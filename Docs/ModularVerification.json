@@ -1,0 +1,38 @@
+{
+  "version": "0.4",
+  "engine": "UE 5.8",
+  "date": "2026-09-12T16:35:51+08:00",
+  "overall": "PASS",
+  "build": "Succeeded",
+  "automation": {
+    "succeeded": 20,
+    "failed": 0
+  },
+  "equipmentChecks": 34,
+  "artAdventureChecks": 26,
+  "legacyAdventureChecks": 26,
+  "network": {
+    "dedicatedServer": true,
+    "sequentialClients": 2,
+    "equipmentRPC": true,
+    "remoteEquipmentVisuals": true,
+    "lateJoinBaseline": true,
+    "impairmentTested": false
+  },
+  "blenderSource": "Art/SwordMagic/Modular/BrokenBellAbbey_Modular.blend",
+  "playableMap": "/Game/SwordMagic/Maps/L_BrokenBell_Playable",
+  "importReport": "Art/SwordMagic/Modular/unreal-import-report.json",
+  "renderedPreviews": [
+    "Docs/Images/SwordMagic_Gameplay.png",
+    "Docs/Images/SwordMagic_Sword.png",
+    "Docs/Images/SwordMagic_Hammer.png",
+    "Docs/Images/SwordMagic_Abbey.png"
+  ],
+  "suiteLog": "Saved/Logs/EquipmentVerify.log",
+  "limitations": [
+    "Prototype animations; no two-hand IK or production AnimBP",
+    "Directional sphere sweep; no exact blade contact",
+    "Four spells and abbey quest remain scenario adapters",
+    "No Shipping package, loss/latency or multiplayer combat performance validation"
+  ]
+}

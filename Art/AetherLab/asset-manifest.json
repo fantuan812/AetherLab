@@ -1,0 +1,2499 @@
+{
+  "pack": "AetherLab Prototype 01",
+  "version": 1,
+  "units": "meters",
+  "up_axis": "Z",
+  "seed": 91226,
+  "license": "Original assets authored for this project; no external model dependencies.",
+  "asset_count": 53,
+  "assets": [
+    {
+      "name": "SM_WoodPlank_200",
+      "label": "木板 2m",
+      "category": "Structure",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        0.24,
+        0.0666,
+        2.0
+      ],
+      "triangles": 144,
+      "vertices": 80,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Wood",
+        "M_Aether_EndGrain"
+      ],
+      "fbx": "Exports/FBX/SM_WoodPlank_200.fbx",
+      "glb": "Exports/GLB/SM_WoodPlank_200.glb"
+    },
+    {
+      "name": "SM_WoodBeam_300",
+      "label": "承重木梁 3m",
+      "category": "Structure",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        0.22,
+        0.2215,
+        3.0
+      ],
+      "triangles": 144,
+      "vertices": 80,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Wood",
+        "M_Aether_EndGrain"
+      ],
+      "fbx": "Exports/FBX/SM_WoodBeam_300.fbx",
+      "glb": "Exports/GLB/SM_WoodBeam_300.glb"
+    },
+    {
+      "name": "SM_WoodWall_200",
+      "label": "木墙 2×2.5m",
+      "category": "Structure",
+      "preset": "Wood",
+      "notes": "Whole panel; use individual beams/planks for independent structural reactions.",
+      "dimensions_m": [
+        2.0,
+        0.199,
+        2.5
+      ],
+      "triangles": 2024,
+      "vertices": 1088,
+      "collision_hulls": 10,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_WoodLight",
+        "M_Aether_EndGrain",
+        "M_Aether_Wood",
+        "M_Aether_Steel"
+      ],
+      "fbx": "Exports/FBX/SM_WoodWall_200.fbx",
+      "glb": "Exports/GLB/SM_WoodWall_200.glb"
+    },
+    {
+      "name": "SM_WoodDoor_100",
+      "label": "木门",
+      "category": "Structure",
+      "preset": "Wood",
+      "notes": "Ground-centre pivot; set hinge relative offset -50cm in a door actor.",
+      "dimensions_m": [
+        0.995,
+        0.162,
+        2.1
+      ],
+      "triangles": 2104,
+      "vertices": 1104,
+      "collision_hulls": 7,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_WoodLight",
+        "M_Aether_EndGrain",
+        "M_Aether_Wood",
+        "M_Aether_DarkSteel",
+        "M_Aether_Steel",
+        "M_Aether_Copper"
+      ],
+      "fbx": "Exports/FBX/SM_WoodDoor_100.fbx",
+      "glb": "Exports/GLB/SM_WoodDoor_100.glb"
+    },
+    {
+      "name": "SM_WoodPlatform_200",
+      "label": "可燃平台 2m",
+      "category": "Structure",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        1.99,
+        2.0,
+        0.24
+      ],
+      "triangles": 1080,
+      "vertices": 560,
+      "collision_hulls": 10,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_WoodLight",
+        "M_Aether_Wood"
+      ],
+      "fbx": "Exports/FBX/SM_WoodPlatform_200.fbx",
+      "glb": "Exports/GLB/SM_WoodPlatform_200.glb"
+    },
+    {
+      "name": "SM_WoodStair_200",
+      "label": "木台阶",
+      "category": "Structure",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        1.2,
+        2.02,
+        1.0764
+      ],
+      "triangles": 756,
+      "vertices": 392,
+      "collision_hulls": 7,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_WoodLight",
+        "M_Aether_Wood"
+      ],
+      "fbx": "Exports/FBX/SM_WoodStair_200.fbx",
+      "glb": "Exports/GLB/SM_WoodStair_200.glb"
+    },
+    {
+      "name": "SM_WoodCrate_090",
+      "label": "木箱",
+      "category": "Props",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        0.94,
+        1.0125,
+        0.895
+      ],
+      "triangles": 4256,
+      "vertices": 2256,
+      "collision_hulls": 30,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Wood",
+        "M_Aether_EndGrain",
+        "M_Aether_WoodLight",
+        "M_Aether_Steel"
+      ],
+      "fbx": "Exports/FBX/SM_WoodCrate_090.fbx",
+      "glb": "Exports/GLB/SM_WoodCrate_090.glb"
+    },
+    {
+      "name": "SM_WoodBarrel",
+      "label": "木桶",
+      "category": "Props",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        0.8,
+        0.8,
+        0.953
+      ],
+      "triangles": 2648,
+      "vertices": 1328,
+      "collision_hulls": 2,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Wood",
+        "M_Aether_DarkSteel",
+        "M_Aether_WoodLight"
+      ],
+      "fbx": "Exports/FBX/SM_WoodBarrel.fbx",
+      "glb": "Exports/GLB/SM_WoodBarrel.glb"
+    },
+    {
+      "name": "SM_WoodLogPile",
+      "label": "薪柴堆",
+      "category": "Props",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        0.75,
+        1.252,
+        0.61
+      ],
+      "triangles": 1128,
+      "vertices": 576,
+      "collision_hulls": 3,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Wood",
+        "M_Aether_WoodLight"
+      ],
+      "fbx": "Exports/FBX/SM_WoodLogPile.fbx",
+      "glb": "Exports/GLB/SM_WoodLogPile.glb"
+    },
+    {
+      "name": "SM_WoodBeam_Charred",
+      "label": "炭化木梁",
+      "category": "Damage",
+      "preset": "Wood",
+      "notes": "Mesh swap at high BurnAmount; same pivot as intact beam.",
+      "dimensions_m": [
+        0.205,
+        0.2066,
+        3.0
+      ],
+      "triangles": 144,
+      "vertices": 80,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Charcoal"
+      ],
+      "fbx": "Exports/FBX/SM_WoodBeam_Charred.fbx",
+      "glb": "Exports/GLB/SM_WoodBeam_Charred.glb"
+    },
+    {
+      "name": "SM_WoodSplinter_01",
+      "label": "木碎片 1",
+      "category": "Damage",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        0.13,
+        0.09,
+        0.62
+      ],
+      "triangles": 12,
+      "vertices": 8,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_WoodLight"
+      ],
+      "fbx": "Exports/FBX/SM_WoodSplinter_01.fbx",
+      "glb": "Exports/GLB/SM_WoodSplinter_01.glb"
+    },
+    {
+      "name": "SM_WoodSplinter_02",
+      "label": "木碎片 2",
+      "category": "Damage",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        0.13,
+        0.09,
+        0.92
+      ],
+      "triangles": 12,
+      "vertices": 8,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_WoodLight"
+      ],
+      "fbx": "Exports/FBX/SM_WoodSplinter_02.fbx",
+      "glb": "Exports/GLB/SM_WoodSplinter_02.glb"
+    },
+    {
+      "name": "SM_WoodSplinter_03",
+      "label": "木碎片 3",
+      "category": "Damage",
+      "preset": "Wood",
+      "notes": "",
+      "dimensions_m": [
+        0.13,
+        0.09,
+        1.22
+      ],
+      "triangles": 12,
+      "vertices": 8,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Charcoal"
+      ],
+      "fbx": "Exports/FBX/SM_WoodSplinter_03.fbx",
+      "glb": "Exports/GLB/SM_WoodSplinter_03.glb"
+    },
+    {
+      "name": "SM_ConcreteFloor_400",
+      "label": "混凝土地板 4m",
+      "category": "Structure",
+      "preset": "Stone",
+      "notes": "Walking surface at Z=0; 4m grid.",
+      "dimensions_m": [
+        4.0,
+        4.0,
+        0.247
+      ],
+      "triangles": 132,
+      "vertices": 72,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Concrete",
+        "M_Aether_DarkSteel"
+      ],
+      "fbx": "Exports/FBX/SM_ConcreteFloor_400.fbx",
+      "glb": "Exports/GLB/SM_ConcreteFloor_400.glb"
+    },
+    {
+      "name": "SM_ConcreteWall_400",
+      "label": "混凝土隔墙",
+      "category": "Structure",
+      "preset": "Stone",
+      "notes": "Blocks Visibility to prevent heat/electric exchange through walls.",
+      "dimensions_m": [
+        4.0,
+        0.36,
+        3.0
+      ],
+      "triangles": 432,
+      "vertices": 224,
+      "collision_hulls": 4,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Concrete",
+        "M_Aether_DarkSteel",
+        "M_Aether_StoneLight"
+      ],
+      "fbx": "Exports/FBX/SM_ConcreteWall_400.fbx",
+      "glb": "Exports/GLB/SM_ConcreteWall_400.glb"
+    },
+    {
+      "name": "SM_MetalColumn_300",
+      "label": "工字钢柱 3m",
+      "category": "Structure",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        0.46,
+        0.46,
+        3.016
+      ],
+      "triangles": 1852,
+      "vertices": 952,
+      "collision_hulls": 5,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_Steel",
+        "M_Aether_Rust"
+      ],
+      "fbx": "Exports/FBX/SM_MetalColumn_300.fbx",
+      "glb": "Exports/GLB/SM_MetalColumn_300.glb"
+    },
+    {
+      "name": "SM_MetalRoof_200",
+      "label": "波纹金属屋顶 2m",
+      "category": "Structure",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        2.018,
+        2.0,
+        0.1275
+      ],
+      "triangles": 604,
+      "vertices": 308,
+      "collision_hulls": 3,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_TealPaint",
+        "M_Aether_Rust"
+      ],
+      "fbx": "Exports/FBX/SM_MetalRoof_200.fbx",
+      "glb": "Exports/GLB/SM_MetalRoof_200.glb"
+    },
+    {
+      "name": "SM_MetalGrating_200",
+      "label": "金属格栅 2m",
+      "category": "Structure",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        2.0,
+        2.0,
+        0.125
+      ],
+      "triangles": 2052,
+      "vertices": 1064,
+      "collision_hulls": 19,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_Steel"
+      ],
+      "fbx": "Exports/FBX/SM_MetalGrating_200.fbx",
+      "glb": "Exports/GLB/SM_MetalGrating_200.glb"
+    },
+    {
+      "name": "SM_MetalRailing_200",
+      "label": "导电栏杆",
+      "category": "Structure",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        2.01,
+        0.17,
+        1.165
+      ],
+      "triangles": 1064,
+      "vertices": 544,
+      "collision_hulls": 6,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Steel",
+        "M_Aether_DarkSteel"
+      ],
+      "fbx": "Exports/FBX/SM_MetalRailing_200.fbx",
+      "glb": "Exports/GLB/SM_MetalRailing_200.glb"
+    },
+    {
+      "name": "SM_RailSegment_300",
+      "label": "废弃导电轨道",
+      "category": "Structure",
+      "preset": "Metal",
+      "notes": "Wood sleepers are decorative; rails provide the conductive body.",
+      "dimensions_m": [
+        1.65,
+        3.0,
+        0.3225
+      ],
+      "triangles": 1188,
+      "vertices": 616,
+      "collision_hulls": 11,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Wood",
+        "M_Aether_Rust",
+        "M_Aether_Steel"
+      ],
+      "fbx": "Exports/FBX/SM_RailSegment_300.fbx",
+      "glb": "Exports/GLB/SM_RailSegment_300.glb"
+    },
+    {
+      "name": "SM_ConcreteRubble_01",
+      "label": "混凝土碎块 1",
+      "category": "Damage",
+      "preset": "Stone",
+      "notes": "",
+      "dimensions_m": [
+        0.553,
+        0.5429,
+        0.5
+      ],
+      "triangles": 20,
+      "vertices": 12,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Concrete"
+      ],
+      "fbx": "Exports/FBX/SM_ConcreteRubble_01.fbx",
+      "glb": "Exports/GLB/SM_ConcreteRubble_01.glb"
+    },
+    {
+      "name": "SM_ConcreteRubble_02",
+      "label": "混凝土碎块 2",
+      "category": "Damage",
+      "preset": "Stone",
+      "notes": "",
+      "dimensions_m": [
+        0.7759,
+        0.7351,
+        0.64
+      ],
+      "triangles": 20,
+      "vertices": 12,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Concrete"
+      ],
+      "fbx": "Exports/FBX/SM_ConcreteRubble_02.fbx",
+      "glb": "Exports/GLB/SM_ConcreteRubble_02.glb"
+    },
+    {
+      "name": "SM_ConcreteRubble_03",
+      "label": "混凝土碎块 3",
+      "category": "Damage",
+      "preset": "Stone",
+      "notes": "",
+      "dimensions_m": [
+        1.0576,
+        0.8797,
+        0.78
+      ],
+      "triangles": 20,
+      "vertices": 12,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Concrete"
+      ],
+      "fbx": "Exports/FBX/SM_ConcreteRubble_03.fbx",
+      "glb": "Exports/GLB/SM_ConcreteRubble_03.glb"
+    },
+    {
+      "name": "SM_Drum_Oil",
+      "label": "油桶",
+      "category": "Props",
+      "preset": "Oil",
+      "notes": "Oil drum is a gameplay proxy for contained oil; mesh does not simulate fluid.",
+      "dimensions_m": [
+        0.65,
+        0.651,
+        0.9175
+      ],
+      "triangles": 2540,
+      "vertices": 1280,
+      "collision_hulls": 3,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_OchrePaint",
+        "M_Aether_DarkSteel",
+        "M_Aether_Steel",
+        "M_Aether_Ceramic",
+        "M_Aether_Rubber",
+        "M_Aether_Rust"
+      ],
+      "fbx": "Exports/FBX/SM_Drum_Oil.fbx",
+      "glb": "Exports/GLB/SM_Drum_Oil.glb"
+    },
+    {
+      "name": "SM_Drum_Water",
+      "label": "水桶",
+      "category": "Props",
+      "preset": "Metal",
+      "notes": "Oil drum is a gameplay proxy for contained oil; mesh does not simulate fluid.",
+      "dimensions_m": [
+        0.65,
+        0.651,
+        0.9175
+      ],
+      "triangles": 2540,
+      "vertices": 1280,
+      "collision_hulls": 3,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_TealPaint",
+        "M_Aether_DarkSteel",
+        "M_Aether_Steel",
+        "M_Aether_Ceramic",
+        "M_Aether_Rubber",
+        "M_Aether_Rust"
+      ],
+      "fbx": "Exports/FBX/SM_Drum_Water.fbx",
+      "glb": "Exports/GLB/SM_Drum_Water.glb"
+    },
+    {
+      "name": "SM_Drum_Burst",
+      "label": "破裂油桶",
+      "category": "Damage",
+      "preset": "Metal",
+      "notes": "Oil drum is a gameplay proxy for contained oil; mesh does not simulate fluid.",
+      "dimensions_m": [
+        0.8078,
+        0.7725,
+        1.0088
+      ],
+      "triangles": 2972,
+      "vertices": 1488,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Rust",
+        "M_Aether_DarkSteel"
+      ],
+      "fbx": "Exports/FBX/SM_Drum_Burst.fbx",
+      "glb": "Exports/GLB/SM_Drum_Burst.glb"
+    },
+    {
+      "name": "SM_WaterBucket",
+      "label": "提水桶",
+      "category": "Props",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        0.543,
+        0.534,
+        0.6716
+      ],
+      "triangles": 3388,
+      "vertices": 1720,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Steel",
+        "M_Aether_Copper",
+        "M_Aether_DarkSteel"
+      ],
+      "fbx": "Exports/FBX/SM_WaterBucket.fbx",
+      "glb": "Exports/GLB/SM_WaterBucket.glb"
+    },
+    {
+      "name": "SM_WaterTank",
+      "label": "储水罐",
+      "category": "Props",
+      "preset": "Metal",
+      "notes": "Use separate water actor or InitialWaterKg for its contents.",
+      "dimensions_m": [
+        1.32,
+        1.144,
+        1.354
+      ],
+      "triangles": 2144,
+      "vertices": 1080,
+      "collision_hulls": 4,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_TealPaint",
+        "M_Aether_Steel",
+        "M_Aether_Copper",
+        "M_Aether_OchrePaint"
+      ],
+      "fbx": "Exports/FBX/SM_WaterTank.fbx",
+      "glb": "Exports/GLB/SM_WaterTank.glb"
+    },
+    {
+      "name": "SM_PressureVessel",
+      "label": "密闭压力罐",
+      "category": "Props",
+      "preset": "Metal",
+      "notes": "Configure a ReactiveMaterialAsset with SealedVolumeM3 and initial water for steam pressure.",
+      "dimensions_m": [
+        0.748,
+        0.7765,
+        1.431
+      ],
+      "triangles": 2932,
+      "vertices": 1480,
+      "collision_hulls": 5,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_Copper",
+        "M_Aether_Steel",
+        "M_Aether_OchrePaint",
+        "M_Aether_Ceramic",
+        "M_Aether_Rubber"
+      ],
+      "fbx": "Exports/FBX/SM_PressureVessel.fbx",
+      "glb": "Exports/GLB/SM_PressureVessel.glb"
+    },
+    {
+      "name": "SM_PipeStraight_200",
+      "label": "直管 2m",
+      "category": "Structure",
+      "preset": "Metal",
+      "notes": "Start connector pivot at Y=0, pipe axis Z=16cm.",
+      "dimensions_m": [
+        0.34,
+        2.07,
+        0.34
+      ],
+      "triangles": 1136,
+      "vertices": 576,
+      "collision_hulls": 4,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Rust",
+        "M_Aether_Steel"
+      ],
+      "fbx": "Exports/FBX/SM_PipeStraight_200.fbx",
+      "glb": "Exports/GLB/SM_PipeStraight_200.glb"
+    },
+    {
+      "name": "SM_PipeElbow_090",
+      "label": "直角管",
+      "category": "Structure",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        0.705,
+        0.705,
+        0.34
+      ],
+      "triangles": 2072,
+      "vertices": 1056,
+      "collision_hulls": 10,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Rust",
+        "M_Aether_Steel"
+      ],
+      "fbx": "Exports/FBX/SM_PipeElbow_090.fbx",
+      "glb": "Exports/GLB/SM_PipeElbow_090.glb"
+    },
+    {
+      "name": "SM_ConduitCable_300",
+      "label": "裸露导电缆线",
+      "category": "Props",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        0.1458,
+        3.14,
+        0.084
+      ],
+      "triangles": 3800,
+      "vertices": 1936,
+      "collision_hulls": 18,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Rubber",
+        "M_Aether_Copper"
+      ],
+      "fbx": "Exports/FBX/SM_ConduitCable_300.fbx",
+      "glb": "Exports/GLB/SM_ConduitCable_300.glb"
+    },
+    {
+      "name": "SM_ElectrodePylon",
+      "label": "导电电极",
+      "category": "Mechanisms",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        0.64,
+        0.64,
+        1.17
+      ],
+      "triangles": 2404,
+      "vertices": 1218,
+      "collision_hulls": 8,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_Copper",
+        "M_Aether_Ceramic",
+        "M_Aether_Steel",
+        "M_Aether_GlowTeal"
+      ],
+      "fbx": "Exports/FBX/SM_ElectrodePylon.fbx",
+      "glb": "Exports/GLB/SM_ElectrodePylon.glb"
+    },
+    {
+      "name": "SM_RelayConsole",
+      "label": "遗迹控制台",
+      "category": "Mechanisms",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        0.75,
+        0.6,
+        1.27
+      ],
+      "triangles": 1284,
+      "vertices": 664,
+      "collision_hulls": 6,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_TealPaint",
+        "M_Aether_GlowTeal",
+        "M_Aether_Copper",
+        "M_Aether_Rubber"
+      ],
+      "fbx": "Exports/FBX/SM_RelayConsole.fbx",
+      "glb": "Exports/GLB/SM_RelayConsole.glb"
+    },
+    {
+      "name": "SM_AetherReactor",
+      "label": "以太反应堆",
+      "category": "Mechanisms",
+      "preset": "Metal",
+      "notes": "",
+      "dimensions_m": [
+        1.6,
+        1.6,
+        1.693
+      ],
+      "triangles": 3916,
+      "vertices": 1978,
+      "collision_hulls": 10,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_Copper",
+        "M_Aether_TealPaint",
+        "M_Aether_GlowTeal"
+      ],
+      "fbx": "Exports/FBX/SM_AetherReactor.fbx",
+      "glb": "Exports/GLB/SM_AetherReactor.glb"
+    },
+    {
+      "name": "SM_Brazier",
+      "label": "实验火盆",
+      "category": "Props",
+      "preset": "Metal",
+      "notes": "Attach Niagara fire to a separate heat source actor.",
+      "dimensions_m": [
+        0.74,
+        0.74,
+        0.6094
+      ],
+      "triangles": 1144,
+      "vertices": 584,
+      "collision_hulls": 6,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_Rust",
+        "M_Aether_Charcoal"
+      ],
+      "fbx": "Exports/FBX/SM_Brazier.fbx",
+      "glb": "Exports/GLB/SM_Brazier.glb"
+    },
+    {
+      "name": "SM_WaterPuddle",
+      "label": "浅水洼",
+      "category": "Liquids",
+      "preset": "Water",
+      "notes": "Matching water/ice footprint; water and oil disable blocking collision.",
+      "dimensions_m": [
+        2.5852,
+        1.7164,
+        0.025
+      ],
+      "triangles": 156,
+      "vertices": 80,
+      "collision_hulls": 0,
+      "fluid": true,
+      "material_slots": [
+        "M_Aether_Water"
+      ],
+      "fbx": "Exports/FBX/SM_WaterPuddle.fbx",
+      "glb": "Exports/GLB/SM_WaterPuddle.glb"
+    },
+    {
+      "name": "SM_IcePuddle",
+      "label": "冻结水洼",
+      "category": "Liquids",
+      "preset": "Water",
+      "notes": "Matching water/ice footprint; water and oil disable blocking collision.",
+      "dimensions_m": [
+        2.5852,
+        1.7164,
+        0.0958
+      ],
+      "triangles": 564,
+      "vertices": 290,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Ice",
+        "M_Aether_StoneLight"
+      ],
+      "fbx": "Exports/FBX/SM_IcePuddle.fbx",
+      "glb": "Exports/GLB/SM_IcePuddle.glb"
+    },
+    {
+      "name": "SM_OilSpill",
+      "label": "泄漏油面",
+      "category": "Liquids",
+      "preset": "Oil",
+      "notes": "Matching water/ice footprint; water and oil disable blocking collision.",
+      "dimensions_m": [
+        2.5852,
+        1.7164,
+        0.012
+      ],
+      "triangles": 156,
+      "vertices": 80,
+      "collision_hulls": 0,
+      "fluid": true,
+      "material_slots": [
+        "M_Aether_Oil"
+      ],
+      "fbx": "Exports/FBX/SM_OilSpill.fbx",
+      "glb": "Exports/GLB/SM_OilSpill.glb"
+    },
+    {
+      "name": "SM_IceWall_200",
+      "label": "冰墙",
+      "category": "Liquids",
+      "preset": "Water",
+      "notes": "Use ice initial state; separate from shallow-water collision.",
+      "dimensions_m": [
+        2.1272,
+        0.4764,
+        1.811
+      ],
+      "triangles": 140,
+      "vertices": 84,
+      "collision_hulls": 7,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Ice"
+      ],
+      "fbx": "Exports/FBX/SM_IceWall_200.fbx",
+      "glb": "Exports/GLB/SM_IceWall_200.glb"
+    },
+    {
+      "name": "SM_IceBridge_300",
+      "label": "冰桥",
+      "category": "Liquids",
+      "preset": "Water",
+      "notes": "",
+      "dimensions_m": [
+        1.6726,
+        3.0,
+        0.3
+      ],
+      "triangles": 268,
+      "vertices": 152,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Ice"
+      ],
+      "fbx": "Exports/FBX/SM_IceBridge_300.fbx",
+      "glb": "Exports/GLB/SM_IceBridge_300.glb"
+    },
+    {
+      "name": "SM_IceShard_01",
+      "label": "冰碎片 1",
+      "category": "Damage",
+      "preset": "Water",
+      "notes": "",
+      "dimensions_m": [
+        0.2504,
+        0.1701,
+        0.38
+      ],
+      "triangles": 20,
+      "vertices": 12,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Ice"
+      ],
+      "fbx": "Exports/FBX/SM_IceShard_01.fbx",
+      "glb": "Exports/GLB/SM_IceShard_01.glb"
+    },
+    {
+      "name": "SM_IceShard_02",
+      "label": "冰碎片 2",
+      "category": "Damage",
+      "preset": "Water",
+      "notes": "",
+      "dimensions_m": [
+        0.3041,
+        0.2212,
+        0.54
+      ],
+      "triangles": 20,
+      "vertices": 12,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Ice"
+      ],
+      "fbx": "Exports/FBX/SM_IceShard_02.fbx",
+      "glb": "Exports/GLB/SM_IceShard_02.glb"
+    },
+    {
+      "name": "SM_IceShard_03",
+      "label": "冰碎片 3",
+      "category": "Damage",
+      "preset": "Water",
+      "notes": "",
+      "dimensions_m": [
+        0.3578,
+        0.2722,
+        0.7
+      ],
+      "triangles": 20,
+      "vertices": 12,
+      "collision_hulls": 1,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_Ice"
+      ],
+      "fbx": "Exports/FBX/SM_IceShard_03.fbx",
+      "glb": "Exports/GLB/SM_IceShard_03.glb"
+    },
+    {
+      "name": "SM_SentinelTarget",
+      "label": "金属哨兵靶",
+      "category": "Targets",
+      "preset": "Metal",
+      "notes": "Static 2m gameplay test target; not a rigged or animated production character.",
+      "dimensions_m": [
+        1.2747,
+        0.425,
+        2.01
+      ],
+      "triangles": 2828,
+      "vertices": 1462,
+      "collision_hulls": 22,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_TealPaint",
+        "M_Aether_Copper",
+        "M_Aether_GlowTeal"
+      ],
+      "fbx": "Exports/FBX/SM_SentinelTarget.fbx",
+      "glb": "Exports/GLB/SM_SentinelTarget.glb"
+    },
+    {
+      "name": "SM_WoodGolemTarget",
+      "label": "木制巨像靶",
+      "category": "Targets",
+      "preset": "Wood",
+      "notes": "Static 2m gameplay test target; not a rigged or animated production character.",
+      "dimensions_m": [
+        1.2747,
+        0.425,
+        2.01
+      ],
+      "triangles": 2828,
+      "vertices": 1462,
+      "collision_hulls": 22,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_WoodLight",
+        "M_Aether_Wood",
+        "M_Aether_GlowAmber"
+      ],
+      "fbx": "Exports/FBX/SM_WoodGolemTarget.fbx",
+      "glb": "Exports/GLB/SM_WoodGolemTarget.glb"
+    },
+    {
+      "name": "SM_AetherStaff",
+      "label": "以太法杖",
+      "category": "SpellMeshes",
+      "preset": "Metal",
+      "notes": "Grip/socket at Z=75cm; static equip mesh.",
+      "dimensions_m": [
+        0.2221,
+        0.25,
+        1.92
+      ],
+      "triangles": 4140,
+      "vertices": 2082,
+      "collision_hulls": 6,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_Copper",
+        "M_Aether_Steel",
+        "M_Aether_GlowTeal"
+      ],
+      "fbx": "Exports/FBX/SM_AetherStaff.fbx",
+      "glb": "Exports/GLB/SM_AetherStaff.glb"
+    },
+    {
+      "name": "SM_AetherGauntlet",
+      "label": "施法护手",
+      "category": "SpellMeshes",
+      "preset": "Metal",
+      "notes": "Static first-person equipment proxy; attach to an existing hand socket.",
+      "dimensions_m": [
+        0.3207,
+        0.51,
+        0.215
+      ],
+      "triangles": 836,
+      "vertices": 434,
+      "collision_hulls": 7,
+      "fluid": false,
+      "material_slots": [
+        "M_Aether_DarkSteel",
+        "M_Aether_TealPaint",
+        "M_Aether_Steel",
+        "M_Aether_GlowTeal"
+      ],
+      "fbx": "Exports/FBX/SM_AetherGauntlet.fbx",
+      "glb": "Exports/GLB/SM_AetherGauntlet.glb"
+    },
+    {
+      "name": "SM_Spell_HeatCore",
+      "label": "法术核心 HeatCore",
+      "category": "SpellMeshes",
+      "preset": "Metal",
+      "notes": "Centre pivot. Optional projectile/Niagara mesh; no particles baked into geometry.",
+      "dimensions_m": [
+        0.2283,
+        0.24,
+        0.24
+      ],
+      "triangles": 80,
+      "vertices": 42,
+      "collision_hulls": 0,
+      "fluid": true,
+      "material_slots": [
+        "M_Aether_GlowAmber"
+      ],
+      "fbx": "Exports/FBX/SM_Spell_HeatCore.fbx",
+      "glb": "Exports/GLB/SM_Spell_HeatCore.glb"
+    },
+    {
+      "name": "SM_Spell_WaterCore",
+      "label": "法术核心 WaterCore",
+      "category": "SpellMeshes",
+      "preset": "Water",
+      "notes": "Centre pivot. Optional projectile/Niagara mesh; no particles baked into geometry.",
+      "dimensions_m": [
+        0.2283,
+        0.24,
+        0.24
+      ],
+      "triangles": 80,
+      "vertices": 42,
+      "collision_hulls": 0,
+      "fluid": true,
+      "material_slots": [
+        "M_Aether_Water"
+      ],
+      "fbx": "Exports/FBX/SM_Spell_WaterCore.fbx",
+      "glb": "Exports/GLB/SM_Spell_WaterCore.glb"
+    },
+    {
+      "name": "SM_Spell_IceCore",
+      "label": "法术核心 IceCore",
+      "category": "SpellMeshes",
+      "preset": "Water",
+      "notes": "Centre pivot. Optional projectile/Niagara mesh; no particles baked into geometry.",
+      "dimensions_m": [
+        0.2283,
+        0.24,
+        0.24
+      ],
+      "triangles": 80,
+      "vertices": 42,
+      "collision_hulls": 0,
+      "fluid": true,
+      "material_slots": [
+        "M_Aether_Ice"
+      ],
+      "fbx": "Exports/FBX/SM_Spell_IceCore.fbx",
+      "glb": "Exports/GLB/SM_Spell_IceCore.glb"
+    },
+    {
+      "name": "SM_Spell_ChargeCore",
+      "label": "法术核心 ChargeCore",
+      "category": "SpellMeshes",
+      "preset": "Metal",
+      "notes": "Centre pivot. Optional projectile/Niagara mesh; no particles baked into geometry.",
+      "dimensions_m": [
+        0.2283,
+        0.24,
+        0.24
+      ],
+      "triangles": 80,
+      "vertices": 42,
+      "collision_hulls": 0,
+      "fluid": true,
+      "material_slots": [
+        "M_Aether_GlowBlue"
+      ],
+      "fbx": "Exports/FBX/SM_Spell_ChargeCore.fbx",
+      "glb": "Exports/GLB/SM_Spell_ChargeCore.glb"
+    },
+    {
+      "name": "SM_RuneRing",
+      "label": "施法环",
+      "category": "SpellMeshes",
+      "preset": "Metal",
+      "notes": "Visual-only ground indicator.",
+      "dimensions_m": [
+        1.23,
+        1.23,
+        0.03
+      ],
+      "triangles": 2320,
+      "vertices": 1184,
+      "collision_hulls": 0,
+      "fluid": true,
+      "material_slots": [
+        "M_Aether_GlowTeal",
+        "M_Aether_Copper"
+      ],
+      "fbx": "Exports/FBX/SM_RuneRing.fbx",
+      "glb": "Exports/GLB/SM_RuneRing.glb"
+    }
+  ],
+  "placements": [
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        -6,
+        -4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        -6,
+        0,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        -6,
+        4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        -2,
+        -4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        -2,
+        0,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        -2,
+        4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        2,
+        -4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        2,
+        0,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        2,
+        4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        6,
+        -4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        6,
+        0,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteFloor_400",
+      "location_m": [
+        6,
+        4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteWall_400",
+      "location_m": [
+        -6,
+        5.9,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteWall_400",
+      "location_m": [
+        -2,
+        5.9,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteWall_400",
+      "location_m": [
+        2,
+        5.9,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteWall_400",
+      "location_m": [
+        6,
+        5.9,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteWall_400",
+      "location_m": [
+        -7.9,
+        -4,
+        0
+      ],
+      "yaw_degrees": 90.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteWall_400",
+      "location_m": [
+        -7.9,
+        0,
+        0
+      ],
+      "yaw_degrees": 90.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteWall_400",
+      "location_m": [
+        -7.9,
+        4,
+        0
+      ],
+      "yaw_degrees": 90.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_MetalColumn_300",
+      "location_m": [
+        -7.65,
+        5.65,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_MetalColumn_300",
+      "location_m": [
+        -3.8,
+        5.65,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_MetalColumn_300",
+      "location_m": [
+        0,
+        5.65,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_MetalColumn_300",
+      "location_m": [
+        3.8,
+        5.65,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_MetalColumn_300",
+      "location_m": [
+        7.65,
+        5.65,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodPlatform_200",
+      "location_m": [
+        -5,
+        1,
+        0.1
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodPlatform_200",
+      "location_m": [
+        -5,
+        3,
+        0.1
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodPlatform_200",
+      "location_m": [
+        -3,
+        1,
+        0.1
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodPlatform_200",
+      "location_m": [
+        -3,
+        3,
+        0.1
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodBeam_300",
+      "location_m": [
+        -5.85,
+        0.15,
+        0.24
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodBeam_300",
+      "location_m": [
+        -5.85,
+        3.85,
+        0.24
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodBeam_300",
+      "location_m": [
+        -2.15,
+        0.15,
+        0.24
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodBeam_300",
+      "location_m": [
+        -2.15,
+        3.85,
+        0.24
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodWall_200",
+      "location_m": [
+        -5,
+        3.82,
+        0.25
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodWall_200",
+      "location_m": [
+        -3,
+        3.82,
+        0.25
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodWall_200",
+      "location_m": [
+        -5.83,
+        1,
+        0.25
+      ],
+      "yaw_degrees": 90.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_MetalRoof_200",
+      "location_m": [
+        -5,
+        1,
+        3.24
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_MetalRoof_200",
+      "location_m": [
+        -5,
+        3,
+        3.24
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_MetalRoof_200",
+      "location_m": [
+        -3,
+        1,
+        3.24
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_MetalRoof_200",
+      "location_m": [
+        -3,
+        3,
+        3.24
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodStair_200",
+      "location_m": [
+        -4,
+        -1,
+        0.0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        0.36
+      ]
+    },
+    {
+      "asset": "SM_WoodCrate_090",
+      "location_m": [
+        -4.9,
+        1,
+        0.35
+      ],
+      "yaw_degrees": 10.313240312354818,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodCrate_090",
+      "location_m": [
+        -3.7,
+        2.6,
+        0.35
+      ],
+      "yaw_degrees": -11.459155902616466,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodLogPile",
+      "location_m": [
+        -3,
+        1,
+        0.36
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodGolemTarget",
+      "location_m": [
+        -4.2,
+        1.8,
+        0.35
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_Drum_Oil",
+      "location_m": [
+        -1.4,
+        2.8,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_Drum_Oil",
+      "location_m": [
+        -0.65,
+        3.5,
+        0
+      ],
+      "yaw_degrees": 17.188733853924695,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_OilSpill",
+      "location_m": [
+        -1.1,
+        2.9,
+        0.003
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        0.7,
+        0.7,
+        1
+      ]
+    },
+    {
+      "asset": "SM_Brazier",
+      "location_m": [
+        -2,
+        -0.2,
+        0.01
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_RailSegment_300",
+      "location_m": [
+        2.2,
+        -3,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_RailSegment_300",
+      "location_m": [
+        2.2,
+        0,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_RailSegment_300",
+      "location_m": [
+        2.2,
+        3,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WaterPuddle",
+      "location_m": [
+        2.1,
+        -2.2,
+        0.012
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1.2,
+        1.2,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ElectrodePylon",
+      "location_m": [
+        1.4,
+        -2,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ElectrodePylon",
+      "location_m": [
+        3.1,
+        -1.3,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ElectrodePylon",
+      "location_m": [
+        2.8,
+        1.0,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_SentinelTarget",
+      "location_m": [
+        2.25,
+        0.1,
+        0.32
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_RelayConsole",
+      "location_m": [
+        3.8,
+        4.1,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_AetherReactor",
+      "location_m": [
+        5.6,
+        4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConduitCable_300",
+      "location_m": [
+        3.6,
+        1,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WaterTank",
+      "location_m": [
+        6.2,
+        0.8,
+        0
+      ],
+      "yaw_degrees": -11.459155902616466,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_Drum_Water",
+      "location_m": [
+        6.9,
+        1.8,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_PressureVessel",
+      "location_m": [
+        5,
+        1.4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WaterBucket",
+      "location_m": [
+        5.4,
+        -0.1,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_IcePuddle",
+      "location_m": [
+        5.7,
+        -2.1,
+        0.01
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_IceWall_200",
+      "location_m": [
+        6.5,
+        -3.4,
+        0
+      ],
+      "yaw_degrees": -17.188733853924695,
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    },
+    {
+      "asset": "SM_IceBridge_300",
+      "location_m": [
+        5.0,
+        -4.9,
+        0
+      ],
+      "yaw_degrees": 90.0,
+      "scale": [
+        0.75,
+        0.7,
+        1
+      ]
+    },
+    {
+      "asset": "SM_IceShard_01",
+      "location_m": [
+        6.0,
+        -4.4,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_IceShard_02",
+      "location_m": [
+        6.25,
+        -4.4,
+        0
+      ],
+      "yaw_degrees": 57.29577951308232,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_IceShard_03",
+      "location_m": [
+        6.5,
+        -4.4,
+        0
+      ],
+      "yaw_degrees": 114.59155902616465,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteRubble_01",
+      "location_m": [
+        -6.8,
+        -3.3,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteRubble_02",
+      "location_m": [
+        -6.2,
+        -3.3,
+        0
+      ],
+      "yaw_degrees": 40.10704565915762,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_ConcreteRubble_03",
+      "location_m": [
+        -5.6,
+        -3.3,
+        0
+      ],
+      "yaw_degrees": 80.21409131831524,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_Drum_Burst",
+      "location_m": [
+        -6.2,
+        -4.4,
+        0
+      ],
+      "yaw_degrees": 45.836623610465864,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodSplinter_01",
+      "location_m": [
+        -5.1,
+        -3.8,
+        0.03
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodSplinter_02",
+      "location_m": [
+        -4.83,
+        -3.8,
+        0.03
+      ],
+      "yaw_degrees": 57.29577951308232,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_WoodSplinter_03",
+      "location_m": [
+        -4.56,
+        -3.8,
+        0.03
+      ],
+      "yaw_degrees": 114.59155902616465,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_AetherStaff",
+      "location_m": [
+        -0.4,
+        -4.7,
+        0
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "asset": "SM_RuneRing",
+      "location_m": [
+        0,
+        -4.2,
+        0.01
+      ],
+      "yaw_degrees": 0.0,
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "palette": {
+    "Wood": {
+      "color": [
+        0.26,
+        0.12,
+        0.045
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": 0
+    },
+    "WoodLight": {
+      "color": [
+        0.44,
+        0.25,
+        0.105
+      ],
+      "metallic": 0,
+      "roughness": 0.75,
+      "emissive": 0
+    },
+    "EndGrain": {
+      "color": [
+        0.19,
+        0.076,
+        0.025
+      ],
+      "metallic": 0,
+      "roughness": 0.88,
+      "emissive": 0
+    },
+    "Charcoal": {
+      "color": [
+        0.018,
+        0.022,
+        0.022
+      ],
+      "metallic": 0,
+      "roughness": 0.95,
+      "emissive": 0
+    },
+    "Steel": {
+      "color": [
+        0.19,
+        0.26,
+        0.27
+      ],
+      "metallic": 0.82,
+      "roughness": 0.4,
+      "emissive": 0
+    },
+    "DarkSteel": {
+      "color": [
+        0.033,
+        0.058,
+        0.065
+      ],
+      "metallic": 0.78,
+      "roughness": 0.48,
+      "emissive": 0
+    },
+    "Copper": {
+      "color": [
+        0.42,
+        0.205,
+        0.083
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "emissive": 0
+    },
+    "Rust": {
+      "color": [
+        0.26,
+        0.085,
+        0.027
+      ],
+      "metallic": 0.35,
+      "roughness": 0.84,
+      "emissive": 0
+    },
+    "TealPaint": {
+      "color": [
+        0.028,
+        0.23,
+        0.225
+      ],
+      "metallic": 0.45,
+      "roughness": 0.44,
+      "emissive": 0
+    },
+    "OchrePaint": {
+      "color": [
+        0.66,
+        0.3,
+        0.045
+      ],
+      "metallic": 0.32,
+      "roughness": 0.53,
+      "emissive": 0
+    },
+    "Concrete": {
+      "color": [
+        0.24,
+        0.29,
+        0.29
+      ],
+      "metallic": 0,
+      "roughness": 0.92,
+      "emissive": 0
+    },
+    "StoneLight": {
+      "color": [
+        0.39,
+        0.43,
+        0.4
+      ],
+      "metallic": 0,
+      "roughness": 0.87,
+      "emissive": 0
+    },
+    "Rubber": {
+      "color": [
+        0.015,
+        0.022,
+        0.025
+      ],
+      "metallic": 0,
+      "roughness": 0.78,
+      "emissive": 0
+    },
+    "Water": {
+      "color": [
+        0.025,
+        0.24,
+        0.3
+      ],
+      "metallic": 0.35,
+      "roughness": 0.14,
+      "emissive": 0
+    },
+    "Ice": {
+      "color": [
+        0.19,
+        0.56,
+        0.65
+      ],
+      "metallic": 0.12,
+      "roughness": 0.22,
+      "emissive": 0
+    },
+    "Oil": {
+      "color": [
+        0.027,
+        0.017,
+        0.01
+      ],
+      "metallic": 0.24,
+      "roughness": 0.19,
+      "emissive": 0
+    },
+    "Ceramic": {
+      "color": [
+        0.67,
+        0.7,
+        0.59
+      ],
+      "metallic": 0.0,
+      "roughness": 0.38,
+      "emissive": 0
+    },
+    "GlowTeal": {
+      "color": [
+        0.035,
+        0.8,
+        0.63
+      ],
+      "metallic": 0.35,
+      "roughness": 0.22,
+      "emissive": 3
+    },
+    "GlowAmber": {
+      "color": [
+        1,
+        0.2,
+        0.025
+      ],
+      "metallic": 0.15,
+      "roughness": 0.25,
+      "emissive": 3
+    },
+    "GlowBlue": {
+      "color": [
+        0.1,
+        0.4,
+        1
+      ],
+      "metallic": 0.15,
+      "roughness": 0.2,
+      "emissive": 3
+    }
+  }
+}

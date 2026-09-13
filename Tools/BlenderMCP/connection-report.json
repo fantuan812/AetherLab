@@ -1,0 +1,54 @@
+{
+  "server": {
+    "name": "BlenderMCP",
+    "title": null,
+    "version": "1.30.0",
+    "websiteUrl": null,
+    "icons": null
+  },
+  "tools": [
+    "get_addon_status",
+    "disable_telemetry",
+    "get_scene_info",
+    "get_object_info",
+    "get_viewport_screenshot",
+    "execute_blender_code",
+    "get_polyhaven_categories",
+    "search_polyhaven_assets",
+    "download_polyhaven_asset",
+    "set_texture",
+    "get_polyhaven_status",
+    "get_hyper3d_status",
+    "get_sketchfab_status",
+    "search_sketchfab_models",
+    "get_sketchfab_model_preview",
+    "download_sketchfab_model",
+    "get_polypizza_status",
+    "search_polypizza_models",
+    "download_polypizza_model",
+    "generate_hyper3d_model_via_text",
+    "generate_hyper3d_model_via_images",
+    "poll_rodin_job_status",
+    "import_generated_asset",
+    "get_hunyuan3d_status",
+    "generate_hunyuan3d_model",
+    "poll_hunyuan_job_status",
+    "import_generated_asset_hunyuan",
+    "record_trajectory_feedback"
+  ],
+  "result": {
+    "meta": null,
+    "content": [
+      {
+        "type": "text",
+        "text": "Code executed successfully: \nFBX export starting... 'C:\\\\ueproject\\\\test\\\\Art\\\\SwordMagic\\\\Modular\\\\FBX\\\\SM_Interact_ApprenticeBench.fbx'\nexport finished in 0.0305 sec.\n\nFBX export starting... 'C:\\\\ueproject\\\\test\\\\Art\\\\SwordMagic\\\\Modular\\\\FBX\\\\SM_Interact_ApprenticeHead.fbx'\nexport finished in 0.0058 sec.\n\nFBX export starting... 'C:\\\\ueproject\\\\test\\\\Art\\\\SwordMagic\\\\Modular\\\\FBX\\\\SM_Interact_ApprenticeCloak.fbx'\nexport finished in 0.0059 sec.\nInfo: Saved as \"BrokenBellAbbey_Modular.blend\"\nNPC_PLACEMENT_FIXED\n",
+        "annotations": null,
+        "meta": null
+      }
+    ],
+    "structuredContent": {
+      "result": "Code executed successfully: \nFBX export starting... 'C:\\\\ueproject\\\\test\\\\Art\\\\SwordMagic\\\\Modular\\\\FBX\\\\SM_Interact_ApprenticeBench.fbx'\nexport finished in 0.0305 sec.\n\nFBX export starting... 'C:\\\\ueproject\\\\test\\\\Art\\\\SwordMagic\\\\Modular\\\\FBX\\\\SM_Interact_ApprenticeHead.fbx'\nexport finished in 0.0058 sec.\n\nFBX export starting... 'C:\\\\ueproject\\\\test\\\\Art\\\\SwordMagic\\\\Modular\\\\FBX\\\\SM_Interact_ApprenticeCloak.fbx'\nexport finished in 0.0059 sec.\nInfo: Saved as \"BrokenBellAbbey_Modular.blend\"\nNPC_PLACEMENT_FIXED\n"
+    },
+    "isError": false
+  }
+}

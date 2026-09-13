@@ -1,0 +1,14 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0",
+  "FriendlyName": "Reactive World",
+  "Description": "Authoritative, fixed-step material reactions with UE adapters.",
+  "Category": "Gameplay",
+  "CanContainContent": true,
+  "Modules": [
+    { "Name": "ReactiveCore", "Type": "Runtime", "LoadingPhase": "Default" },
+    { "Name": "ReactiveRuntime", "Type": "Runtime", "LoadingPhase": "Default" }
+  ],
+  "Plugins": [{ "Name": "GameplayAbilities", "Enabled": true }, { "Name": "Niagara", "Enabled": true }]
+}

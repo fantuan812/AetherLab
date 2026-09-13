@@ -1,0 +1,47 @@
+{
+  "errors": [],
+  "characters": [
+    {
+      "name": "Oathwanderer",
+      "bones": 17,
+      "vertices": 1616,
+      "unweighted_vertices": 0,
+      "pose_test_moved_vertices": 248
+    },
+    {
+      "name": "BellKnight_Auren",
+      "bones": 17,
+      "vertices": 1898,
+      "unweighted_vertices": 0,
+      "pose_test_moved_vertices": 66
+    }
+  ],
+  "level_mesh_count": 459,
+  "exports": [
+    {
+      "file": "Exports\\FBX\\SM_BrokenBellAbbey_Layout.fbx",
+      "bytes": 1774412
+    },
+    {
+      "file": "Exports\\GLB\\SM_BrokenBellAbbey_Layout.glb",
+      "bytes": 3084992
+    },
+    {
+      "file": "Exports\\FBX\\SK_Oathwanderer.fbx",
+      "bytes": 173580
+    },
+    {
+      "file": "Exports\\GLB\\SK_Oathwanderer.glb",
+      "bytes": 3029832
+    },
+    {
+      "file": "Exports\\FBX\\SK_BellKnight_Auren.fbx",
+      "bytes": 190348
+    },
+    {
+      "file": "Exports\\GLB\\SK_BellKnight_Auren.glb",
+      "bytes": 3081936
+    }
+  ],
+  "passed": true
+}

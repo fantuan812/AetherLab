@@ -1,0 +1,739 @@
+{
+  "characters": [
+    {
+      "name": "SK_Modular_Oathwanderer",
+      "triangles": 2420,
+      "materials": [
+        "M_SM_Leather",
+        "M_SM_Bronze",
+        "M_SM_Gold",
+        "M_SM_Teal",
+        "M_SM_Steel",
+        "M_SM_Silver",
+        "M_SM_Void",
+        "M_SM_Ivory"
+      ],
+      "dimensions_m": [
+        1.130053997039795,
+        0.5550000071525574,
+        1.850000023841858
+      ],
+      "bones": 17,
+      "removed_vertices": 336
+    },
+    {
+      "name": "SK_Modular_BellKnight_Auren",
+      "triangles": 2864,
+      "materials": [
+        "M_SM_Leather",
+        "M_SM_Bronze",
+        "M_SM_Gold",
+        "M_SM_Steel",
+        "M_SM_Crimson",
+        "M_SM_Amber",
+        "M_SM_Void",
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        1.9791210889816284,
+        0.9720000624656677,
+        3.3129000663757324
+      ],
+      "bones": 17,
+      "removed_vertices": 380
+    }
+  ],
+  "equipment": [
+    {
+      "name": "SM_OathSword",
+      "triangles": 288,
+      "materials": [
+        "M_SM_Leather",
+        "M_SM_Bronze",
+        "M_SM_Gold",
+        "M_SM_Teal",
+        "M_SM_Steel",
+        "M_SM_Silver",
+        "M_SM_Void",
+        "M_SM_Ivory"
+      ],
+      "dimensions_m": [
+        0.35662493109703064,
+        1.2004377841949463,
+        0.2238183468580246
+      ],
+      "socket": "hand_r",
+      "source_character": "Oathwanderer",
+      "pivot": "bone_local",
+      "parts": 5
+    },
+    {
+      "name": "SM_OathShield",
+      "triangles": 344,
+      "materials": [
+        "M_SM_Leather",
+        "M_SM_Bronze",
+        "M_SM_Gold",
+        "M_SM_Teal",
+        "M_SM_Steel",
+        "M_SM_Silver",
+        "M_SM_Void",
+        "M_SM_Ivory"
+      ],
+      "dimensions_m": [
+        0.7243456840515137,
+        0.9513472318649292,
+        0.33141788840293884
+      ],
+      "socket": "hand_l",
+      "source_character": "Oathwanderer",
+      "pivot": "bone_local",
+      "parts": 5
+    },
+    {
+      "name": "SM_BellHammer",
+      "triangles": 744,
+      "materials": [
+        "M_SM_Leather",
+        "M_SM_Bronze",
+        "M_SM_Gold",
+        "M_SM_Steel",
+        "M_SM_Crimson",
+        "M_SM_Amber",
+        "M_SM_Void",
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        1.526056170463562,
+        2.5012800693511963,
+        0.9397310018539429
+      ],
+      "socket": "hand_r",
+      "source_character": "BellKnight_Auren",
+      "pivot": "bone_local",
+      "parts": 5
+    }
+  ],
+  "level": [
+    {
+      "name": "SM_Abbey_StaticShell",
+      "triangles": 32378,
+      "materials": [
+        "M_SM_Steel",
+        "M_SM_Rock",
+        "M_SM_Ground",
+        "M_SM_Stone",
+        "M_SM_StoneLight",
+        "M_SM_StoneTrim",
+        "M_SM_Wood",
+        "M_SM_Bronze",
+        "M_SM_Teal",
+        "M_SM_Gold",
+        "M_SM_Amber",
+        "M_SM_Crimson"
+      ],
+      "dimensions_m": [
+        48.60614013671875,
+        78.0,
+        22.850000381469727
+      ],
+      "location_m": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "SM_Interact_CanalWater",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Water"
+      ],
+      "dimensions_m": [
+        46.0,
+        4.5,
+        0.08000004291534424
+      ],
+      "location_m": [
+        0.0,
+        -16.5,
+        -0.550000011920929
+      ]
+    },
+    {
+      "name": "SM_Interact_CuttableRope",
+      "triangles": 36,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        0.0665740966796875,
+        5.004887580871582,
+        0.4198293685913086
+      ],
+      "location_m": [
+        -1.6999999284744263,
+        -16.5,
+        1.0750000476837158
+      ]
+    },
+    {
+      "name": "SM_Interact_CuttableRope_001",
+      "triangles": 36,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        0.0665740966796875,
+        5.004887580871582,
+        0.4198293685913086
+      ],
+      "location_m": [
+        1.6999999284744263,
+        -16.5,
+        1.0750000476837158
+      ]
+    },
+    {
+      "name": "SM_Interact_BridgePlank",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        3.5075461864471436,
+        0.5195808410644531,
+        0.18999998271465302
+      ],
+      "location_m": [
+        -2.9802322387695312e-08,
+        -19.0,
+        0.17000000178813934
+      ]
+    },
+    {
+      "name": "SM_Interact_BridgePlank_001",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        3.5064942836761475,
+        0.5090522766113281,
+        0.18999998271465302
+      ],
+      "location_m": [
+        0.0,
+        -18.51000213623047,
+        0.17000000178813934
+      ]
+    },
+    {
+      "name": "SM_Interact_BridgePlank_002",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        3.5081450939178467,
+        0.5257225036621094,
+        0.18999998271465302
+      ],
+      "location_m": [
+        0.0,
+        -18.020000457763672,
+        0.17000000178813934
+      ]
+    },
+    {
+      "name": "SM_Interact_BridgePlank_003",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        3.507197141647339,
+        0.51605224609375,
+        0.18999998271465302
+      ],
+      "location_m": [
+        -2.9802322387695312e-08,
+        -17.530000686645508,
+        0.17000000178813934
+      ]
+    },
+    {
+      "name": "SM_Interact_BridgePlank_004",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        3.5072076320648193,
+        0.5161571502685547,
+        0.18999998271465302
+      ],
+      "location_m": [
+        2.9802322387695312e-08,
+        -15.569999694824219,
+        0.17000000178813934
+      ]
+    },
+    {
+      "name": "SM_Interact_BridgePlank_005",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        3.5088486671447754,
+        0.5330867767333984,
+        0.18999998271465302
+      ],
+      "location_m": [
+        -2.9802322387695312e-08,
+        -15.079999923706055,
+        0.17000000178813934
+      ]
+    },
+    {
+      "name": "SM_Interact_BridgePlank_006",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        3.507265090942383,
+        0.5167350769042969,
+        0.18999998271465302
+      ],
+      "location_m": [
+        0.0,
+        -14.59000015258789,
+        0.17000000178813934
+      ]
+    },
+    {
+      "name": "SM_Interact_BridgePlank_007",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        3.5068774223327637,
+        0.512847900390625,
+        0.18999998271465302
+      ],
+      "location_m": [
+        -2.9802322387695312e-08,
+        -14.100000381469727,
+        0.17000000178813934
+      ]
+    },
+    {
+      "name": "SM_Interact_FrostCrossing",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Ice"
+      ],
+      "dimensions_m": [
+        2.8000001907348633,
+        4.700000762939453,
+        0.21999996900558472
+      ],
+      "location_m": [
+        6.000000476837158,
+        -16.5,
+        -0.4000000059604645
+      ]
+    },
+    {
+      "name": "SM_Interact_CoverCrate",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        1.3000001907348633,
+        1.1000001430511475,
+        1.2000000476837158
+      ],
+      "location_m": [
+        -6.999999523162842,
+        -4.0,
+        0.6000000238418579
+      ]
+    },
+    {
+      "name": "SM_Interact_CoverCrate_001",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        1.2999992370605469,
+        1.0999999046325684,
+        1.2000000476837158
+      ],
+      "location_m": [
+        10.000000953674316,
+        -1.0,
+        0.6000000238418579
+      ]
+    },
+    {
+      "name": "SM_Interact_CoverCrate_002",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        1.2999992370605469,
+        1.0999999046325684,
+        1.2000000476837158
+      ],
+      "location_m": [
+        -10.999999046325684,
+        1.0,
+        0.6000000238418579
+      ]
+    },
+    {
+      "name": "SM_Interact_ConductivePuddle",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Water"
+      ],
+      "dimensions_m": [
+        6.0,
+        4.0,
+        0.059999994933605194
+      ],
+      "location_m": [
+        5.0,
+        -5.0,
+        0.09999999403953552
+      ]
+    },
+    {
+      "name": "SM_Interact_CisternWater",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Water"
+      ],
+      "dimensions_m": [
+        4.200000286102295,
+        3.6000003814697266,
+        0.059999942779541016
+      ],
+      "location_m": [
+        -7.000000953674316,
+        9.0,
+        1.0499999523162842
+      ]
+    },
+    {
+      "name": "SM_Interact_ApprenticeBench",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Wood"
+      ],
+      "dimensions_m": [
+        1.7999992370605469,
+        0.7000007629394531,
+        1.0
+      ],
+      "location_m": [
+        13.400001525878906,
+        11.0,
+        0.5
+      ]
+    },
+    {
+      "name": "SM_Interact_ApprenticeHead",
+      "triangles": 80,
+      "materials": [
+        "M_SM_Ivory"
+      ],
+      "dimensions_m": [
+        0.3423805236816406,
+        0.3600006103515625,
+        0.46000003814697266
+      ],
+      "location_m": [
+        13.399999618530273,
+        11.0,
+        1.649999976158142
+      ]
+    },
+    {
+      "name": "SM_Interact_ApprenticeCloak",
+      "triangles": 44,
+      "materials": [
+        "M_SM_Teal"
+      ],
+      "dimensions_m": [
+        0.7000007629394531,
+        0.7000007629394531,
+        0.7999999523162842
+      ],
+      "location_m": [
+        13.399999618530273,
+        11.0,
+        1.0499999523162842
+      ]
+    },
+    {
+      "name": "SM_Interact_OathRecordPedestal",
+      "triangles": 108,
+      "materials": [
+        "M_SM_StoneTrim"
+      ],
+      "dimensions_m": [
+        0.8999996185302734,
+        0.8999996185302734,
+        1.2999999523162842
+      ],
+      "location_m": [
+        14.999999046325684,
+        5.0,
+        0.6499999761581421
+      ]
+    },
+    {
+      "name": "SM_Interact_OathRecord",
+      "triangles": 108,
+      "materials": [
+        "M_SM_Ivory"
+      ],
+      "dimensions_m": [
+        0.6499996185302734,
+        0.5,
+        0.11999988555908203
+      ],
+      "location_m": [
+        14.999999046325684,
+        5.0,
+        1.3600000143051147
+      ]
+    },
+    {
+      "name": "SM_Interact_AncientSigil",
+      "triangles": 80,
+      "materials": [
+        "M_SM_Amber"
+      ],
+      "dimensions_m": [
+        0.7608463168144226,
+        0.40000152587890625,
+        1.1999998092651367
+      ],
+      "location_m": [
+        7.450580596923828e-09,
+        36.0,
+        2.6500000953674316
+      ]
+    },
+    {
+      "name": "SM_Interact_WitnessBell",
+      "triangles": 196,
+      "materials": [
+        "M_SM_Gold"
+      ],
+      "dimensions_m": [
+        0.7399997711181641,
+        0.7400016784667969,
+        0.6799999475479126
+      ],
+      "location_m": [
+        7.999999523162842,
+        17.0,
+        1.9399999380111694
+      ]
+    }
+  ],
+  "materials": {
+    "M_SM_Amber": {
+      "color": [
+        1.0,
+        0.28999999165534973,
+        0.03500000014901161
+      ],
+      "metallic": 0.15000000596046448,
+      "roughness": 0.30000001192092896,
+      "emission": 2.5
+    },
+    "M_SM_Bronze": {
+      "color": [
+        0.3400000035762787,
+        0.1899999976158142,
+        0.07500000298023224
+      ],
+      "metallic": 0.75,
+      "roughness": 0.4000000059604645,
+      "emission": 0.0
+    },
+    "M_SM_Crimson": {
+      "color": [
+        0.3199999928474426,
+        0.02800000086426735,
+        0.024000000208616257
+      ],
+      "metallic": 0.0,
+      "roughness": 0.8500000238418579,
+      "emission": 0.0
+    },
+    "M_SM_Gold": {
+      "color": [
+        0.6800000071525574,
+        0.4000000059604645,
+        0.10000000149011612
+      ],
+      "metallic": 0.75,
+      "roughness": 0.3199999928474426,
+      "emission": 0.0
+    },
+    "M_SM_Ground": {
+      "color": [
+        0.11999999731779099,
+        0.20000000298023224,
+        0.18000000715255737
+      ],
+      "metallic": 0.0,
+      "roughness": 0.949999988079071,
+      "emission": 0.0
+    },
+    "M_SM_Ice": {
+      "color": [
+        0.23999999463558197,
+        0.6600000262260437,
+        0.7400000095367432
+      ],
+      "metallic": 0.15000000596046448,
+      "roughness": 0.2199999988079071,
+      "emission": 0.0
+    },
+    "M_SM_Ivory": {
+      "color": [
+        0.7599999904632568,
+        0.7200000286102295,
+        0.5199999809265137
+      ],
+      "metallic": 0.0,
+      "roughness": 0.6499999761581421,
+      "emission": 0.0
+    },
+    "M_SM_Leather": {
+      "color": [
+        0.052000001072883606,
+        0.0430000014603138,
+        0.032999999821186066
+      ],
+      "metallic": 0.0,
+      "roughness": 0.8799999952316284,
+      "emission": 0.0
+    },
+    "M_SM_Rock": {
+      "color": [
+        0.07500000298023224,
+        0.11999999731779099,
+        0.14000000059604645
+      ],
+      "metallic": 0.0,
+      "roughness": 0.9300000071525574,
+      "emission": 0.0
+    },
+    "M_SM_Silver": {
+      "color": [
+        0.5799999833106995,
+        0.6600000262260437,
+        0.6899999976158142
+      ],
+      "metallic": 0.75,
+      "roughness": 0.30000001192092896,
+      "emission": 0.0
+    },
+    "M_SM_Steel": {
+      "color": [
+        0.12999999523162842,
+        0.1899999976158142,
+        0.23000000417232513
+      ],
+      "metallic": 0.800000011920929,
+      "roughness": 0.4000000059604645,
+      "emission": 0.0
+    },
+    "M_SM_Stone": {
+      "color": [
+        0.23999999463558197,
+        0.28999999165534973,
+        0.30000001192092896
+      ],
+      "metallic": 0.0,
+      "roughness": 0.8500000238418579,
+      "emission": 0.0
+    },
+    "M_SM_StoneLight": {
+      "color": [
+        0.38999998569488525,
+        0.4300000071525574,
+        0.4099999964237213
+      ],
+      "metallic": 0.0,
+      "roughness": 0.8500000238418579,
+      "emission": 0.0
+    },
+    "M_SM_StoneTrim": {
+      "color": [
+        0.5600000023841858,
+        0.550000011920929,
+        0.46000000834465027
+      ],
+      "metallic": 0.0,
+      "roughness": 0.800000011920929,
+      "emission": 0.0
+    },
+    "M_SM_Teal": {
+      "color": [
+        0.014999999664723873,
+        0.20000000298023224,
+        0.23000000417232513
+      ],
+      "metallic": 0.0,
+      "roughness": 0.800000011920929,
+      "emission": 0.0
+    },
+    "M_SM_Void": {
+      "color": [
+        0.008999999612569809,
+        0.012000000104308128,
+        0.014000000432133675
+      ],
+      "metallic": 0.0,
+      "roughness": 0.6000000238418579,
+      "emission": 0.0
+    },
+    "M_SM_Water": {
+      "color": [
+        0.017999999225139618,
+        0.27000001072883606,
+        0.33000001311302185
+      ],
+      "metallic": 0.25,
+      "roughness": 0.20000000298023224,
+      "emission": 0.0
+    },
+    "M_SM_Wood": {
+      "color": [
+        0.23999999463558197,
+        0.10499999672174454,
+        0.04500000178813934
+      ],
+      "metallic": 0.0,
+      "roughness": 0.800000011920929,
+      "emission": 0.0
+    }
+  },
+  "errors": [],
+  "passed": true
+}

@@ -1,0 +1,378 @@
+{
+  "asset_count": 53,
+  "errors": [],
+  "assets": [
+    {
+      "name": "SM_WoodPlank_200",
+      "triangles": 144,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodBeam_300",
+      "triangles": 144,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodWall_200",
+      "triangles": 2024,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodDoor_100",
+      "triangles": 2104,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodPlatform_200",
+      "triangles": 1080,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodStair_200",
+      "triangles": 756,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodCrate_090",
+      "triangles": 4256,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodBarrel",
+      "triangles": 2648,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodLogPile",
+      "triangles": 1128,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodBeam_Charred",
+      "triangles": 144,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodSplinter_01",
+      "triangles": 12,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodSplinter_02",
+      "triangles": 12,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodSplinter_03",
+      "triangles": 12,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_ConcreteFloor_400",
+      "triangles": 132,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_ConcreteWall_400",
+      "triangles": 432,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_MetalColumn_300",
+      "triangles": 1852,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_MetalRoof_200",
+      "triangles": 604,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_MetalGrating_200",
+      "triangles": 2052,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_MetalRailing_200",
+      "triangles": 1064,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_RailSegment_300",
+      "triangles": 1188,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_ConcreteRubble_01",
+      "triangles": 20,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_ConcreteRubble_02",
+      "triangles": 20,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_ConcreteRubble_03",
+      "triangles": 20,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_Drum_Oil",
+      "triangles": 2540,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_Drum_Water",
+      "triangles": 2540,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_Drum_Burst",
+      "triangles": 2972,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WaterBucket",
+      "triangles": 3388,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WaterTank",
+      "triangles": 2144,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_PressureVessel",
+      "triangles": 2932,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_PipeStraight_200",
+      "triangles": 1136,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_PipeElbow_090",
+      "triangles": 2072,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_ConduitCable_300",
+      "triangles": 3800,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_ElectrodePylon",
+      "triangles": 2404,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_RelayConsole",
+      "triangles": 1284,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_AetherReactor",
+      "triangles": 3916,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_Brazier",
+      "triangles": 1144,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WaterPuddle",
+      "triangles": 156,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_IcePuddle",
+      "triangles": 564,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_OilSpill",
+      "triangles": 156,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_IceWall_200",
+      "triangles": 140,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_IceBridge_300",
+      "triangles": 268,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_IceShard_01",
+      "triangles": 20,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_IceShard_02",
+      "triangles": 20,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_IceShard_03",
+      "triangles": 20,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_SentinelTarget",
+      "triangles": 2828,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_WoodGolemTarget",
+      "triangles": 2828,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_AetherStaff",
+      "triangles": 4140,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_AetherGauntlet",
+      "triangles": 836,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_Spell_HeatCore",
+      "triangles": 80,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_Spell_WaterCore",
+      "triangles": 80,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_Spell_IceCore",
+      "triangles": 80,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_Spell_ChargeCore",
+      "triangles": 80,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    },
+    {
+      "name": "SM_RuneRing",
+      "triangles": 2320,
+      "uv_layers": 2,
+      "non_manifold_edges": 0,
+      "errors": []
+    }
+  ],
+  "passed": true
+}

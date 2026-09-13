@@ -1,0 +1,38 @@
+{
+  "files": [
+    {
+      "file": "SK_Oathwanderer.fbx",
+      "meshes": 1,
+      "armatures": 1,
+      "dimensions_m": [
+        1.581750214099884,
+        0.6706251204013824,
+        1.8685000252892756
+      ],
+      "expected_height_m": 1.8685
+    },
+    {
+      "file": "SK_BellKnight_Auren.fbx",
+      "meshes": 1,
+      "armatures": 1,
+      "dimensions_m": [
+        2.56096088886261,
+        0.9746744334697723,
+        3.312899944865144
+      ],
+      "expected_height_m": 3.3129
+    },
+    {
+      "file": "SM_BrokenBellAbbey_Layout.fbx",
+      "meshes": 457,
+      "armatures": 0,
+      "dimensions_m": [
+        48.60614204406738,
+        78.00000762939453,
+        22.850000381469727
+      ]
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

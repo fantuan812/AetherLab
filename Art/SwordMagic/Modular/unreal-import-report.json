@@ -1,0 +1,69 @@
+{
+  "stage": "complete",
+  "assets": [
+    "/Game/SwordMagic/Equipment/SM_OathSword.SM_OathSword",
+    "/Game/SwordMagic/Equipment/SM_OathShield.SM_OathShield",
+    "/Game/SwordMagic/Equipment/SM_BellHammer.SM_BellHammer",
+    "/Game/SwordMagic/Environment/SM_Abbey_StaticShell.SM_Abbey_StaticShell",
+    "/Game/SwordMagic/Environment/SM_Interact_CanalWater.SM_Interact_CanalWater",
+    "/Game/SwordMagic/Environment/SM_Interact_CuttableRope.SM_Interact_CuttableRope",
+    "/Game/SwordMagic/Environment/SM_Interact_CuttableRope_001.SM_Interact_CuttableRope_001",
+    "/Game/SwordMagic/Environment/SM_Interact_BridgePlank.SM_Interact_BridgePlank",
+    "/Game/SwordMagic/Environment/SM_Interact_BridgePlank_001.SM_Interact_BridgePlank_001",
+    "/Game/SwordMagic/Environment/SM_Interact_BridgePlank_002.SM_Interact_BridgePlank_002",
+    "/Game/SwordMagic/Environment/SM_Interact_BridgePlank_003.SM_Interact_BridgePlank_003",
+    "/Game/SwordMagic/Environment/SM_Interact_BridgePlank_004.SM_Interact_BridgePlank_004",
+    "/Game/SwordMagic/Environment/SM_Interact_BridgePlank_005.SM_Interact_BridgePlank_005",
+    "/Game/SwordMagic/Environment/SM_Interact_BridgePlank_006.SM_Interact_BridgePlank_006",
+    "/Game/SwordMagic/Environment/SM_Interact_BridgePlank_007.SM_Interact_BridgePlank_007",
+    "/Game/SwordMagic/Environment/SM_Interact_FrostCrossing.SM_Interact_FrostCrossing",
+    "/Game/SwordMagic/Environment/SM_Interact_CoverCrate.SM_Interact_CoverCrate",
+    "/Game/SwordMagic/Environment/SM_Interact_CoverCrate_001.SM_Interact_CoverCrate_001",
+    "/Game/SwordMagic/Environment/SM_Interact_CoverCrate_002.SM_Interact_CoverCrate_002",
+    "/Game/SwordMagic/Environment/SM_Interact_ConductivePuddle.SM_Interact_ConductivePuddle",
+    "/Game/SwordMagic/Environment/SM_Interact_CisternWater.SM_Interact_CisternWater",
+    "/Game/SwordMagic/Environment/SM_Interact_ApprenticeBench.SM_Interact_ApprenticeBench",
+    "/Game/SwordMagic/Environment/SM_Interact_ApprenticeHead.SM_Interact_ApprenticeHead",
+    "/Game/SwordMagic/Environment/SM_Interact_ApprenticeCloak.SM_Interact_ApprenticeCloak",
+    "/Game/SwordMagic/Environment/SM_Interact_OathRecordPedestal.SM_Interact_OathRecordPedestal",
+    "/Game/SwordMagic/Environment/SM_Interact_OathRecord.SM_Interact_OathRecord",
+    "/Game/SwordMagic/Environment/SM_Interact_AncientSigil.SM_Interact_AncientSigil",
+    "/Game/SwordMagic/Environment/SM_Interact_WitnessBell.SM_Interact_WitnessBell",
+    "/Game/SwordMagic/Characters/SK_Modular_Oathwanderer.SK_Modular_Oathwanderer",
+    "/Game/SwordMagic/Animations/AN_Oathwanderer_Walk.AN_Oathwanderer_Walk",
+    "/Game/SwordMagic/Animations/AN_Oathwanderer_Attack.AN_Oathwanderer_Attack",
+    "/Game/SwordMagic/Characters/SK_Modular_BellKnight_Auren.SK_Modular_BellKnight_Auren",
+    "/Game/SwordMagic/Animations/AN_BellKnight_Auren_Walk.AN_BellKnight_Auren_Walk",
+    "/Game/SwordMagic/Animations/AN_BellKnight_Auren_Attack.AN_BellKnight_Auren_Attack"
+  ],
+  "errors": [],
+  "character_materials": {
+    "SK_Modular_Oathwanderer": [
+      "/Game/SwordMagic/Materials/MI_Leather.MI_Leather",
+      "/Game/SwordMagic/Materials/MI_Bronze.MI_Bronze",
+      "/Game/SwordMagic/Materials/MI_Gold.MI_Gold",
+      "/Game/SwordMagic/Materials/MI_Teal.MI_Teal",
+      "/Game/SwordMagic/Materials/MI_Steel.MI_Steel",
+      "/Game/SwordMagic/Materials/MI_Silver.MI_Silver",
+      "/Game/SwordMagic/Materials/MI_Void.MI_Void"
+    ],
+    "SK_Modular_BellKnight_Auren": [
+      "/Game/SwordMagic/Materials/MI_Leather.MI_Leather",
+      "/Game/SwordMagic/Materials/MI_Bronze.MI_Bronze",
+      "/Game/SwordMagic/Materials/MI_Gold.MI_Gold",
+      "/Game/SwordMagic/Materials/MI_Steel.MI_Steel",
+      "/Game/SwordMagic/Materials/MI_Crimson.MI_Crimson",
+      "/Game/SwordMagic/Materials/MI_Amber.MI_Amber",
+      "/Game/SwordMagic/Materials/MI_Void.MI_Void"
+    ]
+  },
+  "equipment_definitions": [
+    "/Game/SwordMagic/Data/DA_OathSword.DA_OathSword",
+    "/Game/SwordMagic/Data/DA_OathShield.DA_OathShield",
+    "/Game/SwordMagic/Data/DA_TrainingHammer.DA_TrainingHammer",
+    "/Game/SwordMagic/Data/DA_BellHammer.DA_BellHammer"
+  ],
+  "level_objects": 36,
+  "content": "/Game/SwordMagic/Data/DA_GameContent.DA_GameContent",
+  "playable_map": "/Game/SwordMagic/Maps/L_BrokenBell_Playable"
+}

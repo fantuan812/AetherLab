@@ -1,0 +1,36 @@
+{
+  "stage": "built",
+  "level_meshes": 457,
+  "level_triangles": 34794,
+  "characters": [
+    {
+      "name": "SK_Oathwanderer",
+      "triangles": 3052,
+      "dimensions_m": [
+        1.5817501544952393,
+        0.6706250309944153,
+        1.868499994277954
+      ],
+      "uv_layers": 2,
+      "bones": 17,
+      "height_m": 1.868499994277954,
+      "rig": "rigid_part_weights",
+      "animations": 0
+    },
+    {
+      "name": "SK_BellKnight_Auren",
+      "triangles": 3608,
+      "dimensions_m": [
+        2.560960531234741,
+        0.9746740460395813,
+        3.3129000663757324
+      ],
+      "uv_layers": 2,
+      "bones": 17,
+      "height_m": 3.3129000663757324,
+      "rig": "rigid_part_weights",
+      "animations": 0
+    }
+  ],
+  "refinement": "Torso clearance and bell suspension verified"
+}
