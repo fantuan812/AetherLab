@@ -389,6 +389,7 @@ void AAetherFrontierMode::Tick(float Dt)
         }
         if(Elapsed>8){UE_LOG(LogTemp,Error,TEXT("AETHER_V5_LIGHT_FAIL timeout"));FPlatformMisc::RequestExitWithStatus(false,1);}
     }
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherAnimationCheck"))&&Elapsed>2)CheckAnimation();
     if(bSmoke)SmokeStep();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherV4Capture")))
     { static bool Taken=false;if(Elapsed>8&&!Taken){Taken=true;FScreenshotRequest::RequestScreenshot(FPaths::ProjectDir()/TEXT("Docs/Images/AetherFrontier.png"),true,false);}if(Elapsed>11)FPlatformMisc::RequestExit(false); }

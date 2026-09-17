@@ -2,6 +2,7 @@
 #include "AetherAdventure.h"
 #include "AetherFrontier.h"
 #include "AetherActions.h"
+#include "AetherAnimation.h"
 #include "AetherContent.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimSingleNodeInstance.h"
@@ -151,6 +152,7 @@ void AAetherCharacter::ApplyCharacterDefinition()
         GetCapsuleComponent()->SetCapsuleSize(CharacterDefinition->CapsuleRadius,CharacterDefinition->CapsuleHalfHeight);
         GetMesh()->SetRelativeLocation(FVector(0,0,-CharacterDefinition->CapsuleHalfHeight));
         GetMesh()->SetRelativeRotation(CharacterDefinition->MeshRotation);
+        if(bUseBasicAssets&&GetNetMode()!=NM_DedicatedServer){GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);GetMesh()->SetAnimInstanceClass(UAetherAnimInstance::StaticClass());}
         Equipment->SetAttachmentTarget(GetMesh());
         Nameplate->SetRelativeLocation(FVector(0,0,CharacterDefinition->CapsuleHalfHeight+35));
     }
@@ -169,7 +171,7 @@ void AAetherCharacter::ToggleShield()
 }
 void AAetherCharacter::UpdateAnimation()
 {
-    if (!CharacterDefinition || GetNetMode()==NM_DedicatedServer) return;
+    if (!CharacterDefinition || GetNetMode()==NM_DedicatedServer || Cast<UAetherAnimInstance>(GetMesh()->GetAnimInstance())) return;
     if (Equipment->IsBusy())
     {
         if (PresentedAttackSerial!=Equipment->Attack.Serial)

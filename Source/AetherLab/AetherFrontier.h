@@ -213,6 +213,7 @@ private:
     AAetherFrontierCharacter* SpawnFighter(FVector P,EAetherFighter Type,FName Id);
     bool WriteDatabase(UAetherFrontierSave* Next);
     void SmokeStep();
+    void CheckAnimation();
     float WeatherTimer = 0;
     float AreaTimer = 0;
     float Elapsed = 0; float SaveTimer = 0; float PowerTimer = 0;

@@ -7,6 +7,7 @@
 #include "AetherEquipmentComponent.generated.h"
 
 class UStaticMesh;
+class UAnimSequence;
 class USkinnedMeshComponent;
 class UStaticMeshComponent;
 
@@ -15,6 +16,7 @@ struct AETHEREQUIPMENT_API FAetherAttackDefinition
 {
     GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite) FName Id = TEXT("Light");
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) TSoftObjectPtr<UAnimSequence> Animation;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float Damage = 16;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float PostureDamage = 14;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float ImpulseNs = 6;
