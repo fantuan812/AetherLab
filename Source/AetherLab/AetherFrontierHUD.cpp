@@ -1,0 +1,128 @@
+#include "AetherFrontier.h"
+#include "AetherFrontierPanel.h"
+#include "Engine/Canvas.h"
+#include "EngineUtils.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "HAL/PlatformMisc.h"
+#include "ReactiveWorldSubsystem.h"
+#include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
+
+void AAetherFrontierHUD::BeginPlay()
+{Super::BeginPlay();if(PlayerOwner&&PlayerOwner->IsLocalController()){PanelWidget=CreateWidget<UAetherFrontierPanel>(PlayerOwner,UAetherFrontierPanel::StaticClass());if(PanelWidget)PanelWidget->AddToViewport();}}
+void AAetherFrontierHUD::DrawHUD()
+{
+    Super::DrawHUD();auto* C=Cast<AAetherFrontierCharacter>(GetOwningPawn());auto* PS=C?C->ProfileState():nullptr;if(!Canvas||!C||!PS)return;
+    const float W=Canvas->SizeX,H=Canvas->SizeY;const auto& P=PS->Profile;
+    DrawRect(FLinearColor(.018,.026,.04,.92),20,20,400,108);
+    DrawText(TEXT("AETHERLAB / EMBER FRONTIER"),FLinearColor(.9,.74,.4),34,29,nullptr,1.2);
+    const float Values[]={C->Health(),C->Mana(),C->Stamina()};const FLinearColor Colors[]={FLinearColor(.75,.2,.18),FLinearColor(.18,.45,.85),FLinearColor(.24,.7,.45)};
+    for(int32 I=0;I<3;++I){DrawRect(FLinearColor(.1,.13,.17),34,58+I*20,260,10);DrawRect(Colors[I],34,58+I*20,260*FMath::Clamp(Values[I]/100,0.f,1.f),10);DrawText(FString::Printf(TEXT("%.0f"),Values[I]),FLinearColor::White,310,54+I*20);}
+    DrawRect(FLinearColor(.018,.026,.04,.92),20,H-105,W-40,85);
+    const TCHAR* Names[]={TEXT("HEAT"),TEXT("WATER"),TEXT("FROST"),TEXT("LIGHTNING")};
+    DrawText(FString::Printf(TEXT("[%d %s] %s   Water %.1f kg   Gold %d   Level %d"),C->SelectedSpell+1,Names[C->SelectedSpell],C->SpellUnlocked(C->SelectedSpell)?TEXT("READY"):TEXT("LOCKED"),C->WaterReserveKg,P.Gold,FMath::Clamp(1+P.Experience/200,1,5)),FLinearColor(.9,.74,.4),34,H-94);
+    DrawText(TEXT("WASD Move | Shift Sprint | Ctrl Jump | Space Dodge | LMB/Hold Attack | RMB Guard | 1-4/MMB Magic | F Lock | E Interact"),FLinearColor::White,34,H-70);
+    DrawText(TEXT("I Bag  J Quests  K Skills  M Map  P Party  Q Potion  G Carry  V Push  R/T Equip  F5 Save  Esc Menu"),FLinearColor(.65,.73,.8),34,H-48);
+    DrawText(C->Feedback,FLinearColor(1,.84,.48),30,140);
+    float Y=38;for(int32 Q=0;Q<8;++Q)if(P.Available(Q))
+    {DrawText(FAetherProfile::QuestTitle(Q),FLinearColor(.96,.82,.5),W-370,Y);Y+=22;for(auto F:FAetherProfile::Objectives(Q)){DrawText(FString(P.Evidence.Contains(F)?TEXT("[+] "):TEXT("[ ] "))+F.ToString(),FLinearColor::White,W-360,Y);Y+=18;}Y+=15;}
+    DrawLine(W/2-7,H/2,W/2+7,H/2,FLinearColor::White);DrawLine(W/2,H/2-7,W/2,H/2+7,FLinearColor::White);
+    if(!C->Alive())DrawText(TEXT("DOWNED / Ally E: revive 3s / F8: recover at checkpoint"),FLinearColor(1,.3,.2),W*.35,H*.45,nullptr,1.6);
+    float EY=190;for(TActorIterator<AAetherEncounterDirector> It(GetWorld());It;++It)
+    {
+        for(const auto* Run:{&It->Abbey,&It->Relay})if(Run->Phase!=EAetherEncounterPhase::Idle)
+        {DrawText(FString::Printf(TEXT("%s phase %d / wave %d / channel %.1fs / %d seats"),*Run->Definition.ToString(),int32(Run->Phase),Run->Wave+1,Run->Progress,Run->LockedSeats),FLinearColor(.8,.85,1),30,EY);EY+=20;}
+    }
+    for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Fighter==EAetherFighter::BellKnight&&It->Alive()&&FVector::DistSquared(It->GetActorLocation(),C->GetActorLocation())<FMath::Square(2500.))
+    {const TCHAR* Phases[]={TEXT("ARMORED / BREAK POSTURE"),TEXT("OVERHEATING / WATER TO EXPOSE"),TEXT("EXPOSED / 8 SECOND WINDOW")};DrawText(Phases[It->BossPhase%3],FLinearColor(1,.65,.15),W*.35,165);}
+    if(C->bDebugOverlay)
+    {
+        auto* World=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();float YDebug=280;
+        DrawText(World->GetStatsText(),FLinearColor(.6,1,.7),30,YDebug);YDebug+=22;
+        if(const auto* Sim=World->GetSimulation()){const auto& A=Sim->GetStats();DrawText(FString::Printf(TEXT("Electric J: input %.1f = heat %.1f + device %.1f + loss %.1f | duplicate %llu"),A.ElectricalInputJ,A.ElectricalDepositedJ,A.ElectricalUsefulJ,A.ElectricalLostJ,A.DuplicateInputs),FLinearColor::White,30,YDebug);YDebug+=22;}
+        FHitResult Hit;FVector Origin,Direction;if(C->FindSpellTarget(1,Hit,Origin,Direction))if(auto* Body=Hit.GetActor()?Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>():nullptr)
+        {const auto& V=Body->State;DrawText(FString::Printf(TEXT("%s #%u / T %.1f C / water %.3f kg / electrical water %.3f kg / wet %.2f / fuel %.3f kg / integrity %.2f / chain %llu"),*Body->StableId.ToString(),Body->GetBodyId(),V.TemperatureC,V.WaterKg,V.ElectricalWaterKg,V.ElectricalWetness01,V.FuelKg,V.Integrity,Body->LastReactionChain),FLinearColor::White,30,YDebug);YDebug+=22;
+        if(auto* M=Hit.GetActor()->FindComponentByClass<UReactiveMechanismComponent>())DrawText(FString::Printf(TEXT("Source %.1f W / energy %.1f J / on %d / support released %d / gate %d"),M->PowerW,M->RemainingEnergyJ,M->bPowerEnabled,M->bReleased,M->bGateOpen),FLinearColor::White,30,YDebug);}
+    }
+    if(!C->bPanel||(PanelWidget&&C->Panel!=4))return;
+    DrawRect(FLinearColor(.015,.024,.038,.97),W*.17,H*.16,W*.66,H*.65);Y=H*.19;const float X=W*.2;
+    auto Line=[&](const FString& S){DrawText(S,FLinearColor(.87,.91,.95),X,Y,nullptr,1.1);Y+=25;};
+    if(C->Panel==1){Line(TEXT("INVENTORY / Tab select / B split / N merge / Del sell / 7-8 shop"));if(!P.Inventory.IsEmpty())C->SelectedItem%=P.Inventory.Num();int32 Row=0;for(const auto& I:P.Inventory)Line(FString(Row++==C->SelectedItem?TEXT("> "):TEXT("  "))+FString::Printf(TEXT("%s x%d %s"),*I.DefinitionId.ToString(),I.Count,P.Equipped.FindKey(I.InstanceId)?TEXT("[EQUIPPED]"):TEXT("")));}
+    if(C->Panel==2){Line(TEXT("PERSONAL JOURNAL"));for(int32 Q=0;Q<8;++Q)Line(FString(P.Claims.Contains(FAetherProfile::QuestId(Q))?TEXT("[DONE] "):P.Available(Q)?TEXT("[ACTIVE] "):TEXT("[LOCKED] "))+FAetherProfile::QuestTitle(Q));}
+    if(C->Panel==3){Line(TEXT("ABILITIES / learned permanently from the town teacher"));for(int32 I=0;I<4;++I)Line(FString::Printf(TEXT("%d %s  %s  / mana %.0f"),I+1,Names[I],C->SpellUnlocked(I)?TEXT("LEARNED"):TEXT("LOCKED"),UAetherSpellAbility::Cost(I)));}
+    if(C->Panel==4)
+    {
+        Line(TEXT("WORLD MAP / north is up / 800m graybox"));
+        const FVector Places[]={{0,0,0},{-6500,-29000,0},{-27000,0,0},{27000,0,0},{0,27000,0},{25000,22000,0}};
+        const TCHAR* Titles[]={TEXT("Town"),TEXT("Start"),TEXT("Ashwood"),TEXT("Waterworks"),TEXT("Abbey"),TEXT("Relay")};
+        const float MX=W*.5,MY=H*.5,K=H*.000006;
+        for(int32 I=0;I<6;++I){const float PX=MX+Places[I].X*K,PY=MY-Places[I].Y*K;DrawRect(FLinearColor(.9,.7,.35),PX-4,PY-4,8,8);DrawText(Titles[I],FLinearColor::White,PX+8,PY-8);}
+        const FVector L=C->GetActorLocation();DrawRect(FLinearColor(.2,1,.6),MX+L.X*K-4,MY-L.Y*K-4,8,8);
+    }
+    if(C->Panel==5){Line(TEXT("PARTY / Y invite / U accept / O leave / H command / Del dismiss"));for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Fighter==EAetherFighter::Player)Line(FString::Printf(TEXT("%s  HP %.0f %s"),It->ProfileState()?*It->ProfileState()->DisplayName:It->bHealer?TEXT("Healer companion"):TEXT("Guard companion"),It->Health(),It->ReviveTarget?TEXT("REVIVING"):TEXT("")));}
+    if(C->Panel==6){Line(TEXT("MENU / Esc closes / server keeps running"));Line(TEXT("F5 saves world. Profile transactions save automatically."));Line(TEXT("Restart with the same DevProfile to reconnect to local saved progress."));Line(TEXT("Prototype identity only; no production account authentication."));}
+}
+
+void AAetherFrontierMode::SmokeStep()
+{
+    if(Elapsed<2)return;auto* C=Cast<AAetherFrontierCharacter>(UGameplayStatics::GetPlayerPawn(this,0));if(!C||!C->ProfileState())return;
+    auto* PS=C->ProfileState();
+    auto Check=[&](bool Pass,const TCHAR* Name){UE_LOG(LogTemp,Display,TEXT("V4_CHECK %s %s"),Pass?TEXT("PASS"):TEXT("FAIL"),Name);if(!Pass)++Failures;};
+    if(SmokeStage==0)
+    {
+        Check(C->AbilitySystem==PS->AbilitySystem,TEXT("ASC owned by PlayerState"));
+        Check(C->AbilitySystem->GetActivatableAbilities().Num()==4,TEXT("Persistent ASC receives exactly four specs"));
+        Check(Prop("WorksWater0")->Mesh->GetCollisionResponseToChannel(ECC_Pawn)==ECR_Ignore,TEXT("Liquid channel is not a solid floor"));
+        Check(C->GetMesh()->GetSkeletalMeshAsset()&&C->GetMesh()->GetSkeletalMeshAsset()->GetPathName().Contains("Mannequins"),TEXT("Official mannequin loaded"));
+        for(FName Id:{FName("SupplyA"),FName("SupplyB"),FName("Gate"),FName("Registrar"),FName("Inn")}){C->SetActorLocation(Prop(Id)->GetActorLocation()+FVector(-130,0,10));Interact(C);}
+        Check(PS->Profile.Claims.Contains(FAetherProfile::QuestId(1)),TEXT("Arrival registration rewards"));
+        Check(PS->Profile.Count("Supply")==2&&PS->Profile.Count("TrainingSword")==1,TEXT("Inventory and one-time issue"));
+        const int32 Gold=PS->Profile.Gold;Interact(C);Check(PS->Profile.Gold==Gold,TEXT("Repeated interaction does not duplicate reward"));
+        auto Failed=PS->Profile;Failed.Gold+=123;bFailWrites=true;Check(!Commit(PS,Failed)&&PS->Profile.Gold==Gold,TEXT("Write failure does not publish assets"));bFailWrites=false;
+        C->SetActorLocation(Prop("Teacher")->GetActorLocation()+FVector(-130,0,0));Interact(C);
+        Check(C->SpellUnlocked(0)&&C->SpellUnlocked(1)&&!C->SpellUnlocked(2),TEXT("Learning gates"));
+        for(FName F:{FName("Melee1"),FName("Melee2"),FName("Melee3"),FName("Block"),FName("TrainingExtinguished")})Observe(C,F);
+        Check(PS->Profile.Available(3)&&PS->Profile.Available(4),TEXT("Both field quests available independently"));
+        C->SetActorLocation(Prop("Pump")->GetActorLocation()+FVector(-130,0,20));Interact(C);
+        Check(PS->Profile.Claims.Contains(FAetherProfile::QuestId(4)),TEXT("Mechanical supply route needs no lightning"));
+        for(int32 I=0;I<3;++I){auto* Fire=Prop(*FString::Printf(TEXT("ForestFire%d"),I));FReactiveStimulus Water;Water.SourceActor=C;Water.WaterKg=.5;Fire->Reactive->Inject(Water);}
+        SmokeStage=1;return;
+    }
+    if(SmokeStage==1&&Elapsed>3)
+    {
+        for(int32 I=0;I<3;++I)Check(PS->Profile.Evidence.Contains(*FString::Printf(TEXT("ForestFire%d"),I)),TEXT("Actual extinguish event credited"));
+        Observe(C,"Rescue");Check(PS->Profile.Available(5),TEXT("Both field prerequisites required"));
+        C->SetActorLocation(Prop("Recruit")->GetActorLocation()+FVector(-130,0,0));RecruitCompanion(C);
+        Check(PS->Profile.Claims.Contains(FAetherProfile::QuestId(5))&&Companions.Num()==1,TEXT("Companion recruitment"));
+        C->SetActorLocation(Prop("AbbeyEntry")->GetActorLocation()+FVector(-130,0,0));Interact(C);
+        Check(IsValid(Guardian),TEXT("Encounter starts with human and AI"));
+        if(Guardian){CreditHit(Guardian,C);Guardian->SetVitals(0,0,0);}
+        FReactiveStimulus Cut;Cut.SourceActor=C;Cut.ImpulseNs=FVector(100,0,0);Prop("WorksRope")->Reactive->Inject(Cut);
+        auto* Rod=Prop("MetalRod");Rod->Mesh->SetSimulatePhysics(false);Rod->SetActorLocation(FVector(28350,650,40));
+        SmokeStage=2;return;
+    }
+    if(SmokeStage==2&&Elapsed>4)
+    {
+        Check(PS->Profile.Count("AncientSeal")==1,TEXT("Participant receives seal once"));
+        C->SetActorLocation(Prop("Steward")->GetActorLocation()+FVector(-130,0,0));Interact(C);
+        Check(PS->Profile.Claims.Contains(FAetherProfile::QuestId(7)),TEXT("Main quest completed"));
+        Check(GetGameState<AAetherFrontierState>()->bBridgeReleased&&Prop("WorksBridge")->Mesh->IsSimulatingPhysics(),TEXT("Cut support releases physical bridge"));
+        const auto* Saved=Database->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==PS->Profile.CharacterId;});
+        Check(Saved&&Saved->Claims==PS->Profile.Claims,TEXT("Durable profile matches live state"));
+        auto* Disk=Cast<UAetherFrontierSave>(UGameplayStatics::LoadGameFromSlot(SavePrefix+FString::FromInt(Database->Generation%2),0));
+        Check(Disk&&Disk->Profiles.Num()==1&&Disk->Profiles[0].Claims.Contains(FAetherProfile::QuestId(7)),TEXT("Save roundtrip retains final claim"));
+        Check(Prop("PowerReceiver")->ReceivedPower>1,TEXT("Moved conductor creates real powered contact"));
+        GetGameState<AAetherFrontierState>()->bPowerOn=false;SmokeStage=3;return;
+    }
+    if(SmokeStage==3&&Elapsed>5)
+    {
+        Check(Prop("PowerReceiver")->ReceivedPower==0,TEXT("Disconnecting source clears power without residual shock"));
+        Check(SaveWorld(),TEXT("World snapshot saves with profiles"));
+        const auto Records=Database->World;
+        auto* Rod=Prop("MetalRod");Rod->SetActorLocation(FVector(26500,500,80));
+        Check(GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->Restore(Records),TEXT("World snapshot restores atomically"));
+        Check(Rod->GetActorLocation().Equals(FVector(28350,650,40),1),TEXT("Conductor transform restored"));
+        UE_LOG(LogTemp,Display,TEXT("AETHER_V4_SMOKE_%s checks_failed=%d"),Failures?TEXT("FAIL"):TEXT("PASS"),Failures);
+        SmokeStage=4;FPlatformMisc::RequestExitWithStatus(false,Failures?1:0);
+    }
+}

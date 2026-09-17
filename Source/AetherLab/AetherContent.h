@@ -68,5 +68,5 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TObjectPtr<UAetherCharacterDefinition> Guard;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TObjectPtr<UAetherCharacterDefinition> Caster;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TObjectPtr<UAetherCharacterDefinition> Boss;
-    static UAetherGameContent* Load();
+    static UAetherGameContent* Load(bool Basic = false);
 };

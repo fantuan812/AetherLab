@@ -19,7 +19,7 @@ FMaterial FMaterial::Metal()
 FMaterial FMaterial::Water()
 {
     FMaterial M; M.DryMassKg = 0.001; M.SpecificHeatJPerKgK = 1000; M.WaterCapacityKg = 1;
-    M.InitialFuelKg = 0; M.Conductivity = 0; M.ThermalCouplingWPerK = 8; M.StrengthNs = 10; return M;
+    M.InitialFuelKg = 0; M.Conductivity = .8; M.bLiquidConductor = true; M.ThermalCouplingWPerK = 8; M.StrengthNs = 10; return M;
 }
 FMaterial FMaterial::Oil()
 {
@@ -74,7 +74,7 @@ FBodyId FSimulation::Register(const FMaterial& M, const FVector& P, double R, do
     { ++Stats.RejectedInputs; return InvalidBody; }
     const FBodyId Id = NextId++;
     FBody B; B.Material = M; B.Position = P; B.RadiusCm = R; B.Cell = CellFor(P);
-    B.State.WaterKg = Water; B.State.FuelKg = M.InitialFuelKg; B.State.TemperatureC = T;
+    B.State.ElectricalWaterKg=Water; B.State.WaterKg = Water; B.State.FuelKg = M.InitialFuelKg; B.State.TemperatureC = T;
     B.State.EnthalpyJ = InitialEnthalpy(M, T, Water); B.State.IceFraction = T < 0 && Water > 0 ? 1 : 0;
     Grid.FindOrAdd(B.Cell).Add(Id); Bodies.Add(Id, B); MaxRadiusCm = FMath::Max(MaxRadiusCm, R);
     Wake(Id); Stats.Registered = Bodies.Num(); return Id;
@@ -114,7 +114,16 @@ bool FSimulation::Enqueue(const FStimulus& S)
         || S.ImpulseNs.ContainsNaN() || S.ImpulseNs.Size() > 1.e6
         || (S.Target != InvalidBody && !Bodies.Contains(S.Target)) || Pending.Num() >= Settings.MaxPendingInputs)
     { ++Stats.RejectedInputs; return false; }
-    Pending.Add(S); return true;
+    // Source is part of the idempotency key; no replay can release the same pulse twice.
+    if (S.InputId)
+    {
+        const FInputKey Key{S.Source,S.InputId};
+        if (RecentInputs.Contains(Key)) { ++Stats.DuplicateInputs; return false; }
+        if (InputOrder.Num() >= 4096) { RecentInputs.Remove(InputOrder[0]); InputOrder.RemoveAt(0); }
+        RecentInputs.Add(Key); InputOrder.Add(Key);
+    }
+    FStimulus Accepted=S; if (!Accepted.RootCauseId) Accepted.RootCauseId=NextCause++;
+    Pending.Add(Accepted); return true;
 }
 bool FSimulation::SetEnvironment(const FEnvironment& E)
 {
@@ -134,7 +143,7 @@ void FSimulation::Emit(FBodyId Id, EEvent Kind, double Magnitude, const FVector&
     // Draining once per fixed step is part of the host contract. Bound abandoned consumers.
     if (Events.Num() >= 65536) { ++Stats.BudgetHits; return; }
     const FBody* B = Bodies.Find(Id);
-    Events.Add({ NextEvent++, Id, Kind, Magnitude, Vector, B ? B->State.LastSource : InvalidBody });
+    Events.Add({ NextEvent++, Id, Kind, Magnitude, Vector, B ? B->State.LastSource : InvalidBody, B ? B->State.RootCauseId : 0 });
 }
 TArray<FBodyId> FSimulation::Query(const FVector& P, double R) const
 {
@@ -162,7 +171,9 @@ void FSimulation::Resolve(FBodyId Id, FBody& B)
     const double PreviousIce = S.IceFraction;
     const double C = B.Material.DryCapacity();
     // Magic extraction has a gameplay floor; excess extraction is rejected by this clamp.
-    S.EnthalpyJ = FMath::Max(S.EnthalpyJ, -200.0 * (C + S.WaterKg * IceCp));
+    const double Floor=-200.0*(C+S.WaterKg*IceCp);
+    Stats.RejectedExtractionJ+=FMath::Max(0.0,Floor-S.EnthalpyJ);
+    S.EnthalpyJ = FMath::Max(S.EnthalpyJ, Floor);
     const double BoilH = C * 100 + S.WaterKg * (FusionJPerKg + WaterCp * 100);
     if (S.WaterKg > 0 && S.EnthalpyJ > BoilH)
     {
@@ -180,6 +191,7 @@ void FSimulation::Resolve(FBodyId Id, FBody& B)
     { S.TemperatureC = 0; S.IceFraction = 1 - S.EnthalpyJ / (S.WaterKg * FusionJPerKg); }
     else
     { S.TemperatureC = (S.EnthalpyJ - S.WaterKg * FusionJPerKg) / (C + S.WaterKg * WaterCp); S.IceFraction = 0; }
+    S.ElectricalWaterKg=FMath::Min(S.ElectricalWaterKg,S.WaterKg);
     if (PreviousIce < 0.95 && S.IceFraction >= 0.95) Emit(Id, EEvent::Frozen, S.WaterKg);
     if (PreviousIce >= 0.95 && S.IceFraction < 0.95) Emit(Id, EEvent::Thawed, S.WaterKg);
 }
@@ -188,10 +200,11 @@ void FSimulation::Apply(FBodyId Id, const FStimulus& Input, double Weight)
     FBody* B = Bodies.Find(Id); if (!B) return;
     Wake(Id);
     FState& S = B->State;
-    if (FMath::Abs(Input.HeatJ) > 1 || Input.ElectricalJ > 0 || !Input.ImpulseNs.IsNearlyZero()) S.LastSource = Input.Source;
+    if (FMath::Abs(Input.HeatJ) > 1 || Input.ElectricalJ > 0 || Input.WaterKg > 0 || !Input.ImpulseNs.IsNearlyZero()) { S.LastSource = Input.Source; S.RootCauseId = Input.RootCauseId; }
     const double Water = FMath::Min(Input.WaterKg * Weight, FMath::Max(0.0, B->Material.WaterCapacityKg - S.WaterKg));
     Stats.RejectedWaterKg += Input.WaterKg * Weight - Water;
-    S.WaterKg += Water;
+    S.WaterKg += Water; S.ElectricalWaterKg=FMath::Min(S.WaterKg,S.ElectricalWaterKg+Water);
+    if (Input.WaterKg * Weight > 0) S.ElectricalWetness01 = FMath::Clamp(S.ElectricalWetness01 + Input.WaterKg * Weight * 2, 0.0, 1.0);
     S.EnthalpyJ += Input.HeatJ * Weight + Water * WaterEnthalpy(FMath::Max(0.0, Environment.TemperatureC));
     Resolve(Id, *B);
     const FVector Impulse = Input.ImpulseNs * Weight;
@@ -199,42 +212,76 @@ void FSimulation::Apply(FBodyId Id, const FStimulus& Input, double Weight)
     {
         const double Strength = B->Material.StrengthNs * FMath::Lerp(1.0, B->Material.FrozenStrengthMultiplier, S.IceFraction);
         S.Integrity = FMath::Max(0.0, S.Integrity - Impulse.Size() / Strength);
-        Emit(Id, EEvent::Impulse, 0, Impulse);
+        if(Input.bApplyPhysicsImpulse)Emit(Id, EEvent::Impulse, 0, Impulse);
     }
-    if (Input.ElectricalJ > 0) Conduct(Id, Input.ElectricalJ * Weight, Input.Source);
+
 }
 double FSimulation::Conductivity(const FBody& B) const
 {
-    const double Liquid = B.State.WaterKg * (1 - B.State.IceFraction);
-    const double Wet = B.Material.WaterCapacityKg > 0 ? Liquid / B.Material.WaterCapacityKg : 0;
-    return FMath::Clamp(B.Material.Conductivity + Wet * 0.8, 0.0, 1.0);
+    if (B.State.bBroken) return 0;
+    if (B.Material.bLiquidConductor && (B.State.ElectricalWaterKg < .01 || B.State.IceFraction >= .95)) return 0;
+    return B.Material.Conductivity;
 }
-void FSimulation::Conduct(FBodyId Origin, double EnergyJ, FBodyId Source)
+bool FSimulation::SetReceiver(FBodyId Id, const FElectricalReceiver& R)
 {
-    struct FPacket { FBodyId Id; double Energy; int32 Depth; };
-    TArray<FPacket> Queue; Queue.Add({ Origin, EnergyJ, 0 });
-    TSet<FBodyId> Visited; Visited.Add(Origin);
-    Stats.ElectricalInputJ += EnergyJ;
-    for (int32 Index = 0; Index < Queue.Num(); ++Index)
+    FBody* B=Bodies.Find(Id);
+    if (!B || !Finite(R.LoadWeight) || R.LoadWeight < -1 || !Finite(R.CapacityJ) || R.CapacityJ < 0
+        || !Finite(R.HeatFraction) || R.HeatFraction < 0 || R.HeatFraction > 1) return false;
+    B->Receiver=R; return true;
+}
+void FSimulation::Conduct(const TArray<FBodyId>& Origins, double EnergyJ, FBodyId Source, uint64 Cause)
+{
+    struct FPath { double Cost=0; int32 Hops=0; };
+    TMap<FBodyId,FPath> Paths;
+    for (auto Id:Origins) if (Bodies.Contains(Id)&&(!CanReceiveInput||CanReceiveInput(Id,Source))) Paths.Add(Id,{});
+    TSet<FBodyId> Closed; Stats.ElectricalInputJ+=EnergyJ; bool Truncated=false;
+    if(Paths.Num()>Settings.MaxElectricalNodes){Stats.ElectricalLostJ+=EnergyJ;++Stats.BudgetHits;return;}
+    while(Closed.Num()<Paths.Num())
     {
-        const FPacket Packet = Queue[Index]; FBody& B = Bodies.FindChecked(Packet.Id);
-        ++Stats.ElectricalVisits;
-        TArray<FBodyId> Next; double WeightSum = 0;
-        if (Packet.Depth < Settings.MaxElectricalHops && Conductivity(B) > 0.05)
-        for (FBodyId Candidate : Query(B.Position, B.RadiusCm + 1.0))
+        FBodyId Current=InvalidBody;double Best=TNumericLimits<double>::Max();
+        for(const auto& P:Paths)if(!Closed.Contains(P.Key)&&(P.Value.Cost<Best||(P.Value.Cost==Best&&P.Key<Current))){Current=P.Key;Best=P.Value.Cost;}
+        if(!Current)break;Closed.Add(Current);++Stats.ElectricalVisits;
+        const auto Path=Paths.FindChecked(Current);const auto& B=Bodies.FindChecked(Current);
+        if(Conductivity(B)<=.05 || B.Receiver.bTerminal)continue;
+        for(FBodyId Candidate:Query(B.Position,B.RadiusCm+2))
         {
-            if (Visited.Contains(Candidate)) continue;
-            const FBody& N = Bodies.FindChecked(Candidate);
-            if (Conductivity(N) <= 0.05 || (CanExchange && !CanExchange(Packet.Id, Candidate))) continue;
-            if (Visited.Num() >= Settings.MaxElectricalNodes) { ++Stats.BudgetHits; break; }
-            Next.Add(Candidate); Visited.Add(Candidate); WeightSum += Conductivity(N);
+            if(Candidate==Current||Closed.Contains(Candidate)||(CanReceiveInput&&!CanReceiveInput(Candidate,Source)))continue;
+            const auto& N=Bodies.FindChecked(Candidate);
+            if(Conductivity(N)<=.05||(CanConduct?!CanConduct(Current,Candidate):(CanExchange&&!CanExchange(Current,Candidate))))continue;
+            const double Edge=ContactCostMeters?ContactCostMeters(Current,Candidate):FVector::Distance(B.Position,N.Position)/100.;
+            if(!Finite(Edge)||Edge<0)continue;
+            if(Path.Hops>=Settings.MaxElectricalHops||(!Paths.Contains(Candidate)&&Paths.Num()>=Settings.MaxElectricalNodes)){Truncated=true;continue;}
+            const double Cost=Path.Cost+Edge;
+            auto* Old=Paths.Find(Candidate);if(!Old||Cost<Old->Cost)Paths.Add(Candidate,{Cost,Path.Hops+1});
         }
-        const double Deposited = Next.IsEmpty() ? Packet.Energy : Packet.Energy * 0.35;
-        B.State.LastSource = Source;
-        B.State.EnthalpyJ += Deposited; Stats.ElectricalDepositedJ += Deposited;
-        Wake(Packet.Id); Resolve(Packet.Id, B); Emit(Packet.Id, EEvent::Shock, Deposited);
-        for (FBodyId Candidate : Next)
-            Queue.Add({ Candidate, (Packet.Energy - Deposited) * Conductivity(Bodies.FindChecked(Candidate)) / WeightSum, Packet.Depth + 1 });
+    }
+    if(Truncated){++Stats.BudgetHits;Stats.ElectricalLostJ+=EnergyJ;return;}
+    struct FEndpoint { FBodyId Representative=0; double Path=1.e30; double Load=0; double Capacity=1.e8; double Heat=1; TArray<FBodyId> Members; };
+    TMap<uint64,FEndpoint> Receivers; TArray<FBodyId> IDs;Paths.GetKeys(IDs);IDs.Sort();
+    for(auto Id:IDs)
+    {
+        const auto& B=Bodies.FindChecked(Id); const auto& R=B.Receiver;
+        auto& E=Receivers.FindOrAdd(R.Id?R.Id:uint64(Id));
+        E.Members.Add(Id);E.Capacity=FMath::Min(E.Capacity,R.CapacityJ);E.Heat=FMath::Min(E.Heat,R.HeatFraction);
+        const double Weight=R.LoadWeight>=0?R.LoadWeight:(B.Material.bLiquidConductor?B.State.ElectricalWaterKg:B.Material.DryMassKg);
+        // Explicit endpoints use maximum coupling, material cells sum physical mass.
+        if(R.LoadWeight>=0)E.Load=FMath::Max(E.Load,Weight);else E.Load+=Weight;
+        if(Paths[Id].Cost<E.Path){E.Path=Paths[Id].Cost;E.Representative=Id;}
+    }
+    double Total=0;TArray<uint64> Keys;Receivers.GetKeys(Keys);Keys.Sort();for(auto Key:Keys)Total+=Receivers[Key].Load;
+    if(Total<=0){Stats.ElectricalLostJ+=EnergyJ;return;}
+    for(auto Key:Keys)
+    {
+        const auto& E=Receivers[Key];const double Budget=EnergyJ*E.Load/Total;
+        const double Offer=FMath::Min(E.Capacity,Budget);const double Delivered=Offer*FMath::Exp(-.12*E.Path);
+        Stats.ElectricalLostJ+=Budget-Delivered;Stats.ElectricalDepositedJ+=Delivered*E.Heat;Stats.ElectricalUsefulJ+=Delivered*(1-E.Heat);
+        double Mass=0;for(auto Id:E.Members){const auto& B=Bodies[Id];Mass+=B.Material.DryMassKg+B.State.WaterKg;}
+        for(auto Id:E.Members)
+        {
+            auto& B=Bodies[Id];B.State.LastSource=Source;B.State.RootCauseId=Cause;
+            B.State.EnthalpyJ+=Delivered*E.Heat*(B.Material.DryMassKg+B.State.WaterKg)/Mass;Wake(Id);Resolve(Id,B);
+        }
+        if(Delivered>1.e-9)Emit(E.Representative,EEvent::Shock,Delivered);
     }
 }
 
@@ -282,13 +329,13 @@ void FSimulation::ExchangeHeat()
         const double Scale = FMath::Min3(1.0, OutCap / Outgoing[P.Hot], InCap / Incoming[P.Cold]);
         Deltas.FindOrAdd(P.Hot) -= P.Joules * Scale; Deltas.FindOrAdd(P.Cold) += P.Joules * Scale;
         if (P.Joules * Scale > StrongestHeat.FindRef(P.Cold))
-        { StrongestHeat.Add(P.Cold, P.Joules * Scale); HeatSources.Add(P.Cold, H.State.LastSource); }
+        { StrongestHeat.Add(P.Cold, P.Joules * Scale); HeatSources.Add(P.Cold, P.Hot); }
     }
     TArray<FBodyId> Affected; Deltas.GetKeys(Affected); Affected.Sort();
     for (FBodyId Id : Affected)
     {
         FBody& B = Bodies.FindChecked(Id); B.State.EnthalpyJ += Deltas[Id];
-        if (Deltas[Id] > 1 && HeatSources.Contains(Id)) B.State.LastSource = HeatSources[Id];
+        if (Deltas[Id] > 1 && HeatSources.Contains(Id)) { const auto& Origin=Bodies[HeatSources[Id]].State; B.State.LastSource=Origin.LastSource; B.State.RootCauseId=Origin.RootCauseId; }
         if (FMath::Abs(Deltas[Id]) > 0.01) Wake(Id);
         Resolve(Id, B);
     }
@@ -298,6 +345,7 @@ void FSimulation::React(FBodyId Id, FBody& B)
 {
     FState& S = B.State; const FMaterial& M = B.Material;
     const double Dt = Settings.StepSeconds;
+    S.ElectricalWetness01 = FMath::Max(0.0, S.ElectricalWetness01 - Dt / 12.0);
     const double AreaM2 = PI * FMath::Square(B.RadiusCm / 100.0);
     const double Rain = FMath::Min(Environment.RainKgPerM2Sec * AreaM2 * Dt, FMath::Max(0.0, M.WaterCapacityKg - S.WaterKg));
     S.WaterKg += Rain; S.EnthalpyJ += Rain * WaterEnthalpy(FMath::Max(0.0, Environment.TemperatureC));
@@ -331,7 +379,7 @@ void FSimulation::React(FBodyId Id, FBody& B)
         for (FBodyId Other : Targets)
         {
             const FBody& N = Bodies.FindChecked(Other); const double Share = Energy / Targets.Num();
-            FStimulus Blast; Blast.Source = S.LastSource; Blast.Target = Other; Blast.HeatJ = Share * 0.2;
+            FStimulus Blast; Blast.RootCauseId=S.RootCauseId; Blast.Source = S.LastSource; Blast.Target = Other; Blast.HeatJ = Share * 0.2;
             Blast.ImpulseNs = (N.Position - B.Position).GetSafeNormal(UE_SMALL_NUMBER, FVector::UpVector)
                 * FMath::Sqrt(2 * N.Material.DryMassKg * Share * 0.8);
             if (!Enqueue(Blast)) Stats.VentedEnergyJ += Share;
@@ -341,7 +389,7 @@ void FSimulation::React(FBodyId Id, FBody& B)
     if (!S.bBroken && S.Integrity <= 0.05) { S.bBroken = true; Emit(Id, EEvent::Broken); }
     const bool NearAmbient = FMath::Abs(S.TemperatureC - Environment.TemperatureC) < 0.05;
     const bool RainStable = Environment.RainKgPerM2Sec <= 0 || S.WaterKg >= M.WaterCapacityKg - 1.e-8;
-    if (!S.bBurning && NearAmbient && RainStable) B.QuietSeconds += Dt; else B.QuietSeconds = 0;
+    if (!S.bBurning && NearAmbient && RainStable && S.ElectricalWetness01 <= 1.e-8) B.QuietSeconds += Dt; else B.QuietSeconds = 0;
     if (B.QuietSeconds >= 1) Active.Remove(Id);
 }
 double FSimulation::TransferLiquid(FBodyId From, FBodyId To, double MaxKg)
@@ -352,8 +400,11 @@ double FSimulation::TransferLiquid(FBodyId From, FBodyId To, double MaxKg)
         FMath::Max(0.0, B->Material.WaterCapacityKg - B->State.WaterKg));
     if (Kg <= 1.e-9) return 0;
     const double J = Kg * WaterEnthalpy(FMath::Max(0.0, A->State.TemperatureC));
+    A->State.ElectricalWaterKg=FMath::Max(0.0,A->State.ElectricalWaterKg-Kg);
+    B->State.ElectricalWaterKg=FMath::Min(B->State.WaterKg+Kg,B->State.ElectricalWaterKg+Kg);
     A->State.WaterKg -= Kg; A->State.EnthalpyJ -= J;
-    B->State.WaterKg += Kg; B->State.EnthalpyJ += J; B->State.LastSource = A->State.LastSource;
+    B->State.WaterKg += Kg; B->State.EnthalpyJ += J;
+    B->State.ElectricalWetness01 = FMath::Clamp(B->State.ElectricalWetness01 + Kg * 2, 0.0, 1.0); B->State.LastSource = A->State.LastSource; B->State.RootCauseId=A->State.RootCauseId;
     Resolve(From, *A); Resolve(To, *B); Wake(From); Wake(To);
     return Kg;
 }
@@ -361,17 +412,19 @@ bool FSimulation::RestoreStates(const TMap<FBodyId, FState>& States)
 {
     // Work on a copy to keep malformed saves from leaving a half-restored world.
     FSimulation Candidate = *this;
-    Candidate.Events.Reset(); Candidate.Pending.Reset();
+    Candidate.Events.Reset(); Candidate.Pending.Reset(); Candidate.RecentInputs.Reset(); Candidate.InputOrder.Reset();
     for (const auto& Pair : States)
     {
         FBody* B = Candidate.Bodies.Find(Pair.Key); const FState& S = Pair.Value;
         if (!B || !Finite(S.EnthalpyJ) || !Finite(S.WaterKg) || !Finite(S.FuelKg) || !Finite(S.Integrity)
             || !Finite(S.GasEnergyJ) || FMath::Abs(S.EnthalpyJ) > 1.e12 || S.WaterKg < 0
             || S.WaterKg > B->Material.WaterCapacityKg || S.FuelKg < 0 || S.FuelKg > B->Material.InitialFuelKg
+            || !Finite(S.ElectricalWaterKg) || S.ElectricalWaterKg<0 || S.ElectricalWaterKg>S.WaterKg
+            || !Finite(S.ElectricalWetness01) || S.ElectricalWetness01 < 0 || S.ElectricalWetness01 > 1
             || S.Integrity < 0 || S.Integrity > 1 || S.GasEnergyJ < 0 || S.GasEnergyJ > 1.e12
             || (S.bBurst && S.GasEnergyJ > 0) || (B->Material.SealedVolumeM3 == 0 && S.GasEnergyJ > 0)
             || (S.bBroken != (S.Integrity <= 0.05))) return false;
-        B->State = S; B->State.LastSource = InvalidBody;
+        B->State = S; B->State.LastSource = InvalidBody; B->State.RootCauseId=0;
         Candidate.Resolve(Pair.Key, *B);
         if (FMath::Abs(B->State.WaterKg - S.WaterKg) > 1.e-8 || FMath::Abs(B->State.EnthalpyJ - S.EnthalpyJ) > 1.e-5) return false;
         B->State.GaugePressurePa = B->Material.SealedVolumeM3 > 0 && !S.bBurst ? 0.4 * S.GasEnergyJ / B->Material.SealedVolumeM3 : 0;
@@ -387,6 +440,7 @@ double FSimulation::WithdrawLiquid(FBodyId From, double MaxKg)
     if (!B || !Finite(MaxKg) || MaxKg <= 0) return 0;
     const double Kg = FMath::Min(MaxKg, B->State.WaterKg * (1 - B->State.IceFraction));
     const double J = Kg * WaterEnthalpy(FMath::Max(0.0, B->State.TemperatureC));
+    B->State.ElectricalWaterKg=FMath::Max(0.0,B->State.ElectricalWaterKg-Kg);
     B->State.WaterKg -= Kg; B->State.EnthalpyJ -= J; Resolve(From, *B); Wake(From); return Kg;
 }
 void FSimulation::Step()
@@ -395,12 +449,10 @@ void FSimulation::Step()
     TArray<FStimulus> Inputs = MoveTemp(Pending); Pending.Reset();
     for (const FStimulus& Input : Inputs)
     {
-        if (Input.Target != InvalidBody) Apply(Input.Target, Input, 1);
-        else
-        {
-            const TArray<FBodyId> Targets = Query(Input.PositionCm, Input.RadiusCm);
-            for (FBodyId Id : Targets) Apply(Id, Input, 1.0 / Targets.Num());
-        }
+        TArray<FBodyId> Targets=Input.Target!=InvalidBody?TArray<FBodyId>{Input.Target}:Query(Input.PositionCm,Input.RadiusCm);
+        if(CanReceiveInput)Targets.RemoveAll([&](FBodyId Id){return !CanReceiveInput(Id,Input.Source);});
+        for(FBodyId Id:Targets)Apply(Id,Input,1.0/Targets.Num());
+        if(Input.ElectricalJ>0)Conduct(Targets,Input.ElectricalJ,Input.Source,Input.RootCauseId);
     }
     ExchangeHeat();
     TArray<FBodyId> Work = Active.Array(); Work.Sort();

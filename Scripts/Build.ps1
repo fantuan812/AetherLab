@@ -4,5 +4,5 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $projectPath = Join-Path $projectRoot 'AetherLab.uproject'
 $buildTool = Join-Path $EngineRoot 'Engine\Build\BatchFiles\Build.bat'
 if (!(Test-Path -LiteralPath $buildTool)) { throw "UE build tool not found: $buildTool" }
-& $buildTool AetherLabEditor Win64 Development $projectPath -WaitMutex -NoHotReloadFromIDE -NoUBA
+& $buildTool AetherLabEditor Win64 Development $projectPath -WaitMutex -NoHotReloadFromIDE -NoUBA -MaxParallelActions=1
 exit $LASTEXITCODE

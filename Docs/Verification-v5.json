@@ -1,0 +1,84 @@
+{
+  "recorded_utc": "2026-09-17T17:30:46.811766+00:00",
+  "engine": "5.8.0-55116800",
+  "build": {
+    "result": "Succeeded",
+    "target": "AetherLabEditor Win64 Development",
+    "max_parallel_actions": 1,
+    "log": "Saved/Logs/Build-v5.log"
+  },
+  "basic_assets": {
+    "result": "Passed",
+    "equipment_definitions": 6,
+    "character_mesh": "UE Manny Simple",
+    "log": "Saved/Logs/PrepareBasic-v5.log"
+  },
+  "light_tests": {
+    "filter": "Aether.V5.",
+    "passed": 9,
+    "failed": 0,
+    "test_logic_duration_seconds": 0.1407925933599472,
+    "report": "Saved/Automation/V5Light/index.json"
+  },
+  "world_checks": {
+    "mode": "two brief sequential single-player NullRHI runs on World Partition map",
+    "initial_start": "Passed",
+    "same_profile_process_restart": "Passed",
+    "duplicate_supply_claim": "Rejected; one Supply after restart",
+    "shared_loot_claim": "One persistent ClaimId, two Material total after duplicate claim and process restart",
+    "world_snapshot": "Restored without incompatibility warning",
+    "finite_source": "3598206.7 J preserved while disabled",
+    "saved_generations": [
+      4,
+      5
+    ],
+    "logs": [
+      "Saved/Logs/V5PartitionStart.log",
+      "Saved/Logs/V5PartitionReload.log"
+    ],
+    "script": "Scripts/CheckFrontier.ps1"
+  },
+  "not_run": [
+    "multi-client networking",
+    "load/stress tests",
+    "long soak",
+    "full 50-case RX matrix",
+    "full playthrough",
+    "rendered UMG layout review",
+    "packaged dedicated server"
+  ],
+  "scope": "UE basic-asset graybox implementation. Coverage and remaining code/acceptance limitations are listed in Implementation-v5.zh-CN.md; this is not a full-design acceptance certificate.",
+  "partition_map": {
+    "asset": "Content/AetherCore/Maps/L_Frontier.umap",
+    "external_actor_packages": 51,
+    "navigation_bounds_extent_cm": [
+      41000,
+      41000,
+      1500
+    ],
+    "authoring_result": "Passed",
+    "authoring_log": "Saved/Logs/AetherLab.log",
+    "dynamic_navigation": "Both brief game runs projected a valid navigable point"
+  },
+  "resolved_failures": [
+    {
+      "check": "Initial partition-map startup",
+      "cause": "Navigation volume had a zero-sized brush",
+      "fix": "CreateBrushForVolumeActor initializes volume model/collision; authoring now validates nonzero extent",
+      "recheck": "Both final runs PASS with partition=1 nav=1"
+    },
+    {
+      "check": "Navigation wait in diagnostic mode",
+      "cause": "Saved each frame while waiting for navigation",
+      "fix": "Navigation readiness checked before save; final runs wrote bounded generations 4 and 5",
+      "scope": "Isolated test save only"
+    }
+  ],
+  "cleanup": {
+    "removed_files": 320,
+    "removed_bytes": 59688932,
+    "manifest": "Docs/RemovedLegacyAssets.json",
+    "source_and_tools": "Retained; current load/cook paths use AetherCore and UE mannequin"
+  },
+  "static_diff_check": "Passed"
+}

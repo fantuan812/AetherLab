@@ -1,16 +1,43 @@
 #include "ReactiveWorldSubsystem.h"
 #include "ReactiveBodyComponent.h"
+#include "ReactiveMechanismComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "HAL/PlatformTime.h"
 #include "Components/PrimitiveComponent.h"
 
+namespace
+{
+bool SharesReactionScope(const UReactiveBodyComponent* A,const UReactiveBodyComponent* B)
+{
+ auto Allows=[](const UReactiveBodyComponent* Private,const UReactiveBodyComponent* Other)
+ {return !Private->bOwnerOnlyStimuli||(Private->GetOwner()->GetOwner()&&(Private->GetOwner()->GetOwner()==Other->GetOwner()||Private->GetOwner()->GetOwner()==Other->GetOwner()->GetOwner()));};
+ return Allows(A,B)&&Allows(B,A);
+}
+}
 void UReactiveWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
     Simulation = MakeUnique<Reactive::FSimulation>();
+    Simulation->CanReceiveInput=[this](Reactive::FBodyId Target,Reactive::FBodyId Source)
+    {const auto* B=Components.Find(Target);if(!B||!B->IsValid())return false;return !B->Get()->bOwnerOnlyStimuli||Source==Reactive::InvalidBody||B->Get()->GetOwner()->GetOwner()==GetBodyOwner(Source);};
     Simulation->CanExchange = [this](Reactive::FBodyId A, Reactive::FBodyId B) { return CanBodiesExchange(A, B); };
+    Simulation->CanConduct = [this](Reactive::FBodyId A, Reactive::FBodyId B)
+    {
+        auto* AC = Components.Find(A); auto* BC = Components.Find(B);
+        if (!AC || !BC || !AC->IsValid() || !BC->IsValid()) return false;
+        if(!SharesReactionScope(AC->Get(),BC->Get()))return false;
+        auto* AP = AC->Get()->GetPrimitive(); auto* BP = BC->Get()->GetPrimitive();
+        if (!AP || !BP || !AP->IsCollisionEnabled() || !BP->IsCollisionEnabled()) return false;
+        if (!AP->Bounds.GetBox().ExpandBy(2).Intersect(BP->Bounds.GetBox())) return false;
+        FVector OnA, OnB;
+        if (AP->GetClosestPointOnCollision(BP->Bounds.Origin, OnA) < 0) return false;
+        const float Gap = BP->GetClosestPointOnCollision(OnA, OnB);
+        // Actual touching surfaces authorize this edge; a centre-to-centre heat ray
+        // may cross another receiver and must not erase a valid contact.
+        return Gap >= 0 && Gap <= 2;
+    };
 }
 void UReactiveWorldSubsystem::Deinitialize()
 {
@@ -30,6 +57,11 @@ Reactive::FBodyId UReactiveWorldSubsystem::RegisterBody(UReactiveBodyComponent* 
         Body->InteractionRadiusCm, Body->InitialTemperatureC, Body->InitialWaterKg);
     if (Id != Reactive::InvalidBody)
     {
+        Reactive::FElectricalReceiver Receiver;
+        if(!Body->ReceiverGroup.IsNone()){auto* Group=ReceiverGroups.Find(Body->ReceiverGroup);Receiver.Id=Group?*Group:ReceiverGroups.Add(Body->ReceiverGroup,NextReceiverGroup++);}
+        Receiver.LoadWeight=Body->ReceiverLoad; Receiver.CapacityJ=Body->ReceiverCapacityJ;
+        Receiver.HeatFraction=Body->ElectricalHeatFraction; Receiver.bTerminal=Body->bElectricalTerminal;
+        Simulation->SetReceiver(Id,Receiver);
         Components.Add(Id, Body); if (Body->bTrackMovement) Moving.Add(Id);
         Body->AcceptState(*Simulation->Find(Id));
     }
@@ -44,11 +76,12 @@ bool UReactiveWorldSubsystem::Submit(UReactiveBodyComponent* Target, const FReac
 {
     if (!Simulation || !IsAuthority()) return false;
     if (Target && (!IsValid(Target) || Target->GetWorld() != GetWorld() || Target->GetBodyId() == Reactive::InvalidBody)) return false;
-    Reactive::FStimulus S; S.Target = Target ? Target->GetBodyId() : Reactive::InvalidBody;
+    if(Target&&Target->bOwnerOnlyStimuli&&Input.SourceActor&&Target->GetOwner()->GetOwner()!=Input.SourceActor)return false;
+    Reactive::FStimulus S; S.InputId=Input.InputId;S.RootCauseId=Input.RootCauseId; S.Target = Target ? Target->GetBodyId() : Reactive::InvalidBody;
     if (IsValid(Input.SourceActor) && Input.SourceActor->GetWorld() == GetWorld())
         if (auto* Source = Input.SourceActor->FindComponentByClass<UReactiveBodyComponent>()) S.Source = Source->GetBodyId();
     S.PositionCm = Input.PositionCm; S.RadiusCm = Input.RadiusCm; S.HeatJ = Input.HeatJ;
-    S.WaterKg = Input.WaterKg; S.ElectricalJ = Input.ElectricalJ; S.ImpulseNs = Input.ImpulseNs;
+    S.WaterKg = Input.WaterKg; S.ElectricalJ = Input.ElectricalJ; S.ImpulseNs = Input.ImpulseNs;S.bApplyPhysicsImpulse=Input.bApplyPhysicsImpulse;
     return Simulation->Enqueue(S);
 }
 bool UReactiveWorldSubsystem::SetWeather(double T, double Rain, FVector Wind)
@@ -66,6 +99,7 @@ bool UReactiveWorldSubsystem::CanBodiesExchange(Reactive::FBodyId A, Reactive::F
     const UReactiveBodyComponent* AC = AP ? AP->Get() : nullptr;
     const UReactiveBodyComponent* BC = BP ? BP->Get() : nullptr;
     if (!IsValid(AC) || !IsValid(BC) || !GetWorld()) return false;
+    if(!SharesReactionScope(AC,BC))return false;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(ReactiveExchange), false);
     Params.AddIgnoredActor(AC->GetOwner()); Params.AddIgnoredActor(BC->GetOwner());
     // Reaction-blocking geometry must block Visibility. This gate is a prototype approximation.
@@ -133,7 +167,7 @@ uint32 MaterialSignature(const Reactive::FMaterial& M)
     const double Values[] = { M.DryMassKg, M.SpecificHeatJPerKgK, M.WaterCapacityKg, M.InitialFuelKg, M.IgnitionC,
         M.BurnRateKgPerSec, M.CombustionJPerKg, M.RetainedHeatFraction, M.Conductivity, M.ThermalCouplingWPerK,
         M.CoolingWPerK, M.StrengthNs, M.FrozenStrengthMultiplier, M.SealedVolumeM3, M.BurstGaugePressurePa };
-    uint32 Hash = 0;
+    uint32 Hash = GetTypeHash(M.bLiquidConductor);
     for (double V : Values) Hash = HashCombineFast(Hash, GetTypeHash(V));
     return Hash;
 }
@@ -156,8 +190,10 @@ bool UReactiveWorldSubsystem::Capture(TArray<FReactiveSaveRecord>& Records) cons
         const Reactive::FState* S = Simulation->Find(Pair.Key); if (!S) return false;
         FReactiveSaveRecord R; R.StableId = Body->StableId; R.Transform = Body->GetOwner()->GetActorTransform();
         R.MaterialSignature = MaterialSignature(Body->GetMaterial());
-        R.EnthalpyJ = S->EnthalpyJ; R.WaterKg = S->WaterKg; R.FuelKg = S->FuelKg; R.Integrity = S->Integrity;
+        R.ElectricalWaterKg=S->ElectricalWaterKg; R.ElectricalWetness01 = S->ElectricalWetness01; R.EnthalpyJ = S->EnthalpyJ; R.WaterKg = S->WaterKg; R.FuelKg = S->FuelKg; R.Integrity = S->Integrity;
         R.GasEnergyJ = S->GasEnergyJ; R.bBurning = S->bBurning; R.bBroken = S->bBroken; R.bBurst = S->bBurst;
+        if(auto* M=Body->GetOwner()->FindComponentByClass<UReactiveMechanismComponent>())
+        {R.bGateOpen=M->bGateOpen;R.bHasMechanism=true;R.bSupportReleased=M->bReleased;R.bSourceEnabled=M->bPowerEnabled;R.RemainingEnergyJ=M->RemainingEnergyJ;R.SourceAge=M->SourceAge;}
         Records.Add(R);
     }
     Records.Sort([](const FReactiveSaveRecord& A, const FReactiveSaveRecord& B) { return A.StableId.LexicalLess(B.StableId); });
@@ -179,8 +215,9 @@ bool UReactiveWorldSubsystem::Restore(const TArray<FReactiveSaveRecord>& Records
         if (!B || Seen.Contains(R.StableId) || R.MaterialSignature != MaterialSignature(B->GetMaterial())
             || !R.Transform.IsValid() || R.Transform.GetLocation().GetAbsMax() > 1.e8
             || R.Transform.GetScale3D().GetMin() <= 0 || R.Transform.GetScale3D().GetMax() > 1000) return false;
+        if(!FMath::IsFinite(R.RemainingEnergyJ)||R.RemainingEnergyJ<0||!FMath::IsFinite(R.SourceAge)||R.SourceAge<0)return false;
         Seen.Add(R.StableId);
-        Reactive::FState S; S.EnthalpyJ = R.EnthalpyJ; S.WaterKg = R.WaterKg; S.FuelKg = R.FuelKg; S.Integrity = R.Integrity;
+        Reactive::FState S; S.ElectricalWaterKg=R.ElectricalWaterKg; S.ElectricalWetness01 = R.ElectricalWetness01; S.EnthalpyJ = R.EnthalpyJ; S.WaterKg = R.WaterKg; S.FuelKg = R.FuelKg; S.Integrity = R.Integrity;
         S.GasEnergyJ = R.GasEnergyJ; S.bBurning = R.bBurning; S.bBroken = R.bBroken; S.bBurst = R.bBurst;
         States.Add(B->GetBodyId(), S);
     }
@@ -193,6 +230,7 @@ bool UReactiveWorldSubsystem::Restore(const TArray<FReactiveSaveRecord>& Records
         B->GetOwner()->SetActorTransform(R.Transform, false, nullptr, ETeleportType::TeleportPhysics);
         Simulation->Move(B->GetBodyId(), R.Transform.GetLocation());
         B->AcceptState(*Simulation->Find(B->GetBodyId()));
+        if(R.bHasMechanism)if(auto* M=B->GetOwner()->FindComponentByClass<UReactiveMechanismComponent>()){M->bGateOpen=R.bGateOpen;M->RestoreMechanism(R.bSupportReleased,R.RemainingEnergyJ,R.SourceAge,R.bSourceEnabled);}
         B->GetOwner()->ForceNetUpdate();
     }
     return true;

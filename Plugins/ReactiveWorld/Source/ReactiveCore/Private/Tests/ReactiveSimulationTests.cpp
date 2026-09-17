@@ -60,9 +60,9 @@ bool FReactiveElectricalTest::RunTest(const FString&)
     FStimulus S; S.Target = A; S.ElectricalJ = 1000; Sim.Enqueue(S); Sim.Step();
     const auto Events = Sim.DrainEvents();
     TestEqual(TEXT("Each cyclic node visited once"), CountEvent(Events, EEvent::Shock), 3);
-    TestTrue(TEXT("Branches do not duplicate joules"), FMath::IsNearlyEqual(Sim.GetStats().ElectricalDepositedJ, 1000.0, 1.e-7));
+    TestTrue(TEXT("Branches do not duplicate joules"), FMath::IsNearlyEqual(Sim.GetStats().ElectricalDepositedJ + Sim.GetStats().ElectricalLostJ, 1000.0, 1.e-7));
     double Sum = 0; for (const auto& E : Events) if (E.Kind == EEvent::Shock) Sum += E.Magnitude;
-    TestTrue(TEXT("Shock dose totals the delivered energy"), FMath::IsNearlyEqual(Sum, 1000.0, 1.e-7));
+    TestTrue(TEXT("Shock dose totals the delivered energy"), FMath::IsNearlyEqual(Sum, Sim.GetStats().ElectricalDepositedJ, 1.e-7));
     return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReactiveWaterConductionTest, "Reactive.Core.WaterAndMetalConduction", TestFlags)
@@ -79,7 +79,7 @@ bool FReactiveWaterConductionTest::RunTest(const FString&)
     const auto D = Dry.Register(Isolated(FMaterial::Water()), FVector::ZeroVector, 100, 20, 0);
     Dry.Register(Isolated(FMaterial::Metal()), FVector(140,0,0), 50);
     S.Target = D; Dry.Enqueue(S); Dry.Step();
-    TestEqual(TEXT("Dry surface is no conducting puddle"), CountEvent(Dry.DrainEvents(), EEvent::Shock), 1);
+    TestEqual(TEXT("Dry authored water has no receiver load or conductive path"), CountEvent(Dry.DrainEvents(), EEvent::Shock), 0);
     return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReactiveOcclusionTest, "Reactive.Core.ContactAndOcclusion", TestFlags)
@@ -183,7 +183,7 @@ bool FReactiveLimitTest::RunTest(const FString&)
     FStimulus S; S.Target = A; S.ElectricalJ = 1000;
     TestTrue(TEXT("First input accepted"), Sim.Enqueue(S)); TestFalse(TEXT("Input overflow rejected"), Sim.Enqueue(S));
     Sim.Step(); TestEqual(TEXT("Electrical visit budget enforced"), Sim.GetStats().ElectricalVisits, 1);
-    TestTrue(TEXT("Truncated propagation retains all energy at last node"), FMath::IsNearlyEqual(Sim.GetStats().ElectricalDepositedJ, 1000.0, 1.e-8));
+    TestTrue(TEXT("Truncated propagation is accounted as explicit loss"), FMath::IsNearlyEqual(Sim.GetStats().ElectricalDepositedJ + Sim.GetStats().ElectricalLostJ, 1000.0, 1.e-8));
     return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FReactiveChainTest, "Reactive.Core.BurningWoodSpreadsAndCollapses", TestFlags)

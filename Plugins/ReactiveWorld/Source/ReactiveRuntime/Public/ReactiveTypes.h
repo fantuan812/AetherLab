@@ -23,6 +23,7 @@ struct REACTIVERUNTIME_API FReactiveMaterialParameters
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combustion", meta=(ClampMin="0")) double CombustionJPerKg = 16000000;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combustion", meta=(ClampMin="0", ClampMax="1")) double RetainedHeatFraction = 0.2;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Electrical", meta=(ClampMin="0", ClampMax="1")) double Conductivity = 0.01;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Electrical") bool bLiquidConductor = false;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Thermal", meta=(ClampMin="0")) double ThermalCouplingWPerK = 4;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Thermal", meta=(ClampMin="0")) double CoolingWPerK = 0.1;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Structure", meta=(ClampMin="0.01")) double StrengthNs = 30;
@@ -45,11 +46,14 @@ struct REACTIVERUNTIME_API FReactiveStimulus
 {
     GENERATED_BODY()
     UPROPERTY(BlueprintReadWrite, Category="Reactive") TObjectPtr<AActor> SourceActor;
+    UPROPERTY() uint64 InputId = 0;
+    UPROPERTY() uint64 RootCauseId = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive") FVector PositionCm = FVector::ZeroVector;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive", meta=(ClampMin="0", ClampMax="2000")) double RadiusCm = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive") double HeatJ = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive", meta=(ClampMin="0")) double WaterKg = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive", meta=(ClampMin="0")) double ElectricalJ = 0;
+    UPROPERTY() bool bApplyPhysicsImpulse = true;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive") FVector ImpulseNs = FVector::ZeroVector;
 };
 
@@ -59,9 +63,17 @@ struct REACTIVERUNTIME_API FReactiveSaveRecord
     GENERATED_BODY()
     UPROPERTY() FName StableId;
     UPROPERTY() FTransform Transform;
+    UPROPERTY() bool bGateOpen = false;
+    UPROPERTY() bool bHasMechanism = false;
+    UPROPERTY() bool bSupportReleased = false;
+    UPROPERTY() bool bSourceEnabled = true;
+    UPROPERTY() double RemainingEnergyJ = 0;
+    UPROPERTY() double SourceAge = 0;
     UPROPERTY() uint32 MaterialSignature = 0;
     UPROPERTY() double EnthalpyJ = 0;
     UPROPERTY() double WaterKg = 0;
+    UPROPERTY() double ElectricalWaterKg = 0;
+    UPROPERTY() double ElectricalWetness01 = 0;
     UPROPERTY() double FuelKg = 0;
     UPROPERTY() double Integrity = 1;
     UPROPERTY() double GasEnergyJ = 0;
@@ -76,6 +88,8 @@ struct REACTIVERUNTIME_API FReactiveSnapshot
     GENERATED_BODY()
     UPROPERTY(BlueprintReadOnly, Category="Reactive") double TemperatureC = 20;
     UPROPERTY(BlueprintReadOnly, Category="Reactive") double WaterKg = 0;
+    UPROPERTY(BlueprintReadOnly, Category="Reactive") double ElectricalWaterKg = 0;
+    UPROPERTY(BlueprintReadOnly, Category="Reactive") double ElectricalWetness01 = 0;
     UPROPERTY(BlueprintReadOnly, Category="Reactive") double IceFraction = 0;
     UPROPERTY(BlueprintReadOnly, Category="Reactive") double FuelKg = 0;
     UPROPERTY(BlueprintReadOnly, Category="Reactive") double Integrity = 1;

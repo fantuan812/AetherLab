@@ -5,8 +5,9 @@ public class AetherLab : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
+        if (Target.bBuildEditor) PrivateDependencyModuleNames.Add("UnrealEd");
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "InputCore", "ReactiveCore", "ReactiveRuntime", "GameplayAbilities", "GameplayTags", "GameplayTasks", "NetCore" });
         PublicDependencyModuleNames.Add("AetherEquipment");
-        PrivateDependencyModuleNames.Add("AIModule");
+        PrivateDependencyModuleNames.AddRange(new[] { "AIModule", "Json", "NavigationSystem", "EnhancedInput", "UMG", "Slate", "SlateCore" });
     }
 }

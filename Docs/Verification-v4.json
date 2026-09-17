@@ -1,0 +1,198 @@
+{
+  "recorded_utc": "2026-09-17T15:48:37.608976+00:00",
+  "scope": "UE basic-assets playable graybox; not complete v4 design acceptance",
+  "engine": {
+    "MajorVersion": 5,
+    "MinorVersion": 8,
+    "PatchVersion": 0,
+    "Changelist": 55116800,
+    "CompatibleChangelist": 0,
+    "IsLicenseeVersion": 0,
+    "IsPromotedBuild": 1,
+    "BranchName": "++UE5+Release-5.8"
+  },
+  "editor_build": {
+    "result": "passed",
+    "log": "Saved/Logs/V4-Build-Final.log"
+  },
+  "automation": {
+    "passed": 26,
+    "failed": 0,
+    "report": "Saved/Automation/Reactive/index.json",
+    "tests": [
+      {
+        "name": "Reactive.Adventure.ConductionPreservesAttribution",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Adventure.LiquidTransferConservesMassAndEnthalpy",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Adventure.RestoreIsAtomicAndClearsTransientInput",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Adventure.Scale4096Bodies64Active",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Adventure.WeatherChangesProjectileEnergyAndTrajectory",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.AreaBudgetAndValidation",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.BoundedQueuesAndElectricalBudget",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.BurnExtinguish",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.BurningWoodSpreadsAndCollapses",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.ContactAndOcclusion",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.ElectricalCycleConservation",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.FrozenBrittlenessAndBreakOnce",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.LatentHeat",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.OpenFuelVersusSealedBurst",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.SleepWakeWeather",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.SpatialMoveRemoval",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.SteamEnergyMassBalance",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.ThermalConservationAndStability",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.WaterAndMetalConduction",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Core.WindBiasesHeatTransport",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Frontier.ElectricalContactIndependentOfHeatVisibility",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Frontier.ElectricalDistanceLossAndPulseLifetime",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Frontier.InventoryAtomicCapacityAndOwnership",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Frontier.PersonalQuestsAndRewardIdempotency",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Frontier.RainCannotCreateElectricalWetnessOrEdges",
+        "state": "Success"
+      },
+      {
+        "name": "Reactive.Frontier.SplashOnRainSoakedBodyStillDecays",
+        "state": "Success"
+      }
+    ]
+  },
+  "frontier_smoke": {
+    "result": "passed",
+    "checks": [
+      "ASC owned by PlayerState",
+      "Persistent ASC receives exactly four specs",
+      "Liquid channel is not a solid floor",
+      "Official mannequin loaded",
+      "Arrival registration rewards",
+      "Inventory and one-time issue",
+      "Repeated interaction does not duplicate reward",
+      "Write failure does not publish assets",
+      "Learning gates",
+      "Both field quests available independently",
+      "Mechanical supply route needs no lightning",
+      "Actual extinguish event credited",
+      "Actual extinguish event credited",
+      "Actual extinguish event credited",
+      "Both field prerequisites required",
+      "Companion recruitment",
+      "Encounter starts with human and AI",
+      "Participant receives seal once",
+      "Main quest completed",
+      "Cut support releases physical bridge",
+      "Durable profile matches live state",
+      "Save roundtrip retains final claim",
+      "Moved conductor creates real powered contact",
+      "Disconnecting source clears power without residual shock",
+      "World snapshot saves with profiles",
+      "World snapshot restores atomically",
+      "Conductor transform restored"
+    ],
+    "log": "Saved/Logs/FrontierSmoke.log",
+    "fixture_note": "Some tutorial/encounter prerequisites are advanced by server fixture. Fire reactions, conductivity, break/fall, storage and asset loads run in UE."
+  },
+  "network": {
+    "result": "passed",
+    "clients": 2,
+    "rounds": 2,
+    "server_restart": true,
+    "runtime": "UnrealEditor-Cmd -server, not packaged dedicated server",
+    "log": "Saved/Logs/V4-Network-console.log"
+  },
+  "legacy_equipment": {
+    "result": "passed",
+    "log": "Saved/Logs/V4-LegacyEquipment-console.log"
+  },
+  "legacy_reaction_lab": {
+    "result": "passed",
+    "log": "Saved/Logs/V4-LegacyLab-console.log"
+  },
+  "visual": {
+    "file": "Docs/Images/AetherFrontier.png",
+    "resolution": [
+      1600,
+      1000
+    ],
+    "reviewed": true,
+    "character": "UE official Manny",
+    "status": "idle pose, mannequin NPCs, HUD and basic geometry rendered; no production art acceptance"
+  },
+  "not_run": [
+    "packaged client/server build",
+    "four simultaneous human clients",
+    "latency/loss injection",
+    "full manual 60-90 minute route",
+    "all RX-01..RX-50 acceptance",
+    "production identity/database failure recovery"
+  ],
+  "implementation_notes": "Docs/Implementation-v4.zh-CN.md"
+}

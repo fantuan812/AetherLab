@@ -73,9 +73,17 @@ void UReactiveBodyComponent::RefreshPresentation()
     {
         if (UPrimitiveComponent* P = GetPrimitive())
         {
-            const bool Solid = State.WaterKg >= 0.2 && State.IceFraction >= 0.95 && !State.bBroken;
-            P->SetCollisionEnabled(Solid ? ECollisionEnabled::QueryAndPhysics : InitialCollision);
-            P->SetCollisionResponseToChannel(ECC_Pawn, Solid ? ECR_Block : InitialPawnResponse);
+            const double IceMassThreshold=FMath::Max(.2,P->Bounds.BoxExtent.X*P->Bounds.BoxExtent.Y*4/10000.*IceMassPerSquareMeter);
+            bool Solid = State.WaterKg >= IceMassThreshold && State.IceFraction >= 0.95 && !State.bBroken;
+            const bool WasSolid=P->GetCollisionResponseToChannel(ECC_Pawn)==ECR_Block;
+            if(Solid&&!WasSolid)
+            {
+                FCollisionQueryParams Q(SCENE_QUERY_STAT(IceOccupancy),false,GetOwner());
+                if(GetWorld()->OverlapAnyTestByObjectType(P->Bounds.Origin,FQuat::Identity,FCollisionObjectQueryParams(ECC_Pawn),FCollisionShape::MakeBox(P->Bounds.BoxExtent*.95),Q))Solid=false;
+            }
+            if(Solid!=WasSolid){P->SetCanEverAffectNavigation(false);P->SetCanEverAffectNavigation(true);}
+            P->SetCollisionEnabled(Solid ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::QueryOnly);
+            P->SetCollisionResponseToChannel(ECC_Pawn, Solid ? ECR_Block : ECR_Ignore);
         }
     }
     if (State.bBurning && BurningEffect && !FireVisual && GetWorld()->GetNetMode() != NM_DedicatedServer)
@@ -92,6 +100,7 @@ void UReactiveBodyComponent::RefreshPresentation()
 }
 void UReactiveBodyComponent::AcceptEvent(const Reactive::FEvent& Event)
 {
+    LastReactionChain=Event.RootCauseId; LastReactionSequence=Event.Sequence;
     UPrimitiveComponent* P = GetPrimitive();
     if (P && bEnableChaosOnBreak && State.bBroken && !bIceControlsPawnCollision)
     {

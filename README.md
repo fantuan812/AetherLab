@@ -1,40 +1,28 @@
-# AetherLab · 剑与魔法反应世界 · UE 5.8
+# AetherLab · UE 基础素材版
 
-项目方向为第三人称剑与魔法动作冒险，工作名《余烬誓约》：玩家以游誓者的身份，用剑术、咒术与环境互动探索诸国和古老遗迹。
+UE 5.8 C++ 开放世界灰盒。人物使用官方 Manny，场景和六种装备使用 Engine BasicShapes。旧试验台及 SwordMagic 美术已移除；旧工具与历史文档保留供追溯，不再作为当前入口。
 
-当前版本为 **0.4 模块化剑魔原型**：Blender 角色与修道院已接入 UE，身体、剑、盾、锤分别成件，装备数据驱动攻击与换装，接入 GAS、物理反应、任务和 v2 存档。原型动画、正式美术及生产网络预算仍需继续完善。
-
-- **[模块化玩法与扩展指南](Docs/ModularGameplay.zh-CN.md)**：依赖方向、装备契约、新武器/角色接入和具体限制。
-
-- **[B–E 实施与启动说明](Docs/Implementation-BCDE.zh-CN.md)**：本轮代码、控制方式、验收结果与未完成项。
-
-- [玩法设计](Docs/GameDesign.zh-CN.md)：剑盾、六艺咒术、角色成长、敌人、探索、资源与 UE 接口。
-- [世界设定集](Docs/WorldBible.zh-CN.md)：历史、魔法与誓约、诸国势力、主要人物和主线。
-- [断钟修道院切片](Docs/VerticalSlice.zh-CN.md)：约 15 分钟关卡、Boss 三条完成路线、资产缺口与制作验收。
-
-- [完整架构设计](Docs/Architecture.zh-CN.md)：模块、数据、热/电/相变/结构、调度、线程、网络和存档设计。
-- [运行与接入指南](Docs/Integration.zh-CN.md)：UE 组件、材料资产、Blueprint/C++ 接口。
-- [验证记录](Docs/Verification.zh-CN.md)：实际编译和测试结果。
-- [实验场截图](Docs/Images/AetherLab.png)：由 UE 5.8 实际渲染的调试视图。
-- [修道院灰盒截图](Docs/Images/AetherAdventure.png)：0.3 可玩场景的实际渲染。
-- [模块化角色与关卡截图](Docs/Images/SwordMagic_Gameplay.png)：0.4 的 UE 实际画面。
-- [拆分后的 Blender 源文件](Art/SwordMagic/Modular/BrokenBellAbbey_Modular.blend)：角色、独立装备与修道院。
-
-运行新修道院：执行 `Scripts/PlayAdventure.ps1`；加 `-Graybox` 运行旧灰盒。WASD 移动、鼠标瞄准、左键轻击、Shift 重击、右键格挡、空格闪避；R 换剑/锤，T 装卸盾，X 卸主手；1–4 选法术，F 施放，E/Q 交互。F5 保存、F9 读档。
-
-原实验台仍可用 **UE 5.8** 打开 `AetherLab.uproject` 后点击 Play。`1–5` 选择刺激，鼠标点击物体；`Tab` 执行组合场景；`R/G` 切换雨/风；`Backspace` 重置。
+## 运行
 
 ```powershell
 .\Scripts\Build.ps1
-.\Scripts\Test.ps1
-.\Scripts\Smoke.ps1
-.\Scripts\SmokeAdventure.ps1
-.\Scripts\SmokeAdventure.ps1 -Art
-.\Scripts\SmokeEquipment.ps1
-.\Scripts\TestNetwork.ps1
-.\Scripts\PlayAdventure.ps1
+.\Scripts\PlayFrontier.ps1
 ```
 
-反应插件包含固定步长、空间查询、睡眠、燃烧/灭火、潜热相变、导电分配、结构和密闭爆裂代理。新增水面为显式连接的格子代理；破坏为预制刚体碎块。联网已验证服务器扣费与晚加入基线，尚未验收多人战斗、丢包和大规模场景。
+主机：`PlayFrontier.ps1 -Listen -Profile Alpha`；客户端：`PlayFrontier.ps1 -Connect 127.0.0.1:7777 -Profile Beta`。开发身份最多四个真人/AI 席位。默认打开工程后 Play 同样进入新模式。地图为 `/Game/AetherCore/Maps/L_Frontier`；需要重建基础地图时可运行 `Scripts/BuildPartitionMap.ps1`，已有静态场景修改会保留。
 
-`test/` 是另一个已有 UE 工程，本原型没有修改它。
+## 本轮代码
+
+- 固定步热/水/燃烧/相变/压力；雨与电学水分离；有限电源、物理接触电传播、唯一接收端与完整电能分账。
+- 搬运/推/投掷、支撑断裂落桥、限力铰链门、木箱浮力、落物伤害去重、占位冻结保护。
+- GAS 近战/四元素/救援；背包实例和装备事务；八条主线、三类日常、商店买卖、离线及满包待领奖励。
+- 两名唯一 AI 同行者、队伍邀请/接受/离队、修道院多阶段遭遇、三波公共活动、五类敌人行为、视线记忆与回巢；野外刷新冷却和公共掉落原子认领。
+- Enhanced Input、菜单键位设置与冲突交换；UMG 功能面板；双世代校验存档、天气和区域降频；World Partition 地图与按需动态 NavMesh。
+
+这些是灰盒实现，完整设计的全部验收尚未执行。[实现范围与限制](Docs/Implementation-v5.zh-CN.md)明确区分代码完成和未验收事项。[完整设计稿](Docs/Design-v4.zh-CN.md)是需求参考。
+
+## 主要操作
+
+WASD 移动，Shift 冲刺，Ctrl 跳跃，Space 闪避；左键轻击/按住重击，右键格挡。1–4 选元素，鼠标中键施法，F 锁定；E 交互，G 搬运/放下，C 投掷，V 推物。Q 生命药、Z 法力药；R/T 装备。I/J/K/M/P/Esc 打开背包/任务/技能/地图/队伍/菜单。F5 保存、倒地后 F8 回据点；开发模式 F10 反应调试、F11 晴雨。
+
+轻量验证：`Scripts/TestLight.ps1` 仅运行 9 个小型规则测试；本轮不跑 `TestFrontierNetwork.ps1`、规模压力测试和旧模式回归。如需短启动/重启检查，运行 `Scripts/CheckFrontier.ps1`，使用独立测试存档。完整报告见 [Verification-v5.json](Docs/Verification-v5.json)。

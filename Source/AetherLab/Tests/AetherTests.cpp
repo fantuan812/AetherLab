@@ -50,7 +50,7 @@ bool FAetherCausalElectric::RunTest(const FString&)
     int32 Count=0;
     for (const Reactive::FEvent& E:Sim.DrainEvents()) if (E.Kind==Reactive::EEvent::Shock) { ++Count; TestEqual(TEXT("Original caster retained"),E.Source,Source); }
     TestEqual(TEXT("Three graph nodes receive shock"),Count,3);
-    TestTrue(TEXT("Electrical energy still conserved"),FMath::IsNearlyEqual(Sim.GetStats().ElectricalDepositedJ,6000.0,1.e-6));
+    TestTrue(TEXT("Electrical energy still conserved"),FMath::IsNearlyEqual(Sim.GetStats().ElectricalDepositedJ+Sim.GetStats().ElectricalLostJ,6000.0,1.e-6));
     return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherProjectileWeather, "Reactive.Adventure.WeatherChangesProjectileEnergyAndTrajectory", Flags)

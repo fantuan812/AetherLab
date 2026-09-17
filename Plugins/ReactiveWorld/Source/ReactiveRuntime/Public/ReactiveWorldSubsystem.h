@@ -38,6 +38,8 @@ private:
     TUniquePtr<Reactive::FSimulation> Simulation;
     TMap<Reactive::FBodyId, TWeakObjectPtr<UReactiveBodyComponent>> Components;
     TSet<Reactive::FBodyId> Moving;
+    TMap<FName,uint64> ReceiverGroups;
+    uint64 NextReceiverGroup=uint64(1)<<32;
     double Accumulator = 0;
     double DroppedSeconds = 0;
     mutable TMap<uint64, bool> ContactCache;

@@ -52,7 +52,7 @@ public:
 };
 
 UENUM()
-enum class EAetherFighter : uint8 { Player, ShieldGuard, FireCaster, BellKnight };
+enum class EAetherFighter : uint8 { Player, ShieldGuard, FireCaster, BellKnight, Wolf, Golem };
 
 UCLASS()
 class AETHERLAB_API AAetherCharacter : public ACharacter, public IAbilitySystemInterface, public IAetherHitReceiver
@@ -73,6 +73,8 @@ public:
     UPROPERTY(Replicated) bool bBlocking = false;
     UPROPERTY(Replicated) bool bWindingUp = false;
     UPROPERTY(Replicated) bool bPacified = false;
+    UPROPERTY(Replicated) float MaxHealth = 100;
+    float TimeSinceDamage() const {return CombatTime()-LastDamageAt;}
     UPROPERTY(Replicated) float WaterReserveKg = 3;
     UPROPERTY(Replicated) float CastLockUntil = 0;
     UPROPERTY(Replicated) float StunUntil = 0;
@@ -99,10 +101,23 @@ public:
     bool ExecuteSpell(int32 Spell);
     void GrantSpells();
     bool TrySpell(int32 Spell);
+    virtual bool SpellUnlocked(int32 Spell) const { return true; }
+    UPROPERTY(Replicated) bool bUseBasicAssets = false;
     void SetVitals(float HP, float MP, float SP);
     void ResetCombat();
     void ReceiveHit(float Damage, float PostureDamage, AAetherCharacter* Source, bool bCanBlock);
     void PerformMelee(bool bHeavy);
+    FVector SafeMoveDirection(FVector Destination);
+    float NextSteeringAt=0;
+    FVector SteeringDirection=FVector::ZeroVector;
+    TArray<FVector> NavigationPoints;
+    FVector NavigationGoal=FVector::ZeroVector;
+    int32 NavigationIndex=0;
+    float NextPathAt=0;
+    TWeakObjectPtr<AAetherCharacter> PerceivedTarget;
+    FVector LastSeenPosition=FVector::ZeroVector;
+    float LastSeenAt=-100;
+    float NextPerceptionAt=0;
     virtual void ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit) override;
     UFUNCTION() void ApplyCharacterDefinition();
     void Pacify();

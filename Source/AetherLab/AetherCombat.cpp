@@ -1,9 +1,15 @@
 #include "AetherCombat.h"
 #include "AetherAdventure.h"
+#include "AetherFrontier.h"
+#include "AetherActions.h"
 #include "AetherContent.h"
 #include "Animation/AnimSequence.h"
+#include "Animation/AnimSingleNodeInstance.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "AIController.h"
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
+#include "NavigationInvokerComponent.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -57,7 +63,7 @@ bool UAetherSpellAbility::CheckCost(FGameplayAbilitySpecHandle H, const FGamepla
 {
     const auto* C = Info ? Cast<AAetherCharacter>(Info->AvatarActor.Get()) : nullptr;
     const int32 Spell = GetAbilityLevel(H, Info) - 1;
-    return C && C->Ready() && Spell >= 0 && Spell < 4 && C->Mana() >= Cost(Spell)
+    return C && C->Ready() && C->SpellUnlocked(Spell) && Spell >= 0 && Spell < 4 && C->Mana() >= Cost(Spell)
         && (Spell != 1 || C->WaterReserveKg >= 0.5f) && Super::CheckCost(H, Info, Tags);
 }
 void UAetherSpellAbility::ApplyCost(FGameplayAbilitySpecHandle H, const FGameplayAbilityActorInfo* Info, FGameplayAbilityActivationInfo A) const
@@ -79,6 +85,7 @@ AAetherCharacter::AAetherCharacter()
 {
     PrimaryActorTick.bCanEverTick = true; bReplicates = true; SetReplicateMovement(true);
     AIControllerClass = AAIController::StaticClass();
+    CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("LocalNavigation"))->SetGenerationRadii(2400,3200);
     SetNetUpdateFrequency(20); SetNetCullDistanceSquared(FMath::Square(12000.f));
     GetCapsuleComponent()->InitCapsuleSize(34, 88); GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
     bUseControllerRotationYaw = true;
@@ -99,6 +106,7 @@ AAetherCharacter::AAetherCharacter()
     AbilitySystem->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
     Attributes = CreateDefaultSubobject<UAetherAttributes>(TEXT("Attributes"));
     Reactive = CreateDefaultSubobject<UReactiveBodyComponent>(TEXT("Reactive"));
+    Reactive->bElectricalTerminal=true; Reactive->ReceiverLoad=1; Reactive->ReceiverCapacityJ=12000;
     Reactive->bTrackMovement = true; Reactive->bEnableChaosOnBreak = false; Reactive->InteractionRadiusCm = 85;
     // A small exposed material patch, not a simulation of the entire human body's heat capacity.
     auto* Patch = CreateDefaultSubobject<UReactiveMaterialAsset>(TEXT("ExposedPatch"));
@@ -112,22 +120,23 @@ AAetherCharacter::AAetherCharacter()
 }
 void AAetherCharacter::BeginPlay()
 {
-    Super::BeginPlay(); Home = GetActorLocation(); AbilitySystem->InitAbilityActorInfo(this, this);
+    if(HasAuthority())MaxHealth=Fighter==EAetherFighter::BellKnight?320:Fighter==EAetherFighter::Golem?160:Fighter==EAetherFighter::Player?100:80;
+    Super::BeginPlay(); Home = GetActorLocation(); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(), this);
     Equipment->CanAct.BindUObject(this,&AAetherCharacter::Ready);
-    if (auto* Content=UAetherGameContent::Load())
+    if (auto* Content=UAetherGameContent::Load(bUseBasicAssets))
     {
         Equipment->Catalog=Content->EquipmentCatalog;
         if (HasAuthority() && !CharacterDefinition)
-            CharacterDefinition=Fighter==EAetherFighter::Player?Content->Player:Fighter==EAetherFighter::BellKnight?Content->Boss:Fighter==EAetherFighter::FireCaster?Content->Caster:Content->Guard;
+            CharacterDefinition=Fighter==EAetherFighter::Player?Content->Player:(Fighter==EAetherFighter::BellKnight||Fighter==EAetherFighter::Golem)?Content->Boss:Fighter==EAetherFighter::FireCaster?Content->Caster:Content->Guard;
     }
     ApplyCharacterDefinition();
     if (HasAuthority() && CharacterDefinition && !Equipment->RestoreLoadout(CharacterDefinition->InitialEquipment))
         UE_LOG(LogTemp,Error,TEXT("Invalid initial loadout for %s"),*GetName());
-    if (Fighter == EAetherFighter::Player && GetNetMode() == NM_Standalone) Reactive->StableId = TEXT("Player");
+    if (Fighter == EAetherFighter::Player && GetNetMode() == NM_Standalone && !bUseBasicAssets) Reactive->StableId = TEXT("Player");
     Reactive->OnReaction.AddDynamic(this, &AAetherCharacter::Reaction);
     if (HasAuthority())
     {
-        GrantSpells(); SetVitals(Fighter == EAetherFighter::BellKnight ? 320 : Fighter == EAetherFighter::Player ? 100 : 80, 100, 100);
+        GrantSpells(); SetVitals(MaxHealth, 100, 100);
         if (Fighter != EAetherFighter::Player && !Controller) SpawnDefaultController();
     }
     if (IsLocallyControlled() && Fighter == EAetherFighter::Player)
@@ -180,29 +189,52 @@ void AAetherCharacter::UpdateAnimation()
     if (Walk && !bWalkingAnimation)
     { if (auto* A=CharacterDefinition->WalkAnimation.LoadSynchronous()) { GetMesh()->PlayAnimation(A,true); GetMesh()->SetPlayRate(1); } bWalkingAnimation=true; }
     else if (!Walk)
-    { GetMesh()->Stop(); GetMesh()->SetPosition(0); bWalkingAnimation=false; }
+    {
+        if(bUseBasicAssets)
+        {
+            auto* Idle=LoadObject<UAnimSequence>(nullptr,TEXT("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle.MM_Idle"));
+            auto* Node=GetMesh()->GetSingleNodeInstance();
+            if(Idle&&(!Node||Node->GetCurrentAsset()!=Idle)){GetMesh()->PlayAnimation(Idle,true);GetMesh()->SetPlayRate(1);}
+        }
+        else{GetMesh()->Stop();GetMesh()->SetPosition(0);}
+        bWalkingAnimation=false;
+    }
 }
 void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(AAetherCharacter, Fighter); DOREPLIFETIME(AAetherCharacter, bBlocking);
+    DOREPLIFETIME(AAetherCharacter, MaxHealth); DOREPLIFETIME(AAetherCharacter, Fighter); DOREPLIFETIME(AAetherCharacter, bBlocking);
     DOREPLIFETIME(AAetherCharacter, bWindingUp); DOREPLIFETIME(AAetherCharacter, bPacified);
     DOREPLIFETIME(AAetherCharacter, WaterReserveKg); DOREPLIFETIME(AAetherCharacter, CastLockUntil); DOREPLIFETIME(AAetherCharacter, StunUntil);
-    DOREPLIFETIME(AAetherCharacter, CharacterDefinition);
+    DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
 void AAetherCharacter::PossessedBy(AController* C)
-{ Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(this,this); }
+{ Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
 void AAetherCharacter::OnRep_Controller()
-{ Super::OnRep_Controller(); AbilitySystem->InitAbilityActorInfo(this,this); }
+{ Super::OnRep_Controller(); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
 void AAetherCharacter::GrantSpells()
 {
-    if (!HasAuthority() || bAbilitiesGranted) return;
-    bAbilitiesGranted = true;
-    for (int32 I = 0; I < 4; ++I) SpellHandles.Add(AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherSpellAbility::StaticClass(), I + 1, I)));
+    if(HasAuthority())
+    {
+        if(!AbilitySystem->FindAbilitySpecFromClass(UAetherReviveAbility::StaticClass()))AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherReviveAbility::StaticClass(),1,8,this));
+        for(int32 Level=1;Level<=2;++Level)
+        {bool Found=false;for(const auto& Spec:AbilitySystem->GetActivatableAbilities())if(Spec.Ability&&Spec.Ability->IsA<UAetherMeleeAbility>()&&Spec.Level==Level)Found=true;
+        if(!Found)AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherMeleeAbility::StaticClass(),Level,4+Level,this));}
+    }
+    if (!HasAuthority()) return;
+    SpellHandles.Reset();
+    for (int32 I=0;I<4;++I)
+    {
+        bool Exists=false;
+        for (const FGameplayAbilitySpec& Spec:AbilitySystem->GetActivatableAbilities())
+            if (Spec.Ability && Spec.Ability->GetClass()==UAetherSpellAbility::StaticClass() && Spec.InputID==I)
+            { SpellHandles.Add(Spec.Handle);Exists=true;break; }
+        if (!Exists) SpellHandles.Add(AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherSpellAbility::StaticClass(),I+1,I)));
+    }
 }
 bool AAetherCharacter::TrySpell(int32 Spell)
 {
-    if (Spell < 0 || Spell > 3) return false;
+    if (Spell < 0 || Spell > 3 || !SpellUnlocked(Spell)) return false;
     for (const FGameplayAbilitySpec& Spec : AbilitySystem->GetActivatableAbilities())
         if (Spec.InputID == Spell) return AbilitySystem->TryActivateAbility(Spec.Handle);
     return false;
@@ -214,7 +246,7 @@ float AAetherCharacter::CombatTime() const
 void AAetherCharacter::SetVitals(float HP, float MP, float SP)
 {
     if (!HasAuthority()) return;
-    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(), FMath::Clamp(HP,0.f,320.f));
+    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(), FMath::Clamp(HP,0.f,MaxHealth));
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(), FMath::Clamp(MP,0.f,100.f));
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(), FMath::Clamp(SP,0.f,100.f));
 }
@@ -223,15 +255,16 @@ void AAetherCharacter::ResetCombat()
     ActionUntil = CastLockUntil = StunUntil = InvulnerableUntil = 0; NextAI = 0; LastDamageAt = -100;
     bWindingUp = bBlocking = false; NextShockStun = 0;
     Equipment->CancelAttack();
-    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), 0);
+    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), bUseBasicAssets ? 100 : 0);
     GetCharacterMovement()->StopMovementImmediately();
 }
 bool AAetherCharacter::FindSpellTarget(int32 Spell, FHitResult& Hit, FVector& Origin, FVector& Direction) const
 {
-    if (Spell < 0 || Spell > 3) return false;
+    if (Spell < 0 || Spell > 3 || !SpellUnlocked(Spell)) return false;
     Origin = GetActorLocation() + FVector(0,0,55); Direction = GetControlRotation().Vector();
     FCollisionQueryParams Params(SCENE_QUERY_STAT(AetherSpell), false, this);
     GetWorld()->SweepSingleByChannel(Hit, Origin, Origin + Direction * 1800, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeSphere(12), Params);
+    if(Spell>=2&&Fighter==EAetherFighter::Player)if(auto* Other=Cast<AAetherCharacter>(Hit.GetActor());Other&&Other->Fighter==EAetherFighter::Player)return false;
     return Spell == 0 || (Hit.GetActor() && Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>());
 }
 bool AAetherCharacter::ExecuteSpell(int32 Spell)
@@ -283,7 +316,7 @@ void AAetherCharacter::ServerAttack_Implementation(bool Heavy)
 }
 void AAetherCharacter::PerformMelee(bool Heavy)
 {
-    Equipment->StartAttack(Heavy?TEXT("Heavy"):TEXT("Light"));
+    if(!HasAuthority())return;for(const auto& Spec:AbilitySystem->GetActivatableAbilities())if(Spec.Ability&&Spec.Ability->IsA<UAetherMeleeAbility>()&&Spec.Level==(Heavy?2:1)){AbilitySystem->TryActivateAbility(Spec.Handle);break;}
 }
 void AAetherCharacter::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
 { ReceiveHit(Hit.Damage,Hit.PostureDamage,Cast<AAetherCharacter>(Hit.Source),true); }
@@ -315,8 +348,8 @@ void AAetherCharacter::ReceiveHit(float Damage, float PostureDamage, AAetherChar
         if (Stamina() >= Cost) { AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(), EGameplayModOp::Additive, -Cost); return; }
         bBlocking = false; StunUntil = T + 1.2f; Equipment->CancelAttack();
     }
-    float Posture = Attributes->Posture.GetCurrentValue() + PostureDamage;
-    if (Posture >= 100) { StunUntil = T + 1.5f; Posture = 0; bBlocking = false; Equipment->CancelAttack(); }
+    float Posture = bUseBasicAssets ? Attributes->Posture.GetCurrentValue() - PostureDamage : Attributes->Posture.GetCurrentValue() + PostureDamage;
+    if (bUseBasicAssets ? Posture <= 0 : Posture >= 100) { StunUntil = T + 1.5f; Posture = 0; bBlocking = false; Equipment->CancelAttack(); }
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), Posture);
     FDamageEvent Event; TakeDamage(Damage, Event, Source ? Source->GetController() : nullptr, Source);
 }
@@ -335,7 +368,7 @@ void AAetherCharacter::Reaction(EReactiveReaction Kind, double Magnitude, FVecto
     if (Kind == EReactiveReaction::Shock)
     {
         FDamageEvent Event; AActor* Source = Reactive->GetLastSourceActor();
-        TakeDamage(float(Magnitude / 140), Event, Source ? Source->GetInstigatorController() : nullptr, Source);
+        TakeDamage(float(Magnitude / 140 * (1 + Reactive->State.ElectricalWetness01 * .25)), Event, Source ? Source->GetInstigatorController() : nullptr, Source);
         const float T = CombatTime();
         if (Magnitude > 300 && T > NextShockStun) { Equipment->CancelAttack(); StunUntil = T + .7f; NextShockStun = T + 3; bBlocking = false; }
     }
@@ -346,19 +379,32 @@ void AAetherCharacter::Think(float Dt)
     if (const auto* Mode = GetWorld()->GetAuthGameMode<AAetherAdventureMode>(); Mode && Mode->bSmoke) return;
     if (Fighter == EAetherFighter::Player || !Alive()) return;
     const float T = CombatTime();
+    if(T>=NextPerceptionAt)
+    {
+    NextPerceptionAt=T+.25f;
     AAetherCharacter* Target = nullptr; double Best = FMath::Square(1300.0);
     for (TActorIterator<AAetherCharacter> It(GetWorld()); It; ++It)
-        if (It->Fighter == EAetherFighter::Player && It->Alive())
-        { const double D = FVector::DistSquared(It->GetActorLocation(), GetActorLocation()); if (D < Best) { Target = *It; Best = D; } }
+        if (It->Fighter == EAetherFighter::Player && It->Alive()&&(!Cast<AAetherCharacter>(GetOwner())||GetOwner()==*It))
+        { if(const auto* FC=Cast<AAetherFrontierCharacter>(this);FC&&!FC->EncounterId.IsNone())
+            if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();M&&M->Encounters&&!M->Encounters->Participates(Cast<AAetherFrontierCharacter>(*It),FC->EncounterId))continue;
+          const double D = FVector::DistSquared(It->GetActorLocation(), GetActorLocation());
+          if(D<Best&&FVector::DistSquared(It->GetActorLocation(),Home)<FMath::Square(2600.))
+          {FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherPerception),false,this);Q.AddIgnoredActor(*It);
+           if(!GetWorld()->LineTraceTestByChannel(GetActorLocation()+FVector(0,0,40),It->GetActorLocation()+FVector(0,0,40),ECC_Visibility,Q)){Target=*It;Best=D;}} }
+    if(Target){PerceivedTarget=Target;LastSeenAt=T;LastSeenPosition=Target->GetActorLocation();}
+    }
+    AAetherCharacter* Target=PerceivedTarget.Get();
+    if(Target&&(!Target->Alive()||T-LastSeenAt>4||FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(2800.))){PerceivedTarget.Reset();Target=nullptr;}
     if (T < StunUntil) { bWindingUp = false; bBlocking = false; return; }
-    if (!Target) { bWindingUp = false; return; }
+    if (!Target) { bWindingUp = false;bBlocking=false;if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(120.)){const auto Dir=SafeMoveDirection(Home);SetActorRotation(Dir.Rotation());AddMovementInput(Dir,1);}return; }
+    if(T-LastSeenAt>.3f){bWindingUp=false;bBlocking=false;AddMovementInput(SafeMoveDirection(LastSeenPosition),1);return;}
     FVector Toward = Target->GetActorLocation() - GetActorLocation(); Toward.Z = 0;
     if (bWindingUp)
     {
         if (T >= NextAI)
         {
             bWindingUp = false;
-            if (Fighter == EAetherFighter::FireCaster) TrySpell(0); else PerformMelee(bAIHeavy);
+            if (Fighter == EAetherFighter::FireCaster) TrySpell(0); else {if(Fighter==EAetherFighter::Wolf)LaunchCharacter(GetActorForwardVector()*450,false,false);PerformMelee(bAIHeavy);}
             ActionUntil = T + (Fighter == EAetherFighter::BellKnight ? 1.25f : .8f); NextAI = ActionUntil;
         }
         return;
@@ -368,12 +414,12 @@ void AAetherCharacter::Think(float Dt)
     const auto* Main=Equipment->InSlot(TEXT("MainHand")); const auto* Move=Main?Main->FindAttack(TEXT("Light")):nullptr;
     const float Range = Fighter == EAetherFighter::FireCaster ? 1000 : Move?Move->ReachCm-10:130;
     if (Toward.Size() > Range)
-    { bBlocking = Fighter == EAetherFighter::ShieldGuard && Equipment->GuardDefinition(); AddMovementInput(Toward.GetSafeNormal(), 1); }
+    { bBlocking = Fighter == EAetherFighter::ShieldGuard && Equipment->GuardDefinition(); AddMovementInput(SafeMoveDirection(Target->GetActorLocation()), 1); }
     else if (T >= NextAI)
     {
         FCollisionQueryParams Params(SCENE_QUERY_STAT(AetherAI),false,this); Params.AddIgnoredActor(Target);
         if (GetWorld()->LineTraceTestByChannel(GetActorLocation(),Target->GetActorLocation(),ECC_Visibility,Params)) return;
-        bBlocking = false; bWindingUp = true; bAIHeavy = Fighter == EAetherFighter::BellKnight;
+        bBlocking = false; bWindingUp = true; bAIHeavy = Fighter == EAetherFighter::BellKnight || Fighter==EAetherFighter::Golem;
         NextAI = T + (Fighter == EAetherFighter::BellKnight && Health() < 160 ? .6f : .95f);
     }
 }
@@ -386,12 +432,12 @@ void AAetherCharacter::Tick(float Dt)
     {
         const float Regen = T > ActionUntil && !bBlocking ? 20 : 4;
         SetVitals(Health(), Mana() + Dt * 5, Stamina() + Dt * Regen);
-        if (T - LastDamageAt > 2) AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), FMath::Max(0.f, Attributes->Posture.GetCurrentValue() - Dt * 12));
+        if (T - LastDamageAt > 2) AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), bUseBasicAssets ? FMath::Min(100.f, Attributes->Posture.GetCurrentValue() + Dt * 12) : FMath::Max(0.f, Attributes->Posture.GetCurrentValue() - Dt * 12));
         const double Temp = Reactive->State.TemperatureC;
         if (Temp > 55) { FDamageEvent E; TakeDamage(float(FMath::Min(25.0,(Temp - 55) * .12) * Dt), E, nullptr, Reactive->GetLastSourceActor()); }
         Think(Dt);
     }
-    GetCharacterMovement()->MaxWalkSpeed = !Alive() || T < StunUntil ? 0.f : (bBlocking ? 220.f : Fighter == EAetherFighter::Player ? 450.f : 230.f) * (Reactive->State.IceFraction > .5 ? .5f : 1.f);
+    GetCharacterMovement()->MaxWalkSpeed = !Alive() || T < StunUntil ? 0.f : (bBlocking ? 220.f : Fighter == EAetherFighter::Player ? 450.f : Fighter==EAetherFighter::Wolf?380.f:230.f) * (Reactive->State.IceFraction > .5 ? .5f : 1.f);
     Tint(BodyVisual, !Alive() ? FLinearColor(.15f,.15f,.17f) : bWindingUp ? FLinearColor(1,.09f,.01f) : T < StunUntil ? FLinearColor(.1f,.8f,1) : Fighter == EAetherFighter::Player ? FLinearColor(.12f,.34f,.5f) : Fighter == EAetherFighter::FireCaster ? FLinearColor(.55f,.09f,.025f) : FLinearColor(.45f,.3f,.09f));
     UpdateAnimation();
     const TCHAR* N = Fighter == EAetherFighter::BellKnight ? TEXT("OLEN / BELL KNIGHT") : Fighter == EAetherFighter::ShieldGuard ? TEXT("SHIELD GUARD") : Fighter == EAetherFighter::FireCaster ? TEXT("EMBER CASTER") : TEXT("OATHFARER");
@@ -463,9 +509,40 @@ void AAetherProjectile::Tick(float Dt)
     FCollisionQueryParams P(SCENE_QUERY_STAT(AetherProjectile), false, this); P.AddIgnoredActor(GetOwner());
     if (GetWorld()->SweepSingleByChannel(Hit,GetActorLocation(),End,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(12),P))
     {
+        if(auto* Source=Cast<AAetherCharacter>(GetOwner());Source&&Source->Fighter==EAetherFighter::Player)if(auto* Other=Cast<AAetherCharacter>(Hit.GetActor());Other&&Other->Fighter==EAetherFighter::Player){Destroy();return;}
         if (AActor* A = Hit.GetActor()) if (auto* B = A->FindComponentByClass<UReactiveBodyComponent>())
         { FReactiveStimulus S; S.SourceActor = GetOwner(); S.HeatJ = HeatJ; S.ImpulseNs = VelocityCm.GetSafeNormal() * 2; B->Inject(S); }
         Destroy(); return;
     }
     SetActorLocation(End);
+}
+
+FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
+{
+    if(CombatTime()<NextSteeringAt)return SteeringDirection;NextSteeringAt=CombatTime()+.2f;
+    // Recast paths are bounded to the locally generated tiles. Missing paths fall back to guarded steering.
+    if(CombatTime()>=NextPathAt||FVector::DistSquared2D(Destination,NavigationGoal)>FMath::Square(200.))
+    {
+        NextPathAt=CombatTime()+.75f;NavigationGoal=Destination;NavigationPoints.Reset();NavigationIndex=0;
+        if(auto* Nav=FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
+        {FNavLocation End;const FVector LocalGoal=GetActorLocation()+(Destination-GetActorLocation()).GetClampedToMaxSize2D(2100);
+         if(Nav->ProjectPointToNavigation(LocalGoal,End,FVector(220,220,350)))
+          if(auto* Path=UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(),GetActorLocation(),End.Location,this);Path&&Path->IsValid())NavigationPoints=Path->PathPoints;}
+    }
+    while(NavigationPoints.IsValidIndex(NavigationIndex)&&FVector::DistSquared2D(GetActorLocation(),NavigationPoints[NavigationIndex])<FMath::Square(90.))++NavigationIndex;
+    FVector Waypoint=NavigationPoints.IsValidIndex(NavigationIndex)?NavigationPoints[NavigationIndex]:Destination;
+    FVector Desired=(Waypoint-GetActorLocation()).GetSafeNormal2D();double Best=-1.e30;SteeringDirection=FVector::ZeroVector;
+    FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherSteering),false,this);
+    auto* World=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();const auto* Sim=World?World->GetSimulation():nullptr;
+    for(float Angle:{0.f,45.f,-45.f,90.f,-90.f,135.f,-135.f})
+    {
+        FVector Dir=Desired.RotateAngleAxis(Angle,FVector::UpVector);FVector End=GetActorLocation()+Dir*150;
+        if(GetWorld()->SweepTestByChannel(GetActorLocation(),End,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeCapsule(30,70),Q))continue;
+        FHitResult Floor;if(!GetWorld()->LineTraceSingleByChannel(Floor,End,End-FVector(0,0,200),ECC_Visibility,Q)||Floor.ImpactNormal.Z<.5||!Floor.GetComponent()->IsCollisionEnabled()||Floor.GetComponent()->GetCollisionResponseToChannel(ECC_Pawn)!=ECR_Block)continue;
+        double Score=FVector::DotProduct(Dir,Desired);if(Sim)for(auto Id:Sim->Query(End,70))
+        {const auto* State=Sim->Find(Id);if(State&&(State->bBurning||State->TemperatureC>100))Score-=5;}
+        if(Score>Best){Best=Score;SteeringDirection=Dir;}
+    }
+    if(SteeringDirection.IsNearlyZero())NextPathAt=0;
+    return SteeringDirection;
 }

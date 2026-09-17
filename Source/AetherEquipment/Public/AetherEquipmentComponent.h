@@ -97,6 +97,7 @@ struct FAetherReplicatedAttack
     UPROPERTY() bool bCancelled = false;
 };
 DECLARE_DELEGATE_RetVal(bool, FAetherEquipmentCanAct);
+DECLARE_DELEGATE_RetVal_OneParam(bool, FAetherEquipmentOwnsItem, FName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAetherLoadoutChanged);
 
 // This module knows no character class, quest, material solver, or weapon enum.
@@ -112,6 +113,8 @@ public:
     UPROPERTY(EditAnywhere) FGameplayAttribute StaminaAttribute;
     UPROPERTY(BlueprintAssignable) FAetherLoadoutChanged OnLoadoutChanged;
     FAetherEquipmentCanAct CanAct;
+    FAetherEquipmentOwnsItem OwnsItem;
+    bool bProfileManaged = false;
     UPROPERTY(Replicated) FAetherReplicatedAttack Attack;
     UFUNCTION(BlueprintCallable) bool Equip(FName ItemId);
     UFUNCTION(Server, Reliable) void ServerEquip(FName ItemId);

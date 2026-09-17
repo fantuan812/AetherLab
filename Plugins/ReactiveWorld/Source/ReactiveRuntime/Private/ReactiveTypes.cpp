@@ -7,7 +7,7 @@ Reactive::FMaterial FReactiveMaterialParameters::ToCore() const
     M.WaterCapacityKg = WaterCapacityKg; M.InitialFuelKg = InitialFuelKg;
     M.IgnitionC = IgnitionC; M.BurnRateKgPerSec = BurnRateKgPerSec;
     M.CombustionJPerKg = CombustionJPerKg; M.RetainedHeatFraction = RetainedHeatFraction;
-    M.Conductivity = Conductivity; M.ThermalCouplingWPerK = ThermalCouplingWPerK;
+    M.bLiquidConductor = bLiquidConductor; M.Conductivity = Conductivity; M.ThermalCouplingWPerK = ThermalCouplingWPerK;
     M.CoolingWPerK = CoolingWPerK; M.StrengthNs = StrengthNs;
     M.FrozenStrengthMultiplier = FrozenStrengthMultiplier;
     M.SealedVolumeM3 = SealedVolumeM3; M.BurstGaugePressurePa = BurstGaugePressurePa;
@@ -16,7 +16,7 @@ Reactive::FMaterial FReactiveMaterialParameters::ToCore() const
 FReactiveSnapshot FReactiveSnapshot::FromCore(const Reactive::FState& S)
 {
     FReactiveSnapshot R; R.TemperatureC = S.TemperatureC; R.WaterKg = S.WaterKg;
-    R.IceFraction = S.IceFraction; R.FuelKg = S.FuelKg; R.Integrity = S.Integrity;
+    R.ElectricalWaterKg=S.ElectricalWaterKg; R.ElectricalWetness01 = S.ElectricalWetness01; R.IceFraction = S.IceFraction; R.FuelKg = S.FuelKg; R.Integrity = S.Integrity;
     R.GaugePressurePa = S.GaugePressurePa; R.bBurning = S.bBurning;
     R.bBroken = S.bBroken; R.bBurst = S.bBurst; return R;
 }

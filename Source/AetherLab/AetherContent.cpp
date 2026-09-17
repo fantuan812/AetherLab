@@ -1,5 +1,5 @@
 #include "AetherContent.h"
-UAetherGameContent* UAetherGameContent::Load()
+UAetherGameContent* UAetherGameContent::Load(bool)
 {
-    return LoadObject<UAetherGameContent>(nullptr,TEXT("/Game/SwordMagic/Data/DA_GameContent.DA_GameContent"),nullptr,LOAD_NoWarn);
+    return LoadObject<UAetherGameContent>(nullptr,TEXT("/Game/AetherCore/Data/DA_GameContent.DA_GameContent"),nullptr,LOAD_NoWarn);
 }

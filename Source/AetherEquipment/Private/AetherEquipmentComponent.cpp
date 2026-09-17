@@ -68,14 +68,14 @@ bool UAetherEquipmentComponent::Equip(FName ItemId)
 {
     if (!GetOwner()->HasAuthority()) { ServerEquip(ItemId); return false; }
     if (IsBusy() || (CanAct.IsBound()&&!CanAct.Execute()) || !Catalog) return false;
-    const auto* D=Catalog->Find(ItemId); if (!D) return false;
+    const auto* D=Catalog->Find(ItemId); if (!D || (OwnsItem.IsBound() && !OwnsItem.Execute(ItemId))) return false;
     if (const auto* Current=InSlot(D->Slot); Current && Current->ItemId==ItemId) return true;
     TArray<FAetherEquippedSlot> Next=Slots;
     Next.RemoveAll([D](const auto& S){ return S.Slot==D->Slot || (D->bOccupiesBothHands&&S.Slot==TEXT("OffHand")); });
     FAetherEquippedSlot S; S.Slot=D->Slot; S.ItemId=ItemId; Next.Add(S);
     return RestoreLoadout(Next);
 }
-void UAetherEquipmentComponent::ServerEquip_Implementation(FName ItemId) { Equip(ItemId); }
+void UAetherEquipmentComponent::ServerEquip_Implementation(FName ItemId) { if (!bProfileManaged) Equip(ItemId); }
 bool UAetherEquipmentComponent::Unequip(FName Slot)
 {
     if (!GetOwner()->HasAuthority()) { ServerUnequip(Slot); return false; }
@@ -83,7 +83,7 @@ bool UAetherEquipmentComponent::Unequip(FName Slot)
     auto Next=Slots; if (!Next.RemoveAll([Slot](const auto& S){return S.Slot==Slot;})) return false;
     return RestoreLoadout(Next);
 }
-void UAetherEquipmentComponent::ServerUnequip_Implementation(FName Slot) { Unequip(Slot); }
+void UAetherEquipmentComponent::ServerUnequip_Implementation(FName Slot) { if (!bProfileManaged) Unequip(Slot); }
 const FAetherAttackDefinition* UAetherEquipmentComponent::CurrentAttack() const
 { auto* D=Catalog?Catalog->Find(Attack.ItemId):nullptr; return D?D->FindAttack(Attack.AttackId):nullptr; }
 bool UAetherEquipmentComponent::IsBusy() const

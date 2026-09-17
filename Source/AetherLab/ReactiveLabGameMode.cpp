@@ -188,9 +188,9 @@ void AReactiveLabGameMode::BeginPlay()
     for (int32 I = 0; I < 4; ++I) SpawnSample(FString::Printf(TEXT("WOOD %d"), I+1), EReactiveMaterialPreset::Wood,
         FVector(-720 + I*150,-300,100), FVector(0.8,0.65,1.3), 60, Wood);
     SpawnSample(TEXT("CONDUCTIVE PUDDLE"), EReactiveMaterialPreset::Water, FVector(-480,300,20), FVector(4,3,0.15), 200, Water, 1);
-    SpawnSample(TEXT("METAL / ENEMY A"), EReactiveMaterialPreset::Metal, FVector(-620,310,90), FVector(0.6,0.6,1), 60, Metal);
-    SpawnSample(TEXT("METAL / ENEMY B"), EReactiveMaterialPreset::Metal, FVector(-450,310,90), FVector(0.6,0.6,1), 60, Metal);
-    SpawnSample(TEXT("METAL / PLAYER"), EReactiveMaterialPreset::Metal, FVector(-300,450,90), FVector(0.6,0.6,1), 60, FLinearColor(0.1f,0.55f,0.2f));
+    SpawnSample(TEXT("METAL / ENEMY A"), EReactiveMaterialPreset::Metal, FVector(-620,310,77.5), FVector(0.6,0.6,1), 60, Metal);
+    SpawnSample(TEXT("METAL / ENEMY B"), EReactiveMaterialPreset::Metal, FVector(-450,310,77.5), FVector(0.6,0.6,1), 60, Metal);
+    SpawnSample(TEXT("METAL / PLAYER"), EReactiveMaterialPreset::Metal, FVector(-300,450,77.5), FVector(0.6,0.6,1), 60, FLinearColor(0.1f,0.55f,0.2f));
     SpawnSample(TEXT("FREEZABLE WATER"), EReactiveMaterialPreset::Water, FVector(300,-300,25), FVector(2.8,2,0.15), 140, Water, 0.25);
     SpawnSample(TEXT("WET WOOD / IMPACT"), EReactiveMaterialPreset::Wood, FVector(570,-300,100), FVector(0.8,0.7,1.3), 60, Wood, 0.03);
     SpawnSample(TEXT("OPEN OIL"), EReactiveMaterialPreset::Oil, FVector(250,350,80), FVector(1,1,1), 60, Oil);
@@ -228,7 +228,8 @@ void AReactiveLabGameMode::Tick(float Dt)
             && Samples[8]->Reactive->State.IceFraction > 0.95 && Samples[11]->Reactive->State.bBurst
             && System
             && Samples[5]->ShockCount > 0 && Samples[6]->ShockCount > 0 && Samples[7]->ShockCount > 0
-            && System->GetSimulation()->GetStats().ElectricalDepositedJ > 4999;
+            && System->GetSimulation()->GetStats().ElectricalDepositedJ > 0
+            && System->GetSimulation()->GetStats().ElectricalDepositedJ + System->GetSimulation()->GetStats().ElectricalLostJ > 4999;
         UE_LOG(LogTemp, Display, TEXT("AETHER_SMOKE_%s | %s"), Pass ? TEXT("PASS") : TEXT("FAIL"), System ? *System->GetStatsText() : TEXT("No subsystem"));
         FPlatformMisc::RequestExitWithStatus(false, Pass ? 0 : 1);
     }

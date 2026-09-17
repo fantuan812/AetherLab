@@ -1,0 +1,339 @@
+{
+  "Version": 1,
+  "Items": {
+    "Potion": {
+      "MaxStack": 20,
+      "Buy": 20,
+      "Sell": 5
+    },
+    "ManaPotion": {
+      "MaxStack": 20,
+      "Buy": 24,
+      "Sell": 6
+    },
+    "Ration": {
+      "MaxStack": 20,
+      "Buy": 8,
+      "Sell": 2
+    },
+    "Supply": {
+      "MaxStack": 20,
+      "Buy": 0,
+      "Sell": 0
+    },
+    "Material": {
+      "MaxStack": 99,
+      "Buy": 0,
+      "Sell": 1
+    },
+    "Herb": {
+      "MaxStack": 99,
+      "Buy": 0,
+      "Sell": 2
+    },
+    "Wood": {
+      "MaxStack": 99,
+      "Buy": 0,
+      "Sell": 2
+    },
+    "Ore": {
+      "MaxStack": 99,
+      "Buy": 0,
+      "Sell": 3
+    },
+    "TrainingSword": {
+      "MaxStack": 1,
+      "Buy": 0,
+      "Sell": 0
+    },
+    "TrainingShield": {
+      "MaxStack": 1,
+      "Buy": 0,
+      "Sell": 0
+    },
+    "TrainingHammer": {
+      "MaxStack": 1,
+      "Buy": 0,
+      "Sell": 0
+    },
+    "TideStaff": {
+      "MaxStack": 1,
+      "Buy": 0,
+      "Sell": 0
+    },
+    "AncientSeal": {
+      "MaxStack": 1,
+      "Buy": 0,
+      "Sell": 0
+    },
+    "BellHammer": {
+      "MaxStack": 1,
+      "Buy": 0,
+      "Sell": 0
+    },
+    "EmberFocus": {
+      "MaxStack": 1,
+      "Buy": 0,
+      "Sell": 0
+    }
+  },
+  "Quests": [
+    {
+      "Id": "Q_Main_01",
+      "Title": "Arrival: supplies and gate",
+      "Prerequisites": [],
+      "Objectives": [
+        "SupplyA",
+        "SupplyB",
+        "Gate"
+      ],
+      "Gold": 40,
+      "Experience": 100,
+      "Items": {}
+    },
+    {
+      "Id": "Q_Main_02",
+      "Title": "Register and bind inn",
+      "Prerequisites": [
+        0
+      ],
+      "Objectives": [
+        "Register",
+        "Inn"
+      ],
+      "Gold": 40,
+      "Experience": 100,
+      "Items": {
+        "TrainingSword": 1,
+        "TrainingShield": 1,
+        "TrainingHammer": 1
+      }
+    },
+    {
+      "Id": "Q_Main_03",
+      "Title": "Sword and magic training",
+      "Prerequisites": [
+        1
+      ],
+      "Objectives": [
+        "Melee1",
+        "Melee2",
+        "Melee3",
+        "Block",
+        "TrainingExtinguished"
+      ],
+      "Gold": 80,
+      "Experience": 100,
+      "Items": {}
+    },
+    {
+      "Id": "Q_Main_04",
+      "Title": "Extinguish three forest fires",
+      "Prerequisites": [
+        2
+      ],
+      "Objectives": [
+        "ForestFire0",
+        "ForestFire1",
+        "ForestFire2",
+        "Rescue"
+      ],
+      "Gold": 60,
+      "Experience": 100,
+      "Items": {}
+    },
+    {
+      "Id": "Q_Main_05",
+      "Title": "Restore waterworks supply",
+      "Prerequisites": [
+        2
+      ],
+      "Objectives": [
+        "SupplyRestored"
+      ],
+      "Gold": 60,
+      "Experience": 100,
+      "Items": {
+        "TideStaff": 1
+      }
+    },
+    {
+      "Id": "Q_Main_06",
+      "Title": "Recruit a companion",
+      "Prerequisites": [
+        3,
+        4
+      ],
+      "Objectives": [
+        "Companion"
+      ],
+      "Gold": 40,
+      "Experience": 100,
+      "Items": {}
+    },
+    {
+      "Id": "Q_Main_07",
+      "Title": "Defeat the bell guardian",
+      "Prerequisites": [
+        5
+      ],
+      "Objectives": [
+        "GuardianDefeated"
+      ],
+      "Gold": 100,
+      "Experience": 100,
+      "Items": {
+        "AncientSeal": 1
+      }
+    },
+    {
+      "Id": "Q_Main_08",
+      "Title": "Return the ancient seal",
+      "Prerequisites": [
+        6
+      ],
+      "Objectives": [
+        "SealDelivered"
+      ],
+      "Gold": 120,
+      "Experience": 100,
+      "Items": {}
+    }
+  ],
+  "Encounters": {
+    "Trail": {
+      "Center": [
+        -8000,
+        -27000,
+        120
+      ],
+      "Types": [
+        1
+      ],
+      "RespawnSeconds": 180
+    },
+    "AshwoodWolves": {
+      "Center": [
+        -24500,
+        -1200,
+        120
+      ],
+      "Types": [
+        4,
+        4
+      ],
+      "RespawnSeconds": 240
+    },
+    "AshwoodShed": {
+      "Center": [
+        -28000,
+        800,
+        120
+      ],
+      "Types": [
+        1,
+        2
+      ],
+      "RespawnSeconds": 240
+    },
+    "Waterworks": {
+      "Center": [
+        28100,
+        900,
+        120
+      ],
+      "Types": [
+        2,
+        2,
+        1
+      ],
+      "RespawnSeconds": 300
+    },
+    "AbbeyFront": {
+      "Center": [
+        0,
+        25000,
+        120
+      ],
+      "Types": [
+        1,
+        1,
+        2
+      ],
+      "RespawnSeconds": 0
+    },
+    "AbbeyChannel": {
+      "Center": [
+        0,
+        25800,
+        120
+      ],
+      "Types": [
+        1,
+        2
+      ],
+      "RespawnSeconds": 0
+    },
+    "AbbeyElite": {
+      "Center": [
+        0,
+        26600,
+        120
+      ],
+      "Types": [
+        5
+      ],
+      "RespawnSeconds": 0
+    },
+    "AbbeyBoss": {
+      "Center": [
+        0,
+        27400,
+        120
+      ],
+      "Types": [
+        3
+      ],
+      "RespawnSeconds": 0
+    },
+    "Relay0": {
+      "Center": [
+        24600,
+        22500,
+        120
+      ],
+      "Types": [
+        1,
+        2
+      ],
+      "RespawnSeconds": 0
+    },
+    "Relay1": {
+      "Center": [
+        25400,
+        22500,
+        120
+      ],
+      "Types": [
+        1,
+        1,
+        2
+      ],
+      "RespawnSeconds": 0
+    },
+    "Relay2": {
+      "Center": [
+        25000,
+        22800,
+        120
+      ],
+      "Types": [
+        1,
+        2,
+        1,
+        2
+      ],
+      "RespawnSeconds": 0
+    }
+  }
+}

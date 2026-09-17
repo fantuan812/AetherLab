@@ -53,7 +53,7 @@ void AAetherWorldObject::ConfigureMaterial()
     {
         auto* Asset = NewObject<UReactiveMaterialAsset>(this);
         Asset->Parameters.DryMassKg = .001; Asset->Parameters.SpecificHeatJPerKgK = 1000;
-        Asset->Parameters.WaterCapacityKg = 8; Asset->Parameters.InitialFuelKg = 0; Asset->Parameters.Conductivity = .1;
+        Asset->Parameters.WaterCapacityKg = 8; Asset->Parameters.InitialFuelKg = 0; Asset->Parameters.Conductivity = .1; Asset->Parameters.bLiquidConductor = true;
         Reactive->MaterialAsset = Asset;
     }
 }
@@ -117,9 +117,10 @@ void AAetherAdventureState::BeginPlay()
     Super::BeginPlay();
     // Lighting is presentation-only and is created on each rendering peer.
     if (GetNetMode()==NM_DedicatedServer) return;
+    for(TActorIterator<ADirectionalLight> It(GetWorld());It;++It)if(It->ActorHasTag("AetherBakedLighting"))return;
     if (auto* L=GetWorld()->SpawnActor<ADirectionalLight>(FVector(0,0,1200),FRotator(-48,-30,0)))
     { L->GetLightComponent()->SetMobility(EComponentMobility::Movable); L->GetLightComponent()->SetIntensity(3);
-      Cast<UDirectionalLightComponent>(L->GetLightComponent())->SetAtmosphereSunLight(true); }
+      Cast<UDirectionalLightComponent>(L->GetLightComponent())->SetAtmosphereSunLight(true); Cast<UDirectionalLightComponent>(L->GetLightComponent())->SetForwardShadingPriority(1); }
     if (auto* L=GetWorld()->SpawnActor<ADirectionalLight>(FVector(0,0,1400),FRotator(-28,160,0)))
     { L->GetLightComponent()->SetMobility(EComponentMobility::Movable); L->GetLightComponent()->SetIntensity(1.5f); L->GetLightComponent()->SetCastShadows(false); }
     GetWorld()->SpawnActor<ASkyAtmosphere>();
