@@ -57,6 +57,7 @@ void AAetherFrontierProp::ReceiveEquipmentHit_Implementation(const FAetherEquipm
     if(!HasAuthority())return;
     if(Service=="Dummy")
     {
+        if(Hit.AttackId!="Light")return;
         if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>())if(auto* C=Cast<AAetherFrontierCharacter>(Hit.Source))if(auto* PS=C->ProfileState())
             for(FName F:{FName("Melee1"),FName("Melee2"),FName("Melee3")})if(!PS->Profile.Evidence.Contains(F)){M->Observe(C,F);break;}
         return;
@@ -209,11 +210,11 @@ AAetherFrontierProp* AAetherFrontierMode::Make(FName Id,FName Service,FVector P,
     A->bCarryable=Service=="Conductor"||Service=="Crate";A->Reactive->bTrackMovement=A->bCarryable||Service=="Bridge"||Service=="HingedGate";
     if(Kind==EAetherObjectKind::Water)A->Reactive->InitialWaterKg=.5;
     if(Kind==EAetherObjectKind::Cistern)A->Reactive->InitialWaterKg=8;
-    if(Id.ToString().StartsWith("ForestFire")||Service=="TrainingExtinguished"||Service.ToString().StartsWith("DailyFire"))
+    if(Id.ToString().StartsWith("ForestFire")||AetherGuide::IsPersonalFire(Service))
     {
         auto* M=NewObject<UReactiveMaterialAsset>(A);M->Parameters.InitialFuelKg=10;A->Reactive->MaterialAsset=M;
     }
-    if(Service=="TrainingExtinguished"||Service.ToString().StartsWith("DailyFire")){A->Reactive->StableId=NAME_None;A->Reactive->bOwnerOnlyStimuli=true;}
+    if(AetherGuide::IsPersonalFire(Service)){A->Reactive->StableId=NAME_None;A->Reactive->bOwnerOnlyStimuli=true;}
     if(Id.ToString().StartsWith("Roof")){A->Spec.bInteractiveMaterial=false;A->Reactive->bParticipatesInSimulation=false;}
     UGameplayStatics::FinishSpawningActor(A,FTransform(P));Props.Add(A);return A;
 }
@@ -390,6 +391,7 @@ void AAetherFrontierMode::Tick(float Dt)
         if(Elapsed>8){UE_LOG(LogTemp,Error,TEXT("AETHER_V5_LIGHT_FAIL timeout"));FPlatformMisc::RequestExitWithStatus(false,1);}
     }
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherAnimationCheck"))&&Elapsed>2)CheckAnimation();
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherGuidanceCheck"))&&Elapsed>2)CheckGuidance();
     if(bSmoke)SmokeStep();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherV4Capture")))
     { static bool Taken=false;if(Elapsed>8&&!Taken){Taken=true;FScreenshotRequest::RequestScreenshot(FPaths::ProjectDir()/TEXT("Docs/Images/AetherFrontier.png"),true,false);}if(Elapsed>11)FPlatformMisc::RequestExit(false); }

@@ -376,3 +376,10 @@ float AAetherFrontierCharacter::TakeDamage(float Amount,const FDamageEvent& Even
     }
     return Applied;
 }
+
+void AAetherFrontierCharacter::CycleItem()
+{
+ if(!bPanel||!ProfileState())return;
+ if(Panel==1&&!ProfileState()->Profile.Inventory.IsEmpty())SelectedItem=(SelectedItem+1)%ProfileState()->Profile.Inventory.Num();
+ if(Panel==2)TrackedQuest=AetherGuide::SelectQuest(ProfileState()->Profile,TrackedQuest,true);
+}

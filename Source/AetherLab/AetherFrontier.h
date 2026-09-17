@@ -4,6 +4,7 @@
 #include "AetherProgression.h"
 #include "ReactiveMechanismComponent.h"
 #include "AetherEncounters.h"
+#include "AetherGuide.h"
 #include "AetherFrontier.generated.h"
 class UPhysicsHandleComponent;
 class UInputMappingContext;
@@ -78,6 +79,7 @@ public:
     float NextServerAction = 0;
     float NextPotion = 0;
     int32 SelectedItem = 0;
+    int32 TrackedQuest = INDEX_NONE;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> GameplayContext;
     UPROPERTY(Transient) TMap<FName,TObjectPtr<UInputAction>> InputActions;
     UFUNCTION(Exec) void AetherBind(FName Action,FKey Key);
@@ -93,7 +95,7 @@ public:
     UPROPERTY(Replicated) float BossPhaseStarted = 0;
     UPROPERTY(Replicated) float BossPressure = 0;
     virtual float TakeDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer) override;
-    void CycleItem(){if(bPanel&&Panel==1)++SelectedItem;}
+    void CycleItem();
     void SellItem(){if(bPanel&&Panel==1)ServerAction("Sell",SelectedItem);}
     void BuyMana(){if(bPanel&&Panel==1)ServerAction("Buy",1);}
     void BuyRation(){if(bPanel&&Panel==1)ServerAction("Buy",2);}
@@ -214,6 +216,7 @@ private:
     bool WriteDatabase(UAetherFrontierSave* Next);
     void SmokeStep();
     void CheckAnimation();
+    void CheckGuidance();
     float WeatherTimer = 0;
     float AreaTimer = 0;
     float Elapsed = 0; float SaveTimer = 0; float PowerTimer = 0;
@@ -228,4 +231,7 @@ public:
     virtual void BeginPlay() override;
     UPROPERTY() TObjectPtr<UAetherFrontierPanel> PanelWidget;
     virtual void DrawHUD() override;
+    FAetherGuidance Guidance;
+    FAetherInteractionTarget Interaction;
+    float NextGuidanceUpdate=0;
 };

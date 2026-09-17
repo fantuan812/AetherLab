@@ -24,19 +24,15 @@ FString AAetherFrontierMode::RecruitCompanion(AAetherFrontierCharacter* C,bool H
 FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
 {
     auto* PS=C?C->ProfileState():nullptr;if(!PS||!C->Alive())return TEXT("Cannot interact.");
-    for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)
-        if(*It!=C&&It->Fighter==EAetherFighter::Player&&!It->Alive()&&FVector::DistSquared(C->GetActorLocation(),It->GetActorLocation())<FMath::Square(200.0))
-        {C->ReviveTarget=*It;C->ReviveStarted=C->CombatTime();C->ReviveDamageSerial=C->DamageReceivedCount;if(!C->AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass()))C->ReviveTarget=nullptr;return TEXT("Reviving for 3 seconds; remain close and avoid damage.");}
-    AAetherFrontierProp* Nearest=nullptr;double Best=FMath::Square(250.0);
-    for(AAetherFrontierProp* P:Props)if(IsValid(P)&&!P->Service.IsNone())
-    {
-        double D=FVector::DistSquared(C->GetActorLocation(),P->GetActorLocation());if(D>=Best)continue;
-        FCollisionQueryParams Q(SCENE_QUERY_STAT(Interact),false,C);Q.AddIgnoredActor(P);
-        if(GetWorld()->LineTraceTestByChannel(C->GetActorLocation(),P->GetActorLocation(),ECC_Visibility,Q))continue;
-        Nearest=P;Best=D;
-    }
+    const auto Target=AetherGuide::SelectInteraction(C);
+    if(auto* Downed=Target.Rescue.Get())
+    {C->ReviveTarget=Downed;C->ReviveStarted=C->CombatTime();C->ReviveDamageSerial=C->DamageReceivedCount;if(!C->AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass())){C->ReviveTarget=nullptr;return TEXT("无法开始救援，请靠近队友并保持安全。");}return TEXT("正在救援：保持靠近 3 秒，受伤会打断。");}
+    auto* Nearest=Target.Prop.Get();
     if(!Nearest)return TEXT("Move within 2.5m of an interaction marker.");
     const FName Service=Nearest->Service;auto Next=PS->Profile;Next.RefreshDaily(FDateTime::UtcNow().ToString(TEXT("%Y%m%d")));auto* State=GetGameState<AAetherFrontierState>();
+    if(AetherGuide::IsPersonalFire(Service))return TEXT("使用引泉实际熄灭自己的火盆；交互不会增加灭火进度。");
+    if(Service.ToString().StartsWith("ForestFire")&&!AetherGuide::CanInspectFire(Nearest))return TEXT("火点仍未安全清理，请使用引泉或旁边水桶灭火。");
+    if(Service=="Rescue")for(int32 I=0;I<3;++I)if(!AetherGuide::CanInspectFire(Prop(*FString::Printf(TEXT("ForestFire%d"),I))))return TEXT("先使三处火点熄灭并冷却，再救援工匠。");
     if(Service=="Loot")return ClaimLoot(C,Nearest->Spec.Id);
     if(Service=="SupplyA"||Service=="SupplyB")
     {
@@ -108,8 +104,8 @@ FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
         if(!Fire)return TEXT("No fire beside this bucket.");
         const double Water=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->WithdrawWater(Nearest->Reactive,.5);
         if(Water>0){FReactiveStimulus Splash;Splash.SourceActor=C;Splash.WaterKg=Water;Fire->Reactive->Inject(Splash);}
-        else if(!Fire->Reactive->State.bBurning)Observe(C,Fire->Service); // inspection credit for late arrivals
-        return Water>0?TEXT("Poured existing water onto the fire."):TEXT("Empty bucket. Existing cleared site inspected.");
+        else if(AetherGuide::CanInspectFire(Fire)){Observe(C,Fire->Service);return TEXT("水桶已空，已检查清理后的火点。");}
+        return Water>0?TEXT("已把桶中现有的水泼向火点。"):TEXT("水桶已空；火点仍不安全，需补水或使用引泉。");
     }
     else if(Service=="HingedGate"){Nearest->Mechanism->bGateOpen=!Nearest->Mechanism->bGateOpen;return TEXT("Gate motor toggled; physical obstructions resist its limited force.");}
     else if(Service=="Source"){State->bPowerOn=!State->bPowerOn;SaveWorld();return State->bPowerOn?TEXT("Power on."):TEXT("Power off; no residual charge in the rod.");}

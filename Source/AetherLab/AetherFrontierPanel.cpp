@@ -24,7 +24,8 @@ void UAetherFrontierViewModel::Refresh(AAetherFrontierCharacter* C)
   Text+=TEXT("\nTab / 下一项：选择    B：拆分    N：合并\n商人旁：Delete 出售；7 购买法力药；8 购买口粮。\n任务物品与训练装备不可出售。满包奖励保留待领。");break;
  case 2:
   Title=TEXT("个人任务 / Journal");First=TEXT("领取待领奖励");Text+=FString::Printf(TEXT("待领取：%d 金币 / %d 材料\n\n"),P.PendingGold,P.PendingMaterial);
-  for(int Q=0;Q<8;++Q){Text+=FString::Printf(TEXT("%s %s\n"),P.Claims.Contains(FAetherProfile::QuestId(Q))?TEXT("[完成]"):P.Available(Q)?TEXT("[进行中]"):TEXT("[未开放]"),*FAetherProfile::QuestTitle(Q));if(P.Available(Q))for(auto O:FAetherProfile::Objectives(Q))Text+=FString::Printf(TEXT("     %s %s\n"),P.Evidence.Contains(O)?TEXT("✓"):TEXT("·"),*O.ToString());}
+  {const auto G=AetherGuide::Resolve(C);Text+=TEXT("当前追踪：")+G.Title+TEXT("\n")+G.Label+TEXT("\n")+G.Hint+TEXT("\nTab / 下一项：切换可进行任务\n\n");}
+  for(int Q=0;Q<8;++Q){Text+=FString::Printf(TEXT("%s %s%s\n"),P.Claims.Contains(FAetherProfile::QuestId(Q))?TEXT("[完成]"):P.Complete(Q)?TEXT("[待领奖]"):P.Available(Q)?TEXT("[进行中]"):TEXT("[未开放]"),Q==C->TrackedQuest?TEXT("> "):TEXT(""),*FAetherProfile::QuestTitle(Q));if(P.Available(Q))for(auto O:FAetherProfile::Objectives(Q))Text+=FString::Printf(TEXT("     %s %s\n"),P.Evidence.Contains(O)?TEXT("✓"):TEXT("·"),*AetherGuide::ObjectiveLabel(O));}
   Text+=FString::Printf(TEXT("\n日常委托日期：%s / 当日完成 %d\n补给：2 份补给；巡逻：3 标记；灭火：3 处委托火。\n三类委托均在城镇公告板开始或结算。"),*P.DailyDate,P.DailyClaims.Num());break;
  case 3:
   Title=TEXT("能力 / Abilities");
@@ -81,7 +82,7 @@ void UAetherFrontierPanel::Primary()
 {if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->ServerAction("EquipInstance",C->SelectedItem);else if(C->Panel==2)C->ServerAction("Claim");else if(C->Panel==5)C->ServerAction("Invite");else if(C->Panel==6)C->ServerAction("Save");else ClosePanel();}}
 void UAetherFrontierPanel::Secondary()
 {if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->ServerAction("UseSelected",C->SelectedItem);else if(C->Panel==5)C->ServerAction("AcceptInvite");else if(C->Panel==6)C->ServerAction("Recover");else ClosePanel();}}
-void UAetherFrontierPanel::NextItem(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))if(auto* PS=C->ProfileState())if(!PS->Profile.Inventory.IsEmpty())C->SelectedItem=(C->SelectedItem+1)%PS->Profile.Inventory.Num();}
+void UAetherFrontierPanel::NextItem(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->CycleItem();}
 void UAetherFrontierPanel::ClosePanel(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->bPanel=false;}
 
 void UAetherFrontierPanel::ActionSelected(FString Action,ESelectInfo::Type)

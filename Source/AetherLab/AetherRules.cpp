@@ -36,6 +36,17 @@ const FAetherRules& FAetherRules::Get()
             for(auto P:(*Rewards)->Values){int32 Count=int32(P.Value->AsNumber());if(!R.Items.Contains(*P.Key)||Count<1||Count>1000){R.Error=TEXT("Unknown reward");return R;}Q.Items.Add(*P.Key,Count);}
             R.Quests.Add(Q);
         }
+        const TSharedPtr<FJsonObject>* Objectives=nullptr;
+        if(!Root->TryGetObjectField(TEXT("Objectives"),Objectives)){R.Error=TEXT("Missing objective guidance");return R;}
+        for(const auto& Pair:(*Objectives)->Values)
+        {
+            auto O=Pair.Value->AsObject();FAetherObjectiveRule Rule;FString Anchor;const TArray<TSharedPtr<FJsonValue>>* Position=nullptr;
+            if(!O||!O->TryGetStringField(TEXT("Label"),Rule.Label)||Rule.Label.IsEmpty()||!O->TryGetStringField(TEXT("Hint"),Rule.Hint)||!O->TryGetStringField(TEXT("Anchor"),Anchor)||Anchor.IsEmpty()||!O->TryGetArrayField(TEXT("Position"),Position)||Position->Num()!=3)
+            {R.Error=TEXT("Invalid objective guidance");return R;}
+            Rule.Anchor=*Anchor;for(int I=0;I<3;++I){double Value=0;if(!(*Position)[I]->TryGetNumber(Value)||!FMath::IsFinite(Value)||FMath::Abs(Value)>1000000){R.Error=TEXT("Invalid objective coordinates");return R;}Rule.Position[I]=Value;}
+            R.Objectives.Add(*Pair.Key,Rule);
+        }
+        for(const auto& Q:R.Quests)for(FName Id:Q.Objectives)if(!R.Objectives.Contains(Id)){R.Error=TEXT("Missing quest objective label/anchor");return R;}
         const TSharedPtr<FJsonObject>* Encounters=nullptr;
         if(!Root->TryGetObjectField(TEXT("Encounters"),Encounters)){R.Error=TEXT("Missing encounter definitions");return R;}
         for(const auto& Pair:(*Encounters)->Values)

@@ -24,8 +24,32 @@ void AAetherFrontierHUD::DrawHUD()
     DrawText(TEXT("WASD Move | Shift Sprint | Ctrl Jump | Space Dodge | LMB/Hold Attack | RMB Guard | 1-4/MMB Magic | F Lock | E Interact"),FLinearColor::White,34,H-70);
     DrawText(TEXT("I Bag  J Quests  K Skills  M Map  P Party  Q Potion  G Carry  V Push  R/T Equip  F5 Save  Esc Menu"),FLinearColor(.65,.73,.8),34,H-48);
     DrawText(C->Feedback,FLinearColor(1,.84,.48),30,140);
-    float Y=38;for(int32 Q=0;Q<8;++Q)if(P.Available(Q))
-    {DrawText(FAetherProfile::QuestTitle(Q),FLinearColor(.96,.82,.5),W-370,Y);Y+=22;for(auto F:FAetherProfile::Objectives(Q)){DrawText(FString(P.Evidence.Contains(F)?TEXT("[+] "):TEXT("[ ] "))+F.ToString(),FLinearColor::White,W-360,Y);Y+=18;}Y+=15;}
+    if(GetWorld()->GetTimeSeconds()>=NextGuidanceUpdate)
+    {NextGuidanceUpdate=GetWorld()->GetTimeSeconds()+.15f;Guidance=AetherGuide::Resolve(C);Interaction=AetherGuide::SelectInteraction(C);}
+    const float GX=FMath::Max(430.f,W-370.f);float Y=38;
+    DrawText(Guidance.Title,FLinearColor(.96f,.82f,.5f),GX,Y);Y+=23;
+    DrawText(Guidance.Label,FLinearColor::White,GX,Y);Y+=21;
+    // Canvas has no automatic wrapping: split the short authored hint into bounded rows.
+    for(int32 I=0;I<Guidance.Hint.Len();I+=22){DrawText(Guidance.Hint.Mid(I,22),FLinearColor(.7f,.8f,.9f),GX,Y);Y+=19;}
+    if(Guidance.bHasTarget)
+    {
+        const FVector Delta=Guidance.Position-C->GetActorLocation();const float Meters=Delta.Size2D()/100.f;
+        DrawText(FString::Printf(TEXT("目标距离 %.0f 米 / J 切换追踪"),Meters),FLinearColor(.96f,.82f,.5f),GX,Y);
+        if(!C->bPanel)
+        {
+            const FVector Projected=Project(Guidance.Position+FVector(0,0,100));const FVector Facing=PlayerOwner->GetControlRotation().Vector();
+            if(FVector::DotProduct(Delta,Facing)>0&&Projected.X>30&&Projected.X<W-30&&Projected.Y>180&&Projected.Y<H-160)
+            {DrawRect(FLinearColor(1.f,.75f,.2f),Projected.X-4,Projected.Y-4,8,8);DrawText(FString::Printf(TEXT("%.0f m"),Meters),FLinearColor::White,Projected.X+10,Projected.Y-8);}
+            else
+            {
+                const float Angle=FMath::DegreesToRadians(FMath::FindDeltaAngleDegrees(PlayerOwner->GetControlRotation().Yaw,Delta.Rotation().Yaw));
+                const FVector2D Center(W*.5f,175),Direction(FMath::Sin(Angle),-FMath::Cos(Angle)),Side(-Direction.Y,Direction.X),Tip=Center+Direction*17;
+                DrawLine(Center.X,Center.Y,Tip.X,Tip.Y,FLinearColor(1.f,.75f,.2f),2);
+                for(float Sign:{-1.f,1.f}){const FVector2D Tail=Tip-Direction*7+Side*Sign*5;DrawLine(Tip.X,Tip.Y,Tail.X,Tail.Y,FLinearColor(1.f,.75f,.2f),2);}
+            }
+        }
+    }
+    if(!C->bPanel&&!Interaction.Prompt.IsEmpty())DrawText(Interaction.Prompt,FLinearColor(1.f,.87f,.5f),FMath::Max(30.f,W*.5f-220),H*.62f);
     DrawLine(W/2-7,H/2,W/2+7,H/2,FLinearColor::White);DrawLine(W/2,H/2-7,W/2,H/2+7,FLinearColor::White);
     if(!C->Alive())DrawText(TEXT("DOWNED / Ally E: revive 3s / F8: recover at checkpoint"),FLinearColor(1,.3,.2),W*.35,H*.45,nullptr,1.6);
     float EY=190;for(TActorIterator<AAetherEncounterDirector> It(GetWorld());It;++It)
@@ -58,6 +82,8 @@ void AAetherFrontierHUD::DrawHUD()
         const float MX=W*.5,MY=H*.5,K=H*.000006;
         for(int32 I=0;I<6;++I){const float PX=MX+Places[I].X*K,PY=MY-Places[I].Y*K;DrawRect(FLinearColor(.9,.7,.35),PX-4,PY-4,8,8);DrawText(Titles[I],FLinearColor::White,PX+8,PY-8);}
         const FVector L=C->GetActorLocation();DrawRect(FLinearColor(.2,1,.6),MX+L.X*K-4,MY-L.Y*K-4,8,8);
+        if(Guidance.bHasTarget){const float TX=MX+Guidance.Position.X*K,TY=MY-Guidance.Position.Y*K;DrawRect(FLinearColor(1.f,.4f,.15f),TX-5,TY-5,10,10);DrawText(Guidance.Label,FLinearColor(1.f,.8f,.4f),TX+10,TY+8);}
+
     }
     if(C->Panel==5){Line(TEXT("PARTY / Y invite / U accept / O leave / H command / Del dismiss"));for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Fighter==EAetherFighter::Player)Line(FString::Printf(TEXT("%s  HP %.0f %s"),It->ProfileState()?*It->ProfileState()->DisplayName:It->bHealer?TEXT("Healer companion"):TEXT("Guard companion"),It->Health(),It->ReviveTarget?TEXT("REVIVING"):TEXT("")));}
     if(C->Panel==6){Line(TEXT("MENU / Esc closes / server keeps running"));Line(TEXT("F5 saves world. Profile transactions save automatically."));Line(TEXT("Restart with the same DevProfile to reconnect to local saved progress."));Line(TEXT("Prototype identity only; no production account authentication."));}

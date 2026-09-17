@@ -80,7 +80,7 @@
   "Quests": [
     {
       "Id": "Q_Main_01",
-      "Title": "Arrival: supplies and gate",
+      "Title": "雨中的来客",
       "Prerequisites": [],
       "Objectives": [
         "SupplyA",
@@ -93,7 +93,7 @@
     },
     {
       "Id": "Q_Main_02",
-      "Title": "Register and bind inn",
+      "Title": "城门登记",
       "Prerequisites": [
         0
       ],
@@ -111,7 +111,7 @@
     },
     {
       "Id": "Q_Main_03",
-      "Title": "Sword and magic training",
+      "Title": "双师试炼",
       "Prerequisites": [
         1
       ],
@@ -128,7 +128,7 @@
     },
     {
       "Id": "Q_Main_04",
-      "Title": "Extinguish three forest fires",
+      "Title": "林地防火",
       "Prerequisites": [
         2
       ],
@@ -144,7 +144,7 @@
     },
     {
       "Id": "Q_Main_05",
-      "Title": "Restore waterworks supply",
+      "Title": "水工坊复流",
       "Prerequisites": [
         2
       ],
@@ -159,7 +159,7 @@
     },
     {
       "Id": "Q_Main_06",
-      "Title": "Recruit a companion",
+      "Title": "同行之约",
       "Prerequisites": [
         3,
         4
@@ -173,7 +173,7 @@
     },
     {
       "Id": "Q_Main_07",
-      "Title": "Defeat the bell guardian",
+      "Title": "断钟之下",
       "Prerequisites": [
         5
       ],
@@ -188,7 +188,7 @@
     },
     {
       "Id": "Q_Main_08",
-      "Title": "Return the ancient seal",
+      "Title": "重燃余炉",
       "Prerequisites": [
         6
       ],
@@ -334,6 +334,188 @@
         2
       ],
       "RespawnSeconds": 0
+    }
+  },
+  "Objectives": {
+    "SupplyA": {
+      "Label": "收集驿站第一份补给",
+      "Hint": "靠近补给箱交互。",
+      "Anchor": "SupplyA",
+      "Position": [
+        -6350,
+        -28700,
+        40
+      ]
+    },
+    "SupplyB": {
+      "Label": "收集驿站第二份补给",
+      "Hint": "沿道路向北寻找第二份补给。",
+      "Anchor": "SupplyB",
+      "Position": [
+        -6650,
+        -28300,
+        40
+      ]
+    },
+    "Gate": {
+      "Label": "到达城门",
+      "Hint": "沿南侧道路向北，在城门标记处交互。",
+      "Anchor": "Gate",
+      "Position": [
+        -6500,
+        -9800,
+        160
+      ]
+    },
+    "Register": {
+      "Label": "与登记员交谈",
+      "Hint": "登记员岚庭在城镇中心南侧。",
+      "Anchor": "Registrar",
+      "Position": [
+        -600,
+        -700,
+        90
+      ]
+    },
+    "Inn": {
+      "Label": "绑定旅舍恢复点",
+      "Hint": "与旅舍主人交互，领取训练装备。",
+      "Anchor": "Inn",
+      "Position": [
+        -400,
+        -300,
+        90
+      ]
+    },
+    "Melee1": {
+      "Label": "命中训练木桩 1 / 3",
+      "Hint": "装备训练剑，以轻击命中木桩。",
+      "Anchor": "Dummy",
+      "Position": [
+        850,
+        -300,
+        90
+      ]
+    },
+    "Melee2": {
+      "Label": "命中训练木桩 2 / 3",
+      "Hint": "等待收招结束，再轻击木桩。",
+      "Anchor": "Dummy",
+      "Position": [
+        850,
+        -300,
+        90
+      ]
+    },
+    "Melee3": {
+      "Label": "命中训练木桩 3 / 3",
+      "Hint": "最后一次有效命中，完成剑术训练。",
+      "Anchor": "Dummy",
+      "Position": [
+        850,
+        -300,
+        90
+      ]
+    },
+    "Block": {
+      "Label": "格挡教官一次攻击",
+      "Hint": "装备训练盾，面向教官并格挡。",
+      "Anchor": "Teacher",
+      "Position": [
+        400,
+        -300,
+        90
+      ]
+    },
+    "TrainingExtinguished": {
+      "Label": "熄灭自己的训练火盆",
+      "Hint": "选择引泉，瞄准自己的火盆释放。",
+      "Anchor": "Teacher",
+      "Position": [
+        400,
+        -300,
+        90
+      ]
+    },
+    "ForestFire0": {
+      "Label": "清理林地东侧火点",
+      "Hint": "用引泉或旁边水桶灭火；已清理可近前检查。",
+      "Anchor": "ForestFire0",
+      "Position": [
+        -26500,
+        350,
+        50
+      ]
+    },
+    "ForestFire1": {
+      "Label": "清理林地中部火点",
+      "Hint": "水桶和法术储水有限，按需补充。",
+      "Anchor": "ForestFire1",
+      "Position": [
+        -26950,
+        350,
+        50
+      ]
+    },
+    "ForestFire2": {
+      "Label": "清理林地西侧火点",
+      "Hint": "使火点熄灭，留意附近敌人。",
+      "Anchor": "ForestFire2",
+      "Position": [
+        -27400,
+        350,
+        50
+      ]
+    },
+    "Rescue": {
+      "Label": "救出受困工匠",
+      "Hint": "三处火点安全后，与工匠交谈。",
+      "Anchor": "Rescue",
+      "Position": [
+        -27700,
+        -300,
+        90
+      ]
+    },
+    "SupplyRestored": {
+      "Label": "恢复水工坊供水",
+      "Hint": "可走机械旁路，或连接导体驱动水泵。",
+      "Anchor": "Pump",
+      "Position": [
+        28100,
+        0,
+        80
+      ]
+    },
+    "Companion": {
+      "Label": "在旅舍集结点招募同行者",
+      "Hint": "完成两条野外任务，脱战后招募。",
+      "Anchor": "Recruit",
+      "Position": [
+        400,
+        300,
+        90
+      ]
+    },
+    "GuardianDefeated": {
+      "Label": "完成断钟修道院挑战",
+      "Hint": "与同行者到入口交互，依次推进遭遇。",
+      "Anchor": "AbbeyEntry",
+      "Position": [
+        0,
+        24400,
+        100
+      ]
+    },
+    "SealDelivered": {
+      "Label": "向镇上执事交付古印",
+      "Hint": "返回余炉镇北侧，与执事交互。",
+      "Anchor": "Steward",
+      "Position": [
+        0,
+        700,
+        90
+      ]
     }
   }
 }
