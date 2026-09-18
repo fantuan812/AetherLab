@@ -1,5 +1,8 @@
 #include "Misc/AutomationTest.h"
 #include "Commands/AetherProfileCommand.h"
+#include "Commands/AetherConsumableDeliveryPump.h"
+#include "HAL/PlatformProcess.h"
+#include "HAL/PlatformTime.h"
 #include "Profile/AetherProfileCodec.h"
 #include "Persistence/AetherSqliteStore.h"
 #include "Misc/FileHelper.h"
@@ -86,7 +89,7 @@ bool FAetherConsumableRecoveryTest::RunTest(const FString&)
         const auto R=DB.Store->Read(Row.Value.Key).Get();
         return R.Value.IsSet()&&AetherProfileCodec::Decode(R.Value->Payload,C.Items,FAetherSkillDefinitionsV10::Get(),FAetherRules::Get(),P,Reason);
     };
-    FAetherConsumableReceiver Receiver(C.Context.Resources);
+    FAetherConsumableReceiver Receiver(TEXT("Alice"),C.Context.Resources);
     TestTrue(TEXT("Reserve exact pre-commit resource state"),Receiver.Reserve(C.Command.CommandId,C.Context.Resources));
     auto Damage=C.Context.Resources;++Damage.Revision;Damage.Health=1;
     TestFalse(TEXT("Pending transaction gates resource update; caller must defer whole action"),Receiver.UpdateResources(Damage));
@@ -111,11 +114,11 @@ bool FAetherConsumableRecoveryTest::RunTest(const FString&)
     TestTrue(TEXT("Lost delivery acknowledgement cannot heal again after damage"),Receiver.Apply(D,TEXT("Alice"))==A::Replayed&&Receiver.State().Health==5);
     auto Changed=E;Changed.After.Health+=1;auto Forged=D;AetherConsumableEffects::Encode(Changed,Forged.Payload);
     TestTrue(TEXT("Reused delivery ID with another valid result conflicts"),Receiver.Apply(Forged,TEXT("Alice"))==A::Conflict);
-    FAetherConsumableReceiver Stale(Damage);
+    FAetherConsumableReceiver Stale(TEXT("Alice"),Damage);
     TestTrue(TEXT("No dedupe proof and newer resource version cannot overwrite damage"),Stale.Apply(D,TEXT("Alice"))==A::Conflict);
     // 新进程丢失内存去重表时，必须经过显式的全资源新生命恢复，不可直接重放旧治疗。
     auto Fresh=C.Context.Resources;Fresh.LifeId=FGuid::NewGuid();Fresh.Revision=0;Fresh.Health=Fresh.MaxHealth;
-    FAetherConsumableReceiver Respawn(Fresh);
+    FAetherConsumableReceiver Respawn(TEXT("Alice"),Fresh);
     TestTrue(TEXT("Old life cannot target new pawn through ordinary apply"),Respawn.Apply(D,TEXT("Alice"))==A::Conflict);
     auto Duplicate=Pending.Values;Duplicate.Add(D);
     TestFalse(TEXT("Corrupt duplicate recovery batch changes nothing"),Respawn.RecoverAtFullRespawn(Duplicate,TEXT("Alice")));
@@ -128,5 +131,84 @@ bool FAetherConsumableRecoveryTest::RunTest(const FString&)
     DB.Store->Close();DB.Store.Reset();DB=AetherSQLite::Open(O);
     TestTrue(TEXT("Acknowledged effect stays removed after reopen"),DB.Store.IsValid()&&DB.Store->PendingEffects(TEXT("Alice")).Get().Values.IsEmpty());
     if(DB.Store.IsValid())DB.Store->Close();return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherConsumablePumpTest,"Aether.V10.Consumables.AsyncDeliveryAndEpoch",
+    EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FAetherConsumablePumpTest::RunTest(const FString&)
+{
+    using R=EAetherDeliveryPumpCode;FCase C;FString Reason;
+    FAetherSqliteOptions O;O.DatabasePath=FPaths::ProjectSavedDir()/TEXT("Automation/V10ConsumablePump")/FGuid::NewGuid().ToString(EGuidFormats::Digits)/TEXT("state.sqlite");
+    auto DB=AetherSQLite::Open(O);if(!TestTrue(TEXT("Open isolated pump DB"),DB.Store.IsValid()))return false;
+    FAetherTransaction Seed;Seed.ActorId=C.Profile.CharacterId;Seed.ExpectedProfileRevision=-1;Seed.CommandId=AetherTransactions::NewCommandId(-1);Seed.Request={1};
+    FAetherAggregateWrite Row;Row.Value.Key={EAetherAggregateKind::Profile,C.Profile.CharacterId};
+    AetherProfileCodec::Encode(C.Profile,C.Items,FAetherSkillDefinitionsV10::Get(),FAetherRules::Get(),Row.Value.Payload,Reason);Seed.Writes.Add(Row);
+    DB.Store->Commit(Seed).Get();
+    FAetherConsumableReceiver Receiver(TEXT("Alice"),C.Context.Resources);
+    FAetherProfileCoordinator Coordinator(DB.Store.ToSharedRef(),C.Items,FAetherSkillDefinitionsV10::Get(),FAetherRules::Get());
+    auto Session=Coordinator.BeginSession(TEXT("Alice"));FAetherCommandResult Reject;
+    const FAetherResolveProfileContext Context=[&](const auto&,const auto& Cmd,const auto&,auto& Out)
+    {
+        Out=C.Context;Out.ResourceReservationId=Cmd.CommandId;return Receiver.Reserve(Cmd.CommandId,Out.Resources);
+    };
+    TestTrue(TEXT("UseItem accepted by actual async command coordinator"),Coordinator.Submit(Session,C.Command,Reject));
+    TArray<FAetherProfileCompletion> Done;double Deadline=FPlatformTime::Seconds()+5;
+    while(Done.IsEmpty()&&FPlatformTime::Seconds()<Deadline){Done=Coordinator.Poll(Context);FPlatformProcess::Sleep(.001f);}
+    if(!TestTrue(TEXT("Coordinator commits only inventory and durable delivery before applying resources"),
+        Done.Num()==1&&Done[0].Result.Code==EAetherCommandCode::Applied&&Done[0].Snapshot.IsSet()&&Receiver.State().Health==20&&Receiver.IsReserved(C.Command.CommandId)))
+    {DB.Store->Close();return false;}
+    C.Profile=Done[0].Snapshot.GetValue();
+    FAetherConsumableReceiver* ActiveReceiver=&Receiver;
+    const FAetherResolveConsumableReceiver Resolve=[&](const auto& S){return S==Session?ActiveReceiver:nullptr;};
+    const auto Wait=[&](FAetherConsumableDeliveryPump& Pump)
+    {
+        FAetherDeliveryPumpResult Result;const double End=FPlatformTime::Seconds()+5;
+        do {Result=Pump.Poll(Resolve);if(Result.Code!=R::Pending)return Result;FPlatformProcess::Sleep(.001f);}while(FPlatformTime::Seconds()<End);
+        return Result;
+    };
+    FAetherConsumableDeliveryPump Pump(DB.Store.ToSharedRef());
+    TestTrue(TEXT("Start bounded delivery batch"),Pump.Start(Session));
+    TestFalse(TEXT("Do not overlap read batches"),Pump.Start(Session));
+    Pump.Poll(Resolve);DB.Store->PendingEffects(TEXT("Alice")).Get(); // 排在内部读取后，建立确定的测试时序。
+    TestTrue(TEXT("Apply committed effect and enqueue acknowledgement"),Pump.Poll(Resolve).Code==R::Pending&&Receiver.State().Health>20);
+    TestTrue(TEXT("ACK may already reach disk before game-thread callback"),DB.Store->PendingEffects(TEXT("Alice")).Get().Values.IsEmpty());
+    Session=Coordinator.BeginSession(TEXT("Alice"));
+    TestTrue(TEXT("Old session cannot finish against replacement session"),Pump.Poll(Resolve).Code==R::StaleSession);
+    TestEqual(TEXT("Dropped ACK reply preserves in-memory evidence"),Receiver.PendingAcknowledgementIds().Num(),1);
+    auto Damage=Receiver.State();++Damage.Revision;Damage.Health=5;Receiver.UpdateResources(Damage);
+    TestTrue(TEXT("New session can reconcile completed acknowledgement"),Pump.Start(Session)&&Wait(Pump).Code==R::Complete&&Receiver.PendingAcknowledgementIds().IsEmpty()&&Receiver.State().Health==5);
+    FAetherConsumableReceiver Foreign(TEXT("Bob"),Receiver.State());ActiveReceiver=&Foreign;
+    Pump.Start(Session);TestTrue(TEXT("Resolver cannot route Alice deliveries into Bob resources"),Pump.Poll(Resolve).Code==R::StaleSession);
+    ActiveReceiver=&Receiver;
+    // 再消费一件，为更换资源所有者、坏批次与新生命恢复提供真实持久投递。
+    C.Command.ExpectedProfileRevision=C.Profile.Revision;C.Command.CommandId=AetherTransactions::NewCommandId(C.Profile.Revision);
+    C.Context.ResourceReservationId=C.Command.CommandId;C.Context.ServerUnixMs+=10000;
+    Receiver.Reserve(C.Command.CommandId,C.Context.Resources);
+    if(!TestTrue(TEXT("Prepare second use"),C.Prepare())){DB.Store->Close();return false;}
+    TestTrue(TEXT("Commit second use"),DB.Store->Commit(C.Transaction).Get().Code==EAetherStoreCode::Committed);
+    Pump.Start(Session);Pump.Poll(Resolve);
+    FAetherConsumableReceiver Other(TEXT("Alice"),C.Context.Resources);ActiveReceiver=&Other;
+    TestTrue(TEXT("Same session cannot silently swap resource owner during async read"),Pump.Poll(Resolve).Code==R::StaleSession);
+    TestEqual(TEXT("Stale receiver leaves delivery durable"),DB.Store->PendingEffects(TEXT("Alice")).Get().Values.Num(),1);
+    auto Wrong=C.Context.Resources;++Wrong.Revision;Wrong.Health=1;FAetherConsumableReceiver WrongReceiver(TEXT("Alice"),Wrong);ActiveReceiver=&WrongReceiver;
+    Pump.Start(Session);TestTrue(TEXT("Resource version conflict does not acknowledge effect"),Wait(Pump).Code==R::Conflict);
+    TestEqual(TEXT("Conflicted effect remains pending"),DB.Store->PendingEffects(TEXT("Alice")).Get().Values.Num(),1);
+    // 在合法记录后追加坏记录，验证不是应用前半批之后才发现坏尾项。
+    auto Invalid=C.Transaction;Invalid.CommandId=AetherTransactions::NewCommandId(2);Invalid.ExpectedProfileRevision=2;Invalid.Request={99};Invalid.Result={1};
+    Invalid.Writes[0].ExpectedRevision=2;Invalid.Writes[0].Value.Revision=3;
+    FAetherProfileStateV10 Next;AetherProfileCodec::Decode(C.Transaction.Writes[0].Value.Payload,C.Items,FAetherSkillDefinitionsV10::Get(),FAetherRules::Get(),Next,Reason);
+    Next.Revision=3;AetherProfileCodec::Encode(Next,C.Items,FAetherSkillDefinitionsV10::Get(),FAetherRules::Get(),Invalid.Writes[0].Value.Payload,Reason);
+    Invalid.Effects[0].Id=Invalid.CommandId;Invalid.Effects[0].Payload={1,2,3};
+    TestTrue(TEXT("Seed opaque malformed effect in isolated DB"),DB.Store->Commit(Invalid).Get().Code==EAetherStoreCode::Committed);
+    ActiveReceiver=&Receiver;Pump.Start(Session);TestTrue(TEXT("Whole batch validates before any resource change"),Wait(Pump).Code==R::Invalid&&Receiver.State().Health==5);
+    TestEqual(TEXT("Invalid tail leaves both records"),DB.Store->PendingEffects(TEXT("Alice")).Get().Values.Num(),2);
+    // 仅测试夹具修复上述人工坏记录；生产路径绝不这样跳过未解析效果。
+    DB.Store->AcknowledgeEffect(TEXT("Alice"),Invalid.CommandId).Get();
+    auto Fresh=C.Context.Resources;Fresh.LifeId=FGuid::NewGuid();Fresh.Revision=0;Fresh.Health=Fresh.MaxHealth;
+    FAetherConsumableReceiver Respawn(TEXT("Alice"),Fresh);ActiveReceiver=&Respawn;Session=Coordinator.ReplacePawn(Session);
+    TestTrue(TEXT("New-life recovery batch starts"),Pump.Start(Session,true));
+    const auto Recovered=Wait(Pump);
+    TestTrue(TEXT("Explicit full respawn resolves and acknowledges old-life record"),Recovered.Code==R::Complete&&Recovered.bFullRespawnRecovered&&Recovered.Acknowledged==1&&Respawn.State().Health==100);
+    TestTrue(TEXT("Successful batch removed only applied deliveries"),DB.Store->PendingEffects(TEXT("Alice")).Get().Values.IsEmpty());
+    DB.Store->Close();return true;
 }
 #endif

@@ -73,10 +73,11 @@ bool AetherConsumableEffects::Decode(const TArray<uint8>& Bytes,FAetherConsumabl
     FWire R;R.Bytes=Bytes;R.Reading=true;FAetherConsumableEffectV10 Copy;R.Effect(Copy);
     if(!R.OK||R.Offset!=Bytes.Num()||!Valid(Copy))return false;E=MoveTemp(Copy);return true;
 }
-FAetherConsumableReceiver::FAetherConsumableReceiver(FAetherResourceStateV10 Initial):Current(MoveTemp(Initial)){}
+FAetherConsumableReceiver::FAetherConsumableReceiver(FString Actor,FAetherResourceStateV10 Initial)
+    :Owner(MoveTemp(Actor)),Current(MoveTemp(Initial)){}
 bool FAetherConsumableReceiver::Reserve(FGuid Id,FAetherResourceStateV10& Before)
 {
-    if(!Current.Validate()||Current.Health<=0||!Id.IsValid()||Reserved.IsValid()||Applied.Contains(Id)||Applied.Num()>=128)return false;
+    if(Owner.IsEmpty()||!Current.Validate()||Current.Health<=0||!Id.IsValid()||Reserved.IsValid()||Applied.Contains(Id)||Applied.Num()>=128)return false;
     Reserved=Id;Before=Current;return true;
 }
 bool FAetherConsumableReceiver::CancelUncommitted(FGuid Id)
@@ -90,7 +91,7 @@ bool FAetherConsumableReceiver::UpdateResources(const FAetherResourceStateV10& N
 EAetherEffectApplyCode FAetherConsumableReceiver::Apply(const FAetherEffectDelivery& D,const FString& Actor)
 {
     using C=EAetherEffectApplyCode;FAetherConsumableEffectV10 E;
-    if(!Unpack(D,Actor,E))return C::Invalid;
+    if(Actor!=Owner||!Unpack(D,Actor,E))return C::Invalid;
     // 先查实际投递内容；重试发生在后续受伤之后，也绝不能再次把生命改回旧目标值。
     if(const auto* Bytes=Applied.Find(D.Id))return *Bytes==D.Payload?C::Replayed:C::Conflict;
     if(Applied.Num()>=128)return C::Capacity;
@@ -98,9 +99,11 @@ EAetherEffectApplyCode FAetherConsumableReceiver::Apply(const FAetherEffectDeliv
     Current=E.After;Applied.Add(D.Id,D.Payload);Reserved.Invalidate();return C::Applied;
 }
 bool FAetherConsumableReceiver::ForgetAcknowledged(FGuid Id){return Applied.Remove(Id)>0;}
+TArray<FGuid> FAetherConsumableReceiver::PendingAcknowledgementIds() const
+{TArray<FGuid> Ids;Applied.GetKeys(Ids);return Ids;}
 bool FAetherConsumableReceiver::RecoverAtFullRespawn(const TArray<FAetherEffectDelivery>& Pending,const FString& Actor)
 {
-    if(Reserved.IsValid()||!Applied.IsEmpty()||!Current.Validate()||Current.Revision!=0||Pending.Num()>128||
+    if(Actor!=Owner||Actor.IsEmpty()||Reserved.IsValid()||!Applied.IsEmpty()||!Current.Validate()||Current.Revision!=0||Pending.Num()>128||
         Current.Health!=Current.MaxHealth||Current.Mana!=Current.MaxMana||Current.Stamina!=Current.MaxStamina)return false;
     TMap<FGuid,TArray<uint8>> Recovered;int64 Cooldown=Current.UseReadyAtUnixMs;
     for(const auto& D:Pending)

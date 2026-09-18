@@ -31,7 +31,11 @@ enum class EAetherEffectApplyCode : uint8 { Applied, Replayed, Conflict, Invalid
 class AETHERCORE_API FAetherConsumableReceiver
 {
 public:
-    explicit FAetherConsumableReceiver(FAetherResourceStateV10 Initial);
+    FAetherConsumableReceiver(FString ServerCharacterId,FAetherResourceStateV10 Initial);
+    const FString& CharacterId() const { return Owner; }
+    FAetherConsumableReceiver(const FAetherConsumableReceiver&)=delete;
+    FAetherConsumableReceiver& operator=(const FAetherConsumableReceiver&)=delete;
+    FGuid InstanceId() const { return ReceiverId; }
     const FAetherResourceStateV10& State() const { return Current; }
     bool Reserve(FGuid CommandId,FAetherResourceStateV10& Before);
     bool IsReserved(FGuid CommandId) const { return Reserved==CommandId&&CommandId.IsValid(); }
@@ -41,10 +45,14 @@ public:
     EAetherEffectApplyCode Apply(const FAetherEffectDelivery& Delivery,const FString& ServerCharacterId);
     // 数据库确认删除后才可释放去重槽；重复的已读旧投递仍会因资源版本不符而被拒绝。
     bool ForgetAcknowledged(FGuid DeliveryId);
+    // 发起完整 pending 查询之前取此集合；查询中已不存在的旧 ID 可安全回收去重槽。
+    TArray<FGuid> PendingAcknowledgementIds() const;
     // 明确的“新生命全资源重生”恢复策略，只能在玩家输入/战斗开启前调用。
     // 调用方先等旧写者完成并读取全部 pending；此函数不会把旧生命治疗加到新生命上。
     bool RecoverAtFullRespawn(const TArray<FAetherEffectDelivery>& Pending,const FString& ServerCharacterId);
 private:
+    const FString Owner;
+    const FGuid ReceiverId=FGuid::NewGuid();
     FAetherResourceStateV10 Current;
     FGuid Reserved;
     TMap<FGuid,TArray<uint8>> Applied;
