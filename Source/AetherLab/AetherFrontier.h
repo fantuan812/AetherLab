@@ -7,6 +7,10 @@
 #include "AetherGuide.h"
 #include "AetherServices.h"
 #include "AetherQuestRuntime.h"
+#include "AetherWorldState.h"
+#include "AetherWorldCapability.h"
+#include "AetherPersistence.h"
+struct FAetherWorldPlacement;
 #include "AetherFrontier.generated.h"
 class UAetherPhysicsDamageComponent;
 class UAetherTraversalComponent;
@@ -17,15 +21,18 @@ class UAetherFrontierPanel;
 class USkeletalMeshComponent;
 
 UCLASS()
-class AAetherFrontierProp : public AAetherWorldObject
+class AAetherFrontierProp : public AAetherWorldObject, public IAetherWorldCapability
 {
     GENERATED_BODY()
 public:
     AAetherFrontierProp();
+    virtual bool HasWorldCapability(FName Capability) const override {return Capability=="LiquidReceiver"?bAcceptsWater:Capabilities.Contains(Capability);}
+    virtual UReactiveBodyComponent* ReactionBody() const override {return Reactive;}
     UPROPERTY(VisibleAnywhere) TObjectPtr<UReactiveMechanismComponent> Mechanism;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherPhysicsDamageComponent> PhysicsDamage;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherTraversalComponent> Traversal;
     UPROPERTY(Replicated) FName Service;
+    UPROPERTY(Replicated) TArray<FName> Capabilities;
     UPROPERTY(Replicated) bool bCarryable = false;
     UPROPERTY(Replicated) TObjectPtr<AAetherCharacter> Carrier;
     UPROPERTY(VisibleAnywhere) TObjectPtr<USkeletalMeshComponent> Person;
@@ -94,7 +101,18 @@ public:
     float NextCompanionAction = 0;
     float NextServerAction = 0;
     float NextPotion = 0;
+    bool bTravelPending=false;
+    FVector TravelDestination,TravelOrigin;
+    float TravelStarted=0;
+    void BeginSafeTravel(FVector Destination);
+    void UpdateSafeTravel();
     int32 SelectedItem = 0;
+    FGuid SelectedInstance,MergeDestination;
+    int32 InventoryQuantity=1,MinimumInventoryRevision=0;
+    FAetherInventoryCommand PendingInventory;
+    void SubmitInventory(FName Action,FName Definition=NAME_None);
+    UFUNCTION(Server,Reliable) void ServerInventory(FAetherInventoryCommand Command);
+    UFUNCTION(Client,Reliable) void InventoryResult(FGuid Id,EAetherInventoryResult Result,int32 Revision,int32 Transferred);
     FName TrackedQuest;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> GameplayContext;
     UPROPERTY(Transient) TMap<FName,TObjectPtr<UInputAction>> InputActions;
@@ -112,10 +130,10 @@ public:
     UPROPERTY(Replicated) float BossPressure = 0;
     virtual float TakeDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer) override;
     void CycleItem();
-    void SellItem(){if(bPanel&&Panel==1)ServerAction("Sell",SelectedItem);}
-    void BuyMana(){if(bPanel&&Panel==1)ServerAction("Buy",1);}
-    void BuyRation(){if(bPanel&&Panel==1)ServerAction("Buy",2);}
-    void UseMana(){if(!bPanel)ServerAction("ManaPotion");}
+    void SellItem(){if(bPanel&&Panel==1)SubmitInventory("Sell");}
+    void BuyMana(){if(bPanel&&Panel==1)SubmitInventory("Buy","ManaPotion");}
+    void BuyRation(){if(bPanel&&Panel==1)SubmitInventory("Buy","Ration");}
+    void UseMana(){if(!bPanel)SubmitInventory("Use","ManaPotion");}
     void Recover(){ServerAction("Recover");}
     void PartyCommand(){if(bPanel&&Panel==5)ServerAction("PartyCommand");}
     void Invite(){if(bPanel&&Panel==5)ServerAction("Invite");}
@@ -139,16 +157,16 @@ public:
 private:
     void PressAttack(); void ReleaseAttack();
     void SprintOn(){ServerSprint(true);} void SprintOff(){ServerSprint(false);}
-    void UsePotion(){if(!bPanel)ServerAction("Potion");} void InteractV4();
+    void UsePotion(){if(!bPanel)SubmitInventory("Use","Potion");} void InteractV4();
     FAetherWorldServiceCommand PendingService;
     int32 MinimumServiceRevision=0;
     void Throw(){if(!bPanel)ServerAction("Throw");}
     void ClaimRewards(){if(bPanel&&Panel==2)ServerAction("Claim");}
     void Carry(){if(!bPanel)ServerAction("Carry");} void Push(){if(!bPanel)ServerAction("Push");}
-    void EquipNext(){ServerAction("Equip");} void Shield(){ServerAction("Shield");}
+    void EquipNext(){SubmitInventory("CycleMain");} void Shield(){SubmitInventory("CycleOff");}
     void SaveV4(){ServerAction("Save");} void Recruit(){ServerAction("Recruit");}
-    void SplitStack(){if(bPanel&&Panel==1)ServerAction("Split");}
-    void MergeStacks(){if(bPanel&&Panel==1)ServerAction("Merge");}
+    void SplitStack(){if(bPanel&&Panel==1)SubmitInventory("Split");}
+    void MergeStacks(){if(bPanel&&Panel==1)SubmitInventory("Merge");}
     void ToggleInventory(){SelectPanel(1);} void ToggleQuests(){SelectPanel(2);}
     void ToggleSkills(){SelectPanel(3);} void ToggleMap(){SelectPanel(4);}
     void ToggleParty(){SelectPanel(5);} void ToggleMenu(){SelectPanel(6);}
@@ -167,6 +185,7 @@ struct FAetherWorldLoot
  UPROPERTY() FVector Location=FVector::ZeroVector;
  UPROPERTY() FName Definition="Material";
  UPROPERTY() int32 Count=1;
+ UPROPERTY() TMap<FName,int32> Items;
  UPROPERTY() FString ClaimedBy;
 };
 USTRUCT()
@@ -223,10 +242,13 @@ public:
     TMap<TWeakObjectPtr<AAetherCharacter>,TSet<FName>> KillCredit;
     FString SavePrefix = TEXT("AetherFrontier_v4");
     bool bSmoke = false;
+    bool bWorldRestoreFailed=false;
     bool bFailWrites = false;
+    TSharedPtr<IAetherSnapshotStore> Storage;
     TMap<FString,int32> ClosureAcks;
     bool bClosureFailed=false;
     bool bFailAfterDataWrite = false;
+    EAetherInventoryResult ExecuteInventory(AAetherFrontierCharacter* C,const FAetherInventoryCommand& Command,int32& Revision,int32& Moved);
     bool Commit(AAetherPlayerState* PS, FAetherProfile Next,FName WorldFact=NAME_None,FName FactSource=NAME_None);
     bool CommitOffline(FAetherProfile Next);
     bool SaveWorld();
@@ -238,11 +260,18 @@ public:
     bool RecordCampClear(FName Definition,FGuid Instance);
     FString ClaimLoot(AAetherFrontierCharacter* C,FName Id);
     void SpawnLoot(const FAetherWorldLoot& Loot);
+    bool ExecutePartyAction(AAetherFrontierCharacter* C,FName Action);
     bool CanChangeParty(const AAetherFrontierCharacter* C) const;
     void LeaveParty(AAetherPlayerState* PS);
     void CreditHit(AAetherCharacter* Target,AAetherCharacter* Source);
     AAetherFrontierProp* Make(FName Id,FName Service,FVector Location,FVector Scale,EAetherObjectKind Kind,const FString& Label);
 private:
+    FAetherEntityRegistry Registry;
+    int32 RegionLoads=0,RegionUnloads=0;
+    void UpdateRegions(const TArray<FVector>& Players);
+    void ApplyObjectDefinition(AAetherFrontierProp* A,FName Definition);
+    AAetherFrontierProp* SpawnPlacement(const FAetherWorldPlacement& Placement);
+    void RebuildWorldLinks();
     void BuildWorld();
     void BuildWorkshop();
     void CaptureWorkshop();
@@ -257,6 +286,7 @@ private:
     void CheckReactions();
     void CheckServices();
     void CheckDataContracts();
+    void CheckV9();
     void CheckClosure();
     int32 ClosureStage=0;
     float ClosureAt=0;

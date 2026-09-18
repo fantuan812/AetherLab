@@ -10,37 +10,6 @@
 #include "Misc/Paths.h"
 #include "GameFramework/PlayerController.h"
 
-void AAetherFrontierMode::BuildWorkshop()
-{
-    // A second authored slice within the existing town; shared service/material definitions.
-    auto Add=[&](FName Id,FName Service,FVector P,FVector Scale,EAetherObjectKind Kind,const TCHAR* Label)
-    {
-        auto* A=Make(Id,Service,P+FVector(6000,5000,0),Scale,Kind,Label);
-        A->Reactive->bAllowAbsentFromOlderSave=true;
-        A->bWorkshopService=Service=="Source"||Service=="Receiver"||Service=="SupplyRestored";
-        return A;
-    };
-    Add("LabBoard",NAME_None,{-600,-700,100},{.1,.1,.1},EAetherObjectKind::Stone,TEXT("REACTION WORKSHOP\nRESTORE POWER OR USE MANUAL PUMP\nMISSING MATERIAL? USE BYPASS\nOUT OF WATER? REST AT TOWN INN"));
-    Add("LabDummy","Dummy",{-600,-350,90},{.7,.7,1.8},EAetherObjectKind::Stone,TEXT("TRAINING SWORD / CUT ROPE OR STRIKE DUMMY"));
-    Add("LabFire","WorkshopFire",{-600,300,50},{.9,.9,1},EAetherObjectKind::Timber,TEXT("FIRE / WATER OR BUCKET"));
-    Add("LabBucket","Bucket",{-600,550,45},{.6,.6,.9},EAetherObjectKind::Water,TEXT("E / FINITE BUCKET"));
-    Add("LabWell","Well",{-1000,600,50},{1,1,1},EAetherObjectKind::Cistern,TEXT("E / FINITE RESERVOIR / INN REST REPLENISHES SPELL WATER"));
-    Add("LabCrate","Crate",{-250,-650,50},{.8,.8,1},EAetherObjectKind::Timber,TEXT("G CARRY / V PUSH / THROW / FLOAT"));
-    Add("LabWest",NAME_None,{-300,0,120},{3,10,2.4},EAetherObjectKind::Stone,TEXT(""));
-    for(int I=0;I<3;++I)Add(*FString::Printf(TEXT("LabStep%d"),I),NAME_None,{-700.f+I*100,0,30.f+I*30},{1,3,.6f+I*.6f},EAetherObjectKind::Stone,TEXT(""));
-    Add("LabEast",NAME_None,{900,0,120},{3,10,2.4},EAetherObjectKind::Stone,TEXT(""));
-    Add("LabBypass",NAME_None,{300,650,120},{15,3,2.4},EAetherObjectKind::Stone,TEXT("MAINTENANCE BYPASS / NO MAGIC OR MATERIALS REQUIRED"));
-    auto* Rope=Add("LabRope","Support",{-400,-200,350},{.2,.2,2.2},EAetherObjectKind::Rope,TEXT("CUT OR BURN SUPPORT"));
-    auto* Bridge=Add("LabBridge","Bridge",{300,-250,650},{9,3,.25},EAetherObjectKind::Stone,TEXT("WAIT FOR BRIDGE TO SETTLE"));
-    Bridge->Mechanism->Supports.Add(Rope->Reactive);Bridge->Mesh->SetMassOverrideInKg(NAME_None,60,true);
-    Add("LabStopA",NAME_None,{-80,-250,210},{.4,3,.6},EAetherObjectKind::Stone,TEXT(""));
-    Add("LabStopB",NAME_None,{680,-250,210},{.4,3,.6},EAetherObjectKind::Stone,TEXT(""));
-    for(int I=0;I<3;++I)Add(*FString::Printf(TEXT("LabWater%d"),I),"Water",{float(I*300),150,228},{3,3,.2},EAetherObjectKind::Water,TEXT("FROST PATH / WATCH THAW WARNING"));
-    Add("LabSource","Source",{1400,200,40},{1,1,.8},EAetherObjectKind::Stone,TEXT("E / INDEPENDENT FINITE SOURCE"));
-    Add("LabReceiver","Receiver",{1700,200,40},{1,1,.8},EAetherObjectKind::Stone,TEXT("E / RESTORE WORKSHOP WITH POWER"));
-    Add("LabRod","Conductor",{1550,-150,40},{2.1,.3,.3},EAetherObjectKind::Stone,TEXT("G / MOVE ROD BETWEEN TERMINALS"));
-    Add("LabPump","SupplyRestored",{1100,650,80},{1,1,1.6},EAetherObjectKind::Stone,TEXT("E / MANUAL RESTORE / NO POWER NEEDED"));
-}
 void AAetherFrontierProp::UpdateReactionFeedback()
 {
     if(GetNetMode()==NM_DedicatedServer||!Spec.bInteractiveMaterial)return;

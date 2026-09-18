@@ -1,5 +1,5 @@
 #include "AetherQuestRuntime.h"
-#include "AetherProgression.h"
+#include "AetherProfile.h"
 bool FAetherWorldFacts::Record(FName Id,FName Source,const FAetherRules& R)
 {
  const auto* Rule=R.Objectives.Find(Id);
@@ -36,9 +36,8 @@ bool Observe(FAetherProfile& P,FName Fact,const FAetherRules& R)
 bool Claim(FAetherProfile& P,FName Id,const FAetherRules& R)
 {
  if(!Complete(P,Id,R))return false;const auto& Q=*R.Quest(Id);auto Next=P;
- for(const auto& Item:Q.Items)if(!Next.Add(Item.Key,Item.Value,R))return false;
- if(Next.Gold>10000000-Q.Gold||Next.Experience>MAX_int32-Q.Experience)return false;
- Next.Claims.Add(Id);Next.Gold+=Q.Gold;Next.Experience+=Q.Experience;Next.bRegistered|=Q.bBindInn;
+ if(!AetherItems::Grant(Next,Q.Items,Q.Gold,R)||Next.Experience>MAX_int32-Q.Experience)return false;
+ Next.Claims.Add(Id);Next.Experience+=Q.Experience;Next.bRegistered|=Q.bBindInn;
  P=MoveTemp(Next);return true;
 }
 bool Settle(FAetherProfile& P,const FAetherWorldFacts& Facts,bool Manual,const FAetherRules& R)

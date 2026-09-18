@@ -1,4 +1,6 @@
 #include "AetherEquipmentComponent.h"
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
 #include "Components/SkinnedMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
@@ -186,12 +188,15 @@ UStaticMeshComponent* UAetherEquipmentComponent::VisualForSlot(FName Slot) const
 void UAetherEquipmentComponent::OnRep_Loadout() { RebuildVisuals(); OnLoadoutChanged.Broadcast(); }
 void UAetherEquipmentComponent::RebuildVisuals()
 {
+    if(VisualLoad){if(VisualLoad->HasLoadCompleted()){TArray<FSoftObjectPath> Requested;VisualLoad->GetRequestedAssets(Requested);for(const auto& P:Requested)if(!P.ResolveObject()){FailedVisualAssets.Add(P);UE_LOG(LogTemp,Warning,TEXT("Equipment visual unavailable: %s"),*P.ToString());}}VisualLoad->CancelHandle();VisualLoad->ReleaseHandle();VisualLoad.Reset();}
     for (auto& Pair:Visuals) if (Pair.Value) Pair.Value->DestroyComponent(); Visuals.Reset();
     if (!AttachmentTarget || !Catalog || GetNetMode()==NM_DedicatedServer) return;
+    TArray<FSoftObjectPath> Missing;for(const auto& S:Slots)if(auto* D=Catalog->Find(S.ItemId);D&&!D->Mesh.IsNull()&&!D->Mesh.Get()&&!FailedVisualAssets.Contains(D->Mesh.ToSoftObjectPath()))Missing.AddUnique(D->Mesh.ToSoftObjectPath());
+    if(!Missing.IsEmpty()){VisualLoad=UAssetManager::GetStreamableManager().RequestAsyncLoad(Missing,FStreamableDelegate::CreateUObject(this,&UAetherEquipmentComponent::RebuildVisuals));return;}
     for (const auto& S:Slots)
     {
         auto* D=Catalog->Find(S.ItemId); if (!D || !AttachmentTarget->DoesSocketExist(D->Socket)) continue;
-        auto* Mesh=D->Mesh.LoadSynchronous(); if (!Mesh) continue;
+        auto* Mesh=D->Mesh.Get(); if (!Mesh) continue;
         auto* V=NewObject<UStaticMeshComponent>(GetOwner()); V->SetStaticMesh(Mesh); V->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         V->SetGenerateOverlapEvents(false); V->SetupAttachment(AttachmentTarget,D->Socket);
         // Equipment meshes are already imported in centimetres. FBX skeletons
@@ -200,4 +205,4 @@ void UAetherEquipmentComponent::RebuildVisuals()
     }
 }
 void UAetherEquipmentComponent::EndPlay(const EEndPlayReason::Type Reason)
-{ CancelAttack(); RequestAttack.Unbind(); CanContinueAttack.Unbind(); for (auto& Pair:Visuals) if (Pair.Value) Pair.Value->DestroyComponent(); Visuals.Reset(); Super::EndPlay(Reason); }
+{ if(VisualLoad){VisualLoad->CancelHandle();VisualLoad->ReleaseHandle();VisualLoad.Reset();}CancelAttack(); RequestAttack.Unbind(); CanContinueAttack.Unbind(); for (auto& Pair:Visuals) if (Pair.Value) Pair.Value->DestroyComponent(); Visuals.Reset(); Super::EndPlay(Reason); }

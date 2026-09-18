@@ -27,13 +27,14 @@ public:
     double TransferWater(UReactiveBodyComponent* From, UReactiveBodyComponent* To, double MaxKg, AActor* SourceActor = nullptr);
     double WithdrawWater(UReactiveBodyComponent* From, double MaxKg);
     bool Capture(TArray<FReactiveSaveRecord>& Records) const;
-    bool Restore(const TArray<FReactiveSaveRecord>& Records);
+    bool Restore(const TArray<FReactiveSaveRecord>& Records,bool bPartial=false);
     // Greybox tolerances: enter at 2 cm for two fixed steps, leave beyond 6 cm immediately.
     double ContactEnterCm=2,ContactExitCm=6;
     uint32 ContactConfirmSteps=2;
     uint64 ContactBudgetHits=0;
     TArray<FReactiveContact> GetContacts() const;
     double LastStepMilliseconds = 0;
+    double LastContactMilliseconds = 0;
     int32 OcclusionTraces = 0;
     int32 OcclusionCacheHits = 0;
 protected:

@@ -1,0 +1,154 @@
+{
+  "version": 9,
+  "date": "2026-09-18",
+  "baseCommit": "906ff410b9d337b806a29da66f7822991d8bdfd7",
+  "sourceFingerprint": "e4b7b2bf1be37c49990bd57000c5c15606d57365094db8b72a538042cada45fe",
+  "fingerprintCommand": "pwsh -File Scripts/GetV9SourceFingerprint.ps1",
+  "evidenceScope": "Final pre-commit working tree; testedSourceFingerprint identifies executed code, sourceFingerprint includes only the two documented EOF whitespace cleanups. Logs and private isolated save files remain in ignored Saved/.",
+  "engine": "UE 5.8",
+  "target": "AetherLabEditor Win64 Development",
+  "build": {
+    "result": "Succeeded",
+    "log": "Saved/Logs/V9-build.log",
+    "command": "Build.bat AetherLabEditor Win64 Development AetherLab.uproject -WaitMutex -NoHotReloadFromIDE -NoUBA"
+  },
+  "rules": {
+    "createdOn": "2026.09.18-11.49.20",
+    "passed": 27,
+    "warnings": 0,
+    "failed": 0,
+    "notRun": 0,
+    "filter": "Aether.V9.+Aether.V802.+Aether.V5.+Reactive.Frontier.+Reactive.V9.",
+    "report": "Saved/Automation/V9RulesFinal/index.json",
+    "tests": [
+      "Aether.V5.AreaPulseMergesReceiverOnce",
+      "Aether.V5.CharacterEndpointCannotBridgeWater",
+      "Aether.V5.ContentDefinitionsValidate",
+      "Aether.V5.DailyRewardAtomicAndRollover",
+      "Aether.V5.ExtractionFloorAccountsRejectedBudget",
+      "Aether.V5.InputReplayRejectsSecondRelease",
+      "Aether.V5.PathRefinementAndRegistrationOrder",
+      "Aether.V5.RainCannotReactivateDrainedElectricalWater",
+      "Aether.V5.UniqueReceiverCapacityAndLedger",
+      "Aether.V802.AtomicSlotConflictsAndItemPermissions",
+      "Aether.V802.DefinitionCyclesAndUnsafePoliciesRejected",
+      "Aether.V802.FullBagRetainsPendingReward",
+      "Aether.V802.NewItemEquipmentAndProfileRoundtrip",
+      "Aether.V802.ReorderedNinthQuestAndRewardPolicy",
+      "Aether.V802.WorldFactsCannotForgePrivateOrDailyProgress",
+      "Aether.V9.InstanceSelectionAndStaleVersion",
+      "Aether.V9.NewConsumableShopLootDefinitions",
+      "Aether.V9.OfflineRecordsMigrationAndUniqueness",
+      "Aether.V9.PartialMergeAndAtomicCapacity",
+      "Aether.V9.ThirdSceneAndDefinitionValidation",
+      "Reactive.Frontier.ElectricalContactIndependentOfHeatVisibility",
+      "Reactive.Frontier.ElectricalDistanceLossAndPulseLifetime",
+      "Reactive.Frontier.InventoryAtomicCapacityAndOwnership",
+      "Reactive.Frontier.PersonalQuestsAndRewardIdempotency",
+      "Reactive.Frontier.RainCannotCreateElectricalWetnessOrEdges",
+      "Reactive.Frontier.SplashOnRainSoakedBodyStillDecays",
+      "Reactive.V9.PartialRestoreRetainsLiveDeduplication"
+    ]
+  },
+  "world": {
+    "command": "pwsh -File Scripts/CheckV9.ps1",
+    "result": "Run and Reload PASS",
+    "savePrefix": "AetherV9_eb10a1f47ebc",
+    "checks": [
+      "fixture_commit",
+      "selected_split",
+      "retry_idempotent",
+      "same_id_changed_payload",
+      "stale_version_rejected",
+      "post_data_failure_atomic",
+      "retry_after_failed_storage",
+      "third_scene_loaded",
+      "failed_save_keeps_region_alive",
+      "far_entities_destroyed",
+      "migrated_crate_survives_origin_unload",
+      "offline_water_retained",
+      "save_while_region_absent",
+      "loaded_state_restored",
+      "two_player_union",
+      "cross_region_identity_migrates",
+      "final_durable_snapshot",
+      "durable_inventory_receipts",
+      "restart_quantity",
+      "restart_unloaded_water",
+      "restart_retry_no_duplicate"
+    ],
+    "streamSamples": [
+      "AETHER_STREAM cells_loaded=0 cells_visible=0 contacts_ms=0.173",
+      "AETHER_REGION loaded=0 unloaded=44 registry=48 saved=53 reactive=10 solve_ms=0.099 memory_mb=1650",
+      "AETHER_STREAM cells_loaded=8 cells_visible=8 contacts_ms=0.057",
+      "AETHER_REGION loaded=8 unloaded=51 registry=49 saved=53 reactive=11 solve_ms=0.054 memory_mb=1657",
+      "AETHER_STREAM cells_loaded=6 cells_visible=6 contacts_ms=0.064",
+      "AETHER_REGION loaded=15 unloaded=51 registry=56 saved=53 reactive=18 solve_ms=0.064 memory_mb=1659",
+      "AETHER_STREAM cells_loaded=6 cells_visible=6 contacts_ms=0.064",
+      "AETHER_REGION loaded=15 unloaded=58 registry=49 saved=53 reactive=11 solve_ms=0.085 memory_mb=1662"
+    ],
+    "limitation": "Two-position union is injected into the scheduler; this is not two remote players spreading across a partitioned map."
+  },
+  "network": {
+    "FixtureVersion": 807,
+    "BaseCommitSha": "906ff410b9d337b806a29da66f7822991d8bdfd7",
+    "SourceFingerprint": "3a1dd15a8b718c01913d1b6bebc2b8b6fff42f8e74291ee1bda10c854849a92b",
+    "Engine": "UE 5.8",
+    "Target": "Editor Development dedicated process + 2 remote clients",
+    "Started": "2026-09-18T19:48:01.1451767+08:00",
+    "Finished": "2026-09-18T19:50:00.0965168+08:00",
+    "SavePrefix": "AetherV807_8185d11f28b9",
+    "Passed": [
+      "AUD8-20 loot competition and carry exclusion",
+      "AUD8-21 private server contract and independent quests",
+      "Remote AI ownership commands",
+      "AUD8-22 late replicated fire ice bridge power",
+      "AUD8-23 voluntary disconnect/rejoin and server restart",
+      "V9 remote duplicate/stale inventory commands and durable receipts"
+    ],
+    "NotRun": [
+      "Listen mode",
+      "Loss/latency injection",
+      "Four players",
+      "Stress/Cook/package",
+      "Visual physics smoothing measurement"
+    ],
+    "Logs": [
+      "Saved/Logs/AetherV807_8185d11f28b9-Server.log",
+      "Saved/Logs/AetherV807_8185d11f28b9-Alpha.log",
+      "Saved/Logs/AetherV807_8185d11f28b9-Beta.log",
+      "Saved/Logs/AetherV807_8185d11f28b9-Beta-Rejoin.log",
+      "Saved/Logs/AetherV807_8185d11f28b9-Server-Restart.log",
+      "Saved/Logs/AetherV807_8185d11f28b9-Alpha-Restart.log",
+      "Saved/Logs/AetherV807_8185d11f28b9-Beta-Restart.log"
+    ],
+    "command": "pwsh -File Scripts/TestV807Closure.ps1 -Port 7798",
+    "result": "PASS",
+    "regionMode": "AetherKeepRegionsLoaded: isolated fixed-scene replication assertions",
+    "fireFixture": "AetherV807Server configures 1kg LabFire fuel to survive editor cold starts; normal gameplay remains unchanged."
+  },
+  "visual": {
+    "command": "Scripts/CaptureV806.ps1",
+    "result": "Process exit 0; Inventory screenshot visually inspected",
+    "image": "Saved/Automation/V806-Inventory.png",
+    "scope": "Backpack quantity, merge target, product selection and buttons; not a full gameplay visual acceptance."
+  },
+  "correctedDuringValidation": [
+    "Spawn readiness gate before interaction and fixture movement",
+    "Clear old movement base and synchronize client location after distant teleport",
+    "Place migration fixture inside a region rather than on a grid edge",
+    "Make late-join fire fuel duration explicit instead of depending on client startup speed"
+  ],
+  "notRun": [
+    "Listen mode; network loss/latency; four players",
+    "Full Cook, shipping package, full-map streaming/HLOD acceptance",
+    "Long-running memory, network replication and navigation budgets",
+    "Two remote players distributed across streamed regions",
+    "Full historical-save compatibility matrix; standalone minimal rules build target",
+    "Conditional durability/binding, stateful item drop/pickup and cross-container drag/drop features"
+  ],
+  "testedSourceFingerprint": "3a1dd15a8b718c01913d1b6bebc2b8b6fff42f8e74291ee1bda10c854849a92b",
+  "postValidationChanges": [
+    "Only trailing blank lines removed from AetherPlayerState.cpp and AetherProfile.h after successful tests; no semantic changes."
+  ]
+}

@@ -446,12 +446,13 @@ double FSimulation::TransferLiquid(FBodyId From, FBodyId To, double MaxKg, FBody
     Resolve(From, *A); Resolve(To, *B); Wake(From); Wake(To);
     return Kg;
 }
-bool FSimulation::RestoreStates(const TMap<FBodyId, FState>& States)
+bool FSimulation::RestoreStates(const TMap<FBodyId, FState>& States,bool bPreserveLiveState)
 {
     // Work on a copy to keep malformed saves from leaving a half-restored world.
     FSimulation Candidate = *this;
     Candidate.ElectricalWindows.Reset();Candidate.PreviousElectricalReceivers.Reset();
-    Candidate.Events.Reset(); Candidate.Pending.Reset(); Candidate.RecentInputs.Reset(); Candidate.InputOrder.Reset();
+    if(bPreserveLiveState&&Candidate.HasPendingInputs())return false;
+    if(!bPreserveLiveState){Candidate.Events.Reset();Candidate.Pending.Reset();Candidate.RecentInputs.Reset();Candidate.InputOrder.Reset();}
     for (const auto& Pair : States)
     {
         FBody* B = Candidate.Bodies.Find(Pair.Key); const FState& S = Pair.Value;
@@ -469,7 +470,7 @@ bool FSimulation::RestoreStates(const TMap<FBodyId, FState>& States)
         B->State.GaugePressurePa = B->Material.SealedVolumeM3 > 0 && !S.bBurst ? 0.4 * S.GasEnergyJ / B->Material.SealedVolumeM3 : 0;
         Candidate.Wake(Pair.Key);
     }
-    Candidate.Events.Reset(); Candidate.Changed.Reset();
+    if(!bPreserveLiveState){Candidate.Events.Reset();Candidate.Changed.Reset();}
     *this = MoveTemp(Candidate);
     return true;
 }

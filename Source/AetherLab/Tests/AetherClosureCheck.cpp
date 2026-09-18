@@ -3,6 +3,7 @@
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "EngineUtils.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
@@ -21,6 +22,19 @@ void AAetherFrontierCharacter::ClientClosureAction_Implementation(FName Action,F
     if(Action=="Disconnect"){UE_LOG(LogTemp,Display,TEXT("V807_VOLUNTARY_DISCONNECT"));FPlatformMisc::RequestExit(false);return;}
     if(Controller)Controller->SetControlRotation(Look);
     UE_LOG(LogTemp,Display,TEXT("V807_CLIENT_ACTION id=%s action=%s"),ProfileState()?*ProfileState()->Profile.CharacterId:TEXT("pending"),*Action.ToString());
+    if(Action=="InventoryProbe")
+    {
+        const auto* PS=ProfileState();if(!PS)return;
+        const auto* Stack=PS->Profile.Inventory.FindByPredicate([](const auto& I){return I.DefinitionId=="Potion"&&I.Count>1;});if(!Stack)return;
+        PendingInventory=FAetherInventoryCommand();PendingInventory.CommandId=FGuid(0xA379,0,0,PS->Profile.CharacterId=="Alpha"?11:12);
+        PendingInventory.Action="Split";PendingInventory.Quantity=1;PendingInventory.ExpectedInventoryRevision=PS->Profile.Revision;PendingInventory.ItemInstanceId=Stack->InstanceId;
+        ServerInventory(PendingInventory);ServerInventory(PendingInventory);return;
+    }
+    if(Action=="InventoryStale")
+    {
+        const auto* PS=ProfileState();if(!PS||PS->Profile.InventoryReceipts.IsEmpty())return;
+        auto Command=PS->Profile.InventoryReceipts.Last().Command;Command.CommandId=FGuid::NewGuid();ServerInventory(Command);return;
+    }
     ServerAction(Action);
 #endif
 }
@@ -67,7 +81,7 @@ void AAetherFrontierMode::CheckClosure()
     for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(auto* PS=It->ProfileState())
     {if(PS->Profile.CharacterId=="Alpha")A=*It;if(PS->Profile.CharacterId=="Beta")B=*It;}
     auto* S=GetGameState<AAetherFrontierState>();auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();
-    auto Move=[](AAetherFrontierCharacter* C,FVector P){C->SetActorLocation(P,false,nullptr,ETeleportType::TeleportPhysics);C->GetCharacterMovement()->StopMovementImmediately();};
+    auto Move=[](AAetherFrontierCharacter* C,FVector P){C->SetBase(static_cast<UPrimitiveComponent*>(nullptr));C->SetActorLocation(P,false,nullptr,ETeleportType::TeleportPhysics);C->GetCharacterMovement()->StopMovementImmediately();if(auto* PC=Cast<APlayerController>(C->Controller))PC->ClientSetLocation(P,PC->GetControlRotation());C->ForceNetUpdate();};
     auto Act=[](AAetherFrontierCharacter* C,FName Action,FVector Target){const auto Look=(Target-C->GetActorLocation()-FVector(0,0,25)).Rotation();C->Controller->SetControlRotation(Look);C->NextServerAction=0;C->ClientClosureAction(Action,Look);};
     auto Next=[&](int Stage){ClosureStage=Stage;ClosureAt=Elapsed;};
     auto Acked=[&](int Phase){return ClosureAcks.FindRef("Alpha")==Phase&&ClosureAcks.FindRef("Beta")==Phase;};
@@ -79,13 +93,14 @@ void AAetherFrontierMode::CheckClosure()
         if(!Acked(100))return;
         const auto* Loot=Database->Loot.FindByPredicate([](const auto& L){return L.ClaimId==LootReceipt;});
         Check(Loot&&!Loot->ClaimedBy.IsEmpty()&&A->ProfileState()->Profile.Count("Material")+B->ProfileState()->Profile.Count("Material")==2,TEXT("AUD8-23 restart reward receipt and quantity"));
+        Check(A->ProfileState()->Profile.InventoryReceipts.Num()==1&&B->ProfileState()->Profile.InventoryReceipts.Num()==1,TEXT("V9 remote inventory receipts survive server restart"));
         Check(Database->bSupplyRestored&&!Database->bPowerOn&&Database->ServiceReceipts.Num()==1&&Database->WorldFacts.Sources.Contains("SupplyRestored"),TEXT("AUD8-23 restart world transaction"));
         UE_LOG(LogTemp,Display,TEXT("V807_RELOAD_%s generation=%d receipt=%s"),bClosureFailed?TEXT("FAIL"):TEXT("PASS"),Database->Generation,*LootReceipt.ToString());
         A->ClientClosureAction("Disconnect",FRotator::ZeroRotator);B->ClientClosureAction("Disconnect",FRotator::ZeroRotator);FPlatformMisc::RequestExitWithStatus(false,bClosureFailed?1:0);return;
     }
     if(ClosureStage==0)
     {
-        if(!A||Elapsed<3)return;
+        if(!A||A->bTravelPending||Elapsed<3)return;
         auto P=A->ProfileState()->Profile;
         for(FName Q:{FName("Q_Main_01"),FName("Q_Main_02"),FName("Q_Main_03")}){for(FName O:FAetherProfile::Objectives(Q))P.Observe(O);P.Claim(Q);}
         P.LearnedSpells=15;Check(Commit(A->ProfileState(),P),TEXT("fixture advanced Alpha only"));
@@ -178,7 +193,19 @@ void AAetherFrontierMode::CheckClosure()
     }
     if(ClosureStage==14)
     {
+        if(Elapsed-ClosureAt<1)return;
+        Act(A,"InventoryProbe",A->GetActorLocation());Act(B,"InventoryProbe",B->GetActorLocation());Next(16);return;
+    }
+    if(ClosureStage==16)
+    {
+        if(Elapsed-ClosureAt<1)return;
+        for(auto* C:{A,B})Check(C->ProfileState()->Profile.InventoryReceipts.Num()==1&&C->ProfileState()->Profile.InventoryReceipts[0].Transferred==1,TEXT("V9 remote duplicate split one receipt"));
+        Act(A,"InventoryStale",A->GetActorLocation());Act(B,"InventoryStale",B->GetActorLocation());Next(17);return;
+    }
+    if(ClosureStage==17)
+    {
         if(Elapsed-ClosureAt<1||!SaveWorld())return;
+        for(auto* C:{A,B})Check(C->ProfileState()->Profile.InventoryReceipts.Num()==1,TEXT("V9 remote stale command has no second mutation"));
         UE_LOG(LogTemp,Display,TEXT("V807_SESSION_%s generation=%d correction=authoritative/no-prediction"),bClosureFailed?TEXT("FAIL"):TEXT("PASS"),Database->Generation);
         A->ClientClosureAction("Disconnect",FRotator::ZeroRotator);B->ClientClosureAction("Disconnect",FRotator::ZeroRotator);Next(15);return;
     }

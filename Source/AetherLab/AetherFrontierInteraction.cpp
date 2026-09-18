@@ -23,7 +23,7 @@ FString AAetherFrontierMode::RecruitCompanion(AAetherFrontierCharacter* C,bool H
 }
 FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
 {
-    auto* PS=C?C->ProfileState():nullptr;if(!PS||!C->Alive())return TEXT("Cannot interact.");
+    auto* PS=C?C->ProfileState():nullptr;if(!PS||!C->Alive()||C->bTravelPending)return TEXT("Cannot interact.");
     const auto Target=AetherGuide::SelectInteraction(C);
     if(auto* Downed=Target.Rescue.Get())
     {C->ReviveTarget=Downed;C->ReviveStarted=C->CombatTime();C->ReviveDamageSerial=C->DamageReceivedCount;if(!C->AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass())){C->ReviveTarget=nullptr;return TEXT("无法开始救援，请靠近队友并保持安全。");}return TEXT("正在救援：保持靠近 3 秒，受伤会打断。");}
@@ -32,19 +32,17 @@ FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
     const FName Service=Nearest->Service;auto Next=PS->Profile;Next.RefreshDaily(FDateTime::UtcNow().ToString(TEXT("%Y%m%d")));auto* State=GetGameState<AAetherFrontierState>();
     if(AetherGuide::IsPersonalFire(Service))return TEXT("使用引泉实际熄灭自己的火盆；交互不会增加灭火进度。");
     if(Nearest->bInspectableFire&&!AetherGuide::CanInspectFire(Nearest))return TEXT("火点仍未安全清理，请使用引泉或旁边水桶灭火。");
-    if(Service=="Rescue")for(int32 I=0;I<3;++I)if(!AetherGuide::CanInspectFire(Prop(*FString::Printf(TEXT("ForestFire%d"),I))))return TEXT("先使三处火点熄灭并冷却，再救援工匠。");
+    if(const auto* Required=FAetherRules::Get().InteractionRequirements.Find(Service))for(auto Id:*Required)if(!AetherGuide::CanInspectFire(Prop(Id)))return TEXT("先清理此服务定义要求的火点，再进行交互。");
     if(Service=="Loot")return ClaimLoot(C,Nearest->Spec.Id);
     if(Service=="SupplyA"||Service=="SupplyB")
     {
         if(!Next.Available("Q_Main_01")||Next.Evidence.Contains(Service))return TEXT("Already collected for this character.");
-        if(!Next.Add("Supply",1))return TEXT("Inventory full.");Next.Observe(Service);Next.TryAutoClaim("Q_Main_01");
+        if(!AetherItems::GrantTable(Next,"Supply",FAetherRules::Get()))return TEXT("Inventory full.");Next.Observe(Service);Next.TryAutoClaim("Q_Main_01");
     }
     else if(Service=="Teacher")
     {
         if(!Next.Claims.Contains(FName("Q_Main_02")))return TEXT("Register and bind the inn first.");
-        Next.LearnedSpells|=3;
-        if(Next.Claims.Contains(FName("Q_Main_04")))Next.LearnedSpells|=4;
-        if(Next.Claims.Contains(FName("Q_Main_05")))Next.LearnedSpells|=8;
+        for(const auto& Unlock:FAetherRules::Get().SpellUnlocks)if(Next.Claims.Contains(Unlock.Key))Next.LearnedSpells|=Unlock.Value;
         if(!Commit(PS,Next))return TEXT("Storage unavailable; try again.");
         if(Next.Available("Q_Main_03"))
         {
@@ -65,20 +63,21 @@ FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
         if(C->TimeSinceDamage()<8)return TEXT("Rest requires eight seconds out of combat.");
         C->SetVitals(C->MaxHealth,100,100);C->WaterReserveKg=3;return TEXT("Checkpoint bound. Weapons issued once; R equips. Rested.");
     }
-    else if(Service=="Shop")
-    {const auto& R=FAetherRules::Get().Items.FindChecked("Potion");if(Next.Gold<R.Buy||!Next.Add("Potion",1))return TEXT("Need 20 gold and inventory space. I: 7 mana / 8 ration / Delete sell.");Next.Gold-=R.Buy;}
-    else if(Service=="Daily"||Service=="DailyPatrol"||Service=="DailyFire")
+    else if(FAetherRules::Get().Shops.Contains(Service))
+    {return TEXT("打开背包选择商品购买或选中物品出售。");}
+    else if(FAetherRules::Get().Dailies.ContainsByPredicate([&](const auto& D){return D.Service==Service;}))
     {
-        if(!Next.Claims.Contains(FName("Q_Main_08")))return TEXT("Finish the main story to unlock commissions.");
-        const int32 Template=Service=="Daily"?0:Service=="DailyPatrol"?1:2;
+        const int32 Template=FAetherRules::Get().Dailies.IndexOfByPredicate([&](const auto& D){return D.Service==Service;});
+        const auto& Daily=FAetherRules::Get().Dailies[Template];
+        if(!Next.Claims.Contains(Daily.QuestGate))return TEXT("Finish the required story to unlock commissions.");
         if(!Next.ClaimDaily(Template))
         {
-            if(Template==2&&!Next.DailyClaims.Contains("Daily2"))
+            if(Daily.bPersonalFires&&!Next.DailyClaims.Contains(Daily.Id))
             {
-                for(int32 I=0;I<3;++I)
+                for(int32 I=0;I<Daily.Facts.Num();++I)
                 {
                     FName Id=*FString::Printf(TEXT("Commission_%s_%s_%d"),*Next.CharacterId,*Next.DailyDate,I);
-                    if(!Prop(Id)){auto* Fire=Make(Id,*FString::Printf(TEXT("DailyFire%d"),I),{-27000.f+I*250,1400,50},{.8,.8,1},EAetherObjectKind::Timber,TEXT("COMMISSION / EXTINGUISH"));Fire->SetOwner(C);FReactiveStimulus H;H.HeatJ=60000;Fire->Reactive->Inject(H);}
+                    if(!Prop(Id)){auto* Fire=Make(Id,Daily.Facts[I],{-27000.f+I*250,1400,50},{.8,.8,1},EAetherObjectKind::Timber,TEXT("COMMISSION / EXTINGUISH"));Fire->SetOwner(C);FReactiveStimulus H;H.HeatJ=60000;Fire->Reactive->Inject(H);}
                 }
             }
             return Template==0?TEXT("Bring two supplies; one reward per UTC day."):Template==1?TEXT("Visit the three patrol markers, then return."):TEXT("Extinguish your three commission fires in Ashwood, then return.");
@@ -89,7 +88,7 @@ FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
     else if(Service=="Gather")
     {
         if(Next.DailyEvidence.Contains(Nearest->Spec.Id))return TEXT("This supply cache was collected today.");
-        if(!Next.Add("Supply",1)||!Next.Add("Herb",2))return TEXT("Inventory full.");Next.DailyEvidence.Add(Nearest->Spec.Id);
+        if(!AetherItems::GrantTable(Next,"Gather",FAetherRules::Get()))return TEXT("Inventory full.");Next.DailyEvidence.Add(Nearest->Spec.Id);
     }
     else if(Service=="Recruit")return RecruitCompanion(C,false);
     else if(Service=="Well")
@@ -99,11 +98,12 @@ FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
     }
     else if(Service=="Bucket")
     {
-        auto* Receiver=AetherGuide::SelectWaterReceiver(C,Nearest);
-        if(!Receiver)return TEXT("附近没有可接收水的目标，或通路被遮挡。");
-        if(Receiver->bInspectableFire&&AetherGuide::CanInspectFire(Receiver))
+        auto* Body=AetherCapabilities::WaterReceiver(C,Nearest,FAetherRules::Get().PourRangeCm);
+        auto* Receiver=Body?Cast<AAetherFrontierProp>(Body->GetOwner()):nullptr;
+        if(!Body)return TEXT("附近没有可接收水的目标，或通路被遮挡。");
+        if(Receiver&&Receiver->bInspectableFire&&AetherGuide::CanInspectFire(Receiver))
         {Observe(C,Receiver->Service);return TEXT("已检查清理后的火点，未额外消耗桶中水。");}
-        const double Water=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->TransferWater(Nearest->Reactive,Receiver->Reactive,FAetherRules::Get().PourKg,C);
+        const double Water=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->TransferWater(Nearest->Reactive,Body,FAetherRules::Get().PourKg,C);
         return Water>0?FString::Printf(TEXT("已转移 %.3f kg 水；未被接收的水保留在桶中。"),Water):TEXT("无法转移：水源无液态水、目标已满或通路受阻。");
     }
     else if(Service=="HingedGate"){Nearest->Mechanism->bGateOpen=!Nearest->Mechanism->bGateOpen;return TEXT("Gate motor toggled; physical obstructions resist its limited force.");}

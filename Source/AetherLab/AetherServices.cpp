@@ -32,6 +32,7 @@ EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCha
     if(const auto* Receipt=Database->ServiceReceipts.FindByPredicate([&](const auto& R){return R.Command.Id==Command.Id;}))
         return Receipt->CharacterId==PS->Profile.CharacterId&&Receipt->Command.Matches(Command)
             ?EAetherServiceResult::AlreadyProcessed:EAetherServiceResult::InvalidCommand;
+    if(C->bTravelPending)return EAetherServiceResult::Busy;
     if(PS->Profile.Revision!=Command.ExpectedRevision)return EAetherServiceResult::StaleProfile;
     if(const auto* Stored=Database->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==PS->Profile.CharacterId;}))
         if(Stored->Revision!=Command.ExpectedRevision)return EAetherServiceResult::StaleProfile;

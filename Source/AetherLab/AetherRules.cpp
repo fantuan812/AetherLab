@@ -6,6 +6,7 @@
 #include "Misc/Paths.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
+bool AetherReadExtensions(FAetherRules& R,const TSharedPtr<FJsonObject>& Root);
 FAetherRules FAetherRules::Parse(const FString& Text)
 {
         FAetherRules R;TSharedPtr<FJsonObject> Root;
@@ -95,6 +96,7 @@ FAetherRules FAetherRules::Parse(const FString& Text)
             for(const auto& T:*Types){int32 Type=int32(T->AsNumber());if(Type<1||Type>5){R.Error=TEXT("Invalid enemy archetype");return R;}Rule.Types.Add(uint8(Type));}
             R.Encounters.Add(*Pair.Key,Rule);
         }
+        if(!AetherReadExtensions(R,Root))return R;
         R.bValid=true;return R;
 }
 const FAetherQuestRule* FAetherRules::Quest(FName Id) const

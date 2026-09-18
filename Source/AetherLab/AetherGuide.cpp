@@ -28,7 +28,7 @@ AAetherFrontierProp* SelectWaterReceiver(AAetherFrontierCharacter* C,AAetherFron
  return Best;
 }
 FString ObjectiveLabel(FName Id){const auto* O=FAetherRules::Get().Objectives.Find(Id);return O?O->Label:Id.ToString();}
-bool IsPersonalFire(FName Service){return Service=="TrainingExtinguished"||Service=="DailyFire0"||Service=="DailyFire1"||Service=="DailyFire2";}
+bool IsPersonalFire(FName Service){if(Service=="TrainingExtinguished")return true;for(const auto& D:FAetherRules::Get().Dailies)if(D.bPersonalFires&&D.Facts.Contains(Service))return true;return false;}
 bool CanInspectFire(const AAetherFrontierProp* Fire)
 {
  if(!IsValid(Fire)||!Fire->HasAuthority()||!Fire->Reactive)return false;

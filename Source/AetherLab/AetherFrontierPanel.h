@@ -9,6 +9,7 @@ class UTextBlock;
 class UComboBoxString;
 class UInputKeySelector;
 class UHorizontalBox;
+class USpinBox;
 UCLASS()
 class UAetherFrontierViewModel : public UObject
 {
@@ -37,6 +38,18 @@ private:
  UPROPERTY() TObjectPtr<UHorizontalBox> SettingsRow;
  UPROPERTY() TObjectPtr<UComboBoxString> BindingAction;
  UPROPERTY() TObjectPtr<UInputKeySelector> BindingKey;
+ UPROPERTY() TObjectPtr<UHorizontalBox> InventoryRow;
+ UPROPERTY() TObjectPtr<USpinBox> Quantity;
+ UPROPERTY() TObjectPtr<UComboBoxString> MergeTarget;
+ UPROPERTY() TObjectPtr<UComboBoxString> Product;
+ TArray<FGuid> MergeInstances;
+ int32 ShownRevision=-1;
+ UFUNCTION() void SetQuantity(float Value);
+ UFUNCTION() void SetMergeTarget(FString Value,ESelectInfo::Type Selection);
+ UFUNCTION() void Split();
+ UFUNCTION() void Merge();
+ UFUNCTION() void Buy();
+ UFUNCTION() void Sell();
  bool UpdatingKey=false;
  UFUNCTION() void ActionSelected(FString Action,ESelectInfo::Type Selection);
  UFUNCTION() void KeySelected(FInputChord Key);

@@ -3,6 +3,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Border.h"
+#include "Components/SpinBox.h"
 #include "Components/VerticalBox.h"
 #include "Components/HorizontalBox.h"
 #include "Components/TextBlock.h"
@@ -20,7 +21,8 @@ void UAetherFrontierViewModel::Refresh(AAetherFrontierCharacter* C)
  {
  case 1:
   Title=TEXT("背包与装备 / Inventory");First=TEXT("装备选中项");Second=TEXT("使用选中项");
-  if(!P.Inventory.IsEmpty())C->SelectedItem=FMath::Clamp(C->SelectedItem,0,P.Inventory.Num()-1);
+  if(!C->SelectedInstance.IsValid()&&!P.Inventory.IsEmpty())C->SelectedInstance=P.Inventory[0].InstanceId;
+  C->SelectedItem=P.Inventory.IndexOfByPredicate([&](const auto& Item){return Item.InstanceId==C->SelectedInstance;});
   for(int I=0;I<P.Inventory.Num();++I){const auto& Item=P.Inventory[I];Text+=FString::Printf(TEXT("%s %02d  %s × %d  %s\n"),I==C->SelectedItem?TEXT("> "):TEXT("  "),I+1,*Item.DefinitionId.ToString(),Item.Count,P.Equipped.FindKey(Item.InstanceId)?TEXT("[装备中]"):TEXT(""));}
   Text+=TEXT("\nTab / 下一项：选择    B：拆分    N：合并\n商人旁：Delete 出售；7 购买法力药；8 购买口粮。\n任务物品与训练装备不可出售。满包奖励保留待领。");break;
  case 2:
@@ -57,6 +59,15 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
  Body=WidgetTree->ConstructWidget<UTextBlock>();Body->SetAutoWrapText(true);Scroll->AddChild(Body);
  auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(Row);
  auto Add=[&](const TCHAR* Label,UTextBlock*& Text){auto* Button=WidgetTree->ConstructWidget<UButton>();Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetText(FText::FromString(Label));Button->SetContent(Text);Row->AddChildToHorizontalBox(Button);return Button;};
+ InventoryRow=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(InventoryRow);
+ Quantity=WidgetTree->ConstructWidget<USpinBox>();Quantity->SetMinValue(1);Quantity->SetMaxValue(1000);Quantity->SetDelta(1);Quantity->SetValue(1);Quantity->OnValueChanged.AddDynamic(this,&UAetherFrontierPanel::SetQuantity);InventoryRow->AddChildToHorizontalBox(Quantity);
+ MergeTarget=WidgetTree->ConstructWidget<UComboBoxString>();InventoryRow->AddChildToHorizontalBox(MergeTarget);MergeTarget->OnSelectionChanged.AddDynamic(this,&UAetherFrontierPanel::SetMergeTarget);
+ Product=WidgetTree->ConstructWidget<UComboBoxString>();InventoryRow->AddChildToHorizontalBox(Product);
+ auto InventoryButton=[&](const TCHAR* Label){auto* B=WidgetTree->ConstructWidget<UButton>();auto* T=WidgetTree->ConstructWidget<UTextBlock>();T->SetText(FText::FromString(Label));B->SetContent(T);InventoryRow->AddChildToHorizontalBox(B);return B;};
+ InventoryButton(TEXT("拆分"))->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Split);
+ InventoryButton(TEXT("合并至"))->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Merge);
+ InventoryButton(TEXT("购买"))->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Buy);
+ InventoryButton(TEXT("出售"))->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Sell);
  SettingsRow=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(SettingsRow);
  BindingAction=WidgetTree->ConstructWidget<UComboBoxString>();SettingsRow->AddChildToHorizontalBox(BindingAction);
  BindingKey=WidgetTree->ConstructWidget<UInputKeySelector>();BindingKey->SetAllowModifierKeys(false);BindingKey->SetKeySelectionText(FText::FromString(TEXT("请按新键")));SettingsRow->AddChildToHorizontalBox(BindingKey);
@@ -73,6 +84,15 @@ void UAetherFrontierPanel::NativeTick(const FGeometry& G,float Dt)
  Super::NativeTick(G,Dt);auto* PC=GetOwningPlayer();auto* C=PC?Cast<AAetherFrontierCharacter>(PC->GetPawn()):nullptr;if(!C)return;
  // Keep the widget visible to tick while its content is transparent; no hidden-widget polling dependency.
  const bool Open=C->bPanel&&C->Panel!=4;SetRenderOpacity(Open?1:0);SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::HitTestInvisible);
+ InventoryRow->SetVisibility(Open&&C->Panel==1?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+ if(Open&&C->Panel==1&&C->ProfileState()&&ShownRevision!=C->ProfileState()->Profile.Revision)
+ {
+  ShownRevision=C->ProfileState()->Profile.Revision;const auto Selected=C->MergeDestination;MergeTarget->ClearOptions();MergeInstances.Reset();
+  for(const auto& I:C->ProfileState()->Profile.Inventory){MergeInstances.Add(I.InstanceId);MergeTarget->AddOption(FString::Printf(TEXT("%02d %s × %d"),MergeInstances.Num(),*I.DefinitionId.ToString(),I.Count));}
+  if(MergeInstances.Contains(Selected))MergeTarget->SetSelectedIndex(MergeInstances.Find(Selected));
+  Product->ClearOptions();TSet<FName> Products;for(const auto& Shop:FAetherRules::Get().Shops)for(auto Id:Shop.Value)Products.Add(Id);
+  for(auto Id:Products)Product->AddOption(Id.ToString());if(Product->GetOptionCount())Product->SetSelectedIndex(0);
+ }
  SettingsRow->SetVisibility(Open&&C->Panel==6?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(Open&&C->Panel==6&&BindingAction->GetOptionCount()==0)
  {TArray<FName> Names;C->InputActions.GetKeys(Names);Names.Sort(FNameLexicalLess());for(auto Name:Names)if(Name!="LookX"&&Name!="LookY"&&Name!="Escape")BindingAction->AddOption(Name.ToString());BindingAction->SetSelectedOption(TEXT("Cast"));}
@@ -80,9 +100,9 @@ void UAetherFrontierPanel::NativeTick(const FGeometry& G,float Dt)
  if(Open!=WasOpen){WasOpen=Open;PC->bShowMouseCursor=Open;if(Open){FInputModeGameAndUI Mode;Mode.SetHideCursorDuringCapture(false);PC->SetInputMode(Mode);}else PC->SetInputMode(FInputModeGameOnly());}
 }
 void UAetherFrontierPanel::Primary()
-{if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->ServerAction("EquipInstance",C->SelectedItem);else if(C->Panel==2)C->ServerAction("Claim");else if(C->Panel==5)C->ServerAction("Invite");else if(C->Panel==6)C->ServerAction("Save");else ClosePanel();}}
+{if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->SubmitInventory("Equip");else if(C->Panel==2)C->ServerAction("Claim");else if(C->Panel==5)C->ServerAction("Invite");else if(C->Panel==6)C->ServerAction("Save");else ClosePanel();}}
 void UAetherFrontierPanel::Secondary()
-{if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->ServerAction("UseSelected",C->SelectedItem);else if(C->Panel==5)C->ServerAction("AcceptInvite");else if(C->Panel==6)C->ServerAction("Recover");else ClosePanel();}}
+{if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->SubmitInventory("Use");else if(C->Panel==5)C->ServerAction("AcceptInvite");else if(C->Panel==6)C->ServerAction("Recover");else ClosePanel();}}
 void UAetherFrontierPanel::NextItem(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->CycleItem();}
 void UAetherFrontierPanel::ClosePanel(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->bPanel=false;}
 
@@ -95,3 +115,10 @@ void UAetherFrontierPanel::KeySelected(FInputChord Key)
  if(UpdatingKey)return;if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->AetherBind(*BindingAction->GetSelectedOption(),Key.Key);
  ActionSelected(BindingAction->GetSelectedOption(),ESelectInfo::Direct);
 }
+
+void UAetherFrontierPanel::SetQuantity(float V){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->InventoryQuantity=FMath::Clamp(FMath::RoundToInt(V),1,1000);}
+void UAetherFrontierPanel::SetMergeTarget(FString V,ESelectInfo::Type){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){const int32 Index=MergeTarget->FindOptionIndex(V);C->MergeDestination=MergeInstances.IsValidIndex(Index)?MergeInstances[Index]:FGuid();}}
+void UAetherFrontierPanel::Split(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Split");}
+void UAetherFrontierPanel::Merge(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Merge");}
+void UAetherFrontierPanel::Buy(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Buy",*Product->GetSelectedOption());}
+void UAetherFrontierPanel::Sell(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Sell");}

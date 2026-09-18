@@ -127,6 +127,7 @@ USTRUCT()
 struct REACTIVERUNTIME_API FReactiveSaveRecord
 {
     GENERATED_BODY()
+    UPROPERTY() FName RegionId;
     UPROPERTY() FName StableId;
     UPROPERTY() FTransform Transform;
     UPROPERTY() bool bGateOpen = false;

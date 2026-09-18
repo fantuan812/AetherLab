@@ -10,7 +10,8 @@
       "Sellable": true,
       "EquipmentId": "",
       "Slot": "",
-      "OccupiedSlots": []
+      "OccupiedSlots": [],
+      "Use": "Heal"
     },
     "ManaPotion": {
       "MaxStack": 20,
@@ -21,7 +22,8 @@
       "Sellable": true,
       "EquipmentId": "",
       "Slot": "",
-      "OccupiedSlots": []
+      "OccupiedSlots": [],
+      "Use": "Mana"
     },
     "Ration": {
       "MaxStack": 20,
@@ -32,7 +34,8 @@
       "Sellable": true,
       "EquipmentId": "",
       "Slot": "",
-      "OccupiedSlots": []
+      "OccupiedSlots": [],
+      "Use": "Food"
     },
     "Supply": {
       "MaxStack": 20,
@@ -372,7 +375,8 @@
       "Types": [
         1
       ],
-      "RespawnSeconds": 180
+      "RespawnSeconds": 180,
+      "LootTable": "Camp"
     },
     "AshwoodWolves": {
       "Center": [
@@ -384,7 +388,8 @@
         4,
         4
       ],
-      "RespawnSeconds": 240
+      "RespawnSeconds": 240,
+      "LootTable": "Camp"
     },
     "AshwoodShed": {
       "Center": [
@@ -396,7 +401,8 @@
         1,
         2
       ],
-      "RespawnSeconds": 240
+      "RespawnSeconds": 240,
+      "LootTable": "Camp"
     },
     "Waterworks": {
       "Center": [
@@ -409,7 +415,8 @@
         2,
         1
       ],
-      "RespawnSeconds": 300
+      "RespawnSeconds": 300,
+      "LootTable": "Camp"
     },
     "AbbeyFront": {
       "Center": [
@@ -422,7 +429,8 @@
         1,
         2
       ],
-      "RespawnSeconds": 0
+      "RespawnSeconds": 0,
+      "LootTable": "Camp"
     },
     "AbbeyChannel": {
       "Center": [
@@ -434,7 +442,8 @@
         1,
         2
       ],
-      "RespawnSeconds": 0
+      "RespawnSeconds": 0,
+      "LootTable": "Camp"
     },
     "AbbeyElite": {
       "Center": [
@@ -445,7 +454,8 @@
       "Types": [
         5
       ],
-      "RespawnSeconds": 0
+      "RespawnSeconds": 0,
+      "LootTable": "Camp"
     },
     "AbbeyBoss": {
       "Center": [
@@ -456,7 +466,8 @@
       "Types": [
         3
       ],
-      "RespawnSeconds": 0
+      "RespawnSeconds": 0,
+      "LootTable": "Camp"
     },
     "Relay0": {
       "Center": [
@@ -468,7 +479,8 @@
         1,
         2
       ],
-      "RespawnSeconds": 0
+      "RespawnSeconds": 0,
+      "LootTable": "Camp"
     },
     "Relay1": {
       "Center": [
@@ -481,7 +493,8 @@
         1,
         2
       ],
-      "RespawnSeconds": 0
+      "RespawnSeconds": 0,
+      "LootTable": "Camp"
     },
     "Relay2": {
       "Center": [
@@ -495,7 +508,8 @@
         1,
         2
       ],
-      "RespawnSeconds": 0
+      "RespawnSeconds": 0,
+      "LootTable": "Camp"
     }
   },
   "Objectives": {
@@ -766,5 +780,109 @@
   "Container": {
     "PourKg": 0.5,
     "RangeCm": 600
+  },
+  "SchemaVersion": 2,
+  "InventoryCapacity": 32,
+  "Uses": {
+    "Heal": {
+      "Health": 40,
+      "Mana": 0,
+      "Stamina": 0,
+      "Cooldown": 3,
+      "SafeSeconds": 0
+    },
+    "Mana": {
+      "Health": 0,
+      "Mana": 40,
+      "Stamina": 0,
+      "Cooldown": 3,
+      "SafeSeconds": 0
+    },
+    "Food": {
+      "Health": 15,
+      "Mana": 0,
+      "Stamina": 25,
+      "Cooldown": 3,
+      "SafeSeconds": 8
+    }
+  },
+  "Shops": {
+    "Shop": [
+      "Potion",
+      "ManaPotion",
+      "Ration"
+    ]
+  },
+  "LootTables": {
+    "Supply": {
+      "Supply": 1
+    },
+    "Gather": {
+      "Supply": 1,
+      "Herb": 2
+    },
+    "Camp": {
+      "Material": 2
+    }
+  },
+  "Dailies": [
+    {
+      "Id": "Daily0",
+      "Service": "Daily",
+      "QuestGate": "Q_Main_08",
+      "Facts": [],
+      "PersonalFires": false,
+      "Consume": {
+        "Supply": 2
+      },
+      "Reward": {
+        "Material": 2
+      },
+      "Gold": 30
+    },
+    {
+      "Id": "Daily1",
+      "Service": "DailyPatrol",
+      "QuestGate": "Q_Main_08",
+      "Facts": [
+        "Patrol0",
+        "Patrol1",
+        "Patrol2"
+      ],
+      "PersonalFires": false,
+      "Consume": {},
+      "Reward": {
+        "Material": 2
+      },
+      "Gold": 45
+    },
+    {
+      "Id": "Daily2",
+      "Service": "DailyFire",
+      "QuestGate": "Q_Main_08",
+      "Facts": [
+        "DailyFire0",
+        "DailyFire1",
+        "DailyFire2"
+      ],
+      "PersonalFires": true,
+      "Consume": {},
+      "Reward": {
+        "Material": 2
+      },
+      "Gold": 60
+    }
+  ],
+  "InteractionRequirements": {
+    "Rescue": [
+      "ForestFire0",
+      "ForestFire1",
+      "ForestFire2"
+    ]
+  },
+  "SpellUnlocks": {
+    "Q_Main_02": 3,
+    "Q_Main_04": 4,
+    "Q_Main_05": 8
   }
 }

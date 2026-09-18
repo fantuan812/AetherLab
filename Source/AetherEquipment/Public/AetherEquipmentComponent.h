@@ -6,6 +6,7 @@
 #include "AetherEquipmentComponent.generated.h"
 
 class UStaticMesh;
+struct FStreamableHandle;
 class UAnimSequence;
 class USkinnedMeshComponent;
 class UStaticMeshComponent;
@@ -155,6 +156,8 @@ public:
     uint64 AppliedHitCount = 0;
 private:
     UFUNCTION() void OnRep_Loadout();
+    TSharedPtr<FStreamableHandle> VisualLoad;
+    TSet<FSoftObjectPath> FailedVisualAssets;
     void RebuildVisuals();
     void ResolveHits(const FAetherAttackDefinition& Definition);
     void FinishAttack(bool Cancelled);

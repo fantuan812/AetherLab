@@ -10,7 +10,7 @@ $taskStarted=Get-Date
 function Start-ClosureProcess([string]$Name,[string[]]$Extra){
  $taskLog=Join-Path $taskRoot "Saved/Logs/$taskPrefix-$Name.log"
  $taskLogs.Add($taskLog)
- $taskProc=Start-Process -FilePath $taskEditor -ArgumentList (@($taskProject)+$Extra+@('-nullrhi','-nosound','-unattended','-nop4','-ExecCmds="t.MaxFPS 30"',"-abslog=$taskLog")) -PassThru -WindowStyle Hidden
+ $taskProc=Start-Process -FilePath $taskEditor -ArgumentList (@($taskProject)+$Extra+@('-AetherKeepRegionsLoaded','-nullrhi','-nosound','-unattended','-nop4','-ExecCmds="t.MaxFPS 30"',"-abslog=$taskLog")) -PassThru -WindowStyle Hidden
  $taskProcesses.Add($taskProc)
  return @{Process=$taskProc;Log=$taskLog}
 }
@@ -52,7 +52,7 @@ try {
  foreach($taskClient in @($taskAlpha,$taskBeta,$taskRejoin,$taskAlphaReload,$taskBetaReload)){
   if(!(Select-String -LiteralPath $taskClient.Log -Pattern 'V807_CLIENT_STATE PASS' -Quiet)){throw "No remote state evidence: $($taskClient.Log)"}
  }
- $taskResult=[ordered]@{FixtureVersion=807;CommitSha=(& git -c safe.directory=C:/ueproject/test rev-parse HEAD);Engine='UE 5.8';Target='Editor Development dedicated process + 2 remote clients';Started=$taskStarted.ToString('o');Finished=(Get-Date).ToString('o');SavePrefix=$taskPrefix;Passed=@('AUD8-20 loot competition and carry exclusion','AUD8-21 private server contract and independent quests','Remote AI ownership commands','AUD8-22 late replicated fire ice bridge power','AUD8-23 voluntary disconnect/rejoin and server restart');NotRun=@('Listen mode','Loss/latency injection','Four players','Stress/Cook/package','Visual physics smoothing measurement');Logs=@($taskLogs)}
+ $taskResult=[ordered]@{FixtureVersion=807;BaseCommitSha=(& git -c safe.directory=C:/ueproject/test rev-parse HEAD);SourceFingerprint=(& (Join-Path $PSScriptRoot "GetV9SourceFingerprint.ps1"));Engine='UE 5.8';Target='Editor Development dedicated process + 2 remote clients';Started=$taskStarted.ToString('o');Finished=(Get-Date).ToString('o');SavePrefix=$taskPrefix;Passed=@('AUD8-20 loot competition and carry exclusion','AUD8-21 private server contract and independent quests','Remote AI ownership commands','AUD8-22 late replicated fire ice bridge power','AUD8-23 voluntary disconnect/rejoin and server restart','V9 remote duplicate/stale inventory commands and durable receipts');NotRun=@('Listen mode','Loss/latency injection','Four players','Stress/Cook/package','Visual physics smoothing measurement');Logs=@($taskLogs)}
  $taskResult | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $taskRoot 'Saved/Automation/V807-Result.json') -Encoding utf8
  Write-Output "V807 dedicated two-client closure PASS; logs $taskPrefix"
 } finally {

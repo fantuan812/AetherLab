@@ -5,6 +5,7 @@
 #include "AetherTraversal.h"
 #include "AetherAnimation.h"
 #include "AetherContent.h"
+#include "AetherAssetPreload.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimSingleNodeInstance.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -150,7 +151,7 @@ void AAetherCharacter::BeginPlay()
 void AAetherCharacter::ApplyCharacterDefinition()
 {
     if (!CharacterDefinition) return;
-    if (auto* Body=CharacterDefinition->BodyMesh.LoadSynchronous())
+    if (auto* Body=bUseBasicAssets?CharacterDefinition->BodyMesh.Get():CharacterDefinition->BodyMesh.LoadSynchronous())
     {
         GetMesh()->SetSkeletalMesh(Body); BodyVisual->SetVisibility(false);
         GetCapsuleComponent()->SetCapsuleSize(CharacterDefinition->CapsuleRadius,CharacterDefinition->CapsuleHalfHeight);
@@ -181,7 +182,7 @@ void AAetherCharacter::UpdateAnimation()
         if (PresentedAttackSerial!=Equipment->Attack.Serial)
         {
             PresentedAttackSerial=Equipment->Attack.Serial;
-            if (auto* A=CharacterDefinition->AttackAnimation.LoadSynchronous())
+            if (auto* A=CharacterDefinition->AttackAnimation.Get())
             {
                 GetMesh()->PlayAnimation(A,false);
                 if (const auto* D=Equipment->CurrentAttack()) GetMesh()->SetPlayRate(A->GetPlayLength()/D->Duration());
@@ -193,12 +194,12 @@ void AAetherCharacter::UpdateAnimation()
     }
     const bool Walk=Alive()&&GetVelocity().SizeSquared2D()>100;
     if (Walk && !bWalkingAnimation)
-    { if (auto* A=CharacterDefinition->WalkAnimation.LoadSynchronous()) { GetMesh()->PlayAnimation(A,true); GetMesh()->SetPlayRate(1); } bWalkingAnimation=true; }
+    { if (auto* A=CharacterDefinition->WalkAnimation.Get()) { GetMesh()->PlayAnimation(A,true); GetMesh()->SetPlayRate(1); } bWalkingAnimation=true; }
     else if (!Walk)
     {
         if(bUseBasicAssets)
         {
-            auto* Idle=LoadObject<UAnimSequence>(nullptr,TEXT("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle.MM_Idle"));
+            auto* Idle=FindObject<UAnimSequence>(nullptr,TEXT("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle.MM_Idle"));
             auto* Node=GetMesh()->GetSingleNodeInstance();
             if(Idle&&(!Node||Node->GetCurrentAsset()!=Idle)){GetMesh()->PlayAnimation(Idle,true);GetMesh()->SetPlayRate(1);}
         }
@@ -473,6 +474,12 @@ void AAetherCharacter::Think(float Dt)
 void AAetherCharacter::Tick(float Dt)
 {
     Super::Tick(Dt); const float T = CombatTime();
+    if(bUseBasicAssets&&!Equipment->Catalog)if(auto* Assets=GetWorld()->GetSubsystem<UAetherAssetPreload>();Assets&&Assets->Ready()){
+        auto* Content=Assets->Content.Get();Equipment->Catalog=Content->EquipmentCatalog;
+        if(HasAuthority()&&!CharacterDefinition)CharacterDefinition=Fighter==EAetherFighter::Player?Content->Player:(Fighter==EAetherFighter::BellKnight||Fighter==EAetherFighter::Golem)?Content->Boss:Fighter==EAetherFighter::FireCaster?Content->Caster:Content->Guard;
+        ApplyCharacterDefinition();if(HasAuthority()&&CharacterDefinition&&!Equipment->bProfileManaged)Equipment->RestoreLoadout(CharacterDefinition->InitialEquipment);
+    }
+    if(bUseBasicAssets&&CharacterDefinition&&!GetMesh()->GetSkeletalMeshAsset())ApplyCharacterDefinition();
     if (HasAuthority() && (!Alive() || T<StunUntil)) CancelActions();
     NetworkProbe(Dt);
     if (HasAuthority() && Alive() && AbilitySystem->GetAvatarActor()==this)

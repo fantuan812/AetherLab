@@ -1,0 +1,3278 @@
+{
+  "SchemaVersion": 1,
+  "Definitions": {
+    "Conductor": {
+      "Capabilities": [
+        "Metal",
+        "Carry",
+        "Impacts"
+      ]
+    },
+    "Source": {
+      "Capabilities": [
+        "Metal",
+        "PowerSource"
+      ]
+    },
+    "Receiver": {
+      "Capabilities": [
+        "Metal",
+        "PowerReceiver"
+      ]
+    },
+    "Crate": {
+      "Capabilities": [
+        "Carry",
+        "Buoyant",
+        "Impacts"
+      ]
+    },
+    "Bridge": {
+      "Capabilities": [
+        "Reactive",
+        "Moving",
+        "Bridge",
+        "Impacts"
+      ]
+    },
+    "HingedGate": {
+      "Capabilities": [
+        "Reactive",
+        "Moving"
+      ]
+    },
+    "Bucket": {
+      "Capabilities": [
+        "LiquidSource"
+      ]
+    },
+    "Well": {
+      "Capabilities": [
+        "LiquidSource"
+      ]
+    },
+    "Default": {
+      "Capabilities": []
+    }
+  },
+  "Objects": [
+    {
+      "Id": "Ground",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        0,
+        0,
+        -400
+      ],
+      "Scale": [
+        800,
+        800,
+        2
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Town",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        0,
+        0,
+        -60
+      ],
+      "Scale": [
+        200,
+        200,
+        1.2
+      ],
+      "Kind": 0,
+      "Label": "EMBERHEARTH / SERVICES",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "SouthRoad",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -6500,
+        -19000,
+        -50
+      ],
+      "Scale": [
+        16,
+        220,
+        1
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "WestRoad",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -18000,
+        0,
+        -50
+      ],
+      "Scale": [
+        180,
+        16,
+        1
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "EastRoad",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        18000,
+        0,
+        -50
+      ],
+      "Scale": [
+        180,
+        16,
+        1
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "NorthRoad",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        0,
+        18000,
+        -50
+      ],
+      "Scale": [
+        16,
+        180,
+        1
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Start",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -6500,
+        -29000,
+        200
+      ],
+      "Scale": [
+        0.1,
+        0.1,
+        0.1
+      ],
+      "Kind": 0,
+      "Label": "EMBER FRONTIER / WASD + MOUSE / E INTERACT\nCollect both supplies, then follow the road NORTH to town",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "SupplyA",
+      "Definition": "Default",
+      "Service": "SupplyA",
+      "Location": [
+        -6350,
+        -28700,
+        40
+      ],
+      "Scale": [
+        0.7,
+        0.7,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "E / SUPPLY A",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "SupplyB",
+      "Definition": "Default",
+      "Service": "SupplyB",
+      "Location": [
+        -6650,
+        -28300,
+        40
+      ],
+      "Scale": [
+        0.7,
+        0.7,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "E / SUPPLY B",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Gate",
+      "Definition": "Default",
+      "Service": "Gate",
+      "Location": [
+        -6500,
+        -9800,
+        160
+      ],
+      "Scale": [
+        0.2,
+        0.2,
+        3.2
+      ],
+      "Kind": 0,
+      "Label": "E / SOUTH GATE\nRegistrar and inn: town centre",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Registrar",
+      "Definition": "Default",
+      "Service": "Register",
+      "Location": [
+        -600,
+        -700,
+        90
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "E / REGISTER / LAN TING",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Inn",
+      "Definition": "Default",
+      "Service": "Inn",
+      "Location": [
+        -400,
+        -300,
+        90
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "E / INN / BIND CHECKPOINT",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Teacher",
+      "Definition": "Default",
+      "Service": "Teacher",
+      "Location": [
+        400,
+        -300,
+        90
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "E / TEACHER / LEARN & TRAIN\nR equipment / hold LMB heavy / RMB guard",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Dummy",
+      "Definition": "Default",
+      "Service": "Dummy",
+      "Location": [
+        850,
+        -300,
+        90
+      ],
+      "Scale": [
+        0.7,
+        0.7,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "TRAINING DUMMY / 3 HITS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Shop",
+      "Definition": "Default",
+      "Service": "Shop",
+      "Location": [
+        -400,
+        300,
+        90
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "E / POTION 20 GOLD / I MORE SHOP ACTIONS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Recruit",
+      "Definition": "Default",
+      "Service": "Recruit",
+      "Location": [
+        400,
+        300,
+        90
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "E / RECRUIT / AFTER BOTH FIELD QUESTS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Steward",
+      "Definition": "Default",
+      "Service": "SealDelivered",
+      "Location": [
+        0,
+        700,
+        90
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "E / RETURN ANCIENT SEAL",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "DailyBoard",
+      "Definition": "Default",
+      "Service": "Daily",
+      "Location": [
+        -900,
+        300,
+        100
+      ],
+      "Scale": [
+        0.2,
+        2,
+        2
+      ],
+      "Kind": 0,
+      "Label": "E / DAILY SUPPLY / 2 SUPPLIES -> 30 GOLD",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "PatrolBoard",
+      "Definition": "Default",
+      "Service": "DailyPatrol",
+      "Location": [
+        -900,
+        600,
+        100
+      ],
+      "Scale": [
+        0.2,
+        2,
+        2
+      ],
+      "Kind": 0,
+      "Label": "E / DAILY PATROL / THREE MARKERS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "FireBoard",
+      "Definition": "Default",
+      "Service": "DailyFire",
+      "Location": [
+        -900,
+        900,
+        100
+      ],
+      "Scale": [
+        0.2,
+        2,
+        2
+      ],
+      "Kind": 0,
+      "Label": "E / DAILY FIRE COMMISSION",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Patrol0",
+      "Definition": "Default",
+      "Service": "Patrol0",
+      "Location": [
+        -27000,
+        -1200,
+        80
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.6
+      ],
+      "Kind": 0,
+      "Label": "E / PATROL MARKER",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Patrol1",
+      "Definition": "Default",
+      "Service": "Patrol1",
+      "Location": [
+        26400,
+        -1200,
+        80
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.6
+      ],
+      "Kind": 0,
+      "Label": "E / PATROL MARKER",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Patrol2",
+      "Definition": "Default",
+      "Service": "Patrol2",
+      "Location": [
+        0,
+        24000,
+        80
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.6
+      ],
+      "Kind": 0,
+      "Label": "E / PATROL MARKER",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "SupplyCache0",
+      "Definition": "Default",
+      "Service": "Gather",
+      "Location": [
+        -26820,
+        -1200,
+        40
+      ],
+      "Scale": [
+        0.6,
+        0.6,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "E / DAILY SUPPLY CACHE",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "SupplyCache1",
+      "Definition": "Default",
+      "Service": "Gather",
+      "Location": [
+        26580,
+        -1200,
+        40
+      ],
+      "Scale": [
+        0.6,
+        0.6,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "E / DAILY SUPPLY CACHE",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "SupplyCache2",
+      "Definition": "Default",
+      "Service": "Gather",
+      "Location": [
+        180,
+        24000,
+        40
+      ],
+      "Scale": [
+        0.6,
+        0.6,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "E / DAILY SUPPLY CACHE",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Well",
+      "Definition": "Well",
+      "Service": "Well",
+      "Location": [
+        950,
+        300,
+        50
+      ],
+      "Scale": [
+        1,
+        1,
+        1
+      ],
+      "Kind": 6,
+      "Label": "E / FINITE WATER RESERVE",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "House0",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -1900,
+        -1800,
+        220
+      ],
+      "Scale": [
+        10,
+        8,
+        4.4
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "House1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        0,
+        -1800,
+        220
+      ],
+      "Scale": [
+        10,
+        8,
+        4.4
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "House2",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        1900,
+        -1800,
+        220
+      ],
+      "Scale": [
+        10,
+        8,
+        4.4
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "House3",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -1900,
+        1800,
+        220
+      ],
+      "Scale": [
+        10,
+        8,
+        4.4
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "House4",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        0,
+        1800,
+        220
+      ],
+      "Scale": [
+        10,
+        8,
+        4.4
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "House5",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        1900,
+        1800,
+        220
+      ],
+      "Scale": [
+        10,
+        8,
+        4.4
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Roof0",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -1900,
+        -1800,
+        480
+      ],
+      "Scale": [
+        11,
+        9,
+        0.8
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Roof1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        0,
+        -1800,
+        480
+      ],
+      "Scale": [
+        11,
+        9,
+        0.8
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Roof2",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        1900,
+        -1800,
+        480
+      ],
+      "Scale": [
+        11,
+        9,
+        0.8
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Roof3",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -1900,
+        1800,
+        480
+      ],
+      "Scale": [
+        11,
+        9,
+        0.8
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Roof4",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        0,
+        1800,
+        480
+      ],
+      "Scale": [
+        11,
+        9,
+        0.8
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Roof5",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        1900,
+        1800,
+        480
+      ],
+      "Scale": [
+        11,
+        9,
+        0.8
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "ForestFloor",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -27000,
+        0,
+        -60
+      ],
+      "Scale": [
+        80,
+        100,
+        1.2
+      ],
+      "Kind": 0,
+      "Label": "ASHWOOD / EXTINGUISH FIRES AND RESCUE",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "ForestFire0",
+      "Definition": "Default",
+      "Service": "ForestFire0",
+      "Location": [
+        -26500,
+        350,
+        50
+      ],
+      "Scale": [
+        0.9,
+        0.9,
+        1
+      ],
+      "Kind": 1,
+      "Label": "FIRE / WATER OR LOCAL RESERVOIR",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 60000,
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "ForestFire1",
+      "Definition": "Default",
+      "Service": "ForestFire1",
+      "Location": [
+        -26950,
+        350,
+        50
+      ],
+      "Scale": [
+        0.9,
+        0.9,
+        1
+      ],
+      "Kind": 1,
+      "Label": "FIRE / WATER OR LOCAL RESERVOIR",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 60000,
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "ForestFire2",
+      "Definition": "Default",
+      "Service": "ForestFire2",
+      "Location": [
+        -27400,
+        350,
+        50
+      ],
+      "Scale": [
+        0.9,
+        0.9,
+        1
+      ],
+      "Kind": 1,
+      "Label": "FIRE / WATER OR LOCAL RESERVOIR",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 60000,
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Bucket0",
+      "Definition": "Bucket",
+      "Service": "Bucket",
+      "Location": [
+        -26500,
+        650,
+        45
+      ],
+      "Scale": [
+        0.6,
+        0.6,
+        0.9
+      ],
+      "Kind": 4,
+      "Label": "E / POUR FINITE WATER",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Bucket1",
+      "Definition": "Bucket",
+      "Service": "Bucket",
+      "Location": [
+        -26950,
+        650,
+        45
+      ],
+      "Scale": [
+        0.6,
+        0.6,
+        0.9
+      ],
+      "Kind": 4,
+      "Label": "E / POUR FINITE WATER",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Bucket2",
+      "Definition": "Bucket",
+      "Service": "Bucket",
+      "Location": [
+        -27400,
+        650,
+        45
+      ],
+      "Scale": [
+        0.6,
+        0.6,
+        0.9
+      ],
+      "Kind": 4,
+      "Label": "E / POUR FINITE WATER",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Rescue",
+      "Definition": "Default",
+      "Service": "Rescue",
+      "Location": [
+        -27700,
+        -300,
+        90
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "E / RESCUE CRAFTSMAN",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree0",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -30000,
+        -3400,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -28200,
+        -2950,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree2",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -26400,
+        -2500,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree3",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -24600,
+        -2050,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree4",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -30000,
+        -1600,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree5",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -28200,
+        -1150,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree6",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -26400,
+        -700,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree7",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -24600,
+        -250,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree8",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -30000,
+        200,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree9",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -28200,
+        650,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree10",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -26400,
+        1100,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree11",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -24600,
+        1550,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree12",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -30000,
+        2000,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree13",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -28200,
+        2450,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree14",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -26400,
+        2900,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Tree15",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -24600,
+        3350,
+        220
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        4.4
+      ],
+      "Kind": 1,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "WorksWest",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        26500,
+        0,
+        -60
+      ],
+      "Scale": [
+        10,
+        24,
+        1.2
+      ],
+      "Kind": 0,
+      "Label": "OLD WATERWORKS / THREE ROUTES",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "WorksEast",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        28200,
+        0,
+        -60
+      ],
+      "Scale": [
+        16,
+        24,
+        1.2
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Maintenance",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        27350,
+        1000,
+        -20
+      ],
+      "Scale": [
+        9,
+        3,
+        0.4
+      ],
+      "Kind": 0,
+      "Label": "MAINTENANCE BYPASS / NO SPELL REQUIRED",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "WorksRope",
+      "Definition": "Default",
+      "Service": "Support",
+      "Location": [
+        26900,
+        -650,
+        90
+      ],
+      "Scale": [
+        0.2,
+        0.2,
+        1.8
+      ],
+      "Kind": 2,
+      "Label": "CUT OR BURN ROPE / RELEASE BRIDGE",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "WorksBridge",
+      "Definition": "Bridge",
+      "Service": "Bridge",
+      "Location": [
+        27350,
+        -600,
+        450
+      ],
+      "Scale": [
+        9,
+        3,
+        0.25
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [
+        "WorksRope"
+      ],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "BridgeStopA",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        26970,
+        -600,
+        -30
+      ],
+      "Scale": [
+        0.4,
+        3,
+        0.6
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "BridgeStopB",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        27730,
+        -600,
+        -30
+      ],
+      "Scale": [
+        0.4,
+        3,
+        0.6
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "WorksWater0",
+      "Definition": "Default",
+      "Service": "Water",
+      "Location": [
+        27050,
+        0,
+        -12
+      ],
+      "Scale": [
+        3,
+        3,
+        0.2
+      ],
+      "Kind": 4,
+      "Label": "FROST / FREEZE SHALLOW CHANNEL",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [
+        {
+          "Id": "East",
+          "Target": "WorksWater1",
+          "From": [
+            50,
+            0,
+            0
+          ],
+          "To": [
+            -50,
+            0,
+            0
+          ]
+        }
+      ],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "WorksWater1",
+      "Definition": "Default",
+      "Service": "Water",
+      "Location": [
+        27350,
+        0,
+        -12
+      ],
+      "Scale": [
+        3,
+        3,
+        0.2
+      ],
+      "Kind": 4,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [
+        {
+          "Id": "West",
+          "Target": "WorksWater0",
+          "From": [
+            -50,
+            0,
+            0
+          ],
+          "To": [
+            50,
+            0,
+            0
+          ]
+        },
+        {
+          "Id": "East",
+          "Target": "WorksWater2",
+          "From": [
+            50,
+            0,
+            0
+          ],
+          "To": [
+            -50,
+            0,
+            0
+          ]
+        }
+      ],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "WorksWater2",
+      "Definition": "Default",
+      "Service": "Water",
+      "Location": [
+        27650,
+        0,
+        -12
+      ],
+      "Scale": [
+        3,
+        3,
+        0.2
+      ],
+      "Kind": 4,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [
+        {
+          "Id": "West",
+          "Target": "WorksWater1",
+          "From": [
+            -50,
+            0,
+            0
+          ],
+          "To": [
+            50,
+            0,
+            0
+          ]
+        }
+      ],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pump",
+      "Definition": "Default",
+      "Service": "SupplyRestored",
+      "Location": [
+        28100,
+        0,
+        80
+      ],
+      "Scale": [
+        1,
+        1,
+        1.6
+      ],
+      "Kind": 0,
+      "Label": "E / RESTORE SUPPLY / OR INSPECT COMPLETED WORK",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "PowerSource",
+      "Definition": "Source",
+      "Service": "Source",
+      "Location": [
+        28200,
+        650,
+        40
+      ],
+      "Scale": [
+        1,
+        1,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "E / FIXED POWER SOURCE ON-OFF",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "GlobalPower": true,
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "PowerReceiver",
+      "Definition": "Receiver",
+      "Service": "Receiver",
+      "Location": [
+        28500,
+        650,
+        40
+      ],
+      "Scale": [
+        1,
+        1,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "E / POWERED PUMP / MOVE ROD TO CONNECT",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "MetalRod",
+      "Definition": "Conductor",
+      "Service": "Conductor",
+      "Location": [
+        28350,
+        350,
+        40
+      ],
+      "Scale": [
+        2.1,
+        0.3,
+        0.3
+      ],
+      "Kind": 0,
+      "Label": "G / CARRY-DROP CONDUCTOR / V PUSH",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Crate",
+      "Definition": "Crate",
+      "Service": "Crate",
+      "Location": [
+        26500,
+        -700,
+        50
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        1
+      ],
+      "Kind": 1,
+      "Label": "G / CARRY WOODEN CRATE",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "GateAnchor",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        28500,
+        -650,
+        120
+      ],
+      "Scale": [
+        0.4,
+        0.4,
+        2.4
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "HingedGate",
+      "Definition": "HingedGate",
+      "Service": "HingedGate",
+      "Location": [
+        28650,
+        -650,
+        100
+      ],
+      "Scale": [
+        3,
+        0.2,
+        2
+      ],
+      "Kind": 0,
+      "Label": "E / BOUNDED HINGE MOTOR / BLOCK WITH CRATE",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "Hinge": "GateAnchor",
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "AbbeyFloor",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        0,
+        27000,
+        -60
+      ],
+      "Scale": [
+        70,
+        80,
+        1.2
+      ],
+      "Kind": 0,
+      "Label": "BROKEN BELL ABBEY",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "AbbeyEntry",
+      "Definition": "Default",
+      "Service": "Abbey",
+      "Location": [
+        0,
+        24400,
+        100
+      ],
+      "Scale": [
+        1,
+        1,
+        2
+      ],
+      "Kind": 0,
+      "Label": "E / START PARTY ENCOUNTER",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "AbbeyValve",
+      "Definition": "Default",
+      "Service": "AbbeyValve",
+      "Location": [
+        0,
+        25500,
+        90
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "E / CHANNEL VALVE / P + H COMMAND COMPANION",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "AbbeyExit",
+      "Definition": "Default",
+      "Service": "GuardianDefeated",
+      "Location": [
+        0,
+        28200,
+        100
+      ],
+      "Scale": [
+        1,
+        1,
+        2
+      ],
+      "Kind": 0,
+      "Label": "E / CLAIM ENCOUNTER PROOF",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar0_-1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -2200,
+        24600,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar0_1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        2200,
+        24600,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar1_-1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -2200,
+        25300,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar1_1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        2200,
+        25300,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar2_-1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -2200,
+        26000,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar2_1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        2200,
+        26000,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar3_-1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -2200,
+        26700,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar3_1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        2200,
+        26700,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar4_-1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -2200,
+        27400,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar4_1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        2200,
+        27400,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar5_-1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -2200,
+        28100,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar5_1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        2200,
+        28100,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar6_-1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -2200,
+        28800,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar6_1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        2200,
+        28800,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar7_-1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -2200,
+        29500,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Pillar7_1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        2200,
+        29500,
+        250
+      ],
+      "Scale": [
+        1.2,
+        1.2,
+        5
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "ActivityFloor",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        25000,
+        22000,
+        -60
+      ],
+      "Scale": [
+        50,
+        50,
+        1.2
+      ],
+      "Kind": 0,
+      "Label": "RELAY DEFENCE",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "Activity",
+      "Definition": "Default",
+      "Service": "Activity",
+      "Location": [
+        25000,
+        22000,
+        100
+      ],
+      "Scale": [
+        1,
+        1,
+        2
+      ],
+      "Kind": 0,
+      "Label": "E / PUBLIC DEFENCE / START OR CLAIM",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "RingEast",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        25000,
+        12000,
+        -50
+      ],
+      "Scale": [
+        16,
+        220,
+        1
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "RingNorth",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        12500,
+        26000,
+        -50
+      ],
+      "Scale": [
+        250,
+        16,
+        1
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": false
+    },
+    {
+      "Id": "LabBoard",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        5400,
+        4300,
+        100
+      ],
+      "Scale": [
+        0.1,
+        0.1,
+        0.1
+      ],
+      "Kind": 0,
+      "Label": "REACTION WORKSHOP\nRESTORE POWER OR USE MANUAL PUMP\nMISSING MATERIAL? USE BYPASS\nOUT OF WATER? REST AT TOWN INN",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabDummy",
+      "Definition": "Default",
+      "Service": "Dummy",
+      "Location": [
+        5400,
+        4650,
+        90
+      ],
+      "Scale": [
+        0.7,
+        0.7,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "TRAINING SWORD / CUT ROPE OR STRIKE DUMMY",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabFire",
+      "Definition": "Default",
+      "Service": "WorkshopFire",
+      "Location": [
+        5400,
+        5300,
+        50
+      ],
+      "Scale": [
+        0.9,
+        0.9,
+        1
+      ],
+      "Kind": 1,
+      "Label": "FIRE / WATER OR BUCKET",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 60000,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabBucket",
+      "Definition": "Bucket",
+      "Service": "Bucket",
+      "Location": [
+        5400,
+        5550,
+        45
+      ],
+      "Scale": [
+        0.6,
+        0.6,
+        0.9
+      ],
+      "Kind": 4,
+      "Label": "E / FINITE BUCKET",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabWell",
+      "Definition": "Well",
+      "Service": "Well",
+      "Location": [
+        5000,
+        5600,
+        50
+      ],
+      "Scale": [
+        1,
+        1,
+        1
+      ],
+      "Kind": 6,
+      "Label": "E / FINITE RESERVOIR / INN REST REPLENISHES SPELL WATER",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabCrate",
+      "Definition": "Crate",
+      "Service": "Crate",
+      "Location": [
+        5750,
+        4350,
+        50
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        1
+      ],
+      "Kind": 1,
+      "Label": "G CARRY / V PUSH / THROW / FLOAT",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabWest",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        5700,
+        5000,
+        120
+      ],
+      "Scale": [
+        3,
+        10,
+        2.4
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabStep0",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        5300,
+        5000,
+        30
+      ],
+      "Scale": [
+        1,
+        3,
+        0.6
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabStep1",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        5400,
+        5000,
+        60
+      ],
+      "Scale": [
+        1,
+        3,
+        1.2
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabStep2",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        5500,
+        5000,
+        90
+      ],
+      "Scale": [
+        1,
+        3,
+        1.7999999999999998
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabEast",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        6900,
+        5000,
+        120
+      ],
+      "Scale": [
+        3,
+        10,
+        2.4
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabBypass",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        6300,
+        5650,
+        120
+      ],
+      "Scale": [
+        15,
+        3,
+        2.4
+      ],
+      "Kind": 0,
+      "Label": "MAINTENANCE BYPASS / NO MAGIC OR MATERIALS REQUIRED",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabRope",
+      "Definition": "Default",
+      "Service": "Support",
+      "Location": [
+        5600,
+        4800,
+        350
+      ],
+      "Scale": [
+        0.2,
+        0.2,
+        2.2
+      ],
+      "Kind": 2,
+      "Label": "CUT OR BURN SUPPORT",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabBridge",
+      "Definition": "Bridge",
+      "Service": "Bridge",
+      "Location": [
+        6300,
+        4750,
+        650
+      ],
+      "Scale": [
+        9,
+        3,
+        0.25
+      ],
+      "Kind": 0,
+      "Label": "WAIT FOR BRIDGE TO SETTLE",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [
+        "LabRope"
+      ],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabStopA",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        5920,
+        4750,
+        210
+      ],
+      "Scale": [
+        0.4,
+        3,
+        0.6
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabStopB",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        6680,
+        4750,
+        210
+      ],
+      "Scale": [
+        0.4,
+        3,
+        0.6
+      ],
+      "Kind": 0,
+      "Label": "",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabWater0",
+      "Definition": "Default",
+      "Service": "Water",
+      "Location": [
+        6000,
+        5150,
+        228
+      ],
+      "Scale": [
+        3,
+        3,
+        0.2
+      ],
+      "Kind": 4,
+      "Label": "FROST PATH / WATCH THAW WARNING",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabWater1",
+      "Definition": "Default",
+      "Service": "Water",
+      "Location": [
+        6300,
+        5150,
+        228
+      ],
+      "Scale": [
+        3,
+        3,
+        0.2
+      ],
+      "Kind": 4,
+      "Label": "FROST PATH / WATCH THAW WARNING",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabWater2",
+      "Definition": "Default",
+      "Service": "Water",
+      "Location": [
+        6600,
+        5150,
+        228
+      ],
+      "Scale": [
+        3,
+        3,
+        0.2
+      ],
+      "Kind": 4,
+      "Label": "FROST PATH / WATCH THAW WARNING",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabSource",
+      "Definition": "Source",
+      "Service": "Source",
+      "Location": [
+        7400,
+        5200,
+        40
+      ],
+      "Scale": [
+        1,
+        1,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "E / INDEPENDENT FINITE SOURCE",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabReceiver",
+      "Definition": "Receiver",
+      "Service": "Receiver",
+      "Location": [
+        7700,
+        5200,
+        40
+      ],
+      "Scale": [
+        1,
+        1,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "E / RESTORE WORKSHOP WITH POWER",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabRod",
+      "Definition": "Conductor",
+      "Service": "Conductor",
+      "Location": [
+        7550,
+        4850,
+        40
+      ],
+      "Scale": [
+        2.1,
+        0.3,
+        0.3
+      ],
+      "Kind": 0,
+      "Label": "G / MOVE ROD BETWEEN TERMINALS",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "LabPump",
+      "Definition": "Default",
+      "Service": "SupplyRestored",
+      "Location": [
+        7100,
+        5650,
+        80
+      ],
+      "Scale": [
+        1,
+        1,
+        1.6
+      ],
+      "Kind": 0,
+      "Label": "E / MANUAL RESTORE / NO POWER NEEDED",
+      "Section": "Workshop",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "FieldFire",
+      "Definition": "Default",
+      "Service": "WorkshopFire",
+      "Location": [
+        -14000,
+        10200,
+        50
+      ],
+      "Scale": [
+        0.9,
+        0.9,
+        1
+      ],
+      "Kind": 1,
+      "Label": "FIELD REACTION SITE / SHARED DEFINITIONS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 60000,
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "FieldBucket",
+      "Definition": "Bucket",
+      "Service": "Bucket",
+      "Location": [
+        -14000,
+        10500,
+        45
+      ],
+      "Scale": [
+        0.6,
+        0.6,
+        0.9
+      ],
+      "Kind": 4,
+      "Label": "FIELD REACTION SITE / SHARED DEFINITIONS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 0,
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "FieldCrate",
+      "Definition": "Crate",
+      "Service": "Crate",
+      "Location": [
+        -13700,
+        10000,
+        50
+      ],
+      "Scale": [
+        0.8,
+        0.8,
+        1
+      ],
+      "Kind": 1,
+      "Label": "FIELD REACTION SITE / SHARED DEFINITIONS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 0,
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "FieldSource",
+      "Definition": "Source",
+      "Service": "Source",
+      "Location": [
+        -13300,
+        10300,
+        40
+      ],
+      "Scale": [
+        1,
+        1,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "FIELD REACTION SITE / SHARED DEFINITIONS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 0,
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "FieldReceiver",
+      "Definition": "Receiver",
+      "Service": "Receiver",
+      "Location": [
+        -13000,
+        10300,
+        40
+      ],
+      "Scale": [
+        1,
+        1,
+        0.8
+      ],
+      "Kind": 0,
+      "Label": "FIELD REACTION SITE / SHARED DEFINITIONS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 0,
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "FieldRod",
+      "Definition": "Conductor",
+      "Service": "Conductor",
+      "Location": [
+        -13150,
+        10000,
+        40
+      ],
+      "Scale": [
+        2.1,
+        0.3,
+        0.3
+      ],
+      "Kind": 0,
+      "Label": "FIELD REACTION SITE / SHARED DEFINITIONS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 0,
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "FieldRope",
+      "Definition": "Default",
+      "Service": "Support",
+      "Location": [
+        -14500,
+        10000,
+        150
+      ],
+      "Scale": [
+        0.2,
+        0.2,
+        2
+      ],
+      "Kind": 2,
+      "Label": "FIELD REACTION SITE / SHARED DEFINITIONS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [],
+      "Ports": [],
+      "Heat": 0,
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "FieldBridge",
+      "Definition": "Bridge",
+      "Service": "Bridge",
+      "Location": [
+        -14300,
+        10000,
+        400
+      ],
+      "Scale": [
+        4,
+        3,
+        0.25
+      ],
+      "Kind": 0,
+      "Label": "FIELD REACTION SITE / SHARED DEFINITIONS",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": true,
+      "Supports": [
+        "FieldRope"
+      ],
+      "Ports": [],
+      "Heat": 0,
+      "WorkshopService": true,
+      "AllowAbsentFromOlderSave": true
+    },
+    {
+      "Id": "FieldFloor",
+      "Definition": "Default",
+      "Service": "",
+      "Location": [
+        -13700,
+        10200,
+        -60
+      ],
+      "Scale": [
+        24,
+        22,
+        1.2
+      ],
+      "Kind": 0,
+      "Label": "THIRD FIELD WORKSHOP",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    }
+  ]
+}

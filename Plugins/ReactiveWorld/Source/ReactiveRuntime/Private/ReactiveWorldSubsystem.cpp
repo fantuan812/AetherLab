@@ -140,7 +140,9 @@ void UReactiveWorldSubsystem::Tick(float Dt)
         const uint64 StepId=Simulation->GetStats().Steps+1;
         const uint64 ContactBudgetBefore=ContactBudgetHits;
         AdvanceLiquidPorts(Step,StepId);
+        const double ContactStarted=FPlatformTime::Seconds();
         UpdateElectricalContacts(StepId);
+        LastContactMilliseconds=(FPlatformTime::Seconds()-ContactStarted)*1000;
         TArray<Reactive::FBodyId> Ordered;Components.GetKeys(Ordered);Ordered.Sort();
         for(auto Id:Ordered)if(auto* Body=Components.FindRef(Id).Get())
             if(auto* Source=Body->GetOwner()->FindComponentByClass<UReactiveMechanismComponent>())Source->AdvancePower(Step);
@@ -238,7 +240,7 @@ bool UReactiveWorldSubsystem::Capture(TArray<FReactiveSaveRecord>& Records) cons
     Records.Sort([](const FReactiveSaveRecord& A, const FReactiveSaveRecord& B) { return A.StableId.LexicalLess(B.StableId); });
     return true;
 }
-bool UReactiveWorldSubsystem::Restore(const TArray<FReactiveSaveRecord>& Records)
+bool UReactiveWorldSubsystem::Restore(const TArray<FReactiveSaveRecord>& Records,bool bPartial)
 {
     if (!IsAuthority() || !Simulation) return false;
     TMap<FName, UReactiveBodyComponent*> ByName;
@@ -260,8 +262,9 @@ bool UReactiveWorldSubsystem::Restore(const TArray<FReactiveSaveRecord>& Records
         S.GasEnergyJ = R.GasEnergyJ; S.bBurning = R.bBurning; S.bBroken = R.bBroken; S.bBurst = R.bBurst;
         States.Add(B->GetBodyId(), S);
     }
-    for(const auto& Pair:ByName)if(!Seen.Contains(Pair.Key)&&!Pair.Value->bAllowAbsentFromOlderSave)return false;
-    if (!Simulation->RestoreStates(States)) return false;
+    if(bPartial&&Simulation->HasPendingInputs())return false;
+    if(!bPartial)for(const auto& Pair:ByName)if(!Seen.Contains(Pair.Key)&&!Pair.Value->bAllowAbsentFromOlderSave)return false;
+    if (!Simulation->RestoreStates(States,bPartial)) return false;
     ContactCache.Reset();ElectricalContacts.Reset();ElectricalAdjacency.Reset();ThermalContacts.Reset();LiquidContacts.Reset();ElectricalRecipients.Reset(); Accumulator = 0;
     for(const auto& Pair:Components)if(auto* B=Pair.Value.Get())B->ResetElectricalWindow();
     for (const FReactiveSaveRecord& R : Records)

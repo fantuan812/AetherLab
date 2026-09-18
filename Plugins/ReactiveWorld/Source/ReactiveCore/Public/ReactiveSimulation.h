@@ -179,7 +179,7 @@ public:
     double TransferLiquid(FBodyId From, FBodyId To, double MaxKg, FBodyId Source = InvalidBody);
     double WithdrawLiquid(FBodyId From, double MaxKg);
     // Validates the entire batch before mutation; transient inputs/events are discarded on success.
-    bool RestoreStates(const TMap<FBodyId, FState>& States);
+    bool RestoreStates(const TMap<FBodyId, FState>& States,bool bPreserveLiveState=false);
     void Step();
     const FState* Find(FBodyId Id) const;
     const FMaterial* FindMaterial(FBodyId Id) const;

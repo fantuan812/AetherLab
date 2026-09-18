@@ -180,6 +180,7 @@ void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason){Releas
 void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 Index)
 {
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>(); auto* PS=ProfileState(); if(!Mode||!PS)return;
+    if(bTravelPending&&Action!="Save")return;
     if(CombatTime()<NextServerAction)return;NextServerAction=CombatTime()+.12f;
     if(Action=="Weather")
     {
@@ -193,31 +194,12 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
     {
         if(Alive()||TimeSinceDamage()<3)return;
         ReleaseCarry();SetVitals(MaxHealth,100,100);ResetCombat();
-        SetActorLocation(PS->Profile.bRegistered?FVector(-500,-500,120):FVector(-6500,-29000,120));return;
+        BeginSafeTravel(PS->Profile.bRegistered?FVector(-500,-500,120):FVector(-6500,-29000,120));return;
     }
     if(Action=="Save"){Notify(Mode->SaveWorld()?TEXT("World and profiles saved."):TEXT("Save deferred: world has pending reactions."));return;}
     if(!Alive())return;
     if(Action=="Interact"){Notify(Mode->Interact(this));return;}
-    if((Action=="Invite"||Action=="AcceptInvite"||Action=="LeaveParty"||Action=="Dismiss")&&!Mode->CanChangeParty(this))
-    {Notify(TEXT("Change party at town, out of combat and outside active encounters."));return;}
-    if(Action=="Invite")
-    {
-        if(PS->PartyLeader!=PS->Profile.CharacterId)return;AAetherPlayerState* Target=nullptr;double Best=FMath::Square(500.);
-        for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(*It!=this&&It->ProfileState()&&It->ProfileState()->PartyLeader!=PS->PartyLeader&&Mode->CanChangeParty(*It))
-        {double D=FVector::DistSquared(GetActorLocation(),It->GetActorLocation());if(D<Best){Best=D;Target=It->ProfileState();}}
-        if(Target){Target->InvitedBy=PS->Profile.CharacterId;Target->InvitationExpires=CombatTime()+30;Notify(TEXT("Party invitation sent; recipient P + U accepts within 30 seconds."));}return;
-    }
-    if(Action=="AcceptInvite")
-    {
-        if(PS->InvitedBy.IsEmpty()||CombatTime()>PS->InvitationExpires)return;
-        for(TActorIterator<AAetherPlayerState> It(GetWorld());It;++It)if(It->Profile.CharacterId==PS->InvitedBy&&It->PartyLeader==It->Profile.CharacterId&&Mode->CanChangeParty(Cast<AAetherFrontierCharacter>(It->GetPawn())))
-        {const FString Leader=It->PartyLeader;Mode->LeaveParty(PS);PS->PartyLeader=Leader;break;}
-        PS->InvitedBy.Empty();return;
-    }
-    if(Action=="LeaveParty"){Mode->LeaveParty(PS);return;}
-    if(Action=="PartyCommand"||Action=="Dismiss")
-    {if(Action=="PartyCommand"&&Mode->Encounters&&Mode->Encounters->Abbey.Phase==EAetherEncounterPhase::Channel&&FVector::DistSquared(GetActorLocation(),Mode->Prop("AbbeyValve")->GetActorLocation())<FMath::Square(300.)){Notify(Mode->Encounters->Channel(this,true));return;}for(const auto& B:Mode->Companions)if(IsValid(B)&&B->CompanionOwner==this){if(Action=="Dismiss")B->Destroy();else B->bCompanionHold=!B->bCompanionHold;}return;}
-    if(Action=="Recruit"){Notify(Mode->RecruitCompanion(this));return;}
+    if(Mode->ExecutePartyAction(this,Action))return;
     if(Action=="Throw")
     {if(Carried){auto* P=Carried.Get();ReleaseCarry();P->Mesh->AddImpulse(GetControlRotation().Vector()*P->Mesh->GetMass()*500);P->Mechanism->RecordImpactSource(this);}return;}
     if(Action=="Claim")
@@ -234,52 +216,8 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
         P->Carrier=this;Carried=P;P->Mesh->IgnoreActorWhenMoving(this,true);GetCapsuleComponent()->IgnoreActorWhenMoving(P,true);
         CarryHandle->GrabComponentAtLocationWithRotation(P->Mesh,NAME_None,P->GetActorLocation(),P->GetActorRotation());return;
     }
-    auto Next=PS->Profile;
-    if(Action=="EquipInstance")
-    {if(!Ready()||Carried||!Next.Inventory.IsValidIndex(Index)||!Next.Equip(Next.Inventory[Index].InstanceId))return;if(Mode->Commit(PS,Next))ApplyProfileEquipment();return;}
-    if(Action=="UseSelected")
-    {
-        if(!Next.Inventory.IsValidIndex(Index)||CombatTime()<NextPotion)return;const auto Id=Next.Inventory[Index].DefinitionId;
-        if(Id!="Potion"&&Id!="ManaPotion"&&Id!="Ration")return;if(Id=="Ration"&&TimeSinceDamage()<8)return;
-        if(!Next.Remove(Id,1))return;if(Mode->Commit(PS,Next)){SetVitals(Health()+(Id=="Potion"?40:Id=="Ration"?15:0),Mana()+(Id=="ManaPotion"?40:0),Stamina()+(Id=="Ration"?25:0));NextPotion=CombatTime()+3;}return;
-    }
-    if(Action=="Potion"||Action=="ManaPotion")
-    {
-        if(CombatTime()<NextPotion)return;bool ManaItem=Action=="ManaPotion";
-        if((ManaItem?Mana()>=100:Health()>=MaxHealth)||!Next.Remove(ManaItem?"ManaPotion":"Potion",1))return;
-        if(Mode->Commit(PS,Next)){SetVitals(Health()+(ManaItem?0:40),Mana()+(ManaItem?40:0),Stamina());NextPotion=CombatTime()+3;}return;
-    }
-    if(Action=="Buy"||Action=="Sell")
-    {
-        auto* Shop=Mode->Prop("Shop");if(!Shop||FVector::DistSquared(GetActorLocation(),Shop->GetActorLocation())>FMath::Square(260.))return;
-        if(Action=="Buy")
-        {
-            const FName Items[]={"Potion","ManaPotion","Ration"};if(Index<0||Index>2)return;const auto* Rule=FAetherRules::Get().Items.Find(Items[Index]);
-            if(!Rule||Rule->Buy<=0||Next.Gold<Rule->Buy||!Next.Add(Items[Index],1))return;Next.Gold-=Rule->Buy;
-        }
-        else
-        {
-            if(!Next.Inventory.IsValidIndex(Index))return;const auto Item=Next.Inventory[Index];const auto* Rule=FAetherRules::Get().Items.Find(Item.DefinitionId);
-            if(!Rule||!Rule->bSellable||Rule->Sell<=0||Next.Equipped.FindKey(Item.InstanceId)||Next.Gold>10000000-Rule->Sell||!Next.Remove(Item.DefinitionId,1))return;Next.Gold+=Rule->Sell;
-        }
-        Notify(Mode->Commit(PS,Next)?TEXT("Trade saved."):TEXT("Trade failed; no items or gold changed."));return;
-    }
-    if(Action=="Equip"||Action=="Shield")
-    {
-        if(!Ready()||Carried)return;
-        TArray<FGuid> Choices;for(const auto& S:Next.Inventory)
-            if(const auto* R=FAetherRules::Get().Items.Find(S.DefinitionId);R&&R->bPlayerEquippable&&R->Slot==(Action=="Shield"?FName("OffHand"):FName("MainHand")))Choices.Add(S.InstanceId);
-        if(Choices.IsEmpty())return;
-        const FName Slot=Action=="Shield"?FName("OffHand"):FName("MainHand");
-        if(Action=="Shield"&&Next.Equipped.Contains(Slot))Next.Equipped.Remove(Slot);
-        else {int32 Current=Choices.Find(Next.Equipped.FindRef(Slot));if(!Next.Equip(Choices[(Current+1)%Choices.Num()]))return;}
-    }
-    else if(Action=="Split")
-    {const auto* Stack=Next.Inventory.FindByPredicate([](const auto& S){return S.Count>1;});if(!Stack||!Next.Split(Stack->InstanceId,1))return;}
-    else if(Action=="Merge")
-    {bool Merged=false;for(int32 A=0;A<Next.Inventory.Num()&&!Merged;++A)for(int32 B=A+1;B<Next.Inventory.Num()&&!Merged;++B)if(Next.Inventory[A].DefinitionId==Next.Inventory[B].DefinitionId)Merged=Next.Merge(Next.Inventory[B].InstanceId,Next.Inventory[A].InstanceId);if(!Merged)return;}
-    else return;
-    if(Mode->Commit(PS,Next))ApplyProfileEquipment();
+    // Inventory mutations use ServerInventory with stable client-selected identity.
+
 }
 void AAetherFrontierCharacter::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
 {
@@ -294,6 +232,7 @@ void AAetherFrontierCharacter::ReceiveEquipmentHit_Implementation(const FAetherE
 void AAetherFrontierCharacter::Tick(float Dt)
 {
     Super::Tick(Dt);
+    UpdateSafeTravel();
     CheckClosureClient(Dt);
     if(IsLocallyControlled()&&LockedTarget)
     {
@@ -393,6 +332,6 @@ float AAetherFrontierCharacter::TakeDamage(float Amount,const FDamageEvent& Even
 void AAetherFrontierCharacter::CycleItem()
 {
  if(!bPanel||!ProfileState())return;
- if(Panel==1&&!ProfileState()->Profile.Inventory.IsEmpty())SelectedItem=(SelectedItem+1)%ProfileState()->Profile.Inventory.Num();
+ if(Panel==1&&!ProfileState()->Profile.Inventory.IsEmpty()){SelectedItem=(SelectedItem+1)%ProfileState()->Profile.Inventory.Num();SelectedInstance=ProfileState()->Profile.Inventory[SelectedItem].InstanceId;}
  if(Panel==2)TrackedQuest=AetherGuide::SelectQuest(ProfileState()->Profile,TrackedQuest,true);
 }
