@@ -20,7 +20,7 @@
     {
       "id": "V10-04",
       "status": "in_progress",
-      "acceptance": "SQLite_3.53.4_single_writer_backend; forced_process_commit_recovery_pass; bounded_explicit_v9_reader_and_frozen_rules; 18_rule_tests_pass; backup_and_checksum_audit_pass; final_schema_conversion_and_gameplay_cutover_pending"
+      "acceptance": "SQLite_single_writer_and_forced_crash_recovery; bounded_explicit_v9_reader; complete_profile_DTO_and_19_legacy_profiles_converted; 38_rule_tests_pass; profile_SQLite_atomic_growth_replay_close_reopen_pass; checksum_backup_audit_pass; world_conversion_atomic_import_and_gameplay_cutover_pending"
     },
     {
       "id": "V10-05",

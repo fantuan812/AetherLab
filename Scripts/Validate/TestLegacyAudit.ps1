@@ -42,11 +42,16 @@ foreach($taskRun in $taskRuns) {
  }
  $taskReport=Get-Content -LiteralPath (Join-Path (Split-Path $taskRun.backup) 'reader.json') -Raw | ConvertFrom-Json
  if($taskReport.databaseWritten -or $taskReport.finalSchemaConverted){throw 'Audit claimed an unperformed conversion'}
- if($taskRun.engineExit -eq 0 -and (!$taskReport.legacyValid -or @($taskReport.profiles).Count -ne 19)){throw 'Valid report is incomplete'}
+ if($taskRun.engineExit -eq 0) {
+  if(!$taskReport.legacyValid -or !$taskReport.profilesConverted -or @($taskReport.profiles).Count -ne 19){throw 'Valid profile-conversion report is incomplete'}
+  foreach($taskProfile in $taskReport.profiles) {
+   if(!$taskProfile.converted -or $taskProfile.dtoBytes -le 0 -or $taskProfile.newProfileRevision -ne $taskProfile.revision){throw 'Profile conversion lost version or payload'}
+  }
+ }
  if($taskRun.engineExit -ne 0 -and ($taskReport.legacyValid -or $taskReport.detail -ne 'Missing or mismatched committed-generation checksum')){
   throw 'Negative case failed for an unexpected reason'
  }
 }
-[ordered]@{passed=$true;sourcePreserved=$true;independentBackups=2;validCommittedGeneration=$true;invalidChecksumRejected=$true} |
+[ordered]@{passed=$true;sourcePreserved=$true;independentBackups=2;validCommittedGeneration=$true;all19ProfilesConverted=$true;invalidChecksumRejected=$true} |
  ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskCase 'result.json') -Encoding utf8
 Write-Output "Legacy audit PASS: $taskCase"

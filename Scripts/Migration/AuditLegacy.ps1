@@ -28,10 +28,10 @@ if($Fixture){$taskArgs+='-Fixture'}
 & (Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe') @taskArgs
 $taskExit=$LASTEXITCODE
 $taskUnchanged=(Get-FileHash -LiteralPath $taskSource -Algorithm SHA256).Hash.ToLowerInvariant() -eq $taskHash
-$taskManifest=[ordered]@{phase='legacy_decode_only';source=$taskSource;sourceSha256=$taskHash;backup=$taskBackup;
+$taskManifest=[ordered]@{phase='legacy_decode_and_profile_conversion';source=$taskSource;sourceSha256=$taskHash;backup=$taskBackup;
  sourceUnchanged=$taskUnchanged;engineExit=$taskExit;databaseWritten=$false;finalSchemaConverted=$false}
 $taskManifest | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskRun 'manifest.json') -Encoding utf8
 if($taskExit -ne 0 -or !$taskUnchanged){throw "Legacy audit failed; source and backup retained: $taskRun"}
 $taskResult=Get-Content -LiteralPath $taskReport -Raw | ConvertFrom-Json
-if(!$taskResult.legacyValid -or $taskResult.sourceSha256 -ne $taskHash){throw "Legacy report validation failed: $taskRun"}
-Write-Output "Legacy decode PASS; backup/report: $taskRun. Final v10 conversion and activation are not performed."
+if(!$taskResult.legacyValid -or !$taskResult.profilesConverted -or $taskResult.sourceSha256 -ne $taskHash){throw "Legacy report validation failed: $taskRun"}
+Write-Output "Legacy decode and profile conversion PASS; backup/report: $taskRun. World conversion, database import and activation are not performed."

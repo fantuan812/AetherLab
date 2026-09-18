@@ -6,7 +6,7 @@ public class AetherCore : ModuleRules
     public AetherCore(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        bUseUnity = false; // 技能成长、显式 DTO 与账本测试独立编译，保留模块边界检查。
+        bUseUnity = false; // 完整角色 DTO 与子域规则独立编译，保留模块边界检查。
         PublicDependencyModuleNames.Add("Core");
         PrivateDependencyModuleNames.Add("Json");
     }

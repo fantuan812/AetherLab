@@ -1,5 +1,7 @@
 #include "Migration/AetherLegacyAuditCommandlet.h"
 #include "Persistence/AetherLegacyV9Reader.h"
+#include "Persistence/AetherLegacyProfileConverter.h"
+#include "Profile/AetherProfileCodec.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 #include "Misc/Paths.h"
@@ -35,13 +37,15 @@ int32 UAetherLegacyAuditCommandlet::Main(const FString& Params)
     // GenericPlatform 的 SHA256 在 Windows 没有实现；使用引擎自带 OpenSSL。
     if (!SHA256(Bytes.GetData(), Bytes.Num(), Signature.Signature)) return 2;
     auto Root = MakeShared<FJsonObject>();
-    Root->SetStringField(TEXT("phase"), TEXT("legacy_decode_only"));
+    Root->SetStringField(TEXT("phase"), TEXT("legacy_decode_and_profile_conversion"));
     Root->SetStringField(TEXT("sourceSha256"), Signature.ToString().ToLower());
     Root->SetStringField(TEXT("layoutFingerprint"), AetherLegacyV9::LayoutFingerprint());
     Root->SetBoolField(TEXT("databaseWritten"), false);
     Root->SetBoolField(TEXT("finalSchemaConverted"), false);
     auto Result = AetherLegacyV9::Read(Bytes);
     bool Valid = Result.Code == EAetherLegacyReadCode::Ready;
+    bool ProfilesConverted = false;
+    FString ConversionDetail;
     if (Valid)
     {
         const auto& Save = *Result.Snapshot;
@@ -64,6 +68,11 @@ int32 UAetherLegacyAuditCommandlet::Main(const FString& Params)
         Root->SetNumberField(TEXT("worldRecords"), Save.World.Num());
         Root->SetNumberField(TEXT("lootRecords"), Save.Loot.Num());
         Root->SetNumberField(TEXT("serviceReceipts"), Save.ServiceReceipts.Num());
+        FString ItemJson,DefinitionReason;
+        FFileHelper::LoadFileToString(ItemJson,*(FPaths::ProjectContentDir()/TEXT("AetherCore/Definitions/V10/Items.json")));
+        const auto Items=FAetherV10ItemDefinitions::Parse(ItemJson,DefinitionReason);
+        ProfilesConverted=Valid&&Items.Validate(DefinitionReason);
+        if(Valid&&!ProfilesConverted)ConversionDetail=DefinitionReason;
         TArray<TSharedPtr<FJsonValue>> Profiles;
         for (const auto& Profile : Save.Profiles)
         {
@@ -75,16 +84,34 @@ int32 UAetherLegacyAuditCommandlet::Main(const FString& Params)
             Row->SetNumberField(TEXT("oldSpellMask"), Profile.LearnedSpells);
             Row->SetNumberField(TEXT("pendingGold"), Profile.PendingGold);
             Row->SetNumberField(TEXT("pendingMaterial"), Profile.PendingMaterial);
+            // 校验成功才尝试只读转换；损坏侧车的旧档不能进入新 schema 路径。
+            FAetherProfileStateV10 Converted;TArray<uint8> Payload;FString Detail;
+            const bool ConvertedOK=Valid&&AetherLegacyV9::ConvertProfile(Profile,Save.Version,Signature.ToString().ToLower(),
+                Items,FAetherSkillDefinitionsV10::Get(),FAetherRules::Get(),Converted,Detail)
+                &&AetherProfileCodec::Encode(Converted,Items,FAetherSkillDefinitionsV10::Get(),FAetherRules::Get(),Payload,Detail);
+            ProfilesConverted&=ConvertedOK;
+            Row->SetBoolField(TEXT("converted"),ConvertedOK);
+            if(ConvertedOK)
+            {
+                Row->SetNumberField(TEXT("dtoBytes"),Payload.Num());
+                Row->SetNumberField(TEXT("fixedCapacity"),Converted.Inventory.Capacity);
+                Row->SetNumberField(TEXT("storySkills"),Converted.Skills.StoryGrants.Num());
+                Row->SetNumberField(TEXT("pendingRewardRecords"),Converted.PendingRewards.Num());
+                Row->SetNumberField(TEXT("newProfileRevision"),Converted.Revision);
+            }
+            else if(Valid){Row->SetStringField(TEXT("conversionDetail"),Detail);ConversionDetail=Detail;}
             Profiles.Add(MakeShared<FJsonValueObject>(Row));
         }
         Root->SetArrayField(TEXT("profiles"), Profiles);
     }
     Root->SetBoolField(TEXT("legacyValid"), Valid);
+    Root->SetBoolField(TEXT("profilesConverted"), ProfilesConverted);
+    Root->SetStringField(TEXT("profileConversionDetail"), ConversionDetail);
     Root->SetStringField(TEXT("detail"), Result.Detail);
     FString Json;
     if (!FJsonSerializer::Serialize(Root, TJsonWriterFactory<>::Create(&Json))) return 2;
     IFileManager::Get().MakeDirectory(*FPaths::GetPath(Report), true);
     if (!FFileHelper::SaveStringToFile(Json, *Report, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM,
         &IFileManager::Get(), FILEWRITE_NoReplaceExisting)) return 2;
-    return Valid ? 0 : 1;
+    return Valid && ProfilesConverted ? 0 : 1;
 }

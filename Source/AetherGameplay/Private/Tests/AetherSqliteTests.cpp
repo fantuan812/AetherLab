@@ -1,6 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "Persistence/AetherSqliteStore.h"
 #include "Inventory/AetherInventoryCodec.h"
+#include "Profile/AetherProfileCodec.h"
 #include "../Persistence/AetherSqliteInternal.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
@@ -209,6 +210,44 @@ bool FAetherInventoryStoreTest::RunTest(const FString&)
     Options.Fault->Store(EAetherStoreFault::None);
     Row=Opened.Store->Read({EAetherAggregateKind::Profile,TEXT("SyntheticAlice")}).Get();
     TestTrue(TEXT("Old durable state retained after write failure"),Row.Value.IsSet()&&AetherInventoryCodec::Decode(Row.Value->Payload,D,Loaded,Reason)&&Loaded.Find(I.InstanceId)->Durability==9);
+    Opened.Store->Close();return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherProfileStoreTest,"Aether.V10.Store.FullProfileAtomicGrowthAndRecovery",TestFlags)
+bool FAetherProfileStoreTest::RunTest(const FString&)
+{
+    FString Json,Reason;FFileHelper::LoadFileToString(Json,*(FPaths::ProjectContentDir()/TEXT("AetherCore/Definitions/V10/Items.json")));
+    const auto Items=FAetherV10ItemDefinitions::Parse(Json,Reason);
+    const auto& Skills=FAetherSkillDefinitionsV10::Get();const auto& Rules=FAetherRules::Get();
+    FAetherProfileStateV10 S;S.CharacterId=TEXT("SyntheticAlice");S.Gold=100;
+    FAetherV10ItemInstance Item;Item.InstanceId=FGuid(4,5,6,7);Item.DefinitionId=TEXT("Potion");Item.Quantity=5;Item.SlotIndex=6;S.Inventory.Items.Add(Item);
+    S.Skills.GrantStory(TEXT("Fire.Ignite"),TEXT("Story.Training"),Skills);S.Skills.AwardPoints(TEXT("Quest.Test"),3,Skills);
+    FAetherPendingRewardV10 Reward;Reward.RewardId=FGuid(7,6,5,4);Reward.SourceId=TEXT("Quest.Pending");Reward.Gold=10;S.PendingRewards.Add(Reward);
+    auto Options=TestOptions();auto Opened=AetherSQLite::Open(Options);
+    if(!TestTrue(TEXT("Open full profile fixture"),Opened.Store.IsValid()))return false;
+    auto Initial=Request(-1,1);
+    if(!TestTrue(TEXT("Encode full profile"),AetherProfileCodec::Encode(S,Items,Skills,Rules,Initial.Writes[0].Value.Payload,Reason)))return false;
+    TestTrue(TEXT("Create complete profile"),Opened.Store->Commit(Initial).Get().Code==EAetherStoreCode::Committed);
+    auto Candidate=S;Candidate.Revision=1;Candidate.Gold=90;Candidate.Inventory.Items[0].Quantity=4;
+    FAetherSkillRuleContext C;C.CompletedQuests.Add(TEXT("Q_Main_02"));
+    auto Transaction=Request(0,2);
+    TestTrue(TEXT("Prepare real rank/cost transition"),Candidate.Skills.LearnNext(TEXT("Fire.Ignite"),Transaction.CommandId,C,Skills).Code==EAetherSkillMutationCode::Applied);
+    Candidate.PendingRewards.Reset();Candidate.ClaimedRewardIds.Add(Reward.RewardId);
+    if(!TestTrue(TEXT("Encode complete transaction candidate"),AetherProfileCodec::Encode(Candidate,Items,Skills,Rules,Transaction.Writes[0].Value.Payload,Reason)))return false;
+    Options.Fault->Store(EAetherStoreFault::AfterFirstWrite);
+    TestTrue(TEXT("Injected failure rejects entire profile"),Opened.Store->Commit(Transaction).Get().Code!=EAetherStoreCode::Committed);
+    Options.Fault->Store(EAetherStoreFault::None);
+    auto Row=Opened.Store->Read({EAetherAggregateKind::Profile,S.CharacterId}).Get();FAetherProfileStateV10 Loaded;
+    if(!TestTrue(TEXT("Decode old state after rollback"),Row.Value.IsSet()&&AetherProfileCodec::Decode(Row.Value->Payload,Items,Skills,Rules,Loaded,Reason)))return false;
+    TestTrue(TEXT("No partial economy/skill/reward publication"),Loaded.Gold==100&&Loaded.Inventory.At(6)->Quantity==5&&Loaded.Skills.PermanentRank(TEXT("Fire.Ignite"))==1&&Loaded.Skills.AvailableSkillPoints==3&&Loaded.PendingRewards.Num()==1&&Loaded.ClaimedRewardIds.IsEmpty());
+    TestTrue(TEXT("Retry commits all fields"),Opened.Store->Commit(Transaction).Get().Code==EAetherStoreCode::Committed);
+    TestTrue(TEXT("Duplicate command replays without another payment"),Opened.Store->Commit(Transaction).Get().Code==EAetherStoreCode::Replayed);
+    Opened.Store->Close();Opened.Store.Reset();Opened=AetherSQLite::Open(Options);
+    if(!TestTrue(TEXT("Reopen committed profile store"),Opened.Store.IsValid()))return false;
+    Row=Opened.Store->Read({EAetherAggregateKind::Profile,S.CharacterId}).Get();
+    if(!TestTrue(TEXT("Recover complete DTO"),Row.Value.IsSet()&&AetherProfileCodec::Decode(Row.Value->Payload,Items,Skills,Rules,Loaded,Reason)))return false;
+    TestTrue(TEXT("Row and profile commit versions agree"),Row.Value->Revision==Loaded.Revision&&Loaded.Revision==1);
+    TestTrue(TEXT("Single durable rank/payment and reward claim"),Loaded.Gold==90&&Loaded.Inventory.At(6)->Quantity==4&&Loaded.Skills.PermanentRank(TEXT("Fire.Ignite"))==2&&Loaded.Skills.AvailableSkillPoints==2&&Loaded.PendingRewards.IsEmpty()&&Loaded.ClaimedRewardIds.Contains(Reward.RewardId));
     Opened.Store->Close();return true;
 }
 #endif
