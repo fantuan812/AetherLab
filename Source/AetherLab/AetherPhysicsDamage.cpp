@@ -5,7 +5,7 @@
 
 bool FAetherImpactDamagePolicy::IsValid() const
 {
-    for(float V:{ThresholdJ,JoulesPerDamage,MaxDamage,PosturePerDamage,ReceiverCooldownSeconds})
+    for(float V:{MinClosingMPerSecond,ThresholdJ,JoulesPerDamage,MaxDamage,PosturePerDamage,ReceiverCooldownSeconds})
         if(!FMath::IsFinite(V)||V<0)return false;
     return JoulesPerDamage>0&&MaxDamage<=10000&&PosturePerDamage<=100&&ReceiverCooldownSeconds<=10;
 }
@@ -32,6 +32,7 @@ void UAetherPhysicsDamageComponent::ReceiveImpact(const FReactiveImpactEvent& Ev
     if(!GetOwner()->HasAuthority()||!Mechanism.IsValid()||Event.Mechanism.Get()!=GetOwner()||!IsValid(Target)
         ||Target==GetOwner()||Target->GetWorld()!=GetWorld()||Event.EventId<=LastEventId||!FMath::IsFinite(Event.TimeSeconds))return;
     LastEventId=Event.EventId;
+    if(Event.bSustainedContact||!FMath::IsFinite(Event.RelativeClosingMPerSec)||Event.RelativeClosingMPerSec<Policy.MinClosingMPerSecond)return;
     const float Damage=Policy.DamageFor(Event.EnergyJ);if(Damage<=0)return;
     const double Now=GetWorld()->GetTimeSeconds();
     if(const double* Last=LastDamageAt.Find(Target);Last&&Now-*Last<Policy.ReceiverCooldownSeconds)return;

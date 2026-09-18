@@ -29,6 +29,7 @@ public:
     UPROPERTY(EditAnywhere, Category="Reactive|Bridges") double IceMassPerSquareMeter = .05;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Reactive|Bridges") TObjectPtr<UNiagaraSystem> BurningEffect;
     UPROPERTY(ReplicatedUsing=OnRep_State, BlueprintReadOnly, Category="Reactive") FReactiveSnapshot State;
+    UPROPERTY(ReplicatedUsing=OnRep_State,BlueprintReadOnly,Category="Reactive") EReactiveIceSupport IceSupport=EReactiveIceSupport::Liquid;
     UPROPERTY(BlueprintAssignable, Category="Reactive") FReactiveReactionEvent OnReaction;
     UFUNCTION(BlueprintCallable, Category="Reactive") bool Inject(const FReactiveStimulus& Stimulus);
     Reactive::FBodyId GetBodyId() const { return BodyId; }

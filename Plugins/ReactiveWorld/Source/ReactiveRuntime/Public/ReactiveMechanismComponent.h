@@ -13,7 +13,8 @@ struct REACTIVERUNTIME_API FReactiveImpactEvent
     TWeakObjectPtr<AActor> Mechanism,Receiver,Source;
     FName MechanismId,ReceiverId;
     uint64 EventId=0;
-    double TimeSeconds=0,EnergyJ=0;
+    double TimeSeconds=0,EnergyJ=0,RelativeClosingMPerSec=0;
+    bool bSustainedContact=false;
     FVector ImpulseNs=FVector::ZeroVector,PositionCm=FVector::ZeroVector;
 };
 DECLARE_MULTICAST_DELEGATE_OneParam(FReactiveImpactObserved,const FReactiveImpactEvent&);
@@ -54,4 +55,5 @@ private:
     TWeakObjectPtr<AActor> ImpactSource;
     double ImpactSourceExpiresAt = -1;
     TWeakObjectPtr<UPrimitiveComponent> Primitive;
+    FVector PrePhysicsLinear=FVector::ZeroVector,PrePhysicsAngular=FVector::ZeroVector,PrePhysicsCenter=FVector::ZeroVector;
 };

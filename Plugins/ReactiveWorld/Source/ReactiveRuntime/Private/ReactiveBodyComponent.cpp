@@ -23,7 +23,7 @@ UReactiveBodyComponent::UReactiveBodyComponent() { PrimaryComponentTick.bCanEver
 void UReactiveBodyComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(UReactiveBodyComponent, State);
+    DOREPLIFETIME(UReactiveBodyComponent, State);DOREPLIFETIME(UReactiveBodyComponent,IceSupport);
     DOREPLIFETIME(UReactiveBodyComponent, bIceControlsPawnCollision);
 }
 void UReactiveBodyComponent::OnRep_State() { RefreshPresentation(); }
@@ -75,16 +75,27 @@ void UReactiveBodyComponent::RefreshPresentation()
         if (UPrimitiveComponent* P = GetPrimitive())
         {
             const double IceMassThreshold=FMath::Max(.2,P->Bounds.BoxExtent.X*P->Bounds.BoxExtent.Y*4/10000.*IceMassPerSquareMeter);
-            bool Solid = State.WaterKg >= IceMassThreshold && State.IceFraction >= 0.95 && !State.bBroken;
             const bool WasSolid=P->GetCollisionResponseToChannel(ECC_Pawn)==ECR_Block;
-            if(Solid&&!WasSolid)
+            if(GetOwner()->HasAuthority())
             {
-                FCollisionQueryParams Q(SCENE_QUERY_STAT(IceOccupancy),false,GetOwner());
-                if(GetWorld()->OverlapAnyTestByObjectType(P->Bounds.Origin,FQuat::Identity,FCollisionObjectQueryParams(ECC_Pawn),FCollisionShape::MakeBox(P->Bounds.BoxExtent*.95),Q))Solid=false;
+                const bool EnoughIce=State.WaterKg*State.IceFraction>=IceMassThreshold&&!State.bBroken;
+                bool Solid=EnoughIce&&State.IceFraction>=(WasSolid?.90:.98);
+                bool Occupied=false;
+                if(Solid&&!WasSolid)
+                {
+                    FCollisionQueryParams Q(SCENE_QUERY_STAT(IceOccupancy),false,GetOwner());
+                    Occupied=GetWorld()->OverlapAnyTestByObjectType(P->Bounds.Origin,FQuat::Identity,FCollisionObjectQueryParams(ECC_Pawn),FCollisionShape::MakeBox(P->Bounds.BoxExtent*.95),Q);
+                    Solid=!Occupied;
+                }
+                const auto Next=Solid?(State.IceFraction<.98?EReactiveIceSupport::Thawing:EReactiveIceSupport::Bearing):Occupied?EReactiveIceSupport::FreezePending:EReactiveIceSupport::Liquid;
+                if(Next!=IceSupport){IceSupport=Next;GetOwner()->ForceNetUpdate();}
             }
-            if(Solid!=WasSolid){P->SetCanEverAffectNavigation(false);P->SetCanEverAffectNavigation(true);}
-            P->SetCollisionEnabled(Solid ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::QueryOnly);
-            P->SetCollisionResponseToChannel(ECC_Pawn, Solid ? ECR_Block : ECR_Ignore);
+            const bool Solid=IceSupport==EReactiveIceSupport::Bearing||IceSupport==EReactiveIceSupport::Thawing;
+            P->SetCollisionEnabled(Solid?ECollisionEnabled::QueryAndPhysics:ECollisionEnabled::QueryOnly);
+            P->SetCollisionResponseToChannel(ECC_Pawn,Solid?ECR_Block:ECR_Ignore);
+            // Stop routing onto thawing ice immediately; physical support lasts only while actual ice mass permits it.
+            P->SetCanEverAffectNavigation(IceSupport==EReactiveIceSupport::Bearing);
+
         }
     }
     if (State.bBurning && BurningEffect && !FireVisual && GetWorld()->GetNetMode() != NM_DedicatedServer)

@@ -9,6 +9,7 @@ struct FAetherImpactDamagePolicy
 {
     GENERATED_BODY()
     UPROPERTY(EditAnywhere,BlueprintReadWrite) float ThresholdJ=80;
+    UPROPERTY(EditAnywhere,BlueprintReadWrite) float MinClosingMPerSecond=.5;
     UPROPERTY(EditAnywhere,BlueprintReadWrite) float JoulesPerDamage=35;
     UPROPERTY(EditAnywhere,BlueprintReadWrite) float MaxDamage=70;
     UPROPERTY(EditAnywhere,BlueprintReadWrite) float PosturePerDamage=0;

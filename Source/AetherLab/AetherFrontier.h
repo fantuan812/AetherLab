@@ -9,6 +9,7 @@
 #include "AetherQuestRuntime.h"
 #include "AetherFrontier.generated.h"
 class UAetherPhysicsDamageComponent;
+class UAetherTraversalComponent;
 class UPhysicsHandleComponent;
 class UInputMappingContext;
 class UInputAction;
@@ -23,6 +24,7 @@ public:
     AAetherFrontierProp();
     UPROPERTY(VisibleAnywhere) TObjectPtr<UReactiveMechanismComponent> Mechanism;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherPhysicsDamageComponent> PhysicsDamage;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherTraversalComponent> Traversal;
     UPROPERTY(Replicated) FName Service;
     UPROPERTY(Replicated) bool bCarryable = false;
     UPROPERTY(Replicated) TObjectPtr<AAetherCharacter> Carrier;

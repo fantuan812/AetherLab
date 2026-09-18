@@ -153,6 +153,8 @@ void UReactiveWorldSubsystem::Tick(float Dt)
             const auto* Entry = Components.Find(Id); UReactiveBodyComponent* Body = Entry ? Entry->Get() : nullptr;
             if (IsValid(Body)) if (const Reactive::FState* S = Simulation->Find(Id)) Body->AcceptState(*S);
         }
+        // Frozen material may be asleep while a pawn leaves its collision volume.
+        for(const auto& Pair:Components)if(auto* Ice=Pair.Value.Get();Ice&&Ice->bIceControlsPawnCollision&&Ice->IceSupport==EReactiveIceSupport::FreezePending)Ice->RefreshPresentation();
         PublishElectricalWindows();
         if((Simulation->GetStats().RejectedElectricalPulses>RejectedBefore||ContactBudgetHits>ContactBudgetBefore)&&GetWorld()->GetTimeSeconds()-LastBudgetWarningAt>=5)
         {LastBudgetWarningAt=GetWorld()->GetTimeSeconds();UE_LOG(LogTemp,Warning,TEXT("Reactive budget refusal: electricPulses=%llu lostJ=%.3f contactCandidates=%llu"),Simulation->GetStats().RejectedElectricalPulses,Simulation->GetStats().ElectricalLostJ,ContactBudgetHits);}

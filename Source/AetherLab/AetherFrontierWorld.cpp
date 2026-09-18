@@ -1,5 +1,6 @@
 #include "AetherFrontier.h"
 #include "AetherPhysicsDamage.h"
+#include "AetherTraversal.h"
 #include "AetherContent.h"
 #include "AetherRules.h"
 #include "AetherInventoryRules.h"
@@ -29,6 +30,7 @@
 AAetherFrontierProp::AAetherFrontierProp()
 {
     Mechanism=CreateDefaultSubobject<UReactiveMechanismComponent>(TEXT("Mechanism"));
+    Traversal=CreateDefaultSubobject<UAetherTraversalComponent>(TEXT("Traversal"));
     PhysicsDamage=CreateDefaultSubobject<UAetherPhysicsDamageComponent>(TEXT("PhysicsDamage"));
     Person=CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("UEMannequin"));Person->SetupAttachment(Mesh);
     Person->SetAbsolute(false,true,true);Person->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -236,6 +238,7 @@ AAetherFrontierProp* AAetherFrontierMode::Make(FName Id,FName Service,FVector P,
     {A->Reactive->bParticipatesInSimulation=true;A->Reactive->Preset=EReactiveMaterialPreset::Metal;A->Reactive->InteractionRadiusCm=220;A->Spec.bInteractiveMaterial=true;A->Spec.Color=FLinearColor(.65,.7,.8);}
     if(Service=="Source"){A->Reactive->ReceiverLoad=0;A->Mechanism->PowerW=1000;A->Mechanism->RemainingEnergyJ=3600000;}
     if(Service=="Receiver"){A->Reactive->ReceiverLoad=4;A->Reactive->ReceiverCapacityJ=500;A->Reactive->ElectricalHeatFraction=.05;A->Reactive->bElectricalTerminal=true;}
+    A->Traversal->bAuthoredBridge=Service=="Bridge";
     A->Mechanism->bBuoyant=Service=="Crate";
     A->Mechanism->bReportImpacts=Service=="Bridge"||Service=="Conductor"||Service=="Crate";
     if(Service=="Bridge"||Service=="HingedGate"){A->Reactive->bParticipatesInSimulation=true;A->Spec.bInteractiveMaterial=true;}

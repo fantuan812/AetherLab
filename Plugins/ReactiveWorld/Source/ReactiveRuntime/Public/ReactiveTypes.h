@@ -8,6 +8,9 @@ UENUM(BlueprintType)
 enum class EReactiveMaterialPreset : uint8 { Wood, Metal, Water, Oil, Stone };
 
 UENUM(BlueprintType)
+enum class EReactiveIceSupport : uint8 { Liquid, FreezePending, Bearing, Thawing };
+
+UENUM(BlueprintType)
 enum class EReactiveReaction : uint8 { Ignited, Extinguished, Frozen, Thawed, Steam, Shock, Broken, Impulse, Burst };
 
 USTRUCT(BlueprintType)

@@ -7,10 +7,10 @@
 #include "Engine/World.h"
 
 UReactiveMechanismComponent::UReactiveMechanismComponent()
-{ PrimaryComponentTick.bCanEverTick=true;PrimaryComponentTick.TickInterval=.05f;SetIsReplicatedByDefault(true); }
+{ PrimaryComponentTick.bCanEverTick=true;PrimaryComponentTick.TickGroup=TG_PrePhysics;PrimaryComponentTick.TickInterval=.05f;SetIsReplicatedByDefault(true); }
 void UReactiveMechanismComponent::BeginPlay()
 {
-    Super::BeginPlay();Primitive=Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+    Super::BeginPlay();SetComponentTickInterval(bReportImpacts?0.f:.05f);Primitive=Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
     if(GetOwner()->HasAuthority()&&Primitive.IsValid()&&bReportImpacts)
     {Primitive->SetNotifyRigidBodyCollision(true);Primitive->OnComponentHit.AddDynamic(this,&UReactiveMechanismComponent::Hit);}
 }
@@ -41,6 +41,8 @@ void UReactiveMechanismComponent::RestoreMechanism(bool Released,double EnergyJ,
 void UReactiveMechanismComponent::TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Tick)
 {
     Super::TickComponent(Dt,Type,Tick);if(!GetOwner()->HasAuthority())return;
+    if(Primitive.IsValid())
+    {PrePhysicsLinear=Primitive->GetComponentVelocity();PrePhysicsAngular=Primitive->IsSimulatingPhysics()?Primitive->GetPhysicsAngularVelocityInRadians():FVector::ZeroVector;PrePhysicsCenter=Primitive->GetComponentLocation();}
     if(!bReleased&&!Supports.IsEmpty())
     {
         int32 Broken=0;for(const auto& S:Supports)if(!IsValid(S)||S->State.bBroken)++Broken;
@@ -74,15 +76,20 @@ void UReactiveMechanismComponent::AdvancePower(double Step)
         if(S.ElectricalJ>0&&B->Inject(S)){RemainingEnergyJ-=S.ElectricalJ;SourceAge+=Duration;}
     }
 }
-void UReactiveMechanismComponent::Hit(UPrimitiveComponent* HitComponent,AActor* Other,UPrimitiveComponent*,FVector NormalImpulse,const FHitResult& Result)
+void UReactiveMechanismComponent::Hit(UPrimitiveComponent* HitComponent,AActor* Other,UPrimitiveComponent* OtherComponent,FVector NormalImpulse,const FHitResult& Result)
 {
     if(!GetOwner()->HasAuthority()||!bReportImpacts||!IsValid(Other)||Other==GetOwner()||!HitComponent||!HitComponent->IsSimulatingPhysics()||NormalImpulse.ContainsNaN())return;
     const double Mass=FMath::Max(1.,double(HitComponent->GetMass()));
-    const double Joules=NormalImpulse.SizeSquared()/10000./(2*Mass);
-    if(!FMath::IsFinite(Joules)||Joules<=0)return;
+    const FVector OwnVelocity=PrePhysicsLinear+FVector::CrossProduct(PrePhysicsAngular,Result.ImpactPoint-PrePhysicsCenter);
+    FVector OtherVelocity=OtherComponent?OtherComponent->GetComponentVelocity():Other->GetVelocity();
+    if(auto* M=Other->FindComponentByClass<UReactiveMechanismComponent>())OtherVelocity=M->PrePhysicsLinear+FVector::CrossProduct(M->PrePhysicsAngular,Result.ImpactPoint-M->PrePhysicsCenter);
+    const double Closing=FMath::Max(0.,-FVector::DotProduct(OwnVelocity-OtherVelocity,Result.ImpactNormal.GetSafeNormal())/100.);
+    const double Joules=FMath::Min(NormalImpulse.SizeSquared()/10000./(2*Mass),.5*Mass*Closing*Closing);
+    if(!FMath::IsFinite(Joules)||!FMath::IsFinite(Closing))return;
     FReactiveImpactEvent Event;
     Event.Mechanism=GetOwner();Event.Receiver=Other;Event.Source=GetImpactSource();
     Event.EventId=++ImpactSequence;Event.TimeSeconds=GetWorld()->GetTimeSeconds();
+    Event.RelativeClosingMPerSec=Closing;Event.bSustainedContact=Closing<.2;
     Event.EnergyJ=Joules;Event.ImpulseNs=NormalImpulse/100.;Event.PositionCm=Result.ImpactPoint;
     if(auto* Body=GetOwner()->FindComponentByClass<UReactiveBodyComponent>())Event.MechanismId=Body->StableId;
     if(auto* Body=Other->FindComponentByClass<UReactiveBodyComponent>())Event.ReceiverId=Body->StableId;
