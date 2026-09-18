@@ -1,0 +1,107 @@
+{
+  "version": 10,
+  "baseline": "01f9709047edde1b7ed276cc0a738c196957c3c5",
+  "packages": [
+    {
+      "id": "V10-01",
+      "status": "baseline_frozen",
+      "acceptance": "synthetic_v9_fixture_roundtrip_pass; platform_release_matrix_pending"
+    },
+    {
+      "id": "V10-02",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-03",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-04",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-05",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-06",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-07",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-08",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-09",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-10",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-11",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-12",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-13",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-14",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-15",
+      "status": "in_progress",
+      "acceptance": "CPU_library_build_pass; inference_and_UE_integration_pending"
+    },
+    {
+      "id": "V10-16",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-17",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-18",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-19",
+      "status": "pending",
+      "acceptance": "not_run"
+    },
+    {
+      "id": "V10-20",
+      "status": "pending",
+      "acceptance": "not_run"
+    }
+  ],
+  "note": "状态仅随实际实现与验证更新。阶段完成不等于完整发布验收。"
+}

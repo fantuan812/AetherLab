@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "01f9709047edde1b7ed276cc0a738c196957c3c5",
+  "engine": "5.8.0-55116800+++UE5+Release-5.8",
+  "format": "UE SaveGame tagged properties; UAetherFrontierSave Version=5; v9 profile types",
+  "synthetic": true,
+  "containsPersonalData": false,
+  "fixture": {
+    "path": "Docs/Fixtures/V9/Profiles.sav",
+    "sha256": "9e2b795785ba0d4e8da95f5baf01425db56fcaf3ba861fc2a24dc5733621b693",
+    "bytes": 34039
+  },
+  "cases": {
+    "spellMasks": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "fullSlots": 32,
+    "twoHanded": "TrainingHammer",
+    "pending": {
+      "gold": 37,
+      "material": 3
+    }
+  },
+  "readerTest": "Aether.V10.Baseline.LegacySaveFixtures",
+  "verification": {
+    "succeeded": 1,
+    "failed": 0,
+    "log": "Saved/Logs/V10-baseline-fixtures.log"
+  }
+}
