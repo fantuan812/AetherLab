@@ -60,7 +60,7 @@
     {
       "id": "V10-12",
       "status": "in_progress",
-      "acceptance": "finite_dialogue_and_offer_queries; request_v2_full_target_revision_revalidation; Register_BindInn_story_grants_quest_settlement_and_skill_point_claim_through_consistent_SQLite_coordinator; whole_deferred_rewards_and_unique_quest_point_sources; 61_rule_tests_pass; live_registry_RPC_ASC_CommonUI_and_remaining_services_pending"
+      "acceptance": "finite_dialogue_offer_queries_and_request_v2_target_revision; five_native_progression_services_on_SQLite; production_E_uses_weak_spatial_registry_hysteresis_and_pinned_Actor_action_profile_snapshot_revalidation; 63_rule_tests_pass_without_warnings; streamed_map_guidance_and_two_client_target_RPC_pass; v10_Offer_SQLite_ASC_CommonUI_cutover_and_remaining_services_pending"
     },
     {
       "id": "V10-13",

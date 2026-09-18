@@ -1,5 +1,6 @@
 #include "AetherFrontier.h"
 #include "AetherGuide.h"
+#include "Interaction/AetherNearbyRegistry.h"
 #include "Framework/AetherPlayerController.h"
 #include "GameFramework/HUD.h"
 #include "AetherPhysicsDamage.h"
@@ -43,7 +44,9 @@ AAetherFrontierProp::AAetherFrontierProp()
 }
 void AAetherFrontierProp::BeginPlay()
 {
-    Super::BeginPlay();Reactive->OnReaction.AddDynamic(this,&AAetherFrontierProp::OnMaterialReaction);
+    Super::BeginPlay();
+    GetWorld()->GetSubsystem<UAetherNearbyRegistry>()->Register(this);
+    Reactive->OnReaction.AddDynamic(this,&AAetherFrontierProp::OnMaterialReaction);
     Reactive->OnElectricalWindow.AddDynamic(this,&AAetherFrontierProp::OnElectricalWindow);
     if(Service=="Register"||Service=="Inn"||Service=="Teacher"||Service=="Shop"||Service=="Recruit"||Service=="Rescue"||Service=="SealDelivered")
     {
@@ -52,6 +55,11 @@ void AAetherFrontierProp::BeginPlay()
 
     }
     if(bCarryable&&HasAuthority()){Mesh->SetSimulatePhysics(true);Mesh->SetMassOverrideInKg(NAME_None,20,true);}
+}
+void AAetherFrontierProp::EndPlay(const EEndPlayReason::Type Reason)
+{
+    if(auto* Registry=GetWorld()->GetSubsystem<UAetherNearbyRegistry>())Registry->Unregister(this);
+    Super::EndPlay(Reason);
 }
 void AAetherFrontierProp::Tick(float Dt)
 {

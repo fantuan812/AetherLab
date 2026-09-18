@@ -18,6 +18,7 @@ class UInputMappingContext;
 class UInputAction;
 class UAetherFrontierPanel;
 struct FAetherWorldPlacement;
+struct FAetherInteractionTarget;
 
 // 权威装配与事务协调入口；不允许 UI 直接发布候选数据库。
 UCLASS()
@@ -52,9 +53,11 @@ public:
     bool Commit(AAetherPlayerState* PS, FAetherProfile Next,FName WorldFact=NAME_None,FName FactSource=NAME_None);
     bool CommitOffline(FAetherProfile Next);
     bool SaveWorld();
-    EAetherServiceResult ExecuteWorldService(AAetherFrontierCharacter* C,const FAetherWorldServiceCommand& Command);
+    EAetherServiceResult ExecuteWorldService(AAetherFrontierCharacter* C,const FAetherWorldServiceCommand& Command,const FAetherInteractionTarget* Selection=nullptr);
     void Observe(AAetherCharacter* C,FName Fact);
+    // 仅服务器内部脚本可即时选目标；网络入口必须使用 InteractTarget。
     FString Interact(AAetherFrontierCharacter* C);
+    FString InteractTarget(AAetherFrontierCharacter* C,const FAetherInteractionTarget& Target);
     FString RecruitCompanion(AAetherFrontierCharacter* C,bool Healer=false);
     AAetherFrontierProp* Prop(FName Id) const;
     bool RecordCampClear(FName Definition,FGuid Instance);

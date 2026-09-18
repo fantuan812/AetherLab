@@ -1,5 +1,6 @@
 #include "Characters/AetherFrontierCharacter.h"
 #include "AetherGuide.h"
+#include "Interaction/AetherNearbyRegistry.h"
 #include "AetherFrontier.h"
 #include "AetherContent.h"
 #include "AetherRules.h"
@@ -43,6 +44,7 @@ void AAetherFrontierCharacter::BindPersistentAbilities()
 void AAetherFrontierCharacter::BeginPlay()
 {
     BindPersistentAbilities(); Super::BeginPlay();
+    GetWorld()->GetSubsystem<UAetherNearbyRegistry>()->Register(this);
     Equipment->bProfileManaged=ProfileState()!=nullptr;
     if(HasAuthority())AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),100);
     Equipment->OwnsItem.BindLambda([this](FName Id){auto* PS=ProfileState();return !PS || AetherInventory::OwnsEquipment(PS->Profile,Id,FAetherRules::Get());});
@@ -178,7 +180,12 @@ void AAetherFrontierCharacter::ReleaseCarry()
     if(Carried){Carried->Mechanism->RecordImpactSource(this);Carried->Carrier=nullptr; Carried->Mesh->IgnoreActorWhenMoving(this,false);GetCapsuleComponent()->IgnoreActorWhenMoving(Carried,false); Carried->ForceNetUpdate();}
     Carried=nullptr;
 }
-void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason){ReleaseCarry();Super::EndPlay(Reason);}
+void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
+{
+    InteractionFocus={};bHasInteractionFocus=false;
+    if(auto* Registry=GetWorld()->GetSubsystem<UAetherNearbyRegistry>())Registry->Unregister(this);
+    ReleaseCarry();Super::EndPlay(Reason);
+}
 void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 Index)
 {
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>(); auto* PS=ProfileState(); if(!Mode||!PS)return;
@@ -200,7 +207,8 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
     }
     if(Action=="Save"){Notify(Mode->SaveWorld()?TEXT("World and profiles saved."):TEXT("Save deferred: world has pending reactions."));return;}
     if(!Alive())return;
-    if(Action=="Interact"){Notify(Mode->Interact(this));return;}
+    // 客户端必须提交所见目标；旧的无目标字符串入口不能重新选择邻近对象。
+    if(Action=="Interact"){Notify(TEXT("请重新选择交互目标。"));return;}
     if(Mode->ExecutePartyAction(this,Action))return;
     if(Action=="Throw")
     {if(Carried){auto* P=Carried.Get();ReleaseCarry();P->Mesh->AddImpulse(GetControlRotation().Vector()*P->Mesh->GetMass()*500);P->Mechanism->RecordImpactSource(this);}return;}
@@ -250,7 +258,7 @@ void AAetherFrontierCharacter::Tick(float Dt)
     {
         static float TestTime=0;static float RequestTime=0;TestTime+=Dt;
         auto* PS=ProfileState();auto* S=GetWorld()->GetGameState<AAetherFrontierState>();
-        if(PS && TestTime-RequestTime>.5f){ServerAction("Interact");RequestTime=TestTime;}
+        if(PS && TestTime-RequestTime>.5f){RefreshInteractionFocus();InteractV4();RequestTime=TestTime;}
         if(PS&&S&&TestTime>4&&PS->Profile.Evidence.Contains("SupplyA")&&PS->Profile.Count("Supply")==1&&S->bSupplyRestored)
         {
             const bool DataFixture=FParse::Param(FCommandLine::Get(),TEXT("AetherV802Net"));

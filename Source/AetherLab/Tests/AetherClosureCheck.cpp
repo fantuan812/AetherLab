@@ -40,6 +40,7 @@ void AAetherFrontierCharacter::ClientClosureAction_Implementation(FName Action,F
         const auto* PS=ProfileState();if(!PS||PS->Profile.InventoryReceipts.IsEmpty())return;
         auto Command=PS->Profile.InventoryReceipts.Last().Command;Command.CommandId=FGuid::NewGuid();ServerInventory(Command);return;
     }
+    if(Action=="Interact"){RefreshInteractionFocus();InteractV4();return;}
     ServerAction(Action);
 #endif
 }

@@ -21,7 +21,7 @@ FString AetherServices::Message(EAetherServiceResult Result)
     }
 }
 
-EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCharacter* C,const FAetherWorldServiceCommand& Command)
+EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCharacter* C,const FAetherWorldServiceCommand& Command,const FAetherInteractionTarget* Pinned)
 {
     auto* PS=IsValid(C)?C->ProfileState():nullptr;
     auto* State=GetGameState<AAetherFrontierState>();
@@ -37,9 +37,11 @@ EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCha
     if(PS->Profile.Revision!=Command.ExpectedRevision)return EAetherServiceResult::StaleProfile;
     if(const auto* Stored=Database->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==PS->Profile.CharacterId;}))
         if(Stored->Revision!=Command.ExpectedRevision)return EAetherServiceResult::StaleProfile;
-    const auto Selection=AetherGuide::SelectInteraction(C);
+    // 回执先于场景复验：对象已卸载时仍可确认旧提交，但新操作只能作用于原选择。
+    const auto Selection=Pinned?*Pinned:AetherGuide::QueryTarget(C,Prop(Command.TargetId));
     auto* Target=Selection.Prop.Get();
-    if(Selection.Rescue.IsValid()||!Target||Target->Spec.Id!=Command.TargetId||!AetherServices::IsService(Target->Service))
+    if(!AetherGuide::ValidateSelection(C,Selection)||Selection.Rescue.IsValid()||!Target||
+        !Target->Spec.Id.ToString().Equals(Command.TargetId.ToString(),ESearchCase::CaseSensitive)||!AetherServices::IsService(Target->Service))
         return EAetherServiceResult::TargetChanged;
     if(Target->Service=="Receiver"&&!(Target->bWorkshopService?State->bWorkshopRestored:State->bSupplyRestored)&&Target->ReceivedPower<1)
         return EAetherServiceResult::InsufficientPower;
@@ -77,23 +79,48 @@ EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCha
     return EAetherServiceResult::Committed;
 }
 
+void AAetherFrontierCharacter::RefreshInteractionFocus()
+{
+    AActor* Previous=InteractionFocus.Prop.IsValid()?static_cast<AActor*>(InteractionFocus.Prop.Get()):static_cast<AActor*>(InteractionFocus.Rescue.Get());
+    InteractionFocus=AetherGuide::SelectInteraction(this,Previous);bHasInteractionFocus=true;
+}
 void AAetherFrontierCharacter::InteractV4()
 {
     if(bPanel)return;
-    auto* PS=ProfileState();const auto Selection=AetherGuide::SelectInteraction(this);
+    auto* PS=ProfileState();if(!PS)return;
+    if(!bHasInteractionFocus)RefreshInteractionFocus();
+    // 输入使用最近一次真正显示的快照；失效时只刷新，不在同一次按键偷偷执行新目标。
+    const auto Selection=InteractionFocus;
+    if(!AetherGuide::ValidateSelection(this,Selection)){RefreshInteractionFocus();return;}
     auto* Target=Selection.Prop.Get();
-    if(!PS||Selection.Rescue.IsValid()||!Target||!AetherServices::IsService(Target->Service))
-    {PendingService.Id.Invalidate();ServerAction("Interact");return;}
-    if(PS->Profile.Revision<MinimumServiceRevision)return; // wait for the acknowledged owner-only profile
-    if(!PendingService.Id.IsValid()||PendingService.TargetId!=Target->Spec.Id||PendingService.ExpectedRevision!=PS->Profile.Revision)
-    {PendingService.Id=FGuid::NewGuid();PendingService.TargetId=Target->Spec.Id;PendingService.ExpectedRevision=PS->Profile.Revision;}
-    ServerWorldService(PendingService);
+    if(!Target||!AetherServices::IsService(Selection.ActionId))
+    {
+        PendingService.Id.Invalidate();
+        ServerInteractTarget(Target?static_cast<AActor*>(Target):static_cast<AActor*>(Selection.Rescue.Get()),Selection.StableId,Selection.ActionId,Selection.ProfileRevision);
+        return;
+    }
+    if(PS->Profile.Revision<MinimumServiceRevision)return;
+    if(!PendingService.Id.IsValid()||PendingService.TargetId!=Selection.StableId||PendingService.ExpectedRevision!=Selection.ProfileRevision)
+    {PendingService.Id=FGuid::NewGuid();PendingService.TargetId=Selection.StableId;PendingService.ExpectedRevision=Selection.ProfileRevision;}
+    ServerWorldService(PendingService,Target,Selection.ActionId);
 }
-void AAetherFrontierCharacter::ServerWorldService_Implementation(FAetherWorldServiceCommand Command)
+void AAetherFrontierCharacter::ServerInteractTarget_Implementation(AActor* Target,FName StableId,FName ActionId,int32 ExpectedProfileRevision)
+{
+    auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(!Mode||!ProfileState())return;
+    if(CombatTime()<NextServerAction)return;NextServerAction=CombatTime()+.12f;
+    FAetherInteractionTarget Selection;Selection.Prop=Cast<AAetherFrontierProp>(Target);
+    Selection.Rescue=Cast<AAetherFrontierCharacter>(Target);Selection.StableId=StableId;Selection.ActionId=ActionId;Selection.ProfileRevision=ExpectedProfileRevision;
+    // 有持久回执的世界服务只允许专用入口，不能经普通交互 RPC 绕过重试身份。
+    if(AetherServices::IsService(ActionId)){Notify(TEXT("请使用可重试的世界服务操作。"));return;}
+    Notify(Mode->InteractTarget(this,Selection));
+}
+void AAetherFrontierCharacter::ServerWorldService_Implementation(FAetherWorldServiceCommand Command,AAetherFrontierProp* Target,FName ActionId)
 {
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();auto* PS=ProfileState();if(!Mode||!PS)return;
     if(CombatTime()<NextServerAction)return;NextServerAction=CombatTime()+.12f;
-    const auto Result=Mode->ExecuteWorldService(this,Command);
+    FAetherInteractionTarget Selection;Selection.Prop=Target;Selection.StableId=Command.TargetId;
+    Selection.ActionId=ActionId;Selection.ProfileRevision=Command.ExpectedRevision;
+    const auto Result=Mode->ExecuteWorldService(this,Command,&Selection);
     WorldServiceResult(Command.Id,Result,PS->Profile.Revision);
 }
 void AAetherFrontierCharacter::WorldServiceResult_Implementation(FGuid Id,EAetherServiceResult Result,int32 Revision)

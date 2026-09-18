@@ -25,7 +25,13 @@ FString AAetherFrontierMode::RecruitCompanion(AAetherFrontierCharacter* C,bool H
 FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
 {
     auto* PS=C?C->ProfileState():nullptr;if(!PS||!C->Alive()||C->bTravelPending)return TEXT("Cannot interact.");
-    const auto Target=AetherGuide::SelectInteraction(C);
+    return InteractTarget(C,AetherGuide::SelectInteraction(C));
+}
+FString AAetherFrontierMode::InteractTarget(AAetherFrontierCharacter* C,const FAetherInteractionTarget& Target)
+{
+    auto* PS=IsValid(C)?C->ProfileState():nullptr;
+    if(!HasAuthority()||!PS||C->GetWorld()!=GetWorld()||!AetherGuide::ValidateSelection(C,Target))
+        return TEXT("目标、动作或角色进度已变化，请重新交互。");
     if(auto* Downed=Target.Rescue.Get())
     {C->ReviveTarget=Downed;C->ReviveStarted=C->CombatTime();C->ReviveDamageSerial=C->DamageReceivedCount;if(!C->AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass())){C->ReviveTarget=nullptr;return TEXT("无法开始救援，请靠近队友并保持安全。");}return TEXT("正在救援：保持靠近 3 秒，受伤会打断。");}
     auto* Nearest=Target.Prop.Get();
@@ -111,7 +117,7 @@ FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
     else if(AetherServices::IsService(Service))
     {
         FAetherWorldServiceCommand Command;Command.Id=FGuid::NewGuid();Command.TargetId=Nearest->Spec.Id;Command.ExpectedRevision=PS->Profile.Revision;
-        return AetherServices::Message(ExecuteWorldService(C,Command));
+        return AetherServices::Message(ExecuteWorldService(C,Command,&Target));
     }
     else if(Service=="Abbey")
     {

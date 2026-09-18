@@ -72,7 +72,7 @@ void AAetherFrontierMode::CheckServices()
         UnchangedOnFailure(Conflict,EAetherServiceResult::InvalidCommand,TEXT("GUARD reused command id cannot change payload"));
         const auto Receipts=Database->ServiceReceipts;Database->ServiceReceipts.Reset();
         UnchangedOnFailure(SupplyCommand,EAetherServiceResult::StaleProfile,TEXT("GUARD expired receipt rejected by old revision"));Database->ServiceReceipts=Receipts;
-        UnchangedOnFailure(PowerCommand,EAetherServiceResult::TargetChanged,TEXT("GUARD server reselect rejects remote target"));
+        UnchangedOnFailure(PowerCommand,EAetherServiceResult::TargetChanged,TEXT("GUARD exact target validation rejects remote target"));
         MoveTo("PowerSource");bFailWrites=true;
         UnchangedOnFailure(PowerCommand,EAetherServiceResult::StorageFailure,TEXT("AUD8-02 source retry still fails atomically"));
         bFailWrites=false;bFailAfterDataWrite=true;

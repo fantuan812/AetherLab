@@ -3,6 +3,7 @@
 #include "AetherCombat.h"
 #include "AetherProgression.h"
 #include "AetherServices.h"
+#include "AetherGuide.h"
 #include "AetherFrontierCharacter.generated.h"
 
 class AAetherFrontierProp;
@@ -94,7 +95,13 @@ public:
     void BindPersistentAbilities();
     void ApplyProfileEquipment();
     UFUNCTION(Server,Reliable) void ServerAction(FName Action,int32 Index = 0);
-    UFUNCTION(Server,Reliable) void ServerWorldService(FAetherWorldServiceCommand Command);
+    UFUNCTION(Server,Reliable) void ServerWorldService(FAetherWorldServiceCommand Command,AAetherFrontierProp* Target,FName ActionId);
+    // 过渡期仍调用 v9 服务，但网络目标使用原 Actor 实例 + 持久 ID + 动作 + 所见档案版本。
+    // Actor 的网络引用同时区分区域卸载后用同一持久 ID 重建的新实例。
+    UFUNCTION(Server,Reliable) void ServerInteractTarget(AActor* Target,FName StableId,FName ActionId,int32 ExpectedProfileRevision);
+    FAetherInteractionTarget InteractionFocus;
+    bool bHasInteractionFocus=false;
+    void RefreshInteractionFocus();
     UFUNCTION(Client,Reliable) void WorldServiceResult(FGuid Id,EAetherServiceResult Result,int32 Revision);
     UFUNCTION(Server,Reliable) void ServerSprint(bool Enabled);
     UFUNCTION(Client,Reliable) void Notify(const FString& Message);

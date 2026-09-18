@@ -26,7 +26,7 @@ void AAetherFrontierHUD::DrawHUD()
     DrawText(TEXT("I Bag  J Quests  K Skills  M Map  P Party  Q Potion  G Carry  V Push  R/T Equip  F5 Save  Esc Menu"),FLinearColor(.65,.73,.8),34,H-48);
     DrawText(C->Feedback,FLinearColor(1,.84,.48),30,140);
     if(GetWorld()->GetTimeSeconds()>=NextGuidanceUpdate)
-    {NextGuidanceUpdate=GetWorld()->GetTimeSeconds()+.15f;Guidance=AetherGuide::Resolve(C);Interaction=AetherGuide::SelectInteraction(C);}
+    {NextGuidanceUpdate=GetWorld()->GetTimeSeconds()+.15f;Guidance=AetherGuide::Resolve(C);C->RefreshInteractionFocus();Interaction=C->InteractionFocus;}
     const float GX=FMath::Max(430.f,W-370.f);float Y=38;
     DrawText(Guidance.Title,FLinearColor(.96f,.82f,.5f),GX,Y);Y+=23;
     DrawText(Guidance.Label,FLinearColor::White,GX,Y);Y+=21;

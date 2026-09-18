@@ -36,6 +36,7 @@ public:
     UPROPERTY(Replicated) bool bAcceptsWater = false;
     UPROPERTY(Replicated) bool bInspectableFire = false;
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     virtual void Tick(float Dt) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit) override;
