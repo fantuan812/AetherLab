@@ -155,6 +155,7 @@ private:
     void UpdateAnimation();
     void Think(float Dt);
     UFUNCTION() void Reaction(EReactiveReaction Kind, double Magnitude, FVector Vector);
+    UFUNCTION() void ElectricalWindow(const FReactiveElectricalWindow& Window);
     UFUNCTION(Client, Reliable) void ClientFeedback(const FString& Message);
     TArray<FGameplayAbilitySpecHandle> SpellHandles;
     float ActionUntil = 0;

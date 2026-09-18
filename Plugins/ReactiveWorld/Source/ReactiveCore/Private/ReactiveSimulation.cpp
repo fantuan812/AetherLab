@@ -51,6 +51,7 @@ FSimulation::FSimulation(const FSettings& InSettings) : Settings(InSettings)
     Settings.StepSeconds = Finite(Settings.StepSeconds) ? FMath::Clamp(Settings.StepSeconds, 0.001, 0.1) : 0.05;
     Settings.CellSizeCm = Finite(Settings.CellSizeCm) ? FMath::Clamp(Settings.CellSizeCm, 50.0, 1000.0) : 200.0;
     Settings.HeatReachCm = Finite(Settings.HeatReachCm) ? FMath::Clamp(Settings.HeatReachCm, 0.0, 1000.0) : 250.0;
+    Settings.ElectricalContactReachCm = Finite(Settings.ElectricalContactReachCm)?FMath::Clamp(Settings.ElectricalContactReachCm,0.,20.):6.;
     Settings.MaxBodies = FMath::Clamp(Settings.MaxBodies, 1, 100000);
     Settings.MaxPendingInputs = FMath::Clamp(Settings.MaxPendingInputs, 1, 4096);
     Settings.MaxThermalPairs = FMath::Max(1, Settings.MaxThermalPairs);
@@ -139,6 +140,11 @@ bool FSimulation::SetEnvironment(const FEnvironment& E)
 const FState* FSimulation::Find(FBodyId Id) const { const FBody* B = Bodies.Find(Id); return B ? &B->State : nullptr; }
 const FMaterial* FSimulation::FindMaterial(FBodyId Id) const { const FBody* B = Bodies.Find(Id); return B ? &B->Material : nullptr; }
 TArray<FEvent> FSimulation::DrainEvents() { TArray<FEvent> Result = MoveTemp(Events); Events.Reset(); return Result; }
+TArray<FElectricalWindow> FSimulation::DrainElectricalWindows()
+{
+    TArray<uint64> Keys;ElectricalWindows.GetKeys(Keys);Keys.Sort();TArray<FElectricalWindow> Result;
+    for(uint64 Key:Keys)Result.Add(MoveTemp(ElectricalWindows[Key]));ElectricalWindows.Reset();return Result;
+}
 void FSimulation::Emit(FBodyId Id, EEvent Kind, double Magnitude, const FVector& Vector)
 {
     // Draining once per fixed step is part of the host contract. Bound abandoned consumers.
@@ -241,11 +247,11 @@ bool FSimulation::SetReceiver(FBodyId Id, const FElectricalReceiver& R)
 }
 void FSimulation::Conduct(const TArray<FBodyId>& Origins, double EnergyJ, FBodyId Source, uint64 Cause)
 {
-    struct FPath { double Cost=0; int32 Hops=0; };
+    struct FPath { double Cost=0; int32 Hops=0; FBodyId Parent=InvalidBody; };
     TMap<FBodyId,FPath> Paths;
     for (auto Id:Origins) if (Bodies.Contains(Id)&&(!CanReceiveInput||CanReceiveInput(Id,Source))) Paths.Add(Id,{});
     TSet<FBodyId> Closed; Stats.ElectricalInputJ+=EnergyJ; bool Truncated=false;
-    if(Paths.Num()>Settings.MaxElectricalNodes){Stats.ElectricalLostJ+=EnergyJ;++Stats.BudgetHits;return;}
+    if(Paths.Num()>Settings.MaxElectricalNodes){Stats.ElectricalLostJ+=EnergyJ;++Stats.BudgetHits;++Stats.RejectedElectricalPulses;return;}
     while(Closed.Num()<Paths.Num())
     {
         FBodyId Current=InvalidBody;double Best=TNumericLimits<double>::Max();
@@ -253,19 +259,19 @@ void FSimulation::Conduct(const TArray<FBodyId>& Origins, double EnergyJ, FBodyI
         if(!Current)break;Closed.Add(Current);++Stats.ElectricalVisits;
         const auto Path=Paths.FindChecked(Current);const auto& B=Bodies.FindChecked(Current);
         if(Conductivity(B)<=.05 || B.Receiver.bTerminal)continue;
-        for(FBodyId Candidate:Query(B.Position,B.RadiusCm+2))
+        for(FBodyId Candidate:ElectricalNeighbors?ElectricalNeighbors(Current):Query(B.Position,B.RadiusCm+Settings.ElectricalContactReachCm))
         {
-            if(Candidate==Current||Closed.Contains(Candidate)||(CanReceiveInput&&!CanReceiveInput(Candidate,Source)))continue;
+            if(!Bodies.Contains(Candidate)||Candidate==Current||Closed.Contains(Candidate)||(CanReceiveInput&&!CanReceiveInput(Candidate,Source)))continue;
             const auto& N=Bodies.FindChecked(Candidate);
             if(Conductivity(N)<=.05||(CanConduct?!CanConduct(Current,Candidate):(CanExchange&&!CanExchange(Current,Candidate))))continue;
             const double Edge=ContactCostMeters?ContactCostMeters(Current,Candidate):FVector::Distance(B.Position,N.Position)/100.;
             if(!Finite(Edge)||Edge<0)continue;
             if(Path.Hops>=Settings.MaxElectricalHops||(!Paths.Contains(Candidate)&&Paths.Num()>=Settings.MaxElectricalNodes)){Truncated=true;continue;}
             const double Cost=Path.Cost+Edge;
-            auto* Old=Paths.Find(Candidate);if(!Old||Cost<Old->Cost)Paths.Add(Candidate,{Cost,Path.Hops+1});
+            auto* Old=Paths.Find(Candidate);if(!Old||Cost<Old->Cost)Paths.Add(Candidate,{Cost,Path.Hops+1,Current});
         }
     }
-    if(Truncated){++Stats.BudgetHits;Stats.ElectricalLostJ+=EnergyJ;return;}
+    if(Truncated){++Stats.BudgetHits;++Stats.RejectedElectricalPulses;Stats.ElectricalLostJ+=EnergyJ;return;}
     struct FEndpoint { FBodyId Representative=0; double Path=1.e30; double Load=0; double Capacity=1.e8; double Heat=1; TArray<FBodyId> Members; };
     TMap<uint64,FEndpoint> Receivers; TArray<FBodyId> IDs;Paths.GetKeys(IDs);IDs.Sort();
     for(auto Id:IDs)
@@ -278,6 +284,7 @@ void FSimulation::Conduct(const TArray<FBodyId>& Origins, double EnergyJ, FBodyI
         if(R.LoadWeight>=0)E.Load=FMath::Max(E.Load,Weight);else E.Load+=Weight;
         if(Paths[Id].Cost<E.Path){E.Path=Paths[Id].Cost;E.Representative=Id;}
     }
+    if(ElectricalExposureCount+Receivers.Num()>65536){++Stats.BudgetHits;++Stats.RejectedElectricalPulses;Stats.ElectricalLostJ+=EnergyJ;return;}
     double Total=0;TArray<uint64> Keys;Receivers.GetKeys(Keys);Keys.Sort();for(auto Key:Keys)Total+=Receivers[Key].Load;
     if(Total<=0){Stats.ElectricalLostJ+=EnergyJ;return;}
     for(auto Key:Keys)
@@ -291,7 +298,23 @@ void FSimulation::Conduct(const TArray<FBodyId>& Origins, double EnergyJ, FBodyI
             auto& B=Bodies[Id];B.State.LastSource=Source;B.State.RootCauseId=Cause;
             B.State.EnthalpyJ+=Delivered*E.Heat*(B.Material.DryMassKg+B.State.WaterKg)/Mass;Wake(Id);Resolve(Id,B);
         }
-        if(Delivered>1.e-9)Emit(E.Representative,EEvent::Shock,Delivered);
+        if(Delivered>1.e-9)
+        {
+            FElectricalExposure Exposure;
+            Exposure.Source=Source;Exposure.Receiver=E.Representative;Exposure.ReceiverId=Key;
+            Exposure.ReactionId=NextEvent++;Exposure.RootCauseId=Cause;Exposure.StepId=Stats.Steps+1;
+            Exposure.DeliveredJ=Delivered;Exposure.HeatJ=Delivered*E.Heat;Exposure.UsefulJ=Delivered-Exposure.HeatJ;
+            Exposure.DurationSeconds=Settings.StepSeconds;
+            const FBodyId Parent=Paths[E.Representative].Parent;
+            if(Parent!=InvalidBody&&ConductContact)Exposure.Contact=ConductContact(Parent,E.Representative);
+            auto& Window=ElectricalWindows.FindOrAdd(Key);
+            Window.Receiver=Window.Contributions.IsEmpty()?E.Representative:FMath::Min(Window.Receiver,E.Representative);
+            Window.ReceiverId=Key;Window.StepId=Exposure.StepId;Window.DurationSeconds=Exposure.DurationSeconds;
+            Window.DeliveredJ+=Delivered;Window.HeatJ+=Exposure.HeatJ;Window.UsefulJ+=Exposure.UsefulJ;
+            Window.Contributions.Add(Exposure);++ElectricalExposureCount;
+            // Legacy presentation notification; gameplay energy consumers use the typed window.
+            Emit(E.Representative,EEvent::Shock,Delivered);
+        }
     }
 }
 
@@ -405,7 +428,7 @@ void FSimulation::React(FBodyId Id, FBody& B)
 double FSimulation::TransferLiquid(FBodyId From, FBodyId To, double MaxKg, FBodyId Source)
 {
     FBody* A = Bodies.Find(From); FBody* B = Bodies.Find(To);
-    if (!A || !B || From == To || !Finite(MaxKg) || MaxKg <= 0 || (CanExchange && !CanExchange(From, To))) return 0;
+    if (!A || !B || From == To || !Finite(MaxKg) || MaxKg <= 0 || (CanTransferLiquid?!CanTransferLiquid(From,To):(CanExchange&&!CanExchange(From,To)))) return 0;
     if ((Source != InvalidBody && !Bodies.Contains(Source)) || (CanReceiveInput && (!CanReceiveInput(From, Source) || !CanReceiveInput(To, Source)))) return 0;
     const double Kg = FMath::Min3(MaxKg, A->State.WaterKg * (1 - A->State.IceFraction),
         FMath::Max(0.0, B->Material.WaterCapacityKg - B->State.WaterKg));
@@ -427,6 +450,7 @@ bool FSimulation::RestoreStates(const TMap<FBodyId, FState>& States)
 {
     // Work on a copy to keep malformed saves from leaving a half-restored world.
     FSimulation Candidate = *this;
+    Candidate.ElectricalWindows.Reset();Candidate.PreviousElectricalReceivers.Reset();
     Candidate.Events.Reset(); Candidate.Pending.Reset(); Candidate.RecentInputs.Reset(); Candidate.InputOrder.Reset();
     for (const auto& Pair : States)
     {
@@ -462,7 +486,12 @@ double FSimulation::WithdrawLiquid(FBodyId From, double MaxKg)
 }
 void FSimulation::Step()
 {
-    Changed.Reset(); Stats.ElectricalVisits = 0;
+    Changed.Reset(); Stats.ElectricalVisits = 0;ElectricalExposureCount=0;
+    ElectricalWindows.Reset();
+    // Send one explicit zero window when a previously powered endpoint stops receiving.
+    for(const auto& Previous:PreviousElectricalReceivers)if(Bodies.Contains(Previous.Value))
+    {auto& W=ElectricalWindows.Add(Previous.Key);W.Receiver=Previous.Value;W.ReceiverId=Previous.Key;W.StepId=Stats.Steps+1;W.DurationSeconds=Settings.StepSeconds;}
+    PreviousElectricalReceivers.Reset();
     TArray<FStimulus> Inputs = MoveTemp(Pending); Pending.Reset();
     for (const FStimulus& Input : Inputs)
     {
@@ -474,6 +503,7 @@ void FSimulation::Step()
     ExchangeHeat();
     TArray<FBodyId> Work = Active.Array(); Work.Sort();
     for (FBodyId Id : Work) { React(Id, Bodies.FindChecked(Id)); Changed.Add(Id); }
+    for(const auto& Pair:ElectricalWindows)if(Pair.Value.DeliveredJ>0)PreviousElectricalReceivers.Add(Pair.Key,Pair.Value.Receiver);
     Stats.Active = Active.Num(); ++Stats.Steps;
 }
 }

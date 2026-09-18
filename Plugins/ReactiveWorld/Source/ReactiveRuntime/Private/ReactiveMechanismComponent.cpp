@@ -59,10 +59,14 @@ void UReactiveMechanismComponent::TickComponent(float Dt,ELevelTick Type,FActorC
             Primitive->AddForce(FVector(0,0,Primitive->GetMass()*980*Depth*1.8)-Primitive->GetPhysicsLinearVelocity()*Primitive->GetMass()*Depth*2);break;
         }
     }
-    if(!bPowerEnabled||PowerW<=0||RemainingEnergyJ<=0)return;
+}
+void UReactiveMechanismComponent::AdvancePower(double Step)
+{
+    if(!GetOwner()->HasAuthority()||!FMath::IsFinite(Step)||Step<.001||Step>.1||!FMath::IsFinite(PowerW)
+        ||!FMath::IsFinite(RemainingEnergyJ)||!FMath::IsFinite(LifetimeSeconds)||!FMath::IsFinite(SourceAge)
+        ||!bPowerEnabled||PowerW<=0||RemainingEnergyJ<=0)return;
     if(LifetimeSeconds>0&&SourceAge>=LifetimeSeconds){bPowerEnabled=false;return;}
-    // Clamp catch-up; never emit a huge pulse after a stalled rendering frame.
-    const double Step=FMath::Min(double(Dt),.1);
+    // Called once by the world for each accepted simulation step; dropped frame time emits no energy.
     const double Duration=LifetimeSeconds>0?FMath::Min(Step,LifetimeSeconds-SourceAge):Step;
     if(auto* B=GetOwner()->FindComponentByClass<UReactiveBodyComponent>())
     {

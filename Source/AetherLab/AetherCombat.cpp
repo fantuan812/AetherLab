@@ -137,6 +137,7 @@ void AAetherCharacter::BeginPlay()
         UE_LOG(LogTemp,Error,TEXT("Invalid initial loadout for %s"),*GetName());
     if (Fighter == EAetherFighter::Player && GetNetMode() == NM_Standalone && !bUseBasicAssets) Reactive->StableId = TEXT("Player");
     Reactive->OnReaction.AddDynamic(this, &AAetherCharacter::Reaction);
+    Reactive->OnElectricalWindow.AddDynamic(this,&AAetherCharacter::ElectricalWindow);
     if (HasAuthority())
     {
         GrantSpells(); SetVitals(MaxHealth, 100, 100);
@@ -401,14 +402,22 @@ float AAetherCharacter::TakeDamage(float Amount, const FDamageEvent& Event, ACon
 }
 void AAetherCharacter::Reaction(EReactiveReaction Kind, double Magnitude, FVector Vector)
 {
-    if (!HasAuthority() || !Alive()) return;
-    if (Kind == EReactiveReaction::Shock)
+    // Legacy reaction events are presentation-only. Shock gameplay uses the typed window below.
+}
+void AAetherCharacter::ElectricalWindow(const FReactiveElectricalWindow& Window)
+{
+    if(!HasAuthority()||!Alive()||Window.DurationSeconds<.001)return;
+    for(const auto& Exposure:Window.Contributions)
     {
-        FDamageEvent Event; AActor* Source = Reactive->GetLastSourceActor();
-        TakeDamage(float(Magnitude / 140 * (1 + Reactive->State.ElectricalWetness01 * .25)), Event, Source ? Source->GetInstigatorController() : nullptr, Source);
-        const float T = CombatTime();
-        if (Magnitude > 300 && T > NextShockStun) { StunUntil = T + .7f; CancelActions(); NextShockStun = T + 3; bBlocking = false; }
+        if(!Alive())break;
+        FDamageEvent Event;AActor* Source=Exposure.Source;
+        auto* Pawn=Cast<APawn>(Source);auto* SourceController=Pawn?Pawn->GetController():Source?Source->GetInstigatorController():nullptr;
+        TakeDamage(float(Exposure.DeliveredJ/140*(1+Reactive->State.ElectricalWetness01*.25)),Event,SourceController,Source);
     }
+    const float T=CombatTime();
+    // 300 J in the old 50 ms window is 6000 W. Sum all sources before comparing exposure power.
+    if(Window.DeliveredJ/Window.DurationSeconds>6000&&T>NextShockStun&&Alive())
+    {StunUntil=T+.7f;CancelActions();NextShockStun=T+3;bBlocking=false;}
 }
 void AAetherCharacter::Pacify() { if (HasAuthority()) { bPacified = true; CancelActions(); bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); } }
 void AAetherCharacter::Think(float Dt)

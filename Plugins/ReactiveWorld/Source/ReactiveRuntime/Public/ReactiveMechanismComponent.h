@@ -40,6 +40,7 @@ public:
     UPROPERTY(Replicated) double SourceAge = 0;
     UPROPERTY(EditAnywhere,Category="Mechanism",meta=(ClampMin="0",ClampMax="30")) double ImpactCreditSeconds = 5;
     void RecordImpactSource(AActor* Source);
+    void AdvancePower(double FixedStepSeconds);
     AActor* GetImpactSource() const;
     void RestoreMechanism(bool Released, double EnergyJ, double Age, bool Enabled);
     virtual void BeginPlay() override;

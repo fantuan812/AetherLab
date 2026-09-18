@@ -35,6 +35,7 @@ public:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit) override;
     UFUNCTION() void OnMaterialReaction(EReactiveReaction Kind,double Magnitude,FVector Vector);
+    UFUNCTION() void OnElectricalWindow(const FReactiveElectricalWindow& Window);
     bool bWasBurning = false;
     float LastPowerTime = -100;
 };

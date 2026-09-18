@@ -36,6 +36,7 @@ AAetherFrontierProp::AAetherFrontierProp()
 void AAetherFrontierProp::BeginPlay()
 {
     Super::BeginPlay();Reactive->OnReaction.AddDynamic(this,&AAetherFrontierProp::OnMaterialReaction);
+    Reactive->OnElectricalWindow.AddDynamic(this,&AAetherFrontierProp::OnElectricalWindow);
     if(Service=="Register"||Service=="Inn"||Service=="Teacher"||Service=="Shop"||Service=="Recruit"||Service=="Rescue"||Service=="SealDelivered")
     {
         Person->SetSkeletalMesh(LoadObject<USkeletalMesh>(nullptr,TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple")));
@@ -67,11 +68,15 @@ void AAetherFrontierProp::ReceiveEquipmentHit_Implementation(const FAetherEquipm
     }
     if(Spec.bInteractiveMaterial)Super::ReceiveEquipmentHit_Implementation(Hit);
 }
+void AAetherFrontierProp::OnElectricalWindow(const FReactiveElectricalWindow& Window)
+{
+    if(!HasAuthority())return;
+    ReceivedPower=float(Window.UsefulPowerW());LastPowerTime=GetWorld()->GetTimeSeconds();
+}
 void AAetherFrontierProp::OnMaterialReaction(EReactiveReaction K,double Magnitude,FVector Vector)
 {
     if(!HasAuthority())return;
     if(K==EReactiveReaction::Ignited)bWasBurning=true;
-    if(K==EReactiveReaction::Shock){ReceivedPower=Magnitude/.05f;LastPowerTime=GetWorld()->GetTimeSeconds();}
     if(K==EReactiveReaction::Extinguished && bWasBurning)
     {
         if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>())
@@ -308,6 +313,16 @@ void AAetherFrontierMode::BuildWorld()
     Make("BridgeStopA",NAME_None,{26970,-600,-30},{.4,3,.6},EAetherObjectKind::Stone,TEXT(""));
     Make("BridgeStopB",NAME_None,{27730,-600,-30},{.4,3,.6},EAetherObjectKind::Stone,TEXT(""));
     for(int32 I=0;I<3;++I)Make(*FString::Printf(TEXT("WorksWater%d"),I),"Water",{27050.f+I*300,0,-12},{3,3,.2},EAetherObjectKind::Water,I==0?TEXT("FROST / FREEZE SHALLOW CHANNEL"):TEXT(""));
+    // Explicit adjacent surface ports; buckets and unrelated wet objects never auto-connect.
+    for(int32 I=0;I<2;++I)
+    {
+        auto* West=Prop(*FString::Printf(TEXT("WorksWater%d"),I));auto* East=Prop(*FString::Printf(TEXT("WorksWater%d"),I+1));
+        FReactiveLiquidPort Right;Right.PortId="East";Right.TargetStableId=East->Reactive->StableId;
+        Right.LocalPositionCm=FVector(50,0,0);Right.TargetLocalPositionCm=FVector(-50,0,0);Right.MaxKgPerSecond=.1;
+        West->Reactive->LiquidPorts.Add(Right);
+        FReactiveLiquidPort Left=Right;Left.PortId="West";Left.TargetStableId=West->Reactive->StableId;
+        Left.LocalPositionCm=FVector(-50,0,0);Left.TargetLocalPositionCm=FVector(50,0,0);East->Reactive->LiquidPorts.Add(Left);
+    }
     Make("Pump","SupplyRestored",{28100,0,80},{1,1,1.6},EAetherObjectKind::Stone,TEXT("E / RESTORE SUPPLY / OR INSPECT COMPLETED WORK"));
     Make("PowerSource","Source",{28200,650,40},{1,1,.8},EAetherObjectKind::Stone,TEXT("E / FIXED POWER SOURCE ON-OFF"));
     Make("PowerReceiver","Receiver",{28500,650,40},{1,1,.8},EAetherObjectKind::Stone,TEXT("E / POWERED PUMP / MOVE ROD TO CONNECT"));

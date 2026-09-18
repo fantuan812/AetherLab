@@ -146,3 +146,23 @@ void UReactiveBodyComponent::AcceptEvent(const Reactive::FEvent& Event)
     UE_LOG(LogTemp, Verbose, TEXT("Reactive event #%llu body=%u kind=%d magnitude=%.3f"), Event.Sequence, BodyId, int32(Event.Kind), Event.Magnitude);
     OnReaction.Broadcast(static_cast<EReactiveReaction>(Event.Kind), Event.Magnitude, Event.Vector);
 }
+
+void UReactiveBodyComponent::AcceptElectricalWindow(const FReactiveElectricalWindow& Window)
+{
+    const double Tolerance=FMath::Max(1.e-6,FMath::Abs(Window.DeliveredJ)*1.e-10);
+    if(!GetOwner()->HasAuthority()||Window.StepId<=LastElectricalStep||!FMath::IsFinite(Window.DurationSeconds)||Window.DurationSeconds<.001||Window.DurationSeconds>.1
+        ||!FMath::IsFinite(Window.DeliveredJ)||!FMath::IsFinite(Window.HeatJ)||!FMath::IsFinite(Window.UsefulJ)
+        ||Window.DeliveredJ<0||Window.HeatJ<0||Window.UsefulJ<0||!FMath::IsNearlyEqual(Window.DeliveredJ,Window.HeatJ+Window.UsefulJ,Tolerance))return;
+    double Delivered=0,Heat=0,Useful=0;TSet<uint64> Reactions;
+    for(const auto& E:Window.Contributions)
+    {
+        if(!E.ReactionId||Reactions.Contains(E.ReactionId)||E.StepId!=Window.StepId||E.ReceiverId!=Window.ReceiverId||E.DurationSeconds!=Window.DurationSeconds
+            ||!FMath::IsFinite(E.DeliveredJ)||!FMath::IsFinite(E.HeatJ)||!FMath::IsFinite(E.UsefulJ)||E.DeliveredJ<0||E.HeatJ<0||E.UsefulJ<0
+            ||!FMath::IsNearlyEqual(E.DeliveredJ,E.HeatJ+E.UsefulJ,Tolerance))return;
+        Reactions.Add(E.ReactionId);Delivered+=E.DeliveredJ;Heat+=E.HeatJ;Useful+=E.UsefulJ;
+    }
+    if(!FMath::IsNearlyEqual(Delivered,Window.DeliveredJ,Tolerance)||!FMath::IsNearlyEqual(Heat,Window.HeatJ,Tolerance)||!FMath::IsNearlyEqual(Useful,Window.UsefulJ,Tolerance))return;
+    LastElectricalStep=Window.StepId;OnElectricalWindow.Broadcast(Window);
+}
+void UReactiveBodyComponent::ResetElectricalWindow()
+{LastElectricalStep=0;FReactiveElectricalWindow Empty;OnElectricalWindow.Broadcast(Empty);}

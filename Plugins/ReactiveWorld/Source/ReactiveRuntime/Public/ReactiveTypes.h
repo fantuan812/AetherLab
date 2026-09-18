@@ -59,6 +59,67 @@ struct REACTIVERUNTIME_API FReactiveStimulus
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive") FVector ImpulseNs = FVector::ZeroVector;
 };
 
+UENUM(BlueprintType)
+enum class EReactiveContactChannel : uint8 { Thermal, Electrical, Liquid };
+USTRUCT(BlueprintType)
+struct REACTIVERUNTIME_API FReactiveContact
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly) FName A;
+    UPROPERTY(BlueprintReadOnly) FName B;
+    UPROPERTY() uint32 BodyA=0;
+    UPROPERTY() uint32 BodyB=0;
+    UPROPERTY(BlueprintReadOnly) EReactiveContactChannel Channel=EReactiveContactChannel::Electrical;
+    UPROPERTY(BlueprintReadOnly) FVector PositionCm=FVector::ZeroVector;
+    UPROPERTY(BlueprintReadOnly) bool bValid=false;
+    UPROPERTY() uint64 Version=0;
+    UPROPERTY() uint64 LastConfirmedStep=0;
+};
+USTRUCT(BlueprintType)
+struct REACTIVERUNTIME_API FReactiveLiquidPort
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere,BlueprintReadWrite) FName PortId;
+    UPROPERTY(EditAnywhere,BlueprintReadWrite) FName TargetStableId;
+    UPROPERTY(EditAnywhere,BlueprintReadWrite) FVector LocalPositionCm=FVector::ZeroVector;
+    UPROPERTY(EditAnywhere,BlueprintReadWrite) FVector TargetLocalPositionCm=FVector::ZeroVector;
+    UPROPERTY(EditAnywhere,BlueprintReadWrite) double MaxGapCm=8;
+    UPROPERTY(EditAnywhere,BlueprintReadWrite) double MaxKgPerSecond=.1;
+    UPROPERTY(EditAnywhere,BlueprintReadWrite) bool bEnabled=true;
+};
+USTRUCT(BlueprintType)
+struct REACTIVERUNTIME_API FReactiveElectricalExposure
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly) TObjectPtr<AActor> Source=nullptr;
+    UPROPERTY(BlueprintReadOnly) TObjectPtr<AActor> Receiver=nullptr;
+    UPROPERTY(BlueprintReadOnly) FName SourceStableId;
+    UPROPERTY(BlueprintReadOnly) FName ReceiverStableId;
+    UPROPERTY() uint64 ReactionId=0;
+    UPROPERTY() uint64 RootCauseId=0;
+    UPROPERTY() uint64 StepId=0;
+    UPROPERTY() uint64 ReceiverId=0;
+    UPROPERTY(BlueprintReadOnly) double DeliveredJ=0;
+    UPROPERTY(BlueprintReadOnly) double HeatJ=0;
+    UPROPERTY(BlueprintReadOnly) double UsefulJ=0;
+    UPROPERTY(BlueprintReadOnly) double DurationSeconds=0;
+    UPROPERTY(BlueprintReadOnly) FReactiveContact Contact;
+};
+USTRUCT(BlueprintType)
+struct REACTIVERUNTIME_API FReactiveElectricalWindow
+{
+    GENERATED_BODY()
+    UPROPERTY() uint64 StepId=0;
+    UPROPERTY() uint64 ReceiverId=0;
+    UPROPERTY(BlueprintReadOnly) double DeliveredJ=0;
+    UPROPERTY(BlueprintReadOnly) double HeatJ=0;
+    UPROPERTY(BlueprintReadOnly) double UsefulJ=0;
+    UPROPERTY(BlueprintReadOnly) double DurationSeconds=0;
+    UPROPERTY(BlueprintReadOnly) TArray<FReactiveElectricalExposure> Contributions;
+    double UsefulPowerW() const {return DurationSeconds>=.001&&FMath::IsFinite(DurationSeconds)?UsefulJ/DurationSeconds:0;}
+};
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FReactiveElectricalWindowEvent,const FReactiveElectricalWindow&,Window);
+
 USTRUCT()
 struct REACTIVERUNTIME_API FReactiveSaveRecord
 {

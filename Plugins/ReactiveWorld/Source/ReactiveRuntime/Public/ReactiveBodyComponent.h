@@ -38,6 +38,11 @@ public:
     UPROPERTY(EditAnywhere, Category="Reactive|Electrical") double ReceiverCapacityJ = 100000000;
     UPROPERTY(EditAnywhere, Category="Reactive|Electrical") double ElectricalHeatFraction = 1;
     UPROPERTY(EditAnywhere, Category="Reactive|Electrical") bool bElectricalTerminal = false;
+    UPROPERTY(EditAnywhere,Category="Reactive|Liquid") TArray<FReactiveLiquidPort> LiquidPorts;
+    UPROPERTY(BlueprintAssignable,Category="Reactive|Electrical") FReactiveElectricalWindowEvent OnElectricalWindow;
+    void AcceptElectricalWindow(const FReactiveElectricalWindow& Window);
+    void ResetElectricalWindow();
+    uint64 LastElectricalStep=0;
     uint64 LastReactionChain = 0;
     uint64 LastReactionSequence = 0;
     UPrimitiveComponent* GetPrimitive() const;

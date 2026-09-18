@@ -5,6 +5,7 @@
 #include "ReactiveWorldSubsystem.generated.h"
 
 class UReactiveBodyComponent;
+class UPrimitiveComponent;
 
 UCLASS()
 class REACTIVERUNTIME_API UReactiveWorldSubsystem : public UTickableWorldSubsystem
@@ -27,6 +28,11 @@ public:
     double WithdrawWater(UReactiveBodyComponent* From, double MaxKg);
     bool Capture(TArray<FReactiveSaveRecord>& Records) const;
     bool Restore(const TArray<FReactiveSaveRecord>& Records);
+    // Greybox tolerances: enter at 2 cm for two fixed steps, leave beyond 6 cm immediately.
+    double ContactEnterCm=2,ContactExitCm=6;
+    uint32 ContactConfirmSteps=2;
+    uint64 ContactBudgetHits=0;
+    TArray<FReactiveContact> GetContacts() const;
     double LastStepMilliseconds = 0;
     int32 OcclusionTraces = 0;
     int32 OcclusionCacheHits = 0;
@@ -35,6 +41,25 @@ protected:
 private:
     bool IsAuthority() const;
     bool CanBodiesExchange(Reactive::FBodyId A, Reactive::FBodyId B) const;
+    bool CanBodiesTransferLiquid(Reactive::FBodyId A,Reactive::FBodyId B) const;
+    void UpdateElectricalContacts(uint64 StepId);
+    void AdvanceLiquidPorts(double Step,uint64 StepId);
+    void PublishElectricalWindows();
+    FName ContactBodyName(Reactive::FBodyId Id) const;
+    struct FContactState
+    {
+        FReactiveContact Record;
+        TWeakObjectPtr<UPrimitiveComponent> PrimitiveA,PrimitiveB;
+        uint64 LastObservedStep=0;
+        uint32 Confirmations=0;
+    };
+    TMap<uint64,FContactState> ElectricalContacts;
+    TMap<Reactive::FBodyId,TArray<Reactive::FBodyId>> ElectricalAdjacency;
+    mutable TMap<uint64,FReactiveContact> ThermalContacts;
+    TMap<uint64,FReactiveContact> LiquidContacts;
+    uint64 NextContactVersion=1;
+    double LastBudgetWarningAt=-100;
+    TMap<uint64,TWeakObjectPtr<UReactiveBodyComponent>> ElectricalRecipients;
     TUniquePtr<Reactive::FSimulation> Simulation;
     TMap<Reactive::FBodyId, TWeakObjectPtr<UReactiveBodyComponent>> Components;
     TSet<Reactive::FBodyId> Moving;

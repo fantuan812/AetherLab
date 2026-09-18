@@ -95,6 +95,29 @@ struct FEvent
     uint64 RootCauseId = 0;
 };
 
+// Contact references are observations of this simulation lifetime, not persistent edges.
+struct FContactRef
+{
+    FBodyId A=InvalidBody,B=InvalidBody;
+    uint64 Version=0,ConfirmedStep=0;
+    FVector PositionCm=FVector::ZeroVector;
+    bool bValid=false;
+};
+struct FElectricalExposure
+{
+    FBodyId Source=InvalidBody,Receiver=InvalidBody;
+    uint64 ReceiverId=0,ReactionId=0,RootCauseId=0,StepId=0;
+    double DeliveredJ=0,HeatJ=0,UsefulJ=0,DurationSeconds=0;
+    FContactRef Contact; // Invalid means direct input at this endpoint, no traversed edge.
+};
+struct FElectricalWindow
+{
+    FBodyId Receiver=InvalidBody;
+    uint64 ReceiverId=0,StepId=0;
+    double DeliveredJ=0,HeatJ=0,UsefulJ=0,DurationSeconds=0;
+    TArray<FElectricalExposure> Contributions;
+};
+
 struct FElectricalReceiver
 {
     uint64 Id = 0; // Same physical endpoint across multiple contact shapes. Zero uses body ID.
@@ -113,6 +136,7 @@ struct FStats
     uint64 Steps = 0;
     uint64 RejectedInputs = 0;
     uint64 BudgetHits = 0;
+    uint64 RejectedElectricalPulses = 0;
     double ElectricalInputJ = 0.0;
     double ElectricalDepositedJ = 0.0;
     double ElectricalUsefulJ = 0;
@@ -132,6 +156,7 @@ struct FSettings
     double StepSeconds = 0.05;
     double CellSizeCm = 200.0;
     double HeatReachCm = 250.0;
+    double ElectricalContactReachCm = 6.0;
     int32 MaxBodies = 4096;
     int32 MaxPendingInputs = 512;
     int32 MaxThermalPairs = 16384;
@@ -163,11 +188,15 @@ public:
     bool HasPendingInputs() const { return !Pending.IsEmpty(); }
     const FEnvironment& GetEnvironment() const { return Environment; }
     TArray<FEvent> DrainEvents();
+    TArray<FElectricalWindow> DrainElectricalWindows();
     const TArray<FBodyId>& GetChangedBodies() const { return Changed; }
     TArray<FBodyId> Query(const FVector& PositionCm, double RadiusCm) const;
     // Optional contact/occlusion gate, called synchronously during Step on the owning thread.
     TFunction<bool(FBodyId, FBodyId)> CanExchange;
     TFunction<bool(FBodyId, FBodyId)> CanConduct;
+    TFunction<FContactRef(FBodyId, FBodyId)> ConductContact;
+    TFunction<TArray<FBodyId>(FBodyId)> ElectricalNeighbors;
+    TFunction<bool(FBodyId, FBodyId)> CanTransferLiquid;
     TFunction<bool(FBodyId, FBodyId)> CanReceiveInput; // Target, original source.
     TFunction<double(FBodyId, FBodyId)> ContactCostMeters;
     static double InitialEnthalpy(const FMaterial& M, double TemperatureC, double WaterKg);
@@ -192,6 +221,9 @@ private:
     TArray<FBodyId> Changed;
     TArray<FStimulus> Pending;
     TArray<FEvent> Events;
+    TMap<uint64,FElectricalWindow> ElectricalWindows;
+    int32 ElectricalExposureCount=0;
+    TMap<uint64,FBodyId> PreviousElectricalReceivers;
     FBodyId NextId = 1;
     uint64 NextEvent = 1;
     uint64 NextCause = 1;
