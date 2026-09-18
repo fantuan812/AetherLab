@@ -9,6 +9,6 @@ public class AetherLab : ModuleRules
         PublicIncludePaths.Add(ModuleDirectory);
         PublicDependencyModuleNames.AddRange(new[] { "AetherCore", "Core", "CoreUObject", "Engine", "InputCore", "ReactiveCore", "ReactiveRuntime", "GameplayAbilities", "GameplayTags", "GameplayTasks", "NetCore" });
         PublicDependencyModuleNames.Add("AetherEquipment");
-        PrivateDependencyModuleNames.AddRange(new[] { "AIModule", "AnimGraphRuntime", "Json", "NavigationSystem", "EnhancedInput", "UMG", "Slate", "SlateCore" });
+        PrivateDependencyModuleNames.AddRange(new[] { "AIModule", "AnimGraphRuntime", "Json", "NavigationSystem", "EnhancedInput" });
     }
 }

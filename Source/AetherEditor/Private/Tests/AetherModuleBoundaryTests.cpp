@@ -2,6 +2,7 @@
 #include "AetherWorldAuthoring.h"
 #include "World/AetherShellDefinition.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/SoftObjectPath.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherEditorBoundaryTest,
@@ -10,7 +11,10 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherEditorBoundaryTest,
 bool FAetherEditorBoundaryTest::RunTest(const FString&)
 {
     // 旧工具资产若仍引用旧脚本路径，必须解析为同一个新类，而非静默丢失节点。
-    UClass* Legacy = LoadObject<UClass>(nullptr, TEXT("/Script/AetherLab.AetherWorldAuthoring"));
+    // UE 5.8 的 TryLoadClass 仍执行直接 LoadClass；迁移器先显式修正旧路径。
+    FSoftClassPath LegacyPath(TEXT("/Script/AetherLab.AetherWorldAuthoring"));
+    TestTrue(TEXT("Authoring class redirect registered"), LegacyPath.FixupCoreRedirects());
+    UClass* Legacy = LegacyPath.TryLoadClass<UObject>();
     TestTrue(TEXT("Exact legacy authoring path resolves"), Legacy == UAetherWorldAuthoring::StaticClass());
     TestEqual(TEXT("Authoring belongs to editor only"),
         UAetherWorldAuthoring::StaticClass()->GetOutermost()->GetName(), FString(TEXT("/Script/AetherEditor")));

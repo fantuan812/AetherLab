@@ -23,6 +23,14 @@
       "Name": "AetherEditor",
       "Type": "Editor",
       "LoadingPhase": "Default"
+    },
+    {
+      "Name": "AetherUI",
+      "Type": "ClientOnly",
+      "LoadingPhase": "Default",
+      "TargetDenyList": [
+        "Server"
+      ]
     }
   ],
   "Plugins": [

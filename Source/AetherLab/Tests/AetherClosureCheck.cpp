@@ -1,4 +1,7 @@
 #include "../AetherFrontier.h"
+#include "Presentation/AetherPresentation.h"
+#include "Modules/ModuleManager.h"
+#include "GameFramework/HUD.h"
 #include "../AetherTraversal.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
@@ -57,7 +60,9 @@ void AAetherFrontierCharacter::CheckClosureClient(float Dt)
     auto Find=[&](FName Id)->AAetherFrontierProp*{for(TActorIterator<AAetherFrontierProp> It(GetWorld());It;++It)if(It->Spec.Id==Id)return *It;return nullptr;};
     auto* Source=Find("LabSource");auto* Bridge=Find("LabBridge");auto* Ice=Find("LabWater0");auto* Fire=Find("LabFire");auto* Crate=Find("LabCrate");
     if(!Source||!Bridge||!Ice||!Fire||!Crate)return;
-    bool Pass=Private&&S->bSupplyRestored&&!S->bPowerOn&&!Source->Mechanism->bPowerEnabled
+    const auto* PC=Cast<APlayerController>(Controller);
+    const bool HasLocalHUD=PC&&PC->GetHUD()&&PC->GetHUD()->GetClass()==AetherPresentation::ResolveHUD();
+    bool Pass=Private&&HasLocalHUD&&S->bSupplyRestored&&!S->bPowerOn&&!Source->Mechanism->bPowerEnabled
         &&AbilitySystem==PS->AbilitySystem&&AbilitySystem->GetOwnerActor()==PS
         &&GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->GetSimulation()->GetStats().Registered==0
         &&(PS->Profile.CharacterId=="Alpha"?PS->Profile.Claims.Contains("Q_Main_03"):PS->Profile.Claims.IsEmpty());
@@ -68,6 +73,7 @@ void AAetherFrontierCharacter::CheckClosureClient(float Dt)
     // Allow normal initial property replication to catch up before reporting failure.
     if(!Pass&&ClosureClientTime<12)return;
     ClosureSeenPhase=S->ClosurePhase;ClosureClientTime=0;
+    UE_LOG(LogTemp,Display,TEXT("V10_CLIENT_HUD %s"),HasLocalHUD?TEXT("PASS"):TEXT("FAIL"));
     UE_LOG(LogTemp,Display,TEXT("V807_CLIENT_STATE %s id=%s phase=%d revision=%d private=%d fire=%d ice=%d bridge=%d navversion=%u crate=(%.1f,%.1f,%.1f)"),Pass?TEXT("PASS"):TEXT("FAIL"),*PS->Profile.CharacterId,S->ClosurePhase,PS->Profile.Revision,Private,Fire->Reactive->State.bBurning,int(Ice->Reactive->IceSupport),Bridge->Mechanism->bReleased,Bridge->Traversal->Revision,Crate->GetActorLocation().X,Crate->GetActorLocation().Y,Crate->GetActorLocation().Z);
     ServerClosureAck(S->ClosurePhase,Pass);
 #endif
@@ -101,6 +107,7 @@ void AAetherFrontierMode::CheckClosure()
     if(ClosureStage==0)
     {
         if(!A||A->bTravelPending||Elapsed<3)return;
+        Check(!FModuleManager::Get().IsModuleLoaded("AetherUI"),TEXT("V10 dedicated process excludes UI module"));
         auto P=A->ProfileState()->Profile;
         for(FName Q:{FName("Q_Main_01"),FName("Q_Main_02"),FName("Q_Main_03")}){for(FName O:FAetherProfile::Objectives(Q))P.Observe(O);P.Claim(Q);}
         P.LearnedSpells=15;Check(Commit(A->ProfileState(),P),TEXT("fixture advanced Alpha only"));

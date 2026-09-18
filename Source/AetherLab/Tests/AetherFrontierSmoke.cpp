@@ -68,4 +68,3 @@ void AAetherFrontierMode::SmokeStep()
         SmokeStage=4;FPlatformMisc::RequestExitWithStatus(false,Failures?1:0);
     }
 }
-

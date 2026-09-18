@@ -6,6 +6,6 @@ public class AetherLabEditorTarget : TargetRules
         Type = TargetType.Editor;
         DefaultBuildSettings = BuildSettingsVersion.V7;
         IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_8;
-        ExtraModuleNames.AddRange(new[] { "AetherLab", "AetherEditor" });
+        ExtraModuleNames.AddRange(new[] { "AetherLab", "AetherEditor", "AetherUI" });
     }
 }

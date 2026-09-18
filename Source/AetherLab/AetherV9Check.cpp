@@ -1,4 +1,6 @@
 #include "AetherFrontier.h"
+#include "Presentation/AetherPresentation.h"
+#include "GameFramework/HUD.h"
 #include "AetherAssetPreload.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
@@ -26,6 +28,9 @@ void AAetherFrontierMode::CheckV9()
  if(Elapsed<ClosureAt)return;ClosureAt=Elapsed+.5f;
  if(SmokeStage==0)
  {
+  // 在真实地图/连接中验证工厂装配，而非只检查静态类注册。
+  auto* PC=Cast<APlayerController>(C->Controller);
+  Check(PC&&PC->GetHUD()&&PC->GetHUD()->GetClass()==AetherPresentation::ResolveHUD(),TEXT("local_hud_factory"));
   auto P=PS->Profile;P.Inventory.Reset();P.Equipped.Reset();P.InventoryReceipts.Reset();P.Gold=100;P.Add("Potion",35);
   Check(Commit(PS,P),TEXT("fixture_commit"));C->SetActorLocation(FVector(-14000,10000,130));UpdateRegions({C->GetActorLocation()});SmokeStage=1;return;
  }
