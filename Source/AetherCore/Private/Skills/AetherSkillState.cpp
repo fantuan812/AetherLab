@@ -21,7 +21,7 @@ int32 FAetherSkillStateV10::PermanentRank(const FString& SkillId) const
 int32 FAetherSkillStateV10::EffectiveRank(const FString& SkillId,const TArray<FAetherExternalSkillGrant>& Grants) const
 {
     int32 Rank=PermanentRank(SkillId);
-    for(const auto& G:Grants)if(G.SkillId==SkillId)Rank=FMath::Max(Rank,G.Rank);
+    for(const auto& G:Grants)if(G.SkillId.Equals(SkillId,ESearchCase::CaseSensitive))Rank=FMath::Max(Rank,G.Rank);
     return Rank;
 }
 bool FAetherSkillStateV10::ValidateExternalGrants(const TArray<FAetherExternalSkillGrant>& Grants,const FAetherSkillDefinitionsV10& D)
@@ -53,7 +53,7 @@ bool FAetherSkillStateV10::Validate(const FAetherSkillDefinitionsV10& D,FString&
     for(const auto& P:StoryGrants)
     {
         const auto* S=D.Skills.Find(P.Key);
-        if(!S||!S->bStoryBase||!Id(P.Value)||!PrerequisitesMet(*this,*S))return Fail(TEXT("Invalid story grant"));
+        if(!S||!S->SkillId.Equals(P.Key,ESearchCase::CaseSensitive)||!S->bStoryBase||!Id(P.Value)||!PrerequisitesMet(*this,*S))return Fail(TEXT("Invalid story grant"));
     }
     for(const auto& P:LearnedRanks)
     {
@@ -82,7 +82,7 @@ bool FAetherSkillStateV10::Validate(const FAetherSkillDefinitionsV10& D,FString&
     {
         const auto* S=D.Skills.Find(P.Value);
         // 当前失去授权仍保留可辨识快捷位；UI/施法时用 EffectiveRank 判定能否使用。
-        if(P.Key<0||P.Key>=HotbarCapacity||!S||!S->bActive)return Fail(TEXT("Invalid hotbar entry"));
+        if(P.Key<0||P.Key>=HotbarCapacity||!S||!S->SkillId.Equals(P.Value,ESearchCase::CaseSensitive)||!S->bActive)return Fail(TEXT("Invalid hotbar entry"));
     }
     Reason.Reset();return true;
 }
@@ -104,7 +104,7 @@ FAetherSkillMutation FAetherSkillStateV10::AwardPoints(const FString& EventId,in
 FAetherSkillMutation FAetherSkillStateV10::GrantStory(const FString& SkillId,const FString& EventId,const FAetherSkillDefinitionsV10& D)
 {
     FString Reason;if(!Validate(D,Reason)||!Id(EventId))return {E::Invalid};
-    const auto* Skill=D.Skills.Find(SkillId);if(!Skill)return {E::Missing};
+    const auto* Skill=D.Skills.Find(SkillId);if(!Skill||!Skill->SkillId.Equals(SkillId,ESearchCase::CaseSensitive))return {E::Missing};
     if(!Skill->bStoryBase)return {E::NotAuthorized};
     if(StoryGrants.Contains(SkillId))return {E::Unchanged};
     if(!PrerequisitesMet(*this,*Skill))return {E::Prerequisite};
@@ -114,7 +114,7 @@ FAetherSkillMutation FAetherSkillStateV10::GrantStory(const FString& SkillId,con
 FAetherSkillMutation FAetherSkillStateV10::LearnNext(const FString& SkillId,FGuid CommandId,const FAetherSkillRuleContext& C,const FAetherSkillDefinitionsV10& D)
 {
     FString Reason;if(!Validate(D,Reason)||!CommandId.IsValid()||C.CharacterLevel<1||C.CharacterLevel>100)return {E::Invalid};
-    const auto* S=D.Skills.Find(SkillId);if(!S)return {E::Missing};
+    const auto* S=D.Skills.Find(SkillId);if(!S||!S->SkillId.Equals(SkillId,ESearchCase::CaseSensitive))return {E::Missing};
     if(Busy(C))return {E::NotReady};
     for(const auto& P:Purchases)if(P.CommandId==CommandId)return {E::Conflict};
     const int32 Rank=PermanentRank(SkillId)+1;const auto* Effect=D.Effect(SkillId,Rank);
@@ -133,7 +133,7 @@ FAetherSkillMutation FAetherSkillStateV10::Reset(const FString& Root,const FAeth
 {
     FString Reason;if(!Validate(D,Reason))return {E::Invalid};
     if(!ValidateExternalGrants(Grants,D))return {E::Invalid};
-    if(!Root.IsEmpty()&&!D.Skills.Contains(Root))return {E::Missing};
+    if(!Root.IsEmpty()&&!D.Effect(Root,1))return {E::Missing};
     if(!C.bAtResetService||Busy(C))return {E::NotReady};
     auto Next=*this;
     if(Root.IsEmpty())Next.LearnedRanks.Reset();else Next.LearnedRanks.Remove(Root);
@@ -163,7 +163,7 @@ FAetherSkillMutation FAetherSkillStateV10::Bind(int32 Slot,const FString& SkillI
 {
     FString Reason;if(!Validate(D,Reason)||Slot<0||Slot>=HotbarCapacity||!ValidateExternalGrants(Grants,D))return {E::Invalid};
     const auto* Skill=D.Skills.Find(SkillId);
-    if(!SkillId.IsEmpty()&&(!Skill||!Skill->bActive||EffectiveRank(SkillId,Grants)<1))return {E::NotAuthorized};
+    if(!SkillId.IsEmpty()&&(!Skill||!Skill->SkillId.Equals(SkillId,ESearchCase::CaseSensitive)||!Skill->bActive||EffectiveRank(SkillId,Grants)<1))return {E::NotAuthorized};
     if(Hotbar.FindRef(Slot)==SkillId)return {E::Unchanged};
     auto Next=*this;if(SkillId.IsEmpty())Next.Hotbar.Remove(Slot);else Next.Hotbar.Add(Slot,SkillId);
     return Publish(MoveTemp(Next),{E::Applied},D);

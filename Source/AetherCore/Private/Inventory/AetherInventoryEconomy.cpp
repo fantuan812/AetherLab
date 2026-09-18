@@ -3,7 +3,7 @@ FAetherInventoryMutation FAetherInventoryStateV10::AddNew(const FString& Definit
 {
     using E=EAetherInventoryMutationCode;FString Reason;
     if(!Validate(D,Reason)||Quantity<1||Quantity>1000000)return {E::Invalid};
-    const auto* Def=D.Items.Find(DefinitionId);if(!Def)return {E::Missing};
+    const auto* Def=D.Items.Find(DefinitionId);if(!Def||!Def->Id.Equals(DefinitionId,ESearchCase::CaseSensitive))return {E::Missing};
     FAetherV10ItemInstance Default;Default.DefinitionId=DefinitionId;Default.Durability=Def->MaxDurability>0?Def->MaxDurability:-1;
     auto Next=*this;int32 Remaining=Quantity;FAetherInventoryMutation Result;Result.Code=E::Applied;
     // 按真实格子填充，绝不把绑定/锁定/磨损/词条不同的同名物品洗成默认状态。

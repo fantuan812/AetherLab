@@ -35,13 +35,13 @@ EAetherCommandCode AetherProfileEconomy::Apply(const FAetherPlayerCommand& C,FAe
         return Code::Applied;
     }
     // 此上下文由当前服务器目标/会话解析；旧 UI 缓存价格、距离或另一个商人的清单不能授权。
-    if(!Context.bTradeSessionValid||Context.TradeTargetStableId!=C.TargetStableId)return Code::OutOfReach;
+    if(!Context.bTradeSessionValid||!Context.TradeTargetStableId.Equals(C.TargetStableId,ESearchCase::CaseSensitive))return Code::OutOfReach;
     FString Reason;if(!Economy.Validate(Items,Reason))return Code::NotReady;
-    const auto* Shop=Economy.Shops.Find(Context.ShopId);if(!Shop)return Code::NotAllowed;
+    const auto* Shop=Economy.Shops.Find(Context.ShopId);if(!Shop||!Shop->Id.Equals(Context.ShopId,ESearchCase::CaseSensitive))return Code::NotAllowed;
     if(C.Type==E::BuyItem)
     {
         const auto* D=Items.Items.Find(C.DefinitionId);
-        if(!D||!Shop->Products.Contains(C.DefinitionId)||D->BuyPrice<=0)return Code::NotAllowed;
+        if(!D||!D->Id.Equals(C.DefinitionId,ESearchCase::CaseSensitive)||!Shop->Products.Contains(C.DefinitionId)||D->BuyPrice<=0)return Code::NotAllowed;
         const int64 Cost=int64(D->BuyPrice)*C.Quantity;if(Cost>P.Gold)return Code::InsufficientFunds;
         const auto Result=Mutation(P.Inventory.AddNew(D->Id,C.Quantity,Items),R);if(Result!=Code::Applied)return Result;
         P.Gold-=int32(Cost);R.ReasonParameters.Add(TEXT("GoldChanged"),FString::Printf(TEXT("%lld"),-Cost));return Code::Applied;
@@ -59,7 +59,7 @@ EAetherCommandCode AetherProfileEconomy::Apply(const FAetherPlayerCommand& C,FAe
     if(C.Type==E::RepairItem)
     {
         if(!Shop->bRepair||D->MaxDurability<=0||Item.Durability>=D->MaxDurability||
-            (!Item.BoundToCharacter.IsEmpty()&&Item.BoundToCharacter!=P.CharacterId))return Code::NotAllowed;
+            (!Item.BoundToCharacter.IsEmpty()&&!Item.BoundToCharacter.Equals(P.CharacterId,ESearchCase::CaseSensitive)))return Code::NotAllowed;
         const int64 Cost=int64(D->MaxDurability-Item.Durability)*Shop->RepairGoldPerPoint;
         if(Cost>P.Gold)return Code::InsufficientFunds;
         const auto Result=Mutation(P.Inventory.Repair(Item.InstanceId,Items),R);if(Result!=Code::Applied)return Result;

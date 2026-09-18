@@ -91,7 +91,7 @@ FAetherStoreResult CommitTransaction(sqlite3* DB, const FAetherTransaction& T, c
         FStatement Put(DB,"INSERT INTO aggregates(kind,id,revision,schema,payload) VALUES(?,?,?,?,?) ON CONFLICT(kind,id) DO UPDATE SET revision=excluded.revision,schema=excluded.schema,payload=excluded.payload");
         if (!Put.Int(1,uint8(V.Key.Kind)) || !Put.Text(2,V.Key.Id) || !Put.Int(3,V.Revision) || !Put.Int(4,V.SchemaVersion)
             || !Put.Blob(5,V.Payload) || Put.Step()!=SQLITE_DONE) return Failure();
-        if (V.Key.Kind==EAetherAggregateKind::Profile && V.Key.Id==T.ActorId) CommittedProfileRevision=V.Revision;
+        if (V.Key.Kind==EAetherAggregateKind::Profile && V.Key.Id.Equals(T.ActorId,ESearchCase::CaseSensitive)) CommittedProfileRevision=V.Revision;
         ++Writes;
 #if WITH_DEV_AUTOMATION_TESTS
         if (Writes==1 && Fault==EAetherStoreFault::AfterFirstWrite)

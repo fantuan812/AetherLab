@@ -26,14 +26,14 @@ bool FAetherEconomyDefinitionsV10::Validate(const FAetherV10ItemDefinitions& Ite
     for(const auto& P:Shops)
     {
         const auto& S=P.Value;
-        if(!Id(S.Id)||S.Id!=P.Key||S.Products.Num()>128||S.AcceptedCategories.Num()>32||
+        if(!Id(S.Id)||!S.Id.Equals(P.Key,ESearchCase::CaseSensitive)||S.Products.Num()>128||S.AcceptedCategories.Num()>32||
             S.RepairGoldPerPoint<0||S.RepairGoldPerPoint>1000||S.bRepair!=(S.RepairGoldPerPoint>0))
             return Fail(TEXT("Invalid shop service definition"));
         TSet<FString> Seen;
         for(const auto& Product:S.Products)
         {
             const auto* D=Items.Items.Find(Product);
-            if(!D||D->BuyPrice<=0||Seen.Contains(Product))return Fail(TEXT("Unknown/duplicate/unpriced shop product"));
+            if(!D||!D->Id.Equals(Product,ESearchCase::CaseSensitive)||D->BuyPrice<=0||Seen.Contains(Product))return Fail(TEXT("Unknown/duplicate/unpriced shop product"));
             Seen.Add(Product);
         }
         Seen.Reset();

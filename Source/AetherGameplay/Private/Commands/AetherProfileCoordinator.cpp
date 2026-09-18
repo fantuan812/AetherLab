@@ -43,7 +43,7 @@ struct FAetherProfileCoordinator::FImpl
     {
         FString Reason;
         return Read.Code==EAetherStoreCode::Found&&Read.Value.IsSet()&&Read.Value->SchemaVersion==10&&
-            AetherProfileCodec::Decode(Read.Value->Payload,Items,Skills,Rules,P,Reason)&&P.CharacterId==Actor&&P.Revision==Read.Value->Revision;
+            AetherProfileCodec::Decode(Read.Value->Payload,Items,Skills,Rules,P,Reason)&&P.CharacterId.Equals(Actor,ESearchCase::CaseSensitive)&&P.Revision==Read.Value->Revision;
     }
     FAetherStoreSnapshotQuery Query(const FJob& J) const
     {
@@ -55,7 +55,7 @@ struct FAetherProfileCoordinator::FImpl
     {
         const auto* Row=S.Values.Find({EAetherAggregateKind::Profile,Actor});FString Reason;
         return S.Code==EAetherStoreCode::Found&&Row&&Row->SchemaVersion==10&&
-            AetherProfileCodec::Decode(Row->Payload,Items,Skills,Rules,P,Reason)&&P.CharacterId==Actor&&P.Revision==Row->Revision&&
+            AetherProfileCodec::Decode(Row->Payload,Items,Skills,Rules,P,Reason)&&P.CharacterId.Equals(Actor,ESearchCase::CaseSensitive)&&P.Revision==Row->Revision&&
             S.ProfileRevisions.Contains(Actor)&&S.ProfileRevisions[Actor]==P.Revision;
     }
     bool Receipt(FJob& J,const FAetherStoreResult& R)
@@ -70,7 +70,7 @@ struct FAetherProfileCoordinator::FImpl
         {
             J.ContainerKey=J.Result.ReasonParameters.FindRef(TEXT("ContainerId"));
             if(J.ContainerKey.IsEmpty()||J.Result.FinalWorldRevision<0||
-                (J.Command.Type==EAetherCommandType::TransferItem&&J.ContainerKey!=J.Command.ContainerId))
+                (J.Command.Type==EAetherCommandType::TransferItem&&!J.ContainerKey.Equals(J.Command.ContainerId,ESearchCase::CaseSensitive)))
             {J.Result.Code=EAetherCommandCode::StorageUnavailable;return false;}
             J.Stage=EStage::RefreshBundle;J.SnapshotFuture=Store->ReadSnapshot(Query(J));
         }
@@ -92,6 +92,9 @@ FAetherProfileSession FAetherProfileCoordinator::BeginSession(const FString& Cha
 {
     check(IsInGameThread()&&!Impl->bPolling);
     if(!CharacterId(Character)||(!Impl->Sessions.Contains(Character)&&Impl->Sessions.Num()>=16))return {};
+    // 会话索引保守拒绝大小写别名；不能用 alice 的新登录淘汰已绑定的 Alice 会话。
+    // 正式认证适配器应先解析服务器保存的规范 CharacterId，再调用 BeginSession。
+    if(const auto* Existing=Impl->Sessions.Find(Character);Existing&&!Existing->CharacterId.Equals(Character,ESearchCase::CaseSensitive))return {};
     FAetherProfileSession S{Character,FGuid::NewGuid(),1};Impl->Sessions.Add(Character,S);return S;
 }
 FAetherProfileSession FAetherProfileCoordinator::ReplacePawn(const FAetherProfileSession& S)
@@ -144,7 +147,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             {
                 C.Snapshot=MoveTemp(Snapshot);C.WorldSnapshot=MoveTemp(World);
                 // 旧回执仍能回答操作结果，但不得把其他角色的个人仓储内容传给当前会话。
-                if(Container.IsSet()&&(Container->Kind!=EAetherContainerKind::PersonalStorage||Container->OwnerCharacterId==J.Session.CharacterId))
+                if(Container.IsSet()&&(Container->Kind!=EAetherContainerKind::PersonalStorage||Container->OwnerCharacterId.Equals(J.Session.CharacterId,ESearchCase::CaseSensitive)))
                     C.ContainerSnapshot=MoveTemp(Container);
             }
             Out.Add(MoveTemp(C));Impl->Jobs.RemoveAtSwap(I);
@@ -180,7 +183,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
                     !AetherWorldCodec::Decode(WorldRow->Payload,Impl->Items,Impl->Rules,Snapshot.ProfileRevisions,World,Reason)||
                     World.Revision!=WorldRow->Revision||World.Revision<J.Result.FinalWorldRevision||
                     !AetherContainerCodec::Decode(ContainerRow->Payload,Impl->Items,Container,Reason)||
-                    Container.ContainerId!=J.ContainerKey||Container.Revision!=ContainerRow->Revision||Container.Revision<MinimumContainer||
+                    !Container.ContainerId.Equals(J.ContainerKey,ESearchCase::CaseSensitive)||Container.Revision!=ContainerRow->Revision||Container.Revision<MinimumContainer||
                     Profile.Revision<J.Result.FinalProfileRevision)
                 {J.Result.Code=EAetherCommandCode::StorageUnavailable;Finish();continue;}
                 Finish(MoveTemp(Profile),MoveTemp(World),MoveTemp(Container));continue;
@@ -190,7 +193,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             if(!Resolve||!Resolve(J.Session,J.Command,Profile,Context))
             {J.Result.Code=EAetherCommandCode::NotReady;Finish(MoveTemp(Profile));continue;}
             const auto Allowed=AetherContainerCommands::AuthorizeRead(J.Command,Context,Key);
-            if(Allowed!=EAetherCommandCode::Applied||Key!=J.ContainerKey)
+            if(Allowed!=EAetherCommandCode::Applied||!Key.Equals(J.ContainerKey,ESearchCase::CaseSensitive))
             {J.Result.Code=Allowed==EAetherCommandCode::Applied?EAetherCommandCode::Conflict:Allowed;Finish(MoveTemp(Profile));continue;}
             FAetherTransaction Transaction;
             if(!AetherContainerCommands::Prepare(J.Command,J.Session.CharacterId,Snapshot,Context,Impl->Items,Impl->Skills,Impl->Rules,Transaction,J.Result))

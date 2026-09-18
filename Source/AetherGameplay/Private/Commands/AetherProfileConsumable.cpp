@@ -14,7 +14,7 @@ EAetherCommandCode AetherProfileConsumable::Apply(const FAetherPlayerCommand& C,
     const auto* Use=Rules.Uses.Find(FName(*Def->UseId));if(!Use)return R::NotAllowed;
     // 锁定与任务实例不允许消费；绑定给本人的普通消耗品可用，收藏只影响展示。
     if(I->bLocked||I->QuestInstanceId.IsValid()||Def->bQuestLocked||Next.Inventory.IsEquipped(I->InstanceId)||
-        (!I->BoundToCharacter.IsEmpty()&&I->BoundToCharacter!=Next.CharacterId))return R::NotAllowed;
+        (!I->BoundToCharacter.IsEmpty()&&!I->BoundToCharacter.Equals(Next.CharacterId,ESearchCase::CaseSensitive)))return R::NotAllowed;
     const auto Amount=[](double V){return FMath::IsFinite(V)&&V>=0&&V<=1000;};
     if(!Amount(Use->Health)||!Amount(Use->Mana)||!Amount(Use->Stamina)||!FMath::IsFinite(Use->Cooldown)||
         Use->Cooldown<0||Use->Cooldown>3600||!FMath::IsFinite(Use->SafeSeconds)||Use->SafeSeconds<0||Use->SafeSeconds>3600)return R::Invalid;

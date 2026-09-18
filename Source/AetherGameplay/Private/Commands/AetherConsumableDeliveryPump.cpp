@@ -52,7 +52,7 @@ FAetherDeliveryPumpResult FAetherConsumableDeliveryPump::Poll(const FAetherResol
     using S=FImpl::EStage;using C=EAetherDeliveryPumpCode;
     if(Impl->Stage==S::Idle)return Impl->Result;
     auto* Receiver=Resolve?Resolve(Impl->Session):nullptr;
-    if(!Receiver||Receiver->CharacterId()!=Impl->Session.CharacterId)return Impl->Finish(C::StaleSession);
+    if(!Receiver||!Receiver->CharacterId().Equals(Impl->Session.CharacterId,ESearchCase::CaseSensitive))return Impl->Finish(C::StaleSession);
     if(!Impl->ReceiverId.IsValid())Impl->ReceiverId=Receiver->InstanceId();
     else if(Impl->ReceiverId!=Receiver->InstanceId())return Impl->Finish(C::StaleSession);
     // 下面最多推进一个异步边界；每帧最多应用一条，避免恢复大批次霸占游戏线程。
@@ -73,7 +73,7 @@ FAetherDeliveryPumpResult FAetherConsumableDeliveryPump::Poll(const FAetherResol
         for(const auto& D:Read.Values)
         {
             FAetherConsumableEffectV10 E;
-            if(D.ActorId!=Impl->Session.CharacterId||D.SchemaVersion!=1||!AetherConsumableEffects::Decode(D.Payload,E)||
+            if(!D.ActorId.Equals(Impl->Session.CharacterId,ESearchCase::CaseSensitive)||D.SchemaVersion!=1||!AetherConsumableEffects::Decode(D.Payload,E)||
                 E.DeliveryId!=D.Id||Seen.Contains(D.Id)){Impl->Result.BlockedDeliveryId=D.Id;return Impl->Finish(C::Invalid);}
             Seen.Add(D.Id);
         }

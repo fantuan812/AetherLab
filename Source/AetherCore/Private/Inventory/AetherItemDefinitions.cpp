@@ -25,7 +25,7 @@ bool Number(const TSharedPtr<FJsonObject>& O,const TCHAR* Field,int32& Out,int32
 }
 }
 const FAetherEquipmentSlotDefinition* FAetherV10ItemDefinitions::FindSlot(const FString& Name) const
-{return Slots.FindByPredicate([&](const auto& S){return S.Id==Name;});}
+{return Slots.FindByPredicate([&](const auto& S){return S.Id.Equals(Name,ESearchCase::CaseSensitive);});}
 bool FAetherV10ItemDefinitions::Validate(FString& Reason) const
 {
     const auto Reject=[&](const TCHAR* Text){Reason=Text;return false;};
@@ -36,7 +36,7 @@ bool FAetherV10ItemDefinitions::Validate(FString& Reason) const
     TSet<FString> SlotIds;
     for(const auto& S:Slots)
     {
-        if(!Required.Contains(S.Id)||SlotIds.Contains(S.Id)||S.AllowedCategories.IsEmpty()||S.AllowedCategories.Num()>32)
+        if(!Required.ContainsByPredicate([&](const auto& V){return V.Equals(S.Id,ESearchCase::CaseSensitive);})||SlotIds.Contains(S.Id)||S.AllowedCategories.IsEmpty()||S.AllowedCategories.Num()>32)
             return Reject(TEXT("Invalid equipment layout"));
         TSet<FString> Categories;
         for(const auto& C:S.AllowedCategories){if(!Id(C)||Categories.Contains(C))return Reject(TEXT("Invalid slot category"));Categories.Add(C);}
@@ -47,7 +47,7 @@ bool FAetherV10ItemDefinitions::Validate(FString& Reason) const
     for(const auto& Pair:Items)
     {
         const auto& I=Pair.Value;
-        if(!Id(I.Id)||Pair.Key!=I.Id||I.DisplayName.IsEmpty()||I.DisplayName.Len()>128||!Id(I.Category)||!Id(I.IconId)||
+        if(!Id(I.Id)||!Pair.Key.Equals(I.Id,ESearchCase::CaseSensitive)||I.DisplayName.IsEmpty()||I.DisplayName.Len()>128||!Id(I.Category)||!Id(I.IconId)||
             I.MaxStack<1||I.MaxStack>1000||I.BuyPrice<0||I.BuyPrice>10000000||I.SellPrice<0||I.SellPrice>10000000||
             (I.BuyPrice>0&&I.SellPrice>=I.BuyPrice)||I.MaxDurability<0||I.MaxDurability>1000000||
             !FMath::IsFinite(I.BrokenStatMultiplier)||I.BrokenStatMultiplier<0||I.BrokenStatMultiplier>1)

@@ -43,7 +43,7 @@ bool AetherTransactions::Validate(const FAetherTransaction& T, FString& Reason)
             return Reject(TEXT("Unsupported schema or invalid aggregate payload"));
         if (Write.ExpectedRevision < -1 || Write.ExpectedRevision == MAX_int64 || V.Revision != Write.ExpectedRevision + 1)
             return Reject(TEXT("Aggregate revision must advance exactly once"));
-        if (V.Key.Kind == EAetherAggregateKind::Profile && V.Key.Id == T.ActorId)
+        if (V.Key.Kind == EAetherAggregateKind::Profile && V.Key.Id.Equals(T.ActorId,ESearchCase::CaseSensitive))
         {
             HasActorProfile = true;
             if (Write.ExpectedRevision != T.ExpectedProfileRevision)
@@ -56,7 +56,7 @@ bool AetherTransactions::Validate(const FAetherTransaction& T, FString& Reason)
     TSet<FGuid> Effects;
     for (const auto& Effect : T.Effects)
     {
-        if (!Effect.Id.IsValid() || Effect.Id.A != T.CommandId.A || Effect.Id.B != T.CommandId.B || Effects.Contains(Effect.Id) || Effect.ActorId != T.ActorId
+        if (!Effect.Id.IsValid() || Effect.Id.A != T.CommandId.A || Effect.Id.B != T.CommandId.B || Effects.Contains(Effect.Id) || !Effect.ActorId.Equals(T.ActorId,ESearchCase::CaseSensitive)
             || Effect.SchemaVersion != 1 || Effect.Payload.IsEmpty() || Effect.Payload.Num() > 16384)
             return Reject(TEXT("Invalid effect delivery"));
         Effects.Add(Effect.Id);

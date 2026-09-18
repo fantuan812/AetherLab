@@ -31,7 +31,7 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
     };
     if(C.ProtocolVersion!=AetherCommands::ProtocolVersion)return Fail(EAetherCommandCode::UnsupportedProtocol);
     if(!AetherCommands::Validate(C,Reason))return Fail(EAetherCommandCode::Invalid);
-    if(Actor!=Current.CharacterId)return Fail(EAetherCommandCode::Unauthorized);
+    if(!Actor.Equals(Current.CharacterId,ESearchCase::CaseSensitive))return Fail(EAetherCommandCode::Unauthorized);
     if(!Current.Validate(Items,Skills,Rules,Reason))return Fail(EAetherCommandCode::StorageUnavailable);
     if(C.ExpectedProfileRevision!=Current.Revision)return Fail(EAetherCommandCode::StaleRevision);
     if(Current.Revision>=MAX_int64-1)return Fail(EAetherCommandCode::NotReady);

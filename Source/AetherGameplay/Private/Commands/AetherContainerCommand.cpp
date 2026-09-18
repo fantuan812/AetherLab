@@ -32,12 +32,12 @@ EAetherCommandCode AetherContainerCommands::AuthorizeRead(const FAetherPlayerCom
     }
     else
     {
-        if(C.TargetStableId!=A.TargetStableId)return R::OutOfReach;
+        if(!C.TargetStableId.Equals(A.TargetStableId,ESearchCase::CaseSensitive))return R::OutOfReach;
         if(!A.bCanWithdraw&&C.Type==E::PickUpItem)return R::NotAllowed;
         if(C.Type==E::PickUpItem&&(!A.bInventoryPickup||!A.bSafeToStore))return R::NotAllowed;
         if(C.Type==E::TransferItem)
         {
-            if(!A.bContainerSession||C.ContainerId!=A.ContainerId)return R::Unauthorized;
+            if(!A.bContainerSession||!C.ContainerId.Equals(A.ContainerId,ESearchCase::CaseSensitive))return R::Unauthorized;
             if(C.TransferDirection==EAetherTransferDirection::IntoContainer?!A.bCanDeposit:(!A.bCanWithdraw||!A.bSafeToStore))return R::NotAllowed;
         }
     }
@@ -63,7 +63,7 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
     if(!ProfileRow||!WorldRow)return Fail(R::NotReady);
     FAetherProfileStateV10 P;FAetherWorldStateV10 World;
     if(ProfileRow->SchemaVersion!=10||WorldRow->SchemaVersion!=10||
-        !AetherProfileCodec::Decode(ProfileRow->Payload,Items,Skills,Rules,P,Reason)||P.CharacterId!=Actor||P.Revision!=ProfileRow->Revision||
+        !AetherProfileCodec::Decode(ProfileRow->Payload,Items,Skills,Rules,P,Reason)||!P.CharacterId.Equals(Actor,ESearchCase::CaseSensitive)||P.Revision!=ProfileRow->Revision||
         !Snapshot.ProfileRevisions.Contains(Actor)||Snapshot.ProfileRevisions[Actor]!=P.Revision||
         !AetherWorldCodec::Decode(WorldRow->Payload,Items,Rules,Snapshot.ProfileRevisions,World,Reason)||World.Revision!=WorldRow->Revision)
         return Fail(R::StorageUnavailable);
@@ -75,7 +75,7 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
     if(Existing)
     {
         if(Existing->SchemaVersion!=10||!AetherContainerCodec::Decode(Existing->Payload,Items,Container,Reason)||
-            Container.ContainerId!=Key||Container.Revision!=Existing->Revision)return Fail(R::StorageUnavailable);
+            !Container.ContainerId.Equals(Key,ESearchCase::CaseSensitive)||Container.Revision!=Existing->Revision)return Fail(R::StorageUnavailable);
         ContainerRevision=Container.Revision;if(ContainerRevision>=MAX_int64-1)return Fail(R::NotReady);
     }
     else if(C.Type!=E::DropItem)return Fail(R::Missing);
@@ -102,7 +102,7 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
             const auto* Item=P.Inventory.Find(C.ItemInstanceId);if(!Item)return Fail(R::Missing);
             if(Container.Kind==EAetherContainerKind::PersonalStorage)
             {
-                if(!Item->BoundToCharacter.IsEmpty()&&Item->BoundToCharacter!=Actor)return Fail(R::NotAllowed);
+                if(!Item->BoundToCharacter.IsEmpty()&&!Item->BoundToCharacter.Equals(Actor,ESearchCase::CaseSensitive))return Fail(R::NotAllowed);
             }
             else
             {

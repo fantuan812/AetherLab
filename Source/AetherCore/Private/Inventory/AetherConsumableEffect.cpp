@@ -50,7 +50,7 @@ struct FWire
     }
 };
 bool Unpack(const FAetherEffectDelivery& D,const FString& Actor,FAetherConsumableEffectV10& E)
-{return !Actor.IsEmpty()&&D.ActorId==Actor&&D.SchemaVersion==1&&AetherConsumableEffects::Decode(D.Payload,E)&&D.Id==E.DeliveryId;}
+{return !Actor.IsEmpty()&&D.ActorId.Equals(Actor,ESearchCase::CaseSensitive)&&D.SchemaVersion==1&&AetherConsumableEffects::Decode(D.Payload,E)&&D.Id==E.DeliveryId;}
 }
 bool FAetherResourceStateV10::Validate() const
 {
@@ -91,7 +91,7 @@ bool FAetherConsumableReceiver::UpdateResources(const FAetherResourceStateV10& N
 EAetherEffectApplyCode FAetherConsumableReceiver::Apply(const FAetherEffectDelivery& D,const FString& Actor)
 {
     using C=EAetherEffectApplyCode;FAetherConsumableEffectV10 E;
-    if(Actor!=Owner||!Unpack(D,Actor,E))return C::Invalid;
+    if(!Actor.Equals(Owner,ESearchCase::CaseSensitive)||!Unpack(D,Actor,E))return C::Invalid;
     // 先查实际投递内容；重试发生在后续受伤之后，也绝不能再次把生命改回旧目标值。
     if(const auto* Bytes=Applied.Find(D.Id))return *Bytes==D.Payload?C::Replayed:C::Conflict;
     if(Applied.Num()>=128)return C::Capacity;
@@ -103,7 +103,7 @@ TArray<FGuid> FAetherConsumableReceiver::PendingAcknowledgementIds() const
 {TArray<FGuid> Ids;Applied.GetKeys(Ids);return Ids;}
 bool FAetherConsumableReceiver::RecoverAtFullRespawn(const TArray<FAetherEffectDelivery>& Pending,const FString& Actor)
 {
-    if(Actor!=Owner||Actor.IsEmpty()||Reserved.IsValid()||!Applied.IsEmpty()||!Current.Validate()||Current.Revision!=0||Pending.Num()>128||
+    if(!Actor.Equals(Owner,ESearchCase::CaseSensitive)||Actor.IsEmpty()||Reserved.IsValid()||!Applied.IsEmpty()||!Current.Validate()||Current.Revision!=0||Pending.Num()>128||
         Current.Health!=Current.MaxHealth||Current.Mana!=Current.MaxMana||Current.Stamina!=Current.MaxStamina)return false;
     TMap<FGuid,TArray<uint8>> Recovered;int64 Cooldown=Current.UseReadyAtUnixMs;
     for(const auto& D:Pending)

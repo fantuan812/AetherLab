@@ -10,7 +10,7 @@ struct FAetherProfileSession
     FGuid SessionId;
     uint64 PawnEpoch=0;
     bool operator==(const FAetherProfileSession& Other) const
-    {return CharacterId==Other.CharacterId&&SessionId==Other.SessionId&&PawnEpoch==Other.PawnEpoch;}
+    {return CharacterId.Equals(Other.CharacterId,ESearchCase::CaseSensitive)&&SessionId==Other.SessionId&&PawnEpoch==Other.PawnEpoch;}
 };
 struct FAetherProfileCompletion
 {

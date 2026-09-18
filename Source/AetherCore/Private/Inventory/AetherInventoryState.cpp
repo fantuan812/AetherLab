@@ -10,9 +10,17 @@ FAetherV10ItemInstance* Mutable(FAetherInventoryStateV10& State,FGuid Id)
 }
 bool FAetherV10ItemInstance::SameStackKey(const FAetherV10ItemInstance& O) const
 {
-    return DefinitionId==O.DefinitionId && Quality==O.Quality && Durability==O.Durability &&
-        Affixes.OrderIndependentCompareEqual(O.Affixes) && BoundToCharacter==O.BoundToCharacter &&
-        StateGroup==O.StateGroup && QuestInstanceId==O.QuestInstanceId && bLocked==O.bLocked && bFavorite==O.bFavorite;
+    // FString / TMap 的默认相等会折叠大小写。实例状态必须逐项精确比较，不能把
+    // Wet 与 wet、不同绑定字符或不同词条键合并后只保留其中一份元数据。
+    if(!DefinitionId.Equals(O.DefinitionId,ESearchCase::CaseSensitive)||Quality!=O.Quality||Durability!=O.Durability||
+        !BoundToCharacter.Equals(O.BoundToCharacter,ESearchCase::CaseSensitive)||!StateGroup.Equals(O.StateGroup,ESearchCase::CaseSensitive)||
+        QuestInstanceId!=O.QuestInstanceId||bLocked!=O.bLocked||bFavorite!=O.bFavorite||Affixes.Num()!=O.Affixes.Num())return false;
+    for(const auto& A:Affixes)
+    {
+        bool Found=false;for(const auto& B:O.Affixes)if(A.Key.Equals(B.Key,ESearchCase::CaseSensitive)&&A.Value==B.Value){Found=true;break;}
+        if(!Found)return false;
+    }
+    return true;
 }
 const FAetherV10ItemInstance* FAetherInventoryStateV10::Find(FGuid Id) const
 {return Items.FindByPredicate([&](const auto& I){return I.InstanceId==Id;});}
@@ -35,7 +43,7 @@ bool FAetherInventoryStateV10::Validate(const FAetherV10ItemDefinitions& D,FStri
     {
         const auto* Def=D.Items.Find(I.DefinitionId);
         if(!I.InstanceId.IsValid()||Ids.Contains(I.InstanceId)||I.SlotIndex<0||I.SlotIndex>=Capacity||
-            Positions.Contains(I.SlotIndex)||!Def||I.Quantity<1||I.Quantity>Def->MaxStack)
+            Positions.Contains(I.SlotIndex)||!Def||!Def->Id.Equals(I.DefinitionId,ESearchCase::CaseSensitive)||I.Quantity<1||I.Quantity>Def->MaxStack)
             return Reject(TEXT("Invalid instance identity, cell or quantity"));
         if(I.Quality<0||I.Quality>5||I.Affixes.Num()>16||I.BoundToCharacter.Len()>128||I.StateGroup.Len()>96)
             return Reject(TEXT("Invalid instance metadata"));
@@ -168,7 +176,7 @@ FAetherInventoryMutation FAetherInventoryStateV10::Equip(FGuid Id,const FString&
     if(!I)return Fail(E::Missing);
     if(!Def||!Slot||I->Quantity!=1||!Def->AllowedSlots.Contains(SlotId)||!Slot->AllowedCategories.Contains(Def->Category))
         return Fail(E::NotAllowed);
-    if(!I->BoundToCharacter.IsEmpty()&&I->BoundToCharacter!=Actor)return Fail(E::Bound);
+    if(!I->BoundToCharacter.IsEmpty()&&!I->BoundToCharacter.Equals(Actor,ESearchCase::CaseSensitive))return Fail(E::Bound);
     for(const auto& Pair:Equipment)
     {
         const auto* Existing=Find(Pair.Value);const auto* Other=Existing?D.Items.Find(Existing->DefinitionId):nullptr;

@@ -18,7 +18,7 @@ bool Date(const FString& S)
 bool Known(const TArray<FString>& Values,int32 Limit,const TSet<FString>& Catalog,bool Unique)
 {
     if(Values.Num()>Limit)return false;TSet<FString> Seen;
-    for(const auto& V:Values){if(!Id(V)||!Catalog.Contains(V)||(Unique&&Seen.Contains(V)))return false;Seen.Add(V);}
+    for(const auto& V:Values){if(!Id(V)||(!Catalog.Find(V)||!Catalog.Find(V)->Equals(V,ESearchCase::CaseSensitive))||(Unique&&Seen.Contains(V)))return false;Seen.Add(V);}
     return true;
 }
 }
@@ -47,7 +47,7 @@ bool FAetherProfileStateV10::Validate(const FAetherV10ItemDefinitions& I,const F
             P.Gold<0||P.Gold>10000000||P.Items.Num()>32||(P.Gold==0&&P.Items.IsEmpty()))return Fail(TEXT("Invalid pending reward"));
         PendingIds.Add(P.RewardId);
         for(const auto& Item:P.Items)
-            if(!I.Items.Contains(Item.Key)||Item.Value<1||Item.Value>1000000)return Fail(TEXT("Unknown/invalid reward item"));
+            if((!I.Items.Find(Item.Key)||!I.Items.Find(Item.Key)->Id.Equals(Item.Key,ESearchCase::CaseSensitive))||Item.Value<1||Item.Value>1000000)return Fail(TEXT("Unknown/invalid reward item"));
     }
     if(LegacySaveSchema==0)
     {

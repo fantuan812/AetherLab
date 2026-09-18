@@ -25,7 +25,7 @@ const FAetherSkillDefinitionV10* FAetherSkillDefinitionsV10::Legacy(int32 Bit) c
 }
 const FAetherSkillRankEffect* FAetherSkillDefinitionsV10::Effect(const FString& Id,int32 Rank) const
 {
-    const auto* D=Skills.Find(Id);return D&&Rank>=1&&D->Ranks.IsValidIndex(Rank-1)?&D->Ranks[Rank-1]:nullptr;
+    const auto* D=Skills.Find(Id);return D&&D->SkillId.Equals(Id,ESearchCase::CaseSensitive)&&Rank>=1&&D->Ranks.IsValidIndex(Rank-1)?&D->Ranks[Rank-1]:nullptr;
 }
 bool FAetherSkillDefinitionsV10::Validate(FString& Reason) const
 {
@@ -35,7 +35,7 @@ bool FAetherSkillDefinitionsV10::Validate(FString& Reason) const
     for(const auto& Pair:Skills)
     {
         const auto& D=Pair.Value;
-        if(!Id(D.SkillId)||D.SkillId!=Pair.Key||D.DisplayName.IsEmpty()||D.DisplayName.Len()>128||!Id(D.IconId)||
+        if(!Id(D.SkillId)||!D.SkillId.Equals(Pair.Key,ESearchCase::CaseSensitive)||D.DisplayName.IsEmpty()||D.DisplayName.Len()>128||!Id(D.IconId)||
             (!D.RequiredQuest.IsEmpty()&&!Id(D.RequiredQuest))||D.Ranks.IsEmpty()||D.Ranks.Num()>3||
             uint8(D.Mechanic)>3||D.Prerequisites.Num()>16||D.LegacyBit < -1||D.LegacyBit>3)
             return Fail(TEXT("Invalid skill definition"));
@@ -44,7 +44,7 @@ bool FAetherSkillDefinitionsV10::Validate(FString& Reason) const
         for(const auto& P:D.Prerequisites)
         {
             const auto* Parent=Skills.Find(P.SkillId);
-            if(!Parent||P.SkillId==D.SkillId||P.Rank<1||P.Rank>Parent->Ranks.Num()||Seen.Contains(P.SkillId))
+            if(!Parent||!Parent->SkillId.Equals(P.SkillId,ESearchCase::CaseSensitive)||P.SkillId==D.SkillId||P.Rank<1||P.Rank>Parent->Ranks.Num()||Seen.Contains(P.SkillId))
                 return Fail(TEXT("Unknown/duplicate skill prerequisite"));
             // 必得故事基础不能反向依赖需要自由点数的节点，避免洗点/耗尽点数锁死主线。
             if(D.bStoryBase&&(!Parent->bStoryBase||P.Rank!=1))return Fail(TEXT("Story base depends on a paid rank"));

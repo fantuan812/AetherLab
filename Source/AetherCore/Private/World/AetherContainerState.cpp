@@ -23,7 +23,7 @@ bool FAetherContainerStateV10::Validate(const FAetherV10ItemDefinitions& D,FStri
     if((!bActive&&(Kind!=EAetherContainerKind::WorldDrop||!Inventory.Items.IsEmpty()))||
         (bActive&&Kind==EAetherContainerKind::WorldDrop&&Inventory.Items.IsEmpty()))return Fail(TEXT("Invalid drop tombstone state"));
     for(const auto& Item:Inventory.Items)
-        if(!Item.BoundToCharacter.IsEmpty()&&(Kind!=EAetherContainerKind::PersonalStorage||Item.BoundToCharacter!=OwnerCharacterId))
+        if(!Item.BoundToCharacter.IsEmpty()&&(Kind!=EAetherContainerKind::PersonalStorage||!Item.BoundToCharacter.Equals(OwnerCharacterId,ESearchCase::CaseSensitive)))
             return Fail(TEXT("Bound item cannot enter shared or another character's storage"));
     auto ContainerDefinitions=D;ContainerDefinitions.DefaultCapacity=Inventory.Capacity;
     if(!Inventory.Validate(ContainerDefinitions,Reason))return false;
@@ -31,5 +31,5 @@ bool FAetherContainerStateV10::Validate(const FAetherV10ItemDefinitions& D,FStri
 }
 bool FAetherContainerStateV10::Allows(const FString& Character) const
 {
-    return bActive&&!Character.IsEmpty()&&(Kind!=EAetherContainerKind::PersonalStorage||OwnerCharacterId==Character);
+    return bActive&&!Character.IsEmpty()&&(Kind!=EAetherContainerKind::PersonalStorage||OwnerCharacterId.Equals(Character,ESearchCase::CaseSensitive));
 }
