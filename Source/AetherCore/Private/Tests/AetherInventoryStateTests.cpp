@@ -1,5 +1,6 @@
 #include "Misc/AutomationTest.h"
 #include "Inventory/AetherInventoryState.h"
+#include "Inventory/AetherInventoryCodec.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
 
@@ -136,6 +137,40 @@ bool FAetherItemDefinitionTest::RunTest(const FString&)
     auto Parsed=FAetherV10ItemDefinitions::Parse(Duplicate,Reason);
     TestFalse(TEXT("Duplicate item IDs rejected instead of last-write-wins"),Parsed.Validate(Reason));
     TestTrue(TEXT("Ring declares both legal slots"),Valid.Items.FindChecked(TEXT("CopperRing")).AllowedSlots.Num()==2);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherInventoryCodecTest,"Aether.V10.Inventory.VersionedBinarySnapshot",
+    EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FAetherInventoryCodecTest::RunTest(const FString&)
+{
+    FString Reason;const auto D=Definitions(Reason);if(!TestTrue(*Reason,D.Validate(Reason)))return false;
+    FAetherInventoryStateV10 S;S.Items.Add(Item(1,TEXT("LeatherVest"),7,D));S.Items.Add(Item(2,TEXT("CopperRing"),19,D));
+    S.Items[0].Durability=13;S.Items[0].Quality=2;S.Items[0].BoundToCharacter=TEXT("测试角色");
+    S.Items[0].Affixes.Add(TEXT("B"),42);S.Items[0].Affixes.Add(TEXT("A"),3);
+    S.Items[0].StateGroup=TEXT("Wet");S.Items[0].QuestInstanceId=Id(99);S.Items[0].bLocked=true;S.Items[0].bFavorite=true;
+    S.Equip(Id(1),TEXT("Chest"),TEXT("测试角色"),D);S.Equip(Id(2),TEXT("Ring2"),TEXT("测试角色"),D);
+    TArray<uint8> Bytes,Again;FAetherInventoryStateV10 Restored;
+    if(!TestTrue(TEXT("Explicit DTO encodes"),AetherInventoryCodec::Encode(S,D,Bytes,Reason)))return false;
+    if(!TestTrue(*Reason,AetherInventoryCodec::Decode(Bytes,D,Restored,Reason)))return false;
+    TestTrue(TEXT("All instance state survives decoding"),Restored.Find(Id(1))->SameStackKey(*S.Find(Id(1))));
+    TestEqual(TEXT("Sparse slot position retained"),Restored.Find(Id(1))->SlotIndex,7);
+    TestTrue(TEXT("Equipment still references the original GUID"),Restored.Equipment.OrderIndependentCompareEqual(S.Equipment));
+    auto Reordered=S;Reordered.Items.Swap(0,1);Reordered.Equipment.Reset();
+    Reordered.Equipment.Add(TEXT("Ring2"),Id(2));Reordered.Equipment.Add(TEXT("Chest"),Id(1));
+    Reordered.Items[1].Affixes.Reset();Reordered.Items[1].Affixes.Add(TEXT("A"),3);Reordered.Items[1].Affixes.Add(TEXT("B"),42);
+    TestTrue(TEXT("Container insertion order is not part of persistent identity"),AetherInventoryCodec::Encode(Reordered,D,Again,Reason)&&Bytes==Again);
+    for(int32 N=0;N<Bytes.Num();++N)
+    {
+        TArray<uint8> Truncated;Truncated.Append(Bytes.GetData(),N);
+        TestFalse(TEXT("Every truncated persisted DTO rejected"),AetherInventoryCodec::Decode(Truncated,D,Restored,Reason));
+        TestTrue(TEXT("Failure preserves caller state"),Restored.Items.Num()==2&&Restored.Find(Id(1))&&Restored.Find(Id(1))->Durability==13);
+    }
+    Again=Bytes;Again[4]=99;TestFalse(TEXT("Unknown save DTO schema rejected"),AetherInventoryCodec::Decode(Again,D,Restored,Reason));
+    Again=Bytes;Again[6]=99;TestFalse(TEXT("Unknown content schema rejected"),AetherInventoryCodec::Decode(Again,D,Restored,Reason));
+    Again=Bytes;Again[10]=255;Again[11]=255;TestFalse(TEXT("Forged count rejected before allocation"),AetherInventoryCodec::Decode(Again,D,Restored,Reason));
+    Again=Bytes;Again.Add(0);TestFalse(TEXT("Trailing storage bytes rejected"),AetherInventoryCodec::Decode(Again,D,Restored,Reason));
+    TestTrue(TEXT("No rejected record became an empty replacement"),Restored.Find(Id(1))&&Restored.Equipment.Num()==2);
     return true;
 }
 #endif

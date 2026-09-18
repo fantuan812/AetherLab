@@ -30,7 +30,7 @@
     {
       "id": "V10-06",
       "status": "in_progress",
-      "acceptance": "fixed_grid_and_stateful_stack_rules; 25_rule_tests_pass; persistent_DTO_gateway_and_UI_pending"
+      "acceptance": "fixed_grid_and_stateful_stack_rules; explicit_inventory_DTO_and_SQLite_close_reopen_rollback_pass; 27_rule_tests_pass; profile_gateway_and_UI_pending"
     },
     {
       "id": "V10-07",

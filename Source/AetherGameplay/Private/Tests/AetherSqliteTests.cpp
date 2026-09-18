@@ -1,5 +1,6 @@
 #include "Misc/AutomationTest.h"
 #include "Persistence/AetherSqliteStore.h"
+#include "Inventory/AetherInventoryCodec.h"
 #include "../Persistence/AetherSqliteInternal.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
@@ -176,5 +177,38 @@ bool FAetherStoreContractTest::RunTest(const FString&)
         Reopened.Store->Close();
     }
     return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherInventoryStoreTest,"Aether.V10.Store.InventoryDTORecovery",TestFlags)
+bool FAetherInventoryStoreTest::RunTest(const FString&)
+{
+    FString Text,Reason;FFileHelper::LoadFileToString(Text,*(FPaths::ProjectContentDir()/TEXT("AetherCore/Definitions/V10/Items.json")));
+    const auto D=FAetherV10ItemDefinitions::Parse(Text,Reason);if(!TestTrue(*Reason,D.Validate(Reason)))return false;
+    FAetherInventoryStateV10 S;FAetherV10ItemInstance I;
+    I.InstanceId=FGuid(1,2,3,4);I.DefinitionId=TEXT("LeatherVest");I.SlotIndex=17;I.Durability=9;
+    I.BoundToCharacter=TEXT("SyntheticAlice");I.bLocked=true;I.Affixes.Add(TEXT("Roll"),7);S.Items.Add(I);
+    S.Equip(I.InstanceId,TEXT("Chest"),TEXT("SyntheticAlice"),D);
+    auto Options=TestOptions();auto Opened=AetherSQLite::Open(Options);
+    if(!TestTrue(TEXT("Open inventory store"),Opened.Code==EAetherStoreCode::Ready))return false;
+    auto T=Request(-1,1);
+    if(!TestTrue(TEXT("Encode explicit inventory payload"),AetherInventoryCodec::Encode(S,D,T.Writes[0].Value.Payload,Reason)))return false;
+    TestTrue(TEXT("Persist inventory candidate"),Opened.Store->Commit(T).Get().Code==EAetherStoreCode::Committed);
+    Opened.Store->Close();Opened.Store.Reset();
+    Opened=AetherSQLite::Open(Options);
+    if(!TestTrue(TEXT("Reopen inventory store"),Opened.Code==EAetherStoreCode::Ready))return false;
+    auto Row=Opened.Store->Read({EAetherAggregateKind::Profile,TEXT("SyntheticAlice")}).Get();
+    if(!TestTrue(TEXT("Recover committed inventory row"),Row.Code==EAetherStoreCode::Found&&Row.Value.IsSet()))return false;
+    FAetherInventoryStateV10 Loaded;
+    if(!TestTrue(*Reason,AetherInventoryCodec::Decode(Row.Value->Payload,D,Loaded,Reason)))return false;
+    TestTrue(TEXT("Database roundtrip preserves all instance metadata"),Loaded.Find(I.InstanceId)&&Loaded.Find(I.InstanceId)->SameStackKey(I));
+    TestTrue(TEXT("Sparse grid and equipment reference survive close/reopen"),Loaded.At(17)&&Loaded.Equipment.FindRef(TEXT("Chest"))==I.InstanceId);
+    auto Candidate=Loaded;Candidate.Repair(I.InstanceId,D);
+    auto Next=Request(0,2);AetherInventoryCodec::Encode(Candidate,D,Next.Writes[0].Value.Payload,Reason);
+    Options.Fault->Store(EAetherStoreFault::AfterFirstWrite);
+    TestTrue(TEXT("Injected failure rejects replacement inventory"),Opened.Store->Commit(Next).Get().Code!=EAetherStoreCode::Committed);
+    Options.Fault->Store(EAetherStoreFault::None);
+    Row=Opened.Store->Read({EAetherAggregateKind::Profile,TEXT("SyntheticAlice")}).Get();
+    TestTrue(TEXT("Old durable state retained after write failure"),Row.Value.IsSet()&&AetherInventoryCodec::Decode(Row.Value->Payload,D,Loaded,Reason)&&Loaded.Find(I.InstanceId)->Durability==9);
+    Opened.Store->Close();return true;
 }
 #endif
