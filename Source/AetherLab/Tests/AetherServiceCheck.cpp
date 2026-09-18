@@ -44,7 +44,7 @@ void AAetherFrontierMode::CheckServices()
     const auto PowerCommand=TestCommand("PowerSource",2,2);
     if(Phase=="Fail")
     {
-        auto Fixture=PS->Profile;Fixture.Claims={FAetherProfile::QuestId(0),FAetherProfile::QuestId(1),FAetherProfile::QuestId(2)};Fixture.bRegistered=true;
+        auto Fixture=PS->Profile;Fixture.Claims={FName("Q_Main_01"),FName("Q_Main_02"),FName("Q_Main_03")};Fixture.bRegistered=true;
         Check(Database->Generation==0&&Commit(PS,Fixture)&&SaveWorld(),TEXT("SETUP persisted isolated profile and world"));
         Check(PS->Profile.Revision==1&&Database->Generation==2&&!State->bSupplyRestored&&State->bPowerOn,TEXT("SETUP expected initial state"));
         MoveTo("PowerReceiver");Prop("PowerReceiver")->ReceivedPower=0;
@@ -65,7 +65,7 @@ void AAetherFrontierMode::CheckServices()
         MoveTo("Pump");const int32 Gold=PS->Profile.Gold,Experience=PS->Profile.Experience;
         Check(ExecuteWorldService(C,SupplyCommand)==EAetherServiceResult::Committed&&State->bSupplyRestored&&Database->bSupplyRestored
             &&PS->Profile.Gold==Gold+60&&PS->Profile.Experience==Experience+100&&PS->Profile.Count("TideStaff")==1
-            &&PS->Profile.Claims.Contains(FAetherProfile::QuestId(4))&&PS->Profile.Revision==2&&Database->Generation==3,
+            &&PS->Profile.Claims.Contains(FName("Q_Main_05"))&&PS->Profile.Revision==2&&Database->Generation==3,
             TEXT("AUD8-03 supply retry commits world profile reward and receipt together"));
         UnchangedOnFailure(SupplyCommand,EAetherServiceResult::AlreadyProcessed,TEXT("AUD8-03 duplicate supply receipt has no second reward"));
         auto Conflict=SupplyCommand;Conflict.TargetId="PowerSource";

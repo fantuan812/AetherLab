@@ -38,7 +38,7 @@ FString AAetherEncounterDirector::Start(AAetherFrontierCharacter* C,bool Public)
     {
         if(*It==C||It->Fighter!=EAetherFighter::Player||!It->Alive()||FVector::DistSquared(C->GetActorLocation(),It->GetActorLocation())>FMath::Square(2500.))continue;
         if(It->CompanionOwner&&(Public||It->CompanionOwner==C||(It->CompanionOwner->ProfileState()&&It->CompanionOwner->ProfileState()->PartyLeader==C->ProfileState()->PartyLeader)))++Seats;
-        else if(It->ProfileState()&&(Public||(It->ProfileState()->PartyLeader==C->ProfileState()->PartyLeader&&(It->ProfileState()->Profile.Available(6)||It->ProfileState()->Profile.Claims.Contains(FAetherProfile::QuestId(6))))))
+        else if(It->ProfileState()&&(Public||(It->ProfileState()->PartyLeader==C->ProfileState()->PartyLeader&&(It->ProfileState()->Profile.Available("Q_Main_07")||It->ProfileState()->Profile.Claims.Contains(FName("Q_Main_07"))))))
         {Next.Participants.AddUnique(It->ProfileState()->Profile.CharacterId);++Seats;}
     }
     if(!Public&&Seats<2)return TEXT("At least two nearby humans/companions are required.");
@@ -100,7 +100,7 @@ void AAetherEncounterDirector::Settle(FAetherEncounterRun& R)
         Receipt=R.Instance;
         Next.RefreshDaily(FDateTime::UtcNow().ToString(TEXT("%Y%m%d")));
         const FName Key=R.Definition=="Relay"?FName("RelayReward"):FName("AbbeyReward");
-        if(R.Definition=="Abbey"){Next.Observe("GuardianDefeated");Next.Claim(6);}
+        if(R.Definition=="Abbey"){Next.Observe("GuardianDefeated");Next.TryAutoClaim("Q_Main_07");}
         if(!Next.DailyClaims.Contains(Key))
         {if(Next.PendingGold>999940||Next.PendingMaterial>997)continue;Next.PendingGold+=60;Next.PendingMaterial+=3;Next.DailyClaims.Add(Key);}
         Next.CollectPending();

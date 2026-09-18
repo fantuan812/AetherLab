@@ -6,6 +6,7 @@
 #include "AetherEncounters.h"
 #include "AetherGuide.h"
 #include "AetherServices.h"
+#include "AetherQuestRuntime.h"
 #include "AetherFrontier.generated.h"
 class UPhysicsHandleComponent;
 class UInputMappingContext;
@@ -25,6 +26,8 @@ public:
     UPROPERTY(Replicated) TObjectPtr<AAetherCharacter> Carrier;
     UPROPERTY(VisibleAnywhere) TObjectPtr<USkeletalMeshComponent> Person;
     UPROPERTY(Replicated) float ReceivedPower = 0;
+    UPROPERTY(Replicated) bool bAcceptsWater = false;
+    UPROPERTY(Replicated) bool bInspectableFire = false;
     virtual void BeginPlay() override;
     virtual void Tick(float Dt) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -80,7 +83,7 @@ public:
     float NextServerAction = 0;
     float NextPotion = 0;
     int32 SelectedItem = 0;
-    int32 TrackedQuest = INDEX_NONE;
+    FName TrackedQuest;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> GameplayContext;
     UPROPERTY(Transient) TMap<FName,TObjectPtr<UInputAction>> InputActions;
     UFUNCTION(Exec) void AetherBind(FName Action,FKey Key);
@@ -168,6 +171,7 @@ public:
     UPROPERTY() TArray<FAetherWorldLoot> Loot;
     UPROPERTY() TArray<FAetherCampReceipt> CampReceipts;
     UPROPERTY() TArray<FAetherWorldServiceReceipt> ServiceReceipts;
+    UPROPERTY() FAetherWorldFacts WorldFacts;
     bool ValidateWorldLedger() const;
     UPROPERTY() bool bSupplyRestored = false;
     UPROPERTY() bool bBridgeReleased = false;
@@ -203,7 +207,7 @@ public:
     bool bSmoke = false;
     bool bFailWrites = false;
     bool bFailAfterDataWrite = false;
-    bool Commit(AAetherPlayerState* PS, FAetherProfile Next);
+    bool Commit(AAetherPlayerState* PS, FAetherProfile Next,FName WorldFact=NAME_None,FName FactSource=NAME_None);
     bool CommitOffline(FAetherProfile Next);
     bool SaveWorld();
     EAetherServiceResult ExecuteWorldService(AAetherFrontierCharacter* C,const FAetherWorldServiceCommand& Command);
@@ -222,12 +226,15 @@ private:
     void BuildWorld();
     AAetherFrontierCharacter* SpawnFighter(FVector P,EAetherFighter Type,FName Id);
     bool WriteDatabase(UAetherFrontierSave* Next);
+    void CollectPublicFacts(FAetherWorldFacts& Facts) const;
+    void RefreshWorldProgress();
     bool CaptureWorldCandidate(UAetherFrontierSave* Candidate) const;
     void SmokeStep();
     void CheckAnimation();
     void CheckGuidance();
     void CheckReactions();
     void CheckServices();
+    void CheckDataContracts();
     float WeatherTimer = 0;
     float AreaTimer = 0;
     float Elapsed = 0; float SaveTimer = 0; float PowerTimer = 0;

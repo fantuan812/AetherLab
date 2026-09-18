@@ -56,7 +56,7 @@ bool FV5Definitions::RunTest(const FString&)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FV5Dailies,"Aether.V5.DailyRewardAtomicAndRollover",Flags)
 bool FV5Dailies::RunTest(const FString&)
 {
- FAetherProfile P;P.CharacterId="DailyTest";P.Claims.Add(FAetherProfile::QuestId(7));P.RefreshDaily("20260918");P.Add("Supply",2);
+ FAetherProfile P;P.CharacterId="DailyTest";P.Claims.Add(FName("Q_Main_08"));P.RefreshDaily("20260918");P.Add("Supply",2);
  TestTrue(TEXT("Supply"),P.ClaimDaily(0));TestFalse(TEXT("Idempotent"),P.ClaimDaily(0));TestEqual(TEXT("Gold once"),P.Gold,30);P.RefreshDaily("20260917");TestFalse(TEXT("Clock rollback cannot reset claim"),P.ClaimDaily(0));
  for(int I=0;I<3;++I)P.DailyEvidence.Add(*FString::Printf(TEXT("Patrol%d"),I));TestTrue(TEXT("Patrol"),P.ClaimDaily(1));P.RefreshDaily("20260919");TestTrue(TEXT("Rollover preserves story"),P.DailyClaims.IsEmpty()&&P.DailyEvidence.IsEmpty()&&P.Claims.Num()==1);
  while(P.Inventory.Num()<32)P.Add("TrainingSword",1);P.DailyEvidence={"DailyFire0","DailyFire1","DailyFire2"};for(auto& I:P.Inventory)if(I.DefinitionId=="Material")I.Count=99;

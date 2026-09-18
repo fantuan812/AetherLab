@@ -3,6 +3,7 @@
 #include "GameFramework/PlayerState.h"
 #include "AbilitySystemInterface.h"
 #include "AetherCombat.h"
+#include "AetherRules.h"
 #include "AetherProgression.generated.h"
 
 USTRUCT(BlueprintType)
@@ -39,21 +40,22 @@ struct FAetherProfile
     bool ClaimDaily(int32 Template);
     UPROPERTY(NotReplicated) TMap<FName, FGuid> Equipped; // Serialized by the profile NetSerialize.
     bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& Success);
-    static int32 MaxStack(FName Id);
+    static int32 MaxStack(FName Id, const FAetherRules& Rules=FAetherRules::Get());
     int32 Count(FName Id) const;
-    bool Add(FName Id, int32 Quantity);
-    bool Remove(FName Id, int32 Quantity);
+    bool Add(FName Id, int32 Quantity, const FAetherRules& Rules=FAetherRules::Get());
+    bool Remove(FName Id, int32 Quantity, const FAetherRules& Rules=FAetherRules::Get());
     bool Split(FGuid Id, int32 Quantity);
-    bool Merge(FGuid From, FGuid To);
-    bool Equip(FGuid Id);
-    bool Observe(FName Fact);
-    bool Available(int32 Quest) const;
-    bool Complete(int32 Quest) const;
-    bool Claim(int32 Quest);
-    bool Validate() const;
+    bool Merge(FGuid From, FGuid To, const FAetherRules& Rules=FAetherRules::Get());
+    bool Equip(FGuid Id, const FAetherRules& Rules=FAetherRules::Get());
+    bool Observe(FName Fact, const FAetherRules& Rules=FAetherRules::Get());
+    bool Available(FName Quest,const FAetherRules& Rules=FAetherRules::Get()) const;
+    bool Complete(FName Quest,const FAetherRules& Rules=FAetherRules::Get()) const;
+    bool Claim(FName Quest, const FAetherRules& Rules=FAetherRules::Get());
+    bool TryAutoClaim(FName Quest);
+    bool Validate(const FAetherRules& Rules=FAetherRules::Get()) const;
     static FName QuestId(int32 Quest);
-    static FString QuestTitle(int32 Quest);
-    static TArray<FName> Objectives(int32 Quest);
+    static FString QuestTitle(FName Quest, const FAetherRules& Rules=FAetherRules::Get());
+    static TArray<FName> Objectives(FName Quest, const FAetherRules& Rules=FAetherRules::Get());
 };
 
 template<> struct TStructOpsTypeTraits<FAetherProfile> : TStructOpsTypeTraitsBase2<FAetherProfile>

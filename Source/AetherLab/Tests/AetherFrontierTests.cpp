@@ -21,10 +21,10 @@ bool FV4Quest::RunTest(const FString&)
 {
     FAetherProfile A,B;A.CharacterId="A";B.CharacterId="B";
     TestFalse(TEXT("No skipping prerequisites"),A.Observe("SupplyRestored"));
-    for(int32 Q=0;Q<3;++Q){for(auto F:FAetherProfile::Objectives(Q))A.Observe(F);TestTrue(TEXT("Claim current quest"),A.Claim(Q));TestFalse(TEXT("Duplicate reward rejected"),A.Claim(Q));}
-    TestTrue(TEXT("Both field quests available"),A.Available(3)&&A.Available(4));A.Observe("SupplyRestored");A.Claim(4);
-    TestFalse(TEXT("Both field quests required"),A.Available(5));TestTrue(TEXT("Other player independent"),B.Claims.IsEmpty()&&B.Evidence.IsEmpty());
-    for(auto F:FAetherProfile::Objectives(3))A.Observe(F);A.Claim(3);TestTrue(TEXT("Converged prerequisites"),A.Available(5));
+    for(int32 Q=0;Q<3;++Q){for(auto F:FAetherProfile::Objectives(FAetherProfile::QuestId(Q)))A.Observe(F);TestTrue(TEXT("Claim current quest"),A.Claim(FAetherProfile::QuestId(Q)));TestFalse(TEXT("Duplicate reward rejected"),A.Claim(FAetherProfile::QuestId(Q)));}
+    TestTrue(TEXT("Both field quests available"),A.Available("Q_Main_04")&&A.Available("Q_Main_05"));A.Observe("SupplyRestored");A.Claim("Q_Main_05");
+    TestFalse(TEXT("Both field quests required"),A.Available("Q_Main_06"));TestTrue(TEXT("Other player independent"),B.Claims.IsEmpty()&&B.Evidence.IsEmpty());
+    for(auto F:FAetherProfile::Objectives("Q_Main_04"))A.Observe(F);A.Claim("Q_Main_04");TestTrue(TEXT("Converged prerequisites"),A.Available("Q_Main_06"));
     TestFalse(TEXT("Repeated fire doesn't count"),A.Observe("ForestFire0"));return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FV4Rain,"Reactive.Frontier.RainCannotCreateElectricalWetnessOrEdges",V4Flags)

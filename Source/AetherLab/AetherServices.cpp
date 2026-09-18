@@ -47,7 +47,8 @@ EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCha
     auto Profile=PS->Profile;
     Profile.RefreshDaily(FDateTime::UtcNow().ToString(TEXT("%Y%m%d")));
     if(Target->Service=="Source")Candidate->bPowerOn=!State->bPowerOn;
-    else {Candidate->bSupplyRestored=true;Profile.Observe("SupplyRestored");Profile.Claim(4);}
+    else {Candidate->bSupplyRestored=true;Candidate->WorldFacts.Record("SupplyRestored",Target->Spec.Id);Profile.Observe("SupplyRestored");}
+    AetherQuests::Settle(Profile,Candidate->WorldFacts,false);
     // The saved source switch and the public flag must describe the same transaction.
     for(auto& Record:Candidate->World)if(Record.StableId==Prop("PowerSource")->Reactive->StableId)
         Record.bSourceEnabled=Candidate->bPowerOn;

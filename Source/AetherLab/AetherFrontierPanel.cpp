@@ -25,7 +25,7 @@ void UAetherFrontierViewModel::Refresh(AAetherFrontierCharacter* C)
  case 2:
   Title=TEXT("个人任务 / Journal");First=TEXT("领取待领奖励");Text+=FString::Printf(TEXT("待领取：%d 金币 / %d 材料\n\n"),P.PendingGold,P.PendingMaterial);
   {const auto G=AetherGuide::Resolve(C);Text+=TEXT("当前追踪：")+G.Title+TEXT("\n")+G.Label+TEXT("\n")+G.Hint+TEXT("\nTab / 下一项：切换可进行任务\n\n");}
-  for(int Q=0;Q<8;++Q){Text+=FString::Printf(TEXT("%s %s%s\n"),P.Claims.Contains(FAetherProfile::QuestId(Q))?TEXT("[完成]"):P.Complete(Q)?TEXT("[待领奖]"):P.Available(Q)?TEXT("[进行中]"):TEXT("[未开放]"),Q==C->TrackedQuest?TEXT("> "):TEXT(""),*FAetherProfile::QuestTitle(Q));if(P.Available(Q))for(auto O:FAetherProfile::Objectives(Q))Text+=FString::Printf(TEXT("     %s %s\n"),P.Evidence.Contains(O)?TEXT("✓"):TEXT("·"),*AetherGuide::ObjectiveLabel(O));}
+  for(const auto& Rule:FAetherRules::Get().Quests){const FName Q=Rule.Id;Text+=FString::Printf(TEXT("%s %s%s\n"),P.Claims.Contains(Q)?TEXT("[完成]"):P.Complete(Q)?TEXT("[待领奖]"):P.Available(Q)?TEXT("[进行中]"):TEXT("[未开放]"),Q==C->TrackedQuest?TEXT("> "):TEXT(""),*FAetherProfile::QuestTitle(Q));if(P.Available(Q))for(auto O:FAetherProfile::Objectives(Q))Text+=FString::Printf(TEXT("     %s %s\n"),P.Evidence.Contains(O)?TEXT("✓"):TEXT("·"),*AetherGuide::ObjectiveLabel(O));}
   Text+=FString::Printf(TEXT("\n日常委托日期：%s / 当日完成 %d\n补给：2 份补给；巡逻：3 标记；灭火：3 处委托火。\n三类委托均在城镇公告板开始或结算。"),*P.DailyDate,P.DailyClaims.Num());break;
  case 3:
   Title=TEXT("能力 / Abilities");

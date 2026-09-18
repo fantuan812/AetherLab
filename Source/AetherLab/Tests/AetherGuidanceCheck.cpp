@@ -13,13 +13,13 @@ void AAetherFrontierMode::CheckGuidance()
  if(SmokeStage==0)
  {
   Check(FAetherRules::Get().bValid,TEXT("All quest labels and anchors validate"));
-  FAetherProfile P;Check(AetherGuide::SelectQuest(P,7)==0,TEXT("Locked preference falls back to first available"));
-  P.Claims={FAetherProfile::QuestId(0),FAetherProfile::QuestId(1),FAetherProfile::QuestId(2)};
-  Check(AetherGuide::SelectQuest(P,3,true)==4&&AetherGuide::SelectQuest(P,4,true)==3,TEXT("Independent field quests cycle"));
-  P.Claims.Add(FAetherProfile::QuestId(3));Check(AetherGuide::SelectQuest(P,3)==4,TEXT("Claimed quest automatically advances"));
-  P.Claims.Add(FAetherProfile::QuestId(4));Check(AetherGuide::SelectQuest(P,3)==5,TEXT("Recruit unlock requires both branches"));
-  PS->Profile.Claims={FAetherProfile::QuestId(0),FAetherProfile::QuestId(1),FAetherProfile::QuestId(2)};
-  C->TrackedQuest=3;auto G=AetherGuide::Resolve(C);Check(G.Objective=="ForestFire0"&&G.bHasTarget&&G.Position.Equals(Prop("ForestFire0")->GetActorLocation()),TEXT("World marker targets actual objective"));
+  FAetherProfile P;Check(AetherGuide::SelectQuest(P,"Q_Main_08")==FName("Q_Main_01"),TEXT("Locked preference falls back to first available"));
+  P.Claims={FName("Q_Main_01"),FName("Q_Main_02"),FName("Q_Main_03")};
+  Check(AetherGuide::SelectQuest(P,"Q_Main_04",true)==FName("Q_Main_05")&&AetherGuide::SelectQuest(P,"Q_Main_05",true)==FName("Q_Main_04"),TEXT("Independent field quests cycle"));
+  P.Claims.Add(FName("Q_Main_04"));Check(AetherGuide::SelectQuest(P,"Q_Main_04")==FName("Q_Main_05"),TEXT("Claimed quest automatically advances"));
+  P.Claims.Add(FName("Q_Main_05"));Check(AetherGuide::SelectQuest(P,"Q_Main_04")==FName("Q_Main_06"),TEXT("Recruit unlock requires both branches"));
+  PS->Profile.Claims={FName("Q_Main_01"),FName("Q_Main_02"),FName("Q_Main_03")};
+  C->TrackedQuest="Q_Main_04";auto G=AetherGuide::Resolve(C);Check(G.Objective=="ForestFire0"&&G.bHasTarget&&G.Position.Equals(Prop("ForestFire0")->GetActorLocation()),TEXT("World marker targets actual objective"));
   C->SetActorLocation(Prop("ForestFire0")->GetActorLocation()+FVector(0,-160,40));
   Check(AetherGuide::SelectInteraction(C).Prop==Prop("ForestFire0"),TEXT("Prompt and server select the same nearby target"));
   Check(Prop("ForestFire0")->Reactive->State.bBurning,TEXT("Bypass check starts with an actual burning fire"));
@@ -42,8 +42,8 @@ void AAetherFrontierMode::CheckGuidance()
   Check(Cleared,TEXT("Actual water reaction produces inspectable sites"));
   Check(PS->Profile.Evidence.Contains("ForestFire0"),TEXT("Real extinguish event credits participating character"));
   C->SetActorLocation(Prop("Rescue")->GetActorLocation()+FVector(0,-160,40));Interact(C);
-  Check(PS->Profile.Claims.Contains(FAetherProfile::QuestId(3)),TEXT("Safe rescue completes forest quest"));
-  const auto G=AetherGuide::Resolve(C);Check(G.Quest==4&&G.Objective=="SupplyRestored",TEXT("Guide advances after world completion"));
+  Check(PS->Profile.Claims.Contains(FName("Q_Main_04")),TEXT("Safe rescue completes forest quest"));
+  const auto G=AetherGuide::Resolve(C);Check(G.Quest=="Q_Main_05"&&G.Objective=="SupplyRestored",TEXT("Guide advances after world completion"));
   UE_LOG(LogTemp,Display,TEXT("AETHER_GUIDANCE_%s failures=%d"),Failures?TEXT("FAIL"):TEXT("PASS"),Failures);SmokeStage=2;
   FPlatformMisc::RequestExitWithStatus(false,Failures?1:0);
  }

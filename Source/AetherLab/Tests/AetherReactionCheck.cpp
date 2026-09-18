@@ -15,7 +15,7 @@ void AAetherFrontierMode::CheckReactions()
  if(SmokeStage==0)
  {
   GetGameState<AAetherFrontierState>()->bPowerOn=false;Prop("PowerSource")->Mechanism->bPowerEnabled=false;
-  C->ProfileState()->Profile.Claims={FAetherProfile::QuestId(0),FAetherProfile::QuestId(1),FAetherProfile::QuestId(2)};
+  C->ProfileState()->Profile.Claims={FName("Q_Main_01"),FName("Q_Main_02"),FName("Q_Main_03")};
   auto* Bucket=Prop("Bucket0");const double Before=W->GetSimulation()->Find(Bucket->Reactive->GetBodyId())->WaterKg;
   C->SetActorLocation(Bucket->GetActorLocation()+FVector(0,150,50));Interact(C);
   const double After=W->GetSimulation()->Find(Bucket->Reactive->GetBodyId())->WaterKg;

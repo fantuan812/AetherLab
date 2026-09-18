@@ -1,5 +1,5 @@
 {
-  "fixtureVersion": "synthetic-v6-tagged-record-1",
+  "fixtureVersion": "synthetic-v6-tagged-record-1 + V802-rules-1",
   "cases": [
     {
       "id": "Aether.V5.AreaPulseMergesReceiverOnce",
@@ -64,6 +64,42 @@
     {
       "id": "Aether.V8.ServiceReceiptCorruptionRejected",
       "source": "Source/AetherLab/Tests/AetherServiceCheck.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V802.AtomicSlotConflictsAndItemPermissions",
+      "source": "Source/AetherLab/Tests/AetherDataRulesTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V802.DefinitionCyclesAndUnsafePoliciesRejected",
+      "source": "Source/AetherLab/Tests/AetherDataRulesTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V802.FullBagRetainsPendingReward",
+      "source": "Source/AetherLab/Tests/AetherDataRulesTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V802.NewItemEquipmentAndProfileRoundtrip",
+      "source": "Source/AetherLab/Tests/AetherDataRulesTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V802.ReorderedNinthQuestAndRewardPolicy",
+      "source": "Source/AetherLab/Tests/AetherDataRulesTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V802.WorldFactsCannotForgePrivateOrDailyProgress",
+      "source": "Source/AetherLab/Tests/AetherDataRulesTests.cpp",
       "kind": "small-rule",
       "default": true
     },
@@ -314,6 +350,26 @@
         "AUD8-03"
       ],
       "fixture": "isolated ServiceCheck profile; fixed command IDs; random save prefix"
+    },
+    {
+      "id": "world-data-contracts",
+      "command": "Scripts/CheckDataContracts.ps1",
+      "kind": "short-world",
+      "caseIds": [
+        "AUD8-04",
+        "AUD8-05",
+        "AUD8-08",
+        "AUD8-09"
+      ],
+      "expectedChecks": 10
+    },
+    {
+      "id": "new-item-replication",
+      "command": "Scripts/TestV8NetworkBaseline.ps1 -DataDefinitions",
+      "kind": "two-clients-isolated-definitions",
+      "caseIds": [
+        "AUD8-04"
+      ]
     }
   ]
 }

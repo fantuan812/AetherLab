@@ -5,7 +5,7 @@ class AAetherFrontierCharacter;
 class AAetherFrontierProp;
 struct FAetherGuidance
 {
- int32 Quest=INDEX_NONE;
+ FName Quest;
  FName Objective;
  FString Title,Label,Hint;
  FVector Position=FVector::ZeroVector;
@@ -19,10 +19,11 @@ struct FAetherInteractionTarget
 };
 namespace AetherGuide
 {
- int32 SelectQuest(const FAetherProfile& Profile,int32 Preferred,bool Cycle=false);
+ FName SelectQuest(const FAetherProfile& Profile,FName Preferred,bool Cycle=false);
  FString ObjectiveLabel(FName Id);
  FAetherGuidance Resolve(AAetherFrontierCharacter* Character);
  FAetherInteractionTarget SelectInteraction(AAetherFrontierCharacter* Character);
  bool IsPersonalFire(FName Service);
+ AAetherFrontierProp* SelectWaterReceiver(AAetherFrontierCharacter* Character,AAetherFrontierProp* Container);
  bool CanInspectFire(const AAetherFrontierProp* Fire);
 }

@@ -1,0 +1,52 @@
+{
+  "WorkPackage": "V8-02",
+  "TestedParentCommit": "03aae65d06e3f16982319dfedeb0dbcdd3b7a187",
+  "WorktreeDirtyAtStart": true,
+  "Scope": "UE basic assets; implementation and targeted checks, not full design acceptance",
+  "Build": {
+    "Result": "Passed",
+    "Seconds": 13.0,
+    "LocalLog": "Saved/Logs/V802-Build.log"
+  },
+  "Checks": [
+    {
+      "Name": "Small rules",
+      "Passed": 50,
+      "Evidence": "Saved/Automation/V8-20260918-113450-e3c10c/Rules/index.json"
+    },
+    {
+      "Name": "Reaction scene",
+      "Passed": 16
+    },
+    {
+      "Name": "New item replication and baseline",
+      "Result": "Passed on two clients",
+      "Fixture": "AetherNetV8_afe2caf1ff864360"
+    },
+    {
+      "Name": "Service fail retry reload",
+      "Passed": 21,
+      "Fixture": "AetherService_7814d4527631405b"
+    },
+    {
+      "Name": "Data contracts scene",
+      "Passed": 10,
+      "Fixture": "AetherData_99333b03ea7e4db0"
+    },
+    {
+      "Name": "Guidance short check",
+      "Result": "Passed",
+      "Evidence": "Saved/Logs/V802Guidance-console.log"
+    }
+  ],
+  "ExecutionNote": "Aggregate stopped before network launch due to PowerShell single extra argument expansion. Fixed array construction; remaining network, service, data and guidance scripts executed separately and passed. Corrected full aggregate was not rerun. Tests used the modified worktree, not a clean commit. Input hashes are in the local aggregate summary.",
+  "LocalAggregate": "Saved/Automation/V8-20260918-113450-e3c10c/summary.json",
+  "NotRun": [
+    "Full RX acceptance",
+    "Rendered acceptance",
+    "Cook",
+    "Scale/stress",
+    "Long loops"
+  ],
+  "Policy": "User requested less testing; next work prioritizes implementation and incremental compilation."
+}

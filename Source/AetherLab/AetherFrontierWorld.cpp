@@ -1,6 +1,7 @@
 #include "AetherFrontier.h"
 #include "AetherContent.h"
 #include "AetherRules.h"
+#include "AetherInventoryRules.h"
 #include "AetherWorldAuthoring.h"
 #include "NavigationSystem.h"
 #include "GameFramework/WorldSettings.h"
@@ -50,7 +51,7 @@ void AAetherFrontierProp::Tick(float Dt)
 void AAetherFrontierProp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierProp,Service);DOREPLIFETIME(AAetherFrontierProp,bCarryable);
-    DOREPLIFETIME(AAetherFrontierProp,Carrier);DOREPLIFETIME(AAetherFrontierProp,ReceivedPower);
+    DOREPLIFETIME(AAetherFrontierProp,Carrier);DOREPLIFETIME(AAetherFrontierProp,ReceivedPower);DOREPLIFETIME(AAetherFrontierProp,bAcceptsWater);DOREPLIFETIME(AAetherFrontierProp,bInspectableFire);
 }
 void AAetherFrontierProp::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
 {
@@ -93,6 +94,8 @@ void AAetherFrontierMode::InitGame(const FString& Map,const FString& Options,FSt
     if(bSmoke)SavePrefix=TEXT("AetherFrontier_Automation");
     FString Override; if(FParse::Value(FCommandLine::Get(),TEXT("AetherSavePrefix="),Override) && Override.Len()<64 && !Override.Contains("/")&&!Override.Contains("\\"))SavePrefix=Override;
     if(!FAetherRules::Get().bValid){Error=FAetherRules::Get().Error;return;}
+    const auto* Content=UAetherGameContent::Load(true);
+    if(!Content||!AetherInventory::ValidateCatalog(FAetherRules::Get(),Content->EquipmentCatalog)){Error=TEXT("Item capabilities disagree with equipment catalog");return;}
     Database=NewObject<UAetherFrontierSave>(this);
     bool FoundStorage=false,LoadedStorage=false;
     if(!bSmoke)for(int32 I=0;I<2;++I)
@@ -129,7 +132,11 @@ FString AAetherFrontierMode::InitNewPlayer(APlayerController* PC,const FUniqueNe
     for(TActorIterator<AAetherPlayerState> It(GetWorld());It;++It)if(*It!=PC->PlayerState&&It->Profile.CharacterId==Key)return TEXT("Profile already connected.");
     auto* PS=PC->GetPlayerState<AAetherPlayerState>();if(!PS)return TEXT("Missing profile state.");
     if(auto* Existing=Database->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==Key;}))PS->Profile=*Existing;
-    else {PS->Profile.CharacterId=Key;PS->Profile.Add("Potion",2);}
+    else {PS->Profile.CharacterId=Key;PS->Profile.Add("Potion",2);
+#if !UE_BUILD_SHIPPING
+        if(FParse::Param(FCommandLine::Get(),TEXT("AetherV802Net"))&&PS->Profile.Add("SurveySword",1))PS->Profile.Equip(PS->Profile.Inventory.Last().InstanceId);
+#endif
+    }
     PS->DisplayName=Key;PS->PartyLeader=Key;
     return FString();
 }
@@ -155,14 +162,24 @@ bool AAetherFrontierMode::WriteDatabase(UAetherFrontierSave* Next)
     if(!IFileManager::Get().Move(*(Base+TEXT(".crc")),*(Base+TEXT(".crc.pending")),true,true))return false;
     Database=Next;return true;
 }
-bool AAetherFrontierMode::Commit(AAetherPlayerState* PS,FAetherProfile Next)
+bool AAetherFrontierMode::Commit(AAetherPlayerState* PS,FAetherProfile Next,FName WorldFact,FName FactSource)
 {
     if(!PS || !PS->HasAuthority() || Next.CharacterId!=PS->Profile.CharacterId || Next.Revision==MAX_int32 || Next.Revision!=PS->Profile.Revision || !Next.Validate())return false;
-    auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);++Next.Revision;
+    auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);
+    CollectPublicFacts(Candidate->WorldFacts);
+    if(!WorldFact.IsNone())
+    {
+        const auto* Rule=FAetherRules::Get().Objectives.Find(WorldFact);
+        if(!Rule||Rule->Scope!=EAetherObjectiveScope::World||!Rule->FactSources.Contains(FactSource))return false;
+        Candidate->WorldFacts.Record(WorldFact,FactSource);
+    }
+    if(!Candidate->WorldFacts.Sources.OrderIndependentCompareEqual(Database->WorldFacts.Sources)&&!CaptureWorldCandidate(Candidate))return false;
+    AetherQuests::Settle(Next,Candidate->WorldFacts,false);
+    ++Next.Revision;
     if(auto* P=Candidate->Profiles.FindByPredicate([&](const auto& V){return V.CharacterId==Next.CharacterId;}))*P=Next;else Candidate->Profiles.Add(Next);
     if(!WriteDatabase(Candidate))return false;
     PS->Profile=MoveTemp(Next);PS->ForceNetUpdate();
-    if(PS->Profile.Claims.Contains(FAetherProfile::QuestId(2)))
+    if(PS->Profile.Claims.Contains(FName("Q_Main_03")))
      for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Reactive->bOwnerOnlyStimuli&&It->GetOwner()==PS->GetPawn())It->Pacify();
     return true;
 }
@@ -173,6 +190,7 @@ bool AAetherFrontierMode::CaptureWorldCandidate(UAetherFrontierSave* Candidate) 
     auto* S=GetGameState<AAetherFrontierState>();Candidate->bSupplyRestored=S->bSupplyRestored;Candidate->bBridgeReleased=S->bBridgeReleased;Candidate->bPowerOn=S->bPowerOn;
     const auto& Environment=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->GetSimulation()->GetEnvironment();Candidate->AmbientTemperatureC=Environment.TemperatureC;Candidate->RainKgPerM2Sec=Environment.RainKgPerM2Sec;Candidate->WindMPerSec=Environment.WindMPerSec;
     if(Encounters){Candidate->Abbey=Encounters->Abbey;Candidate->Relay=Encounters->Relay;}
+    CollectPublicFacts(Candidate->WorldFacts);
     return true;
 }
 bool AAetherFrontierMode::SaveWorld()
@@ -185,10 +203,10 @@ void AAetherFrontierMode::Observe(AAetherCharacter* C,FName Fact)
     auto* FC=Cast<AAetherFrontierCharacter>(C);if(FC&&FC->CompanionOwner)FC=FC->CompanionOwner;
     auto* PS=FC?FC->ProfileState():nullptr;if(!PS)return;
     auto Next=PS->Profile;
-    if(Fact.ToString().StartsWith("DailyFire")&&Next.Claims.Contains(FAetherProfile::QuestId(7)))
+    if(Fact.ToString().StartsWith("DailyFire")&&Next.Claims.Contains(FName("Q_Main_08")))
     {Next.RefreshDaily(FDateTime::UtcNow().ToString(TEXT("%Y%m%d")));Next.DailyEvidence.AddUnique(Fact);Commit(PS,Next);return;}
     if(!Next.Observe(Fact))return;
-    for(int32 I=0;I<8;++I)Next.Claim(I);
+    AetherQuests::Settle(Next,Database->WorldFacts,false);
     if(Commit(PS,Next))FC->Notify(TEXT("Objective recorded. Completed quest rewards saved."));
     else FC->Notify(TEXT("Storage unavailable; objective was not committed. Retry the interaction."));
 }
@@ -217,12 +235,14 @@ AAetherFrontierProp* AAetherFrontierMode::Make(FName Id,FName Service,FVector P,
     A->bCarryable=Service=="Conductor"||Service=="Crate";A->Reactive->bTrackMovement=A->bCarryable||Service=="Bridge"||Service=="HingedGate";
     if(Kind==EAetherObjectKind::Water)A->Reactive->InitialWaterKg=.5;
     if(Kind==EAetherObjectKind::Cistern)A->Reactive->InitialWaterKg=8;
-    if(Id.ToString().StartsWith("ForestFire")||AetherGuide::IsPersonalFire(Service))
+    if(const auto* Rule=FAetherRules::Get().Objectives.Find(Service))A->bInspectableFire=Rule->bInspectableFire;
+    if(A->bInspectableFire||AetherGuide::IsPersonalFire(Service))
     {
         auto* M=NewObject<UReactiveMaterialAsset>(A);M->Parameters.InitialFuelKg=10;A->Reactive->MaterialAsset=M;
     }
     if(AetherGuide::IsPersonalFire(Service)){A->Reactive->StableId=NAME_None;A->Reactive->bOwnerOnlyStimuli=true;}
     if(Id.ToString().StartsWith("Roof")){A->Spec.bInteractiveMaterial=false;A->Reactive->bParticipatesInSimulation=false;}
+    A->bAcceptsWater=A->Reactive->bParticipatesInSimulation&&A->Reactive->GetMaterial().WaterCapacityKg>0;
     UGameplayStatics::FinishSpawningActor(A,FTransform(P));Props.Add(A);return A;
 }
 AAetherFrontierProp* AAetherFrontierMode::Prop(FName Id) const
@@ -350,6 +370,7 @@ void AAetherFrontierMode::Tick(float Dt)
     if(AreaTimer>=2)
     {
         for(auto It=KillCredit.CreateIterator();It;++It)if(!It.Key().IsValid())It.RemoveCurrent();
+        RefreshWorldProgress();
         AreaTimer=0;TArray<FVector> Players;for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->ProfileState())Players.Add(It->GetActorLocation());
         for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Fighter!=EAetherFighter::Player)
         {bool Near=false;for(auto P:Players)Near|=FVector::DistSquared(P,It->GetActorLocation())<FMath::Square(7000.);It->SetActorTickInterval(Near?0.f:1.f);}
@@ -401,6 +422,7 @@ void AAetherFrontierMode::Tick(float Dt)
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherGuidanceCheck"))&&Elapsed>2)CheckGuidance();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherReactionCheck"))&&Elapsed>2)CheckReactions();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherServiceCheck"))&&Elapsed>2)CheckServices();
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherDataCheck"))&&Elapsed>2)CheckDataContracts();
     if(bSmoke)SmokeStep();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherV4Capture")))
     { static bool Taken=false;if(Elapsed>8&&!Taken){Taken=true;FScreenshotRequest::RequestScreenshot(FPaths::ProjectDir()/TEXT("Docs/Images/AetherFrontier.png"),true,false);}if(Elapsed>11)FPlatformMisc::RequestExit(false); }
@@ -412,7 +434,7 @@ bool AAetherFrontierMode::CommitOffline(FAetherProfile Next)
  for(TActorIterator<AAetherPlayerState> It(GetWorld());It;++It)if(It->Profile.CharacterId==Next.CharacterId)return false;
  const auto* Existing=Database->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==Next.CharacterId;});
  if(!Existing||Existing->Revision!=Next.Revision)return false;
- auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);++Next.Revision;
+ auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);AetherQuests::Settle(Next,Candidate->WorldFacts,false);++Next.Revision;
  for(auto& P:Candidate->Profiles)if(P.CharacterId==Next.CharacterId)P=Next;
  return WriteDatabase(Candidate);
 }
@@ -441,7 +463,7 @@ void AAetherFrontierMode::LeaveParty(AAetherPlayerState* PS)
 
 bool UAetherFrontierSave::ValidateWorldLedger() const
 {
- if(Loot.Num()>128||CampReceipts.Num()>32||ServiceReceipts.Num()>64)return false;
+ if(Loot.Num()>128||CampReceipts.Num()>32||ServiceReceipts.Num()>64||!WorldFacts.Validate())return false;
  TSet<FGuid> ServiceIDs;
  for(const auto& R:ServiceReceipts)
  {
@@ -477,4 +499,34 @@ FString AAetherFrontierMode::ClaimLoot(AAetherFrontierCharacter* C,FName Id)
  if(!Loot||!Loot->ClaimedBy.IsEmpty())return TEXT("Already claimed.");auto Profile=PS->Profile;if(Profile.Revision==MAX_int32||!Profile.Add(Loot->Definition,Loot->Count))return TEXT("Inventory full; loot remains.");
  ++Profile.Revision;Loot->ClaimedBy=Profile.CharacterId;if(auto* Stored=Next->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==Profile.CharacterId;}))*Stored=Profile;else Next->Profiles.Add(Profile);
  if(!WriteDatabase(Next))return TEXT("Storage unavailable; loot unchanged.");PS->Profile=MoveTemp(Profile);PS->ForceNetUpdate();Props.Remove(Actor);Actor->Destroy();return TEXT("Shared loot claimed and saved once.");
+}
+
+void AAetherFrontierMode::CollectPublicFacts(FAetherWorldFacts& Facts) const
+{
+    if(!HasAuthority())return;
+    // Backfill only a trusted persisted service outcome from older saves.
+    if(Database->bSupplyRestored)Facts.Record("SupplyRestored","Pump");
+    for(const auto& P:Props)if(IsValid(P)&&P->bInspectableFire&&!P->Reactive->bOwnerOnlyStimuli&&AetherGuide::CanInspectFire(P))
+        Facts.Record(P->Service,P->Spec.Id);
+}
+void AAetherFrontierMode::RefreshWorldProgress()
+{
+    auto Facts=Database->WorldFacts;CollectPublicFacts(Facts);
+    bool Changed=!Facts.Sources.OrderIndependentCompareEqual(Database->WorldFacts.Sources);
+    TArray<TPair<AAetherPlayerState*,FAetherProfile>> Publish;
+    for(TActorIterator<AAetherPlayerState> It(GetWorld());It;++It)if(!It->IsInactive()&&It->Profile.Revision<MAX_int32)
+    {
+        auto Next=It->Profile;if(!AetherQuests::Settle(Next,Facts,false))continue;
+        ++Next.Revision;if(!Next.Validate())return;
+        Publish.Emplace(*It,MoveTemp(Next));Changed=true;
+    }
+    if(!Changed)return;
+    auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);Candidate->WorldFacts=MoveTemp(Facts);
+    for(const auto& Pair:Publish)
+    {
+        const auto& Next=Pair.Value;
+        if(auto* Stored=Candidate->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==Next.CharacterId;}))*Stored=Next;else Candidate->Profiles.Add(Next);
+    }
+    if(!CaptureWorldCandidate(Candidate)||!WriteDatabase(Candidate))return;
+    for(auto& Pair:Publish){Pair.Key->Profile=MoveTemp(Pair.Value);Pair.Key->ForceNetUpdate();}
 }

@@ -1,6 +1,7 @@
 #include "AetherFrontier.h"
 #include "AetherContent.h"
 #include "AetherRules.h"
+#include "AetherInventoryRules.h"
 #include "AetherActions.h"
 #include "AetherInputProfile.h"
 #include "EnhancedInputComponent.h"
@@ -34,7 +35,7 @@ void AAetherFrontierCharacter::BeginPlay()
     BindPersistentAbilities(); Super::BeginPlay();
     Equipment->bProfileManaged=ProfileState()!=nullptr;
     if(HasAuthority())AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),100);
-    Equipment->OwnsItem.BindLambda([this](FName Id){auto* PS=ProfileState();return !PS || PS->Profile.Count(Id)>0;});
+    Equipment->OwnsItem.BindLambda([this](FName Id){auto* PS=ProfileState();return !PS || AetherInventory::OwnsEquipment(PS->Profile,Id,FAetherRules::Get());});
     Equipment->CanAct.BindLambda([this](){return Ready()&&!Carried&&!ReviveTarget&&!bPanel;});
     if (HasAuthority() && ProfileState()) ApplyProfileEquipment();
 }
@@ -52,8 +53,7 @@ void AAetherFrontierCharacter::ApplyProfileEquipment()
 {
     auto* PS=ProfileState(); if (!HasAuthority()||!PS) return;
     TArray<FAetherEquippedSlot> Slots;
-    for (const auto& Pair:PS->Profile.Equipped) for (const auto& I:PS->Profile.Inventory) if (I.InstanceId==Pair.Value)
-    { FAetherEquippedSlot S;S.Slot=Pair.Key;S.ItemId=I.DefinitionId;Slots.Add(S); }
+    if(!AetherInventory::BuildLoadout(PS->Profile,FAetherRules::Get(),Slots))return;
     Equipment->RestoreLoadout(Slots);
 }
 void AAetherFrontierCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -213,7 +213,7 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
     if(Action=="Throw")
     {if(Carried){auto* P=Carried.Get();ReleaseCarry();P->Mesh->AddImpulse(GetControlRotation().Vector()*P->Mesh->GetMass()*500);P->Mechanism->RecordImpactSource(this);}return;}
     if(Action=="Claim")
-    {auto Next=PS->Profile;bool Changed=Next.CollectPending();for(int Q=0;Q<8;++Q)Changed|=Next.Claim(Q);if(Changed)Notify(Mode->Commit(PS,Next)?TEXT("Pending rewards received."):TEXT("Reward save failed; retry."));return;}
+    {auto Next=PS->Profile;bool Changed=Next.CollectPending();Changed|=AetherQuests::Settle(Next,Mode->Database->WorldFacts,true);if(Changed)Notify(Mode->Commit(PS,Next)?TEXT("Pending rewards received."):TEXT("Reward save failed; retry."));return;}
     if(Action=="Carry"||Action=="Push")
     {
         if(Carried){ReleaseCarry();return;}
@@ -252,7 +252,7 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
         else
         {
             if(!Next.Inventory.IsValidIndex(Index))return;const auto Item=Next.Inventory[Index];const auto* Rule=FAetherRules::Get().Items.Find(Item.DefinitionId);
-            if(!Rule||Rule->Sell<=0||Next.Equipped.FindKey(Item.InstanceId)||Next.Gold>10000000-Rule->Sell||!Next.Remove(Item.DefinitionId,1))return;Next.Gold+=Rule->Sell;
+            if(!Rule||!Rule->bSellable||Rule->Sell<=0||Next.Equipped.FindKey(Item.InstanceId)||Next.Gold>10000000-Rule->Sell||!Next.Remove(Item.DefinitionId,1))return;Next.Gold+=Rule->Sell;
         }
         Notify(Mode->Commit(PS,Next)?TEXT("Trade saved."):TEXT("Trade failed; no items or gold changed."));return;
     }
@@ -260,7 +260,7 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
     {
         if(!Ready()||Carried)return;
         TArray<FGuid> Choices;for(const auto& S:Next.Inventory)
-            if(Action=="Shield"?S.DefinitionId=="TrainingShield":(S.DefinitionId=="TrainingSword"||S.DefinitionId=="TrainingHammer"||S.DefinitionId=="TideStaff"))Choices.Add(S.InstanceId);
+            if(const auto* R=FAetherRules::Get().Items.Find(S.DefinitionId);R&&R->bPlayerEquippable&&R->Slot==(Action=="Shield"?FName("OffHand"):FName("MainHand")))Choices.Add(S.InstanceId);
         if(Choices.IsEmpty())return;
         const FName Slot=Action=="Shield"?FName("OffHand"):FName("MainHand");
         if(Action=="Shield"&&Next.Equipped.Contains(Slot))Next.Equipped.Remove(Slot);
@@ -303,9 +303,13 @@ void AAetherFrontierCharacter::Tick(float Dt)
         if(PS && TestTime-RequestTime>.5f){ServerAction("Interact");RequestTime=TestTime;}
         if(PS&&S&&TestTime>4&&PS->Profile.Evidence.Contains("SupplyA")&&PS->Profile.Count("Supply")==1&&S->bSupplyRestored)
         {
+            const bool DataFixture=FParse::Param(FCommandLine::Get(),TEXT("AetherV802Net"));
+            const auto* Weapon=Equipment->InSlot("MainHand");
+            const bool EquipmentValid=DataFixture?PS->Profile.Count("SurveySword")==1&&PS->Profile.Equipped.Contains("MainHand")&&Weapon&&Weapon->ItemId=="TrainingSword"&&Equipment->VisualForSlot("MainHand"):Equipment->Slots.IsEmpty();
             bool Pass=PS->Profile.Claims.IsEmpty()&&!PS->Profile.Evidence.Contains("SupplyRestored")&&AbilitySystem==PS->AbilitySystem&&AbilitySystem->GetOwnerActor()==PS
-                &&Equipment->Slots.IsEmpty()&&!SpellUnlocked(0)&&GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->GetSimulation()->GetStats().Registered==0;
+                &&EquipmentValid&&!SpellUnlocked(0)&&GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->GetSimulation()->GetStats().Registered==0;
             UE_LOG(LogTemp,Display,TEXT("AETHER_V4_NET_%s profile=%s revision=%d isolated=%d claims=%d evidence=%d asc=%d owner=%d slots=%d locked=%d bodies=%d"),Pass?TEXT("PASS"):TEXT("FAIL"),*PS->Profile.CharacterId,PS->Profile.Revision,Pass,PS->Profile.Claims.Num(),PS->Profile.Evidence.Contains("SupplyRestored"),AbilitySystem==PS->AbilitySystem,AbilitySystem->GetOwnerActor()==PS,Equipment->Slots.Num(),!SpellUnlocked(0),GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->GetSimulation()->GetStats().Registered);
+            if(DataFixture)UE_LOG(LogTemp,Display,TEXT("AETHER_V802_EQUIPMENT_%s profile=%s"),Pass?TEXT("PASS"):TEXT("FAIL"),*PS->Profile.CharacterId);
             FPlatformMisc::RequestExitWithStatus(false,Pass?0:1);
         }
         if(TestTime>30){UE_LOG(LogTemp,Display,TEXT("AETHER_V4_NET_FAIL timeout"));FPlatformMisc::RequestExitWithStatus(false,1);}

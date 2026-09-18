@@ -180,19 +180,147 @@
       "OccupiedSlots": [
         "MainHand"
       ]
+    },
+    "SurveySword": {
+      "MaxStack": 1,
+      "Buy": 0,
+      "Sell": 0,
+      "PlayerEquippable": true,
+      "Removable": true,
+      "Sellable": false,
+      "EquipmentId": "TrainingSword",
+      "Slot": "MainHand",
+      "OccupiedSlots": [
+        "MainHand"
+      ]
+    },
+    "SurveyToken": {
+      "MaxStack": 1,
+      "Buy": 0,
+      "Sell": 0,
+      "PlayerEquippable": false,
+      "Removable": false,
+      "Sellable": false,
+      "EquipmentId": "",
+      "Slot": "",
+      "OccupiedSlots": []
     }
   },
   "Quests": [
     {
-      "Id": "Q_Main_01",
-      "Title": "雨中的来客",
-      "Prerequisites": [],
+      "Id": "Q_Test_09",
+      "Title": "复流记录（测试夹具）",
+      "Prerequisites": [
+        "Q_Main_05"
+      ],
       "Objectives": [
-        "SupplyA",
-        "SupplyB",
-        "Gate"
+        "SupplyRestored"
+      ],
+      "Gold": 15,
+      "Experience": 20,
+      "Items": {
+        "SurveySword": 1
+      },
+      "AutoClaim": false,
+      "BindInn": false
+    },
+    {
+      "Id": "Q_Main_08",
+      "Title": "重燃余炉",
+      "Prerequisites": [
+        "Q_Main_07"
+      ],
+      "Objectives": [
+        "SealDelivered"
+      ],
+      "Gold": 120,
+      "Experience": 100,
+      "Items": {},
+      "AutoClaim": true,
+      "BindInn": false
+    },
+    {
+      "Id": "Q_Main_07",
+      "Title": "断钟之下",
+      "Prerequisites": [
+        "Q_Main_06"
+      ],
+      "Objectives": [
+        "GuardianDefeated"
+      ],
+      "Gold": 100,
+      "Experience": 100,
+      "Items": {
+        "AncientSeal": 1
+      },
+      "AutoClaim": true,
+      "BindInn": false
+    },
+    {
+      "Id": "Q_Main_06",
+      "Title": "同行之约",
+      "Prerequisites": [
+        "Q_Main_04",
+        "Q_Main_05"
+      ],
+      "Objectives": [
+        "Companion"
       ],
       "Gold": 40,
+      "Experience": 100,
+      "Items": {},
+      "AutoClaim": true,
+      "BindInn": false
+    },
+    {
+      "Id": "Q_Main_05",
+      "Title": "水工坊复流",
+      "Prerequisites": [
+        "Q_Main_03"
+      ],
+      "Objectives": [
+        "SupplyRestored"
+      ],
+      "Gold": 60,
+      "Experience": 100,
+      "Items": {
+        "TideStaff": 1
+      },
+      "AutoClaim": true,
+      "BindInn": false
+    },
+    {
+      "Id": "Q_Main_04",
+      "Title": "林地防火",
+      "Prerequisites": [
+        "Q_Main_03"
+      ],
+      "Objectives": [
+        "ForestFire0",
+        "ForestFire1",
+        "ForestFire2",
+        "Rescue"
+      ],
+      "Gold": 60,
+      "Experience": 100,
+      "Items": {},
+      "AutoClaim": true,
+      "BindInn": false
+    },
+    {
+      "Id": "Q_Main_03",
+      "Title": "双师试炼",
+      "Prerequisites": [
+        "Q_Main_02"
+      ],
+      "Objectives": [
+        "Melee1",
+        "Melee2",
+        "Melee3",
+        "Block",
+        "TrainingExtinguished"
+      ],
+      "Gold": 80,
       "Experience": 100,
       "Items": {},
       "AutoClaim": true,
@@ -219,102 +347,15 @@
       "BindInn": true
     },
     {
-      "Id": "Q_Main_03",
-      "Title": "双师试炼",
-      "Prerequisites": [
-        "Q_Main_02"
-      ],
+      "Id": "Q_Main_01",
+      "Title": "雨中的来客",
+      "Prerequisites": [],
       "Objectives": [
-        "Melee1",
-        "Melee2",
-        "Melee3",
-        "Block",
-        "TrainingExtinguished"
-      ],
-      "Gold": 80,
-      "Experience": 100,
-      "Items": {},
-      "AutoClaim": true,
-      "BindInn": false
-    },
-    {
-      "Id": "Q_Main_04",
-      "Title": "林地防火",
-      "Prerequisites": [
-        "Q_Main_03"
-      ],
-      "Objectives": [
-        "ForestFire0",
-        "ForestFire1",
-        "ForestFire2",
-        "Rescue"
-      ],
-      "Gold": 60,
-      "Experience": 100,
-      "Items": {},
-      "AutoClaim": true,
-      "BindInn": false
-    },
-    {
-      "Id": "Q_Main_05",
-      "Title": "水工坊复流",
-      "Prerequisites": [
-        "Q_Main_03"
-      ],
-      "Objectives": [
-        "SupplyRestored"
-      ],
-      "Gold": 60,
-      "Experience": 100,
-      "Items": {
-        "TideStaff": 1
-      },
-      "AutoClaim": true,
-      "BindInn": false
-    },
-    {
-      "Id": "Q_Main_06",
-      "Title": "同行之约",
-      "Prerequisites": [
-        "Q_Main_04",
-        "Q_Main_05"
-      ],
-      "Objectives": [
-        "Companion"
+        "SupplyA",
+        "SupplyB",
+        "Gate"
       ],
       "Gold": 40,
-      "Experience": 100,
-      "Items": {},
-      "AutoClaim": true,
-      "BindInn": false
-    },
-    {
-      "Id": "Q_Main_07",
-      "Title": "断钟之下",
-      "Prerequisites": [
-        "Q_Main_06"
-      ],
-      "Objectives": [
-        "GuardianDefeated"
-      ],
-      "Gold": 100,
-      "Experience": 100,
-      "Items": {
-        "AncientSeal": 1
-      },
-      "AutoClaim": true,
-      "BindInn": false
-    },
-    {
-      "Id": "Q_Main_08",
-      "Title": "重燃余炉",
-      "Prerequisites": [
-        "Q_Main_07"
-      ],
-      "Objectives": [
-        "SealDelivered"
-      ],
-      "Gold": 120,
       "Experience": 100,
       "Items": {},
       "AutoClaim": true,
