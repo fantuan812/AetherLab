@@ -62,6 +62,12 @@
       "default": true
     },
     {
+      "id": "Aether.V8.ServiceReceiptCorruptionRejected",
+      "source": "Source/AetherLab/Tests/AetherServiceCheck.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
       "id": "Reactive.Adventure.ConductionPreservesAttribution",
       "source": "Source/AetherLab/Tests/AetherTests.cpp",
       "kind": "small-rule",
@@ -297,6 +303,17 @@
       "id": "cook-hlod",
       "kind": "heavy",
       "state": "NotRun"
+    },
+    {
+      "id": "world-services",
+      "command": "Scripts/CheckServices.ps1",
+      "kind": "fault-injection-three-short-process-starts",
+      "caseIds": [
+        "AUD8-01",
+        "AUD8-02",
+        "AUD8-03"
+      ],
+      "fixture": "isolated ServiceCheck profile; fixed command IDs; random save prefix"
     }
   ]
 }

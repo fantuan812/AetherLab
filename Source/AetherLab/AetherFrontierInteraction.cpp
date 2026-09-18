@@ -107,11 +107,10 @@ FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
         return Water>0?FString::Printf(TEXT("已转移 %.3f kg 水；未被接收的水保留在桶中。"),Water):TEXT("无法转移：水源无液态水、目标已满或通路受阻。");
     }
     else if(Service=="HingedGate"){Nearest->Mechanism->bGateOpen=!Nearest->Mechanism->bGateOpen;return TEXT("Gate motor toggled; physical obstructions resist its limited force.");}
-    else if(Service=="Source"){State->bPowerOn=!State->bPowerOn;SaveWorld();return State->bPowerOn?TEXT("Power on."):TEXT("Power off; no residual charge in the rod.");}
-    else if(Service=="SupplyRestored"||Service=="Receiver")
+    else if(AetherServices::IsService(Service))
     {
-        if(Service=="Receiver"&&!State->bSupplyRestored&&Nearest->ReceivedPower<1)return TEXT("No power: place the metal rod touching both contacts, or use the mechanical pump.");
-        State->bSupplyRestored=true;Next.Observe("SupplyRestored");Next.Claim(4);
+        FAetherWorldServiceCommand Command;Command.Id=FGuid::NewGuid();Command.TargetId=Nearest->Spec.Id;Command.ExpectedRevision=PS->Profile.Revision;
+        return AetherServices::Message(ExecuteWorldService(C,Command));
     }
     else if(Service=="Abbey")
     {

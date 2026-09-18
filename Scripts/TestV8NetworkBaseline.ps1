@@ -22,6 +22,7 @@ try {
         if($taskServer.HasExited -or (Get-Date) -gt $taskDeadline){throw 'Baseline client timeout or server exit.'}
         Start-Sleep -Milliseconds 500
     }
+    foreach($taskClient in $taskClients){$taskClient.WaitForExit();if($taskClient.ExitCode -ne 0){throw "Baseline client exited $($taskClient.ExitCode)"}}
     foreach($taskLog in $taskLogs) {
         if(!(Select-String -LiteralPath $taskLog -Pattern 'AETHER_V4_NET_PASS' -Quiet) -or (Select-String -LiteralPath $taskLog -Pattern 'AETHER_V4_NET_FAIL|Fatal error:' -Quiet)){throw "Baseline failed: $taskLog"}
     }

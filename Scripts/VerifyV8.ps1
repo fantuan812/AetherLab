@@ -18,7 +18,7 @@ $taskSummary=[ordered]@{
     EngineBuild="$($taskBuild.MajorVersion).$($taskBuild.MinorVersion).$($taskBuild.PatchVersion)-$($taskBuild.Changelist)"
     Target='AetherLabEditor Win64 Development'; FixtureVersion=$taskRegistry.fixtureVersion
     StartedUtc=(Get-Date).ToUniversalTime().ToString('o'); ArtifactLocation="Saved/Automation/$taskRun"
-    Command=@(); Cases=@(); Passed=0; Failed=0; Skipped=0; NotRun=@('Scale4096','rendered-play','full-RX-acceptance','cook-hlod','four-player-stress','V8-07-network-acceptance')
+    Command=@(); Cases=@(); Passed=0; Failed=0; Skipped=0; NotRun=@('Scale4096','rendered-play','full-RX-acceptance','cook-hlod','four-player-stress','V8-07-network-acceptance','world-reactions','network-baseline','world-services')
 }
 # Fingerprint inputs when dirty: a parent SHA alone must not masquerade as the tested revision.
 $taskInputs=@(& git -c "safe.directory=$($taskRoot.Replace('\','/'))" -C $taskRoot ls-files --cached --others --exclude-standard Source Plugins Content Config Scripts Docs '*.uproject')
@@ -39,12 +39,13 @@ try {
     }
     if($taskReport.failed -gt 0 -or $taskSummary.Failed -gt 0){throw 'Rule failure or missing registered case'}
     foreach($taskCheck in @(@{Enabled=$World;Script='CheckReactions.ps1';Id='world-reactions'},@{Enabled=$Network;Script='TestV8NetworkBaseline.ps1';Id='network-baseline'},@{Enabled=$Services;Script='CheckServices.ps1';Id='world-services'})){
-        if(!$taskCheck.Enabled){$taskSummary.NotRun+=$taskCheck.Id;continue}
+        if(!$taskCheck.Enabled){continue}
         $taskSummary.Command+="Scripts/$($taskCheck.Script)"
         $taskStart=Get-Date
         # A child PowerShell keeps scripts using exit from terminating this report writer.
         & (Get-Process -Id $PID).Path -NoProfile -File (Join-Path $PSScriptRoot $taskCheck.Script) -EngineRoot $EngineRoot
         $taskPassed=($LASTEXITCODE -eq 0)
+        $taskSummary.NotRun=@($taskSummary.NotRun | Where-Object {$_ -ne $taskCheck.Id})
         $taskSummary.Cases+=[ordered]@{Id=$taskCheck.Id;Result=$(if($taskPassed){'Success'}else{'Fail'});Seconds=((Get-Date)-$taskStart).TotalSeconds}
         if($taskPassed){$taskSummary.Passed++}else{$taskSummary.Failed++;throw "Failed $($taskCheck.Id)"}
     }

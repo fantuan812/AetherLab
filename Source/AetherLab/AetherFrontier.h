@@ -5,6 +5,7 @@
 #include "ReactiveMechanismComponent.h"
 #include "AetherEncounters.h"
 #include "AetherGuide.h"
+#include "AetherServices.h"
 #include "AetherFrontier.generated.h"
 class UPhysicsHandleComponent;
 class UInputMappingContext;
@@ -110,13 +111,17 @@ public:
     void BindPersistentAbilities();
     void ApplyProfileEquipment();
     UFUNCTION(Server,Reliable) void ServerAction(FName Action,int32 Index = 0);
+    UFUNCTION(Server,Reliable) void ServerWorldService(FAetherWorldServiceCommand Command);
+    UFUNCTION(Client,Reliable) void WorldServiceResult(FGuid Id,EAetherServiceResult Result,int32 Revision);
     UFUNCTION(Server,Reliable) void ServerSprint(bool Enabled);
     UFUNCTION(Client,Reliable) void Notify(const FString& Message);
     void ReleaseCarry();
 private:
     void PressAttack(); void ReleaseAttack();
     void SprintOn(){ServerSprint(true);} void SprintOff(){ServerSprint(false);}
-    void UsePotion(){if(!bPanel)ServerAction("Potion");} void InteractV4(){if(!bPanel)ServerAction("Interact");}
+    void UsePotion(){if(!bPanel)ServerAction("Potion");} void InteractV4();
+    FAetherWorldServiceCommand PendingService;
+    int32 MinimumServiceRevision=0;
     void Throw(){if(!bPanel)ServerAction("Throw");}
     void ClaimRewards(){if(bPanel&&Panel==2)ServerAction("Claim");}
     void Carry(){if(!bPanel)ServerAction("Carry");} void Push(){if(!bPanel)ServerAction("Push");}
@@ -162,6 +167,7 @@ public:
     UPROPERTY() TArray<FAetherProfile> Profiles;
     UPROPERTY() TArray<FAetherWorldLoot> Loot;
     UPROPERTY() TArray<FAetherCampReceipt> CampReceipts;
+    UPROPERTY() TArray<FAetherWorldServiceReceipt> ServiceReceipts;
     bool ValidateWorldLedger() const;
     UPROPERTY() bool bSupplyRestored = false;
     UPROPERTY() bool bBridgeReleased = false;
@@ -196,9 +202,11 @@ public:
     FString SavePrefix = TEXT("AetherFrontier_v4");
     bool bSmoke = false;
     bool bFailWrites = false;
+    bool bFailAfterDataWrite = false;
     bool Commit(AAetherPlayerState* PS, FAetherProfile Next);
     bool CommitOffline(FAetherProfile Next);
     bool SaveWorld();
+    EAetherServiceResult ExecuteWorldService(AAetherFrontierCharacter* C,const FAetherWorldServiceCommand& Command);
     void Observe(AAetherCharacter* C,FName Fact);
     FString Interact(AAetherFrontierCharacter* C);
     FString RecruitCompanion(AAetherFrontierCharacter* C,bool Healer=false);
@@ -214,10 +222,12 @@ private:
     void BuildWorld();
     AAetherFrontierCharacter* SpawnFighter(FVector P,EAetherFighter Type,FName Id);
     bool WriteDatabase(UAetherFrontierSave* Next);
+    bool CaptureWorldCandidate(UAetherFrontierSave* Candidate) const;
     void SmokeStep();
     void CheckAnimation();
     void CheckGuidance();
     void CheckReactions();
+    void CheckServices();
     float WeatherTimer = 0;
     float AreaTimer = 0;
     float Elapsed = 0; float SaveTimer = 0; float PowerTimer = 0;

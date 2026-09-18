@@ -141,14 +141,18 @@ bool AAetherFrontierMode::WriteDatabase(UAetherFrontierSave* Next)
     Next->Generation=Database->Generation+1;
     // Alternate generations. Publish live state only after the new generation is readable.
     const FString Slot=SavePrefix+FString::FromInt(Next->Generation%2);
-    if(!UGameplayStatics::SaveGameToSlot(Next,Slot,0))return false;
-    const FString Base=FPaths::ProjectSavedDir()/TEXT("SaveGames")/Slot;TArray<uint8> Bytes;
+    const FString Base=FPaths::ProjectSavedDir()/TEXT("SaveGames")/Slot;
+    // Invalidate only the inactive generation first. A failed data write must not leave
+    // a stale commit marker that could authorize this candidate on the next startup.
+    if(!IFileManager::Get().Delete(*(Base+TEXT(".crc")),false,true,true))return false;
+    if(!UGameplayStatics::SaveGameToSlot(Next,Slot,0)||bFailAfterDataWrite)return false;
+    auto* Verify=Cast<UAetherFrontierSave>(UGameplayStatics::LoadGameFromSlot(Slot,0));
+    if(!Verify||Verify->Generation!=Next->Generation||!Verify->ValidateWorldLedger())return false;
+    TArray<uint8> Bytes;
     if(!FFileHelper::LoadFileToArray(Bytes,*(Base+TEXT(".sav"))))return false;
     const FString Checksum=FString::Printf(TEXT("%d:%u"),Next->Generation,FCrc::MemCrc32(Bytes.GetData(),Bytes.Num()));
     if(!FFileHelper::SaveStringToFile(Checksum,*(Base+TEXT(".crc.pending")),FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))return false;
     if(!IFileManager::Get().Move(*(Base+TEXT(".crc")),*(Base+TEXT(".crc.pending")),true,true))return false;
-    auto* Verify=Cast<UAetherFrontierSave>(UGameplayStatics::LoadGameFromSlot(Slot,0));
-    if(!Verify || Verify->Generation!=Next->Generation)return false;
     Database=Next;return true;
 }
 bool AAetherFrontierMode::Commit(AAetherPlayerState* PS,FAetherProfile Next)
@@ -162,14 +166,19 @@ bool AAetherFrontierMode::Commit(AAetherPlayerState* PS,FAetherProfile Next)
      for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Reactive->bOwnerOnlyStimuli&&It->GetOwner()==PS->GetPawn())It->Pacify();
     return true;
 }
-bool AAetherFrontierMode::SaveWorld()
+bool AAetherFrontierMode::CaptureWorldCandidate(UAetherFrontierSave* Candidate) const
 {
-    auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);
+    if(!Candidate)return false;
     if(!GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->Capture(Candidate->World))return false;
     auto* S=GetGameState<AAetherFrontierState>();Candidate->bSupplyRestored=S->bSupplyRestored;Candidate->bBridgeReleased=S->bBridgeReleased;Candidate->bPowerOn=S->bPowerOn;
     const auto& Environment=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->GetSimulation()->GetEnvironment();Candidate->AmbientTemperatureC=Environment.TemperatureC;Candidate->RainKgPerM2Sec=Environment.RainKgPerM2Sec;Candidate->WindMPerSec=Environment.WindMPerSec;
     if(Encounters){Candidate->Abbey=Encounters->Abbey;Candidate->Relay=Encounters->Relay;}
-    return WriteDatabase(Candidate);
+    return true;
+}
+bool AAetherFrontierMode::SaveWorld()
+{
+    auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);
+    return CaptureWorldCandidate(Candidate)&&WriteDatabase(Candidate);
 }
 void AAetherFrontierMode::Observe(AAetherCharacter* C,FName Fact)
 {
@@ -391,6 +400,7 @@ void AAetherFrontierMode::Tick(float Dt)
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherAnimationCheck"))&&Elapsed>2)CheckAnimation();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherGuidanceCheck"))&&Elapsed>2)CheckGuidance();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherReactionCheck"))&&Elapsed>2)CheckReactions();
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherServiceCheck"))&&Elapsed>2)CheckServices();
     if(bSmoke)SmokeStep();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherV4Capture")))
     { static bool Taken=false;if(Elapsed>8&&!Taken){Taken=true;FScreenshotRequest::RequestScreenshot(FPaths::ProjectDir()/TEXT("Docs/Images/AetherFrontier.png"),true,false);}if(Elapsed>11)FPlatformMisc::RequestExit(false); }
@@ -431,7 +441,16 @@ void AAetherFrontierMode::LeaveParty(AAetherPlayerState* PS)
 
 bool UAetherFrontierSave::ValidateWorldLedger() const
 {
- if(Loot.Num()>128||CampReceipts.Num()>32)return false;TSet<FGuid> IDs;TSet<FName> Camps;
+ if(Loot.Num()>128||CampReceipts.Num()>32||ServiceReceipts.Num()>64)return false;
+ TSet<FGuid> ServiceIDs;
+ for(const auto& R:ServiceReceipts)
+ {
+  const auto* Profile=Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==R.CharacterId;});
+  if(!R.Command.Id.IsValid()||ServiceIDs.Contains(R.Command.Id)||R.Command.TargetId.IsNone()||R.Command.TargetId.ToString().Len()>128
+      ||R.CharacterId.IsEmpty()||!Profile||R.Command.ExpectedRevision<0||R.Command.ExpectedRevision>=Profile->Revision)return false;
+  ServiceIDs.Add(R.Command.Id);
+ }
+ TSet<FGuid> IDs;TSet<FName> Camps;
  for(const auto& L:Loot){if(!L.ClaimId.IsValid()||IDs.Contains(L.ClaimId)||L.Count<1||L.Count>99||FAetherProfile::MaxStack(L.Definition)==0||L.Location.ContainsNaN()||L.Location.GetAbsMax()>100000||L.ClaimedBy.Len()>32)return false;IDs.Add(L.ClaimId);}
  for(const auto& R:CampReceipts){if(Camps.Contains(R.Definition)||!FAetherRules::Get().Encounters.Contains(R.Definition)||!R.Instance.IsValid()||R.RespawnAfterUtc<0)return false;Camps.Add(R.Definition);}return true;
 }
