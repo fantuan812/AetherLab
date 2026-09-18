@@ -1,0 +1,538 @@
+[
+  {
+    "id": "RX-01",
+    "scenario": "相同材料换地图",
+    "expected": "规则不依赖关卡名字",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-02",
+    "scenario": "玩家、敌人、固定热源作用于同一绳",
+    "expected": "走同一材料/结构契约",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-03",
+    "scenario": "关闭Niagara及声音",
+    "expected": "权威结果不变",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-04",
+    "scenario": "输入NaN/负质量/超上限值",
+    "expected": "拒绝，无半更新",
+    "relatedChecks": [
+      "Reactive.Core.AreaBudgetAndValidation",
+      "Reactive.V7.InvalidCuttingInputIsAtomic"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-05",
+    "scenario": "重复StimulusId",
+    "expected": "不重复释放资源或伤害",
+    "relatedChecks": [
+      "Aether.V5.InputReplayRejectsSecondRelease"
+    ],
+    "code": [
+      "Source/AetherLab/Tests/AetherV5Tests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-06",
+    "scenario": "卸载对象后旧结果返回",
+    "expected": "代际检查拒绝写到新对象",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-07",
+    "scenario": "两物体内部热交换",
+    "expected": "扣增成对，残差在约定容差内",
+    "relatedChecks": [
+      "Reactive.Core.ThermalConservationAndStability"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-08",
+    "scenario": "一个热体多个邻居",
+    "expected": "不超预算，不出现不合理数值反转",
+    "relatedChecks": [
+      "Reactive.Core.ThermalConservationAndStability"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-09",
+    "scenario": "相变平台",
+    "expected": "未支付潜热前不免费完成相变",
+    "relatedChecks": [
+      "Reactive.Core.LatentHeat"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-10",
+    "scenario": "冷却超过最低边界",
+    "expected": "记录拒绝抽热量，不隐藏损失",
+    "relatedChecks": [
+      "Aether.V5.ExtractionFloorAccountsRejectedBudget"
+    ],
+    "code": [
+      "Source/AetherLab/Tests/AetherV5Tests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-11",
+    "scenario": "有限燃料持续燃烧",
+    "expected": "燃料耗尽熄灭，释放能量不复制",
+    "relatedChecks": [
+      "Reactive.Core.BurnExtinguish"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-12",
+    "scenario": "熄灭后重新点燃",
+    "expected": "根据剩余状态反应，任务不重复刷分",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-13",
+    "scenario": "两人同取一个水源",
+    "expected": "转移总量不超过可用液态量",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-14",
+    "scenario": "向满容器喷水",
+    "expected": "溢出/拒绝符合策略，来源不多扣",
+    "relatedChecks": [
+      "Reactive.V7.LiquidCapacityAndEnthalpy"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-15",
+    "scenario": "转移不同温度液体",
+    "expected": "质量和携带焓按声明模型核算",
+    "relatedChecks": [
+      "Reactive.V7.LiquidCapacityAndEnthalpy"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-16",
+    "scenario": "少量水被冻结",
+    "expected": "不生成超配置面积的可站立冰",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-17",
+    "scenario": "冻结时目标空间被占",
+    "expected": "不把角色或物体挤入墙内",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-18",
+    "scenario": "解冻承载面",
+    "expected": "碰撞与导航一致失效，不悬空卡住",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-19",
+    "scenario": "无源金属与无源水面",
+    "expected": "不产生持续电危险",
+    "relatedChecks": [
+      "Reactive.Frontier.ElectricalDistanceLossAndPulseLifetime"
+    ],
+    "code": [
+      "Source/AetherLab/Tests/AetherFrontierTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-20",
+    "scenario": "直接电击干燥敌人",
+    "expected": "正常受电，不要求Wet",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-21",
+    "scenario": "岸上目标与水中目标",
+    "expected": "只有合法首击/接触目标受影响",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-22",
+    "scenario": "水面中间干隙/绝缘壳",
+    "expected": "不以范围查询穿越间隙传电",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-23",
+    "scenario": "同角色接触四水格",
+    "expected": "不收到四次完整电击",
+    "relatedChecks": [
+      "Aether.V5.UniqueReceiverCapacityAndLedger"
+    ],
+    "code": [
+      "Source/AetherLab/Tests/AetherV5Tests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-24",
+    "scenario": "电网络环路与分叉",
+    "expected": "总输出不超过输入与储能释放",
+    "relatedChecks": [
+      "Reactive.Core.ElectricalCycleConservation"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-25",
+    "scenario": "两份电源同一窗口",
+    "expected": "来源保留、按预算累计，无覆盖丢账",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-26",
+    "scenario": "断开电源",
+    "expected": "新受电停止；控制状态独立到期",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-27",
+    "scenario": "单次电击结束后进水",
+    "expected": "不承受无来源的残留DOT",
+    "relatedChecks": [
+      "Reactive.Frontier.ElectricalDistanceLossAndPulseLifetime"
+    ],
+    "code": [
+      "Source/AetherLab/Tests/AetherFrontierTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-28",
+    "scenario": "网格细分/注册次序/路径长度对照",
+    "expected": "同场景细分结果近似，先以5%为容差目标；单独延长同负载路径应衰减，不能归一化抵消",
+    "relatedChecks": [
+      "Aether.V5.PathRefinementAndRegistrationOrder"
+    ],
+    "code": [
+      "Source/AetherLab/Tests/AetherV5Tests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-29",
+    "scenario": "超过电节点/时间预算",
+    "expected": "记录降级，不把剩余能量变末端爆伤",
+    "relatedChecks": [
+      "Reactive.Core.BoundedQueuesAndElectricalBudget"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-30",
+    "scenario": "只切换下雨，锁定电拓扑/源",
+    "expected": "无电伤、电范围、电学湿润差异",
+    "relatedChecks": [
+      "Reactive.Frontier.RainCannotCreateElectricalWetnessOrEdges"
+    ],
+    "code": [
+      "Source/AetherLab/Tests/AetherFrontierTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-31",
+    "scenario": "先被水术浸湿再下雨",
+    "expected": "雨不刷新ElectricalWetness的持续时间",
+    "relatedChecks": [
+      "Reactive.Frontier.SplashOnRainSoakedBodyStillDecays"
+    ],
+    "code": [
+      "Source/AetherLab/Tests/AetherFrontierTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-32",
+    "scenario": "金属表面结霜、另一路水渠冻结",
+    "expected": "只按各自材料/连接政策变化",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-33",
+    "scenario": "剑切和烧绳",
+    "expected": "相同预置支撑正确解除，无特制任务分支",
+    "relatedChecks": [
+      "Reactive.V7.CuttingIsNotImpulseOrHeat",
+      "world-reactions"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp",
+      "Source/AetherLab/Tests/AetherReactionCheck.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-34",
+    "scenario": "重复断裂请求",
+    "expected": "碎片、断裂事实与奖励不复制",
+    "relatedChecks": [
+      "Reactive.Core.FrozenBrittlenessAndBreakOnce"
+    ],
+    "code": [
+      "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-35",
+    "scenario": "木箱阻挡闸门",
+    "expected": "按有界驱动受阻/损坏，不直接穿箱",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-36",
+    "scenario": "静止重物接触与高速落物",
+    "expected": "前者不无限伤害，后者单次合规结算",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-37",
+    "scenario": "同次碰撞多个子步回调",
+    "expected": "合并后按通道去重",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-38",
+    "scenario": "双人抢搬同一物件",
+    "expected": "仅一个有效操作租约",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-39",
+    "scenario": "搬运中断线/死亡/超距",
+    "expected": "释放抓持，物件仍存在且可恢复",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-40",
+    "scenario": "打开新通路再撤掉支撑",
+    "expected": "AI重新规划，不走旧导航空面",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-41",
+    "scenario": "四种进入水工坊的方法",
+    "expected": "同一最终目标可完成，方法不锁奖励",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-42",
+    "scenario": "接任务前已救人/供水恢复",
+    "expected": "读取事实/替代步骤，不强制倒退世界",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-43",
+    "scenario": "关键物件被丢入不可达处",
+    "expected": "有后备路线或受控恢复，不坏档",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-44",
+    "scenario": "晚加入持续电危险与断桥场景",
+    "expected": "正确恢复状态，不重放旧攻击",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-45",
+    "scenario": "离开相关性再返回",
+    "expected": "状态、碰撞、连接与视觉收敛",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-46",
+    "scenario": "重启后恢复新版本",
+    "expected": "源、材料、链接、任务凭据一致",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-47",
+    "scenario": "旧含水量存档迁移",
+    "expected": "不将历史雨湿误恢复成电学湿润",
+    "relatedChecks": [
+      "Aether.V8.LegacyTaggedRecordMigration",
+      "world-reactions"
+    ],
+    "code": [
+      "Source/AetherLab/Tests/AetherLegacyFixture.cpp",
+      "Source/AetherLab/Tests/AetherReactionCheck.cpp"
+    ],
+    "acceptance": "NotRun",
+    "reason": "相关子性质有自动检查，尚未逐条完成本 RX 场景验收。"
+  },
+  {
+    "id": "RX-48",
+    "scenario": "公共区恶意点火/堵门",
+    "expected": "保护策略与安全复位工作，记录责任",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-49",
+    "scenario": "30/60/120FPS及不同反应步精度",
+    "expected": "一致性与数值误差有记录，不随渲染帧率倍增",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  },
+  {
+    "id": "RX-50",
+    "scenario": "长时多次进入、保存、回调清理",
+    "expected": "反应源/委托/实例数量不无界增长",
+    "relatedChecks": [],
+    "code": [],
+    "acceptance": "NotRun",
+    "reason": "尚无直接验收用例；待对应工作包建立运行证据。"
+  }
+]

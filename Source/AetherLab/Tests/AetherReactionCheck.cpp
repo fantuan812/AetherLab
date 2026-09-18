@@ -1,4 +1,5 @@
 #include "../AetherFrontier.h"
+#include "AetherLegacyFixture.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -46,6 +47,17 @@ void AAetherFrontierMode::CheckReactions()
    Check(W->Restore(Records)&&Prop("WorksRope")->Reactive->State.bBroken&&Prop("WorksBridge")->Mechanism->bReleased,TEXT("Cut structure survives material snapshot restore"));
    Check(Prop("WorksBridge")->Mechanism->GetImpactSource()==nullptr,TEXT("Restored structure does not resurrect old player credit"));
   }
+  // Replace just the rope in this isolated world with an independently serialized v6 record.
+  FReactiveSaveRecord OldRope;
+  bool Decoded=AetherLegacyFixture::DecodeRope(OldRope);
+  auto LegacyRecords=Records;
+  auto* RopeRecord=LegacyRecords.FindByPredicate([](const auto& R){return R.StableId=="WorksRope";});
+  if(RopeRecord)*RopeRecord=OldRope;
+  Check(Decoded&&RopeRecord&&W->Restore(LegacyRecords),TEXT("Synthetic v6 tagged rope restores with schema zero"));
+  TArray<FReactiveSaveRecord> Upgraded;
+  const bool Captured=W->Capture(Upgraded);
+  const auto* UpgradedRope=Upgraded.FindByPredicate([](const auto& R){return R.StableId=="WorksRope";});
+  Check(Captured&&UpgradedRope&&UpgradedRope->MaterialSchema==1&&FMath::IsNearlyEqual(UpgradedRope->WaterKg,.025)&&UpgradedRope->ElectricalWaterKg==0&&UpgradedRope->ElectricalWetness01==0&&FMath::IsNearlyEqual(UpgradedRope->Integrity,.6),TEXT("Legacy rain-only water stays non-electrical after upgrade capture"));
   FString LegacySlot;
   if(FParse::Value(FCommandLine::Get(),TEXT("AetherLegacyFixture="),LegacySlot)&&!LegacySlot.IsEmpty())
   {

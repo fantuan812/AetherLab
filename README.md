@@ -31,3 +31,5 @@ WASD 移动，Shift 冲刺，Ctrl 跳跃，Space 闪避；左键轻击/按住重
 后续玩法记录见 [Gameplay-v6.zh-CN.md](Docs/Gameplay-v6.zh-CN.md)。J 面板中 Tab / 下一项切换任务，M 查看同一目标的位置。`Scripts/CheckAnimation.ps1` 和 `Scripts/CheckGuidance.ps1` 各进行一次隔离存档的短启动检查，无需多人压力或全量 Cook；结果见 [Verification-v6.json](Docs/Verification-v6.json)。
 
 反应与物理后续：[v7 实现记录](Docs/Reactions-v7.zh-CN.md)。新增有限水桶的原子水量/焓转移、独立剑刃切割、限时落物归属及材料签名兼容。`Scripts/TestReactionLight.ps1` 运行 8 个规则小测试；`Scripts/CheckReactions.ps1` 运行一次短场景检查。
+
+审计后续按 [v8 工作记录](Docs/Execution-v8.zh-CN.md) 推进。`Scripts/VerifyV8.ps1 -World -Network` 聚合小规则、短反应场景与独立编辑器服务器双客户端基线；不运行规模、Cook 或长循环。测试注册清单与 RX 未验收项分别见 [Tests-v8.json](Docs/Tests-v8.json)、[RX-v8.json](Docs/RX-v8.json)。

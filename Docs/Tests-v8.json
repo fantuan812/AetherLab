@@ -1,0 +1,302 @@
+{
+  "fixtureVersion": "synthetic-v6-tagged-record-1",
+  "cases": [
+    {
+      "id": "Aether.V5.AreaPulseMergesReceiverOnce",
+      "source": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V5.CharacterEndpointCannotBridgeWater",
+      "source": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V5.ContentDefinitionsValidate",
+      "source": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V5.DailyRewardAtomicAndRollover",
+      "source": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V5.ExtractionFloorAccountsRejectedBudget",
+      "source": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V5.InputReplayRejectsSecondRelease",
+      "source": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V5.PathRefinementAndRegistrationOrder",
+      "source": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V5.RainCannotReactivateDrainedElectricalWater",
+      "source": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V5.UniqueReceiverCapacityAndLedger",
+      "source": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Aether.V8.LegacyTaggedRecordMigration",
+      "source": "Source/AetherLab/Tests/AetherLegacyFixture.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Adventure.ConductionPreservesAttribution",
+      "source": "Source/AetherLab/Tests/AetherTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Adventure.LiquidTransferConservesMassAndEnthalpy",
+      "source": "Source/AetherLab/Tests/AetherTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Adventure.RestoreIsAtomicAndClearsTransientInput",
+      "source": "Source/AetherLab/Tests/AetherTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Adventure.Scale4096Bodies64Active",
+      "source": "Source/AetherLab/Tests/AetherTests.cpp",
+      "kind": "scale",
+      "default": false
+    },
+    {
+      "id": "Reactive.Adventure.WeatherChangesProjectileEnergyAndTrajectory",
+      "source": "Source/AetherLab/Tests/AetherTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.AreaBudgetAndValidation",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.BoundedQueuesAndElectricalBudget",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.BurnExtinguish",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.BurningWoodSpreadsAndCollapses",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.ContactAndOcclusion",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.ElectricalCycleConservation",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.FrozenBrittlenessAndBreakOnce",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.LatentHeat",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.OpenFuelVersusSealedBurst",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.SleepWakeWeather",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.SpatialMoveRemoval",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.SteamEnergyMassBalance",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.ThermalConservationAndStability",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.WaterAndMetalConduction",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Core.WindBiasesHeatTransport",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveSimulationTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Frontier.ElectricalContactIndependentOfHeatVisibility",
+      "source": "Source/AetherLab/Tests/AetherFrontierTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Frontier.ElectricalDistanceLossAndPulseLifetime",
+      "source": "Source/AetherLab/Tests/AetherFrontierTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Frontier.InventoryAtomicCapacityAndOwnership",
+      "source": "Source/AetherLab/Tests/AetherFrontierTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Frontier.PersonalQuestsAndRewardIdempotency",
+      "source": "Source/AetherLab/Tests/AetherFrontierTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Frontier.RainCannotCreateElectricalWetnessOrEdges",
+      "source": "Source/AetherLab/Tests/AetherFrontierTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.Frontier.SplashOnRainSoakedBodyStillDecays",
+      "source": "Source/AetherLab/Tests/AetherFrontierTests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.V7.CuttingIsNotImpulseOrHeat",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.V7.InvalidCuttingInputIsAtomic",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.V7.LiquidCapacityAndEnthalpy",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.V7.LiquidTransferAuthorizationIsAtomic",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.V7.PartialIceOnlyTransfersLiquid",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.V7.TransfersPreserveRainElectricalSeparation",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.V7.VaporCarriesMixedElectricalWaterFraction",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    },
+    {
+      "id": "Reactive.V7.WithdrawalBoundaryLedger",
+      "source": "Plugins/ReactiveWorld/Source/ReactiveCore/Private/Tests/ReactiveV7Tests.cpp",
+      "kind": "small-rule",
+      "default": true
+    }
+  ],
+  "otherChecks": [
+    {
+      "id": "world-reactions",
+      "command": "Scripts/CheckReactions.ps1",
+      "kind": "short-world",
+      "expectedChecks": 16
+    },
+    {
+      "id": "world-guidance",
+      "command": "Scripts/CheckGuidance.ps1",
+      "kind": "short-world"
+    },
+    {
+      "id": "animation-graph",
+      "command": "Scripts/CheckAnimation.ps1",
+      "kind": "short-world"
+    },
+    {
+      "id": "network-baseline",
+      "command": "Scripts/TestV8NetworkBaseline.ps1",
+      "kind": "dedicated-editor-server-two-clients"
+    },
+    {
+      "id": "rendered-play",
+      "kind": "manual",
+      "state": "NotRun"
+    },
+    {
+      "id": "cook-hlod",
+      "kind": "heavy",
+      "state": "NotRun"
+    }
+  ]
+}

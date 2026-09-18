@@ -1,0 +1,103 @@
+{
+  "CommitSha": "0ec60b0c8b58ee58ea9c040a7544da15aa96e166",
+  "WorktreeDirtyAtStart": true,
+  "EngineBuild": "5.8.0-55116800",
+  "Target": "AetherLabEditor Win64 Development",
+  "FixtureVersion": "synthetic-v6-tagged-record-1",
+  "date": "2026-09-18",
+  "scope": "V8-00 tested worktree on parent CommitSha; not a clean-commit claim",
+  "build": "incremental succeeded (27.75 s)",
+  "rules": {
+    "passed": 43,
+    "failed": 0,
+    "seconds": 0.3564731478691101,
+    "cases": [
+      "Aether.V5.AreaPulseMergesReceiverOnce",
+      "Aether.V5.CharacterEndpointCannotBridgeWater",
+      "Aether.V5.ContentDefinitionsValidate",
+      "Aether.V5.DailyRewardAtomicAndRollover",
+      "Aether.V5.ExtractionFloorAccountsRejectedBudget",
+      "Aether.V5.InputReplayRejectsSecondRelease",
+      "Aether.V5.PathRefinementAndRegistrationOrder",
+      "Aether.V5.RainCannotReactivateDrainedElectricalWater",
+      "Aether.V5.UniqueReceiverCapacityAndLedger",
+      "Aether.V8.LegacyTaggedRecordMigration",
+      "Reactive.Adventure.ConductionPreservesAttribution",
+      "Reactive.Adventure.LiquidTransferConservesMassAndEnthalpy",
+      "Reactive.Adventure.RestoreIsAtomicAndClearsTransientInput",
+      "Reactive.Adventure.WeatherChangesProjectileEnergyAndTrajectory",
+      "Reactive.Core.AreaBudgetAndValidation",
+      "Reactive.Core.BoundedQueuesAndElectricalBudget",
+      "Reactive.Core.BurnExtinguish",
+      "Reactive.Core.BurningWoodSpreadsAndCollapses",
+      "Reactive.Core.ContactAndOcclusion",
+      "Reactive.Core.ElectricalCycleConservation",
+      "Reactive.Core.FrozenBrittlenessAndBreakOnce",
+      "Reactive.Core.LatentHeat",
+      "Reactive.Core.OpenFuelVersusSealedBurst",
+      "Reactive.Core.SleepWakeWeather",
+      "Reactive.Core.SpatialMoveRemoval",
+      "Reactive.Core.SteamEnergyMassBalance",
+      "Reactive.Core.ThermalConservationAndStability",
+      "Reactive.Core.WaterAndMetalConduction",
+      "Reactive.Core.WindBiasesHeatTransport",
+      "Reactive.Frontier.ElectricalContactIndependentOfHeatVisibility",
+      "Reactive.Frontier.ElectricalDistanceLossAndPulseLifetime",
+      "Reactive.Frontier.InventoryAtomicCapacityAndOwnership",
+      "Reactive.Frontier.PersonalQuestsAndRewardIdempotency",
+      "Reactive.Frontier.RainCannotCreateElectricalWetnessOrEdges",
+      "Reactive.Frontier.SplashOnRainSoakedBodyStillDecays",
+      "Reactive.V7.CuttingIsNotImpulseOrHeat",
+      "Reactive.V7.InvalidCuttingInputIsAtomic",
+      "Reactive.V7.LiquidCapacityAndEnthalpy",
+      "Reactive.V7.LiquidTransferAuthorizationIsAtomic",
+      "Reactive.V7.PartialIceOnlyTransfersLiquid",
+      "Reactive.V7.TransfersPreserveRainElectricalSeparation",
+      "Reactive.V7.VaporCarriesMixedElectricalWaterFraction",
+      "Reactive.V7.WithdrawalBoundaryLedger"
+    ]
+  },
+  "world": {
+    "passed": 16,
+    "failed": 0,
+    "fixture": "synthetic-v6-tagged-record-1",
+    "rendering": "NullRHI"
+  },
+  "network": {
+    "result": "PASS",
+    "configuration": "one editor dedicated server + two editor clients, one round, NullRHI",
+    "checks": [
+      "one Supply per client despite retry",
+      "ASC owns local PlayerState",
+      "shared supply flag",
+      "locked equipment/spells",
+      "zero client simulation bodies"
+    ],
+    "notCovered": [
+      "other-player profile privacy",
+      "late-join reconstruction",
+      "restart",
+      "competing carry",
+      "listen server"
+    ]
+  },
+  "commands": [
+    "Scripts/Build.ps1",
+    "Scripts/VerifyV8.ps1 -World -Network (43 rules passed; old empty-argument bug caused optional legacy check failure)",
+    "Scripts/CheckReactions.ps1 (after argument fix: 16 passed)",
+    "Scripts/TestV8NetworkBaseline.ps1 (passed)"
+  ],
+  "notRun": [
+    "4096-body scale",
+    "full RX acceptance",
+    "rendered acceptance",
+    "Cook/HLOD",
+    "V8-07 targeted multiplayer"
+  ],
+  "artifactLocations": [
+    "Saved/Logs/V8-Build.log",
+    "Saved/Automation/V8-20260918-103254-a3f64f",
+    "Saved/Logs/ReactionCheck.log",
+    "Saved/Logs/AetherNetV8_165808e0b8a64ff7-*.log"
+  ]
+}
