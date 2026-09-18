@@ -1,0 +1,90 @@
+#include "Migration/AetherLegacyAuditCommandlet.h"
+#include "Persistence/AetherLegacyV9Reader.h"
+#include "Dom/JsonObject.h"
+#include "Serialization/JsonSerializer.h"
+#include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Parse.h"
+#include "Misc/Crc.h"
+#include "HAL/FileManager.h"
+#include "HAL/PlatformMisc.h"
+THIRD_PARTY_INCLUDES_START
+#include <openssl/sha.h>
+THIRD_PARTY_INCLUDES_END
+
+UAetherLegacyAuditCommandlet::UAetherLegacyAuditCommandlet()
+{
+    IsClient = false; IsServer = false; IsEditor = true;
+    LogToConsole = true; ShowErrorCount = true;
+}
+
+int32 UAetherLegacyAuditCommandlet::Main(const FString& Params)
+{
+    FString Source, Report;
+    if (!FParse::Value(*Params, TEXT("Source="), Source) || !FParse::Value(*Params, TEXT("Report="), Report)) return 2;
+    Source = FPaths::ConvertRelativePathToFull(Source);
+    Report = FPaths::ConvertRelativePathToFull(Report);
+    const FString ReportRoot = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("V10Migration"));
+    // 报告仅可写 Saved/V10Migration 下的新文件；参数错误不能覆盖原存档或工程资源。
+    if (!FPaths::IsUnderDirectory(Report, ReportRoot) || IFileManager::Get().FileExists(*Report)) return 2;
+    const int64 FileSize = IFileManager::Get().FileSize(*Source);
+    if (FileSize < 64 || FileSize > 16*1024*1024) return 2;
+    TArray<uint8> Bytes;
+    if (!FFileHelper::LoadFileToArray(Bytes, *Source)) return 2;
+    FSHA256Signature Signature;
+    // GenericPlatform 的 SHA256 在 Windows 没有实现；使用引擎自带 OpenSSL。
+    if (!SHA256(Bytes.GetData(), Bytes.Num(), Signature.Signature)) return 2;
+    auto Root = MakeShared<FJsonObject>();
+    Root->SetStringField(TEXT("phase"), TEXT("legacy_decode_only"));
+    Root->SetStringField(TEXT("sourceSha256"), Signature.ToString().ToLower());
+    Root->SetStringField(TEXT("layoutFingerprint"), AetherLegacyV9::LayoutFingerprint());
+    Root->SetBoolField(TEXT("databaseWritten"), false);
+    Root->SetBoolField(TEXT("finalSchemaConverted"), false);
+    auto Result = AetherLegacyV9::Read(Bytes);
+    bool Valid = Result.Code == EAetherLegacyReadCode::Ready;
+    if (Valid)
+    {
+        const auto& Save = *Result.Snapshot;
+        const bool Fixture = FParse::Param(*Params, TEXT("Fixture"));
+        if (Fixture)
+        {
+            // 夹具没有生产提交侧车；不能让此开关绕过任意真实档案的校验。
+            Valid = Signature.ToString().Equals(TEXT("9e2b795785ba0d4e8da95f5baf01425db56fcaf3ba861fc2a24dc5733621b693"), ESearchCase::IgnoreCase);
+            if (!Valid) Result.Detail = TEXT("Fixture bypass only accepts the frozen synthetic fixture");
+        }
+        else if (Save.Version == 5)
+        {
+            FString Checksum;
+            const FString Expected = FString::Printf(TEXT("%d:%u"), Save.Generation, FCrc::MemCrc32(Bytes.GetData(), Bytes.Num()));
+            Valid = FFileHelper::LoadFileToString(Checksum, *FPaths::ChangeExtension(Source, TEXT("crc"))) && Checksum == Expected;
+            if (!Valid) Result.Detail = TEXT("Missing or mismatched committed-generation checksum");
+        }
+        Root->SetNumberField(TEXT("sourceSchema"), Save.Version);
+        Root->SetNumberField(TEXT("generation"), Save.Generation);
+        Root->SetNumberField(TEXT("worldRecords"), Save.World.Num());
+        Root->SetNumberField(TEXT("lootRecords"), Save.Loot.Num());
+        Root->SetNumberField(TEXT("serviceReceipts"), Save.ServiceReceipts.Num());
+        TArray<TSharedPtr<FJsonValue>> Profiles;
+        for (const auto& Profile : Save.Profiles)
+        {
+            auto Row = MakeShared<FJsonObject>();
+            Row->SetStringField(TEXT("characterId"), Profile.CharacterId);
+            Row->SetNumberField(TEXT("revision"), Profile.Revision);
+            Row->SetNumberField(TEXT("instances"), Profile.Inventory.Num());
+            Row->SetNumberField(TEXT("equipmentReferences"), Profile.Equipped.Num());
+            Row->SetNumberField(TEXT("oldSpellMask"), Profile.LearnedSpells);
+            Row->SetNumberField(TEXT("pendingGold"), Profile.PendingGold);
+            Row->SetNumberField(TEXT("pendingMaterial"), Profile.PendingMaterial);
+            Profiles.Add(MakeShared<FJsonValueObject>(Row));
+        }
+        Root->SetArrayField(TEXT("profiles"), Profiles);
+    }
+    Root->SetBoolField(TEXT("legacyValid"), Valid);
+    Root->SetStringField(TEXT("detail"), Result.Detail);
+    FString Json;
+    if (!FJsonSerializer::Serialize(Root, TJsonWriterFactory<>::Create(&Json))) return 2;
+    IFileManager::Get().MakeDirectory(*FPaths::GetPath(Report), true);
+    if (!FFileHelper::SaveStringToFile(Json, *Report, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM,
+        &IFileManager::Get(), FILEWRITE_NoReplaceExisting)) return 2;
+    return Valid ? 0 : 1;
+}

@@ -405,9 +405,9 @@ void AAetherFrontierMode::LeaveParty(AAetherPlayerState* PS)
  PS->PartyLeader=PS->Profile.CharacterId;PS->InvitedBy.Empty();
 }
 
-bool UAetherFrontierSave::ValidateWorldLedger() const
+bool UAetherFrontierSave::ValidateWorldLedger(const FAetherRules& Rules) const
 {
- if(Loot.Num()>128||CampReceipts.Num()>32||ServiceReceipts.Num()>64||!WorldFacts.Validate())return false;
+ if(Loot.Num()>128||CampReceipts.Num()>32||ServiceReceipts.Num()>64||!WorldFacts.Validate(Rules))return false;
  TSet<FGuid> ServiceIDs;
  for(const auto& R:ServiceReceipts)
  {
@@ -417,9 +417,9 @@ bool UAetherFrontierSave::ValidateWorldLedger() const
   ServiceIDs.Add(R.Command.Id);
  }
  TSet<FGuid> IDs;TSet<FName> Camps;
- for(const auto& L:Loot){if(L.Items.Num()>128)return false;for(const auto& I:L.Items)if(!FAetherRules::Get().Items.Contains(I.Key)||I.Value<1||I.Value>1000)return false;}
- for(const auto& L:Loot){if(!L.ClaimId.IsValid()||IDs.Contains(L.ClaimId)||L.Count<1||L.Count>99||FAetherProfile::MaxStack(L.Definition)==0||L.Location.ContainsNaN()||L.Location.GetAbsMax()>100000||L.ClaimedBy.Len()>32)return false;IDs.Add(L.ClaimId);}
- for(const auto& R:CampReceipts){if(Camps.Contains(R.Definition)||!FAetherRules::Get().Encounters.Contains(R.Definition)||!R.Instance.IsValid()||R.RespawnAfterUtc<0)return false;Camps.Add(R.Definition);}return true;
+ for(const auto& L:Loot){if(L.Items.Num()>128)return false;for(const auto& I:L.Items)if(!Rules.Items.Contains(I.Key)||I.Value<1||I.Value>1000)return false;}
+ for(const auto& L:Loot){if(!L.ClaimId.IsValid()||IDs.Contains(L.ClaimId)||L.Count<1||L.Count>99||FAetherProfile::MaxStack(L.Definition,Rules)==0||L.Location.ContainsNaN()||L.Location.GetAbsMax()>100000||L.ClaimedBy.Len()>32)return false;IDs.Add(L.ClaimId);}
+ for(const auto& R:CampReceipts){if(Camps.Contains(R.Definition)||!Rules.Encounters.Contains(R.Definition)||!R.Instance.IsValid()||R.RespawnAfterUtc<0)return false;Camps.Add(R.Definition);}return true;
 }
 void AAetherFrontierMode::SpawnLoot(const FAetherWorldLoot& Loot)
 {

@@ -7,7 +7,8 @@ public class AetherEditor : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
+        AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine" });
-        PrivateDependencyModuleNames.AddRange(new[] { "AetherCore", "AetherLab", "UnrealEd", "NavigationSystem" });
+        PrivateDependencyModuleNames.AddRange(new[] { "AetherCore", "AetherLab", "UnrealEd", "NavigationSystem", "Json" });
     }
 }

@@ -50,7 +50,7 @@ public:
     UPROPERTY() TArray<FAetherCampReceipt> CampReceipts;
     UPROPERTY() TArray<FAetherWorldServiceReceipt> ServiceReceipts;
     UPROPERTY() FAetherWorldFacts WorldFacts;
-    bool ValidateWorldLedger() const;
+    bool ValidateWorldLedger(const FAetherRules& Rules=FAetherRules::Get()) const;
     UPROPERTY() bool bSupplyRestored = false;
     UPROPERTY() bool bWorkshopRestored = false;
     UPROPERTY() bool bBridgeReleased = false;
