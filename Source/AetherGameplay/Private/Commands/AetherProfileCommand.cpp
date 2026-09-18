@@ -1,6 +1,7 @@
 #include "Commands/AetherProfileCommand.h"
 #include "Profile/AetherProfileCodec.h"
 #include "AetherProfileEconomy.h"
+#include "AetherProfileConsumable.h"
 namespace
 {
 EAetherCommandCode InventoryCode(EAetherInventoryMutationCode C)
@@ -36,6 +37,7 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
     if(Current.Revision>=MAX_int64-1)return Fail(EAetherCommandCode::NotReady);
     // 永远在副本上调用领域规则；失败路径不会清空已准备的事务，也不会改调用者的状态。
     auto Next=Current;FAetherInventoryMutation Inventory;FAetherSkillMutation Skill;
+    TOptional<FAetherEffectDelivery> Effect;
     bool IsInventory=true,IsSkill=false;
     using E=EAetherCommandType;
     switch(C.Type)
@@ -79,10 +81,17 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
         }
         break;
     }
+    case E::UseItem:
+    {
+        FAetherEffectDelivery Delivery;
+        Result.Code=AetherProfileConsumable::Apply(C,Next,Context,Items,Rules,Delivery,Result);
+        if(Result.Code==EAetherCommandCode::Applied)Effect=MoveTemp(Delivery);
+        break;
+    }
     case E::BuyItem:case E::SellItem:case E::RepairItem:case E::ClaimReward:
         Result.Code=AetherProfileEconomy::Apply(C,Next,Context,Items,Economy,Result);
         break;
-    // 掉落/容器版本与治疗投递仍需专门的跨域处理器，不能按成功空操作提交。
+    // 掉落/容器由跨域处理器处理；交互尚未实现，不能按成功空操作提交。
     default:return Fail(EAetherCommandCode::UnsupportedAction);
     }
     if(IsInventory)
@@ -105,6 +114,7 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
     if(!AetherCommands::Encode(C,Candidate.Request,Reason)||!AetherCommands::EncodeResult(Result,Candidate.Result,Reason)||
         !AetherProfileCodec::Encode(Next,Items,Skills,Rules,Write.Value.Payload,Reason))return Fail(EAetherCommandCode::Invalid);
     Candidate.Writes.Add(MoveTemp(Write));
+    if(Effect.IsSet())Candidate.Effects.Add(MoveTemp(Effect.GetValue()));
     if(!AetherTransactions::Validate(Candidate,Reason))return Fail(EAetherCommandCode::Invalid);
     Transaction=MoveTemp(Candidate);return true;
 }

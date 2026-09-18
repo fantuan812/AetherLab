@@ -3,6 +3,7 @@
 #include "Contracts/AetherTransaction.h"
 #include "Profile/AetherProfileState.h"
 #include "Inventory/AetherEconomyDefinitions.h"
+#include "Inventory/AetherConsumableEffect.h"
 
 struct FAetherContainerAccessContext
 {
@@ -20,6 +21,11 @@ struct FAetherProfileCommandContext
     // 服务器在每次提交前复验会话、目标存活/已加载、范围/视线及战斗限制；客户端不能填 true。
     bool bTradeSessionValid=false;
     FString TradeTargetStableId,ShopId;
+    // 必须由资源所有者为本 CommandId 持有屏障；未接入屏障的旧 ASC 不得开启此命令。
+    FGuid ResourceReservationId;
+    FAetherResourceStateV10 Resources;
+    int64 ServerUnixMs=0;
+    double SafeForSeconds=0;
     FAetherContainerAccessContext Container;
     FAetherSkillRuleContext Skill;
     TArray<FAetherExternalSkillGrant> ExternalSkillGrants;
