@@ -37,3 +37,5 @@ WASD 移动，Shift 冲刺，Ctrl 跳跃，Space 闪避；左键轻击/按住重
 供水与电源现在通过持久化事务更新；失败保持原状态，重试不重复切换或领奖。`Scripts/CheckServices.ps1` 覆盖故障/重试/重启；本轮已实测的完整记录见 [Verification-v8-services.json](Docs/Verification-v8-services.json)。后续数据化与接触契约仍按 v8 计划推进。
 
 物品/任务数据契约与通用容器已完成本轮实现，详见 [V8-02 数据契约](Docs/Data-contracts-v802.zh-CN.md) 与 [实际验证记录](Docs/Verification-v802.json)。后续优先推进方案实现，只做必要的轻量验证。
+
+近战 GAS 生命周期与物理伤害适配已实现，见 [V8-03 行动记录](Docs/Actions-v803.zh-CN.md)。本工作单元按要求只做必要增量编译，不以编译通过替代运行验收。

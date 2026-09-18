@@ -3,8 +3,6 @@
 #include "ReactiveWorldSubsystem.h"
 #include "Components/PrimitiveComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "GameFramework/Pawn.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 
@@ -13,7 +11,7 @@ UReactiveMechanismComponent::UReactiveMechanismComponent()
 void UReactiveMechanismComponent::BeginPlay()
 {
     Super::BeginPlay();Primitive=Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
-    if(GetOwner()->HasAuthority()&&Primitive.IsValid()&&bImpactDamage)
+    if(GetOwner()->HasAuthority()&&Primitive.IsValid()&&bReportImpacts)
     {Primitive->SetNotifyRigidBodyCollision(true);Primitive->OnComponentHit.AddDynamic(this,&UReactiveMechanismComponent::Hit);}
 }
 void UReactiveMechanismComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -38,7 +36,7 @@ void UReactiveMechanismComponent::RestoreMechanism(bool Released,double EnergyJ,
     ImpactSource.Reset();ImpactSourceExpiresAt=-1;
     bReleased=false;if(Released)ReleaseSupport();else if(Constraint){if(Primitive.IsValid())Primitive->SetSimulatePhysics(true);Constraint->InitComponentConstraint();}
     // Restoring a released constraint is not a new player-caused break.
-    ImpactSource.Reset();ImpactSourceExpiresAt=-1;LastImpacts.Reset();
+    ImpactSource.Reset();ImpactSourceExpiresAt=-1;
 }
 void UReactiveMechanismComponent::TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Tick)
 {
@@ -72,22 +70,19 @@ void UReactiveMechanismComponent::TickComponent(float Dt,ELevelTick Type,FActorC
         if(S.ElectricalJ>0&&B->Inject(S)){RemainingEnergyJ-=S.ElectricalJ;SourceAge+=Duration;}
     }
 }
-void UReactiveMechanismComponent::Hit(UPrimitiveComponent* HitComponent,AActor* Other,UPrimitiveComponent*,FVector NormalImpulse,const FHitResult&)
+void UReactiveMechanismComponent::Hit(UPrimitiveComponent* HitComponent,AActor* Other,UPrimitiveComponent*,FVector NormalImpulse,const FHitResult& Result)
 {
-    if(!GetOwner()->HasAuthority()||!bImpactDamage||!IsValid(Other)||Other==GetOwner()||!HitComponent->IsSimulatingPhysics())return;
-    const double Now=GetWorld()->GetTimeSeconds();
-    if(const double* Last=LastImpacts.Find(Other);Last&&Now-*Last<.5)return;
-    // Collision impulse -> lost kinetic energy proxy, SI units. One damage path only.
+    if(!GetOwner()->HasAuthority()||!bReportImpacts||!IsValid(Other)||Other==GetOwner()||!HitComponent||!HitComponent->IsSimulatingPhysics()||NormalImpulse.ContainsNaN())return;
     const double Mass=FMath::Max(1.,double(HitComponent->GetMass()));
     const double Joules=NormalImpulse.SizeSquared()/10000./(2*Mass);
-    if(Joules<ImpactThresholdJ)return;
-    LastImpacts.Add(Other,Now);
-    for(auto It=LastImpacts.CreateIterator();It;++It)if(!It.Key().IsValid()||Now-It.Value()>2)It.RemoveCurrent();
-    AActor* Instigator=GetImpactSource();
-    auto* Pawn=Cast<APawn>(Instigator);AController* Controller=Pawn?Pawn->GetController():Instigator?Instigator->GetInstigatorController():nullptr;
-    UGameplayStatics::ApplyDamage(Other,FMath::Clamp(float((Joules-ImpactThresholdJ)/35),0.f,70.f),Controller,GetOwner(),nullptr);
-    if(auto* Body=Other->FindComponentByClass<UReactiveBodyComponent>())
-    {FReactiveStimulus S;S.SourceActor=Instigator;S.bApplyPhysicsImpulse=false;S.ImpulseNs=NormalImpulse/100.;Body->Inject(S);}
+    if(!FMath::IsFinite(Joules)||Joules<=0)return;
+    FReactiveImpactEvent Event;
+    Event.Mechanism=GetOwner();Event.Receiver=Other;Event.Source=GetImpactSource();
+    Event.EventId=++ImpactSequence;Event.TimeSeconds=GetWorld()->GetTimeSeconds();
+    Event.EnergyJ=Joules;Event.ImpulseNs=NormalImpulse/100.;Event.PositionCm=Result.ImpactPoint;
+    if(auto* Body=GetOwner()->FindComponentByClass<UReactiveBodyComponent>())Event.MechanismId=Body->StableId;
+    if(auto* Body=Other->FindComponentByClass<UReactiveBodyComponent>())Event.ReceiverId=Body->StableId;
+    OnImpact.Broadcast(Event);
 }
 
 void UReactiveMechanismComponent::RecordImpactSource(AActor* Source)

@@ -1,6 +1,4 @@
 #include "AetherEquipmentComponent.h"
-#include "AbilitySystemBlueprintLibrary.h"
-#include "AbilitySystemComponent.h"
 #include "Components/SkinnedMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
@@ -85,25 +83,50 @@ bool UAetherEquipmentComponent::Unequip(FName Slot)
 }
 void UAetherEquipmentComponent::ServerUnequip_Implementation(FName Slot) { if (!bProfileManaged) Unequip(Slot); }
 const FAetherAttackDefinition* UAetherEquipmentComponent::CurrentAttack() const
-{ auto* D=Catalog?Catalog->Find(Attack.ItemId):nullptr; return D?D->FindAttack(Attack.AttackId):nullptr; }
+{
+    if (GetOwner()->HasAuthority()) return Attack.Serial ? &ActiveDefinition : nullptr;
+    auto* D=Catalog?Catalog->Find(Attack.ItemId):nullptr; return D?D->FindAttack(Attack.AttackId):nullptr;
+}
 bool UAetherEquipmentComponent::IsBusy() const
-{ const auto* D=CurrentAttack(); return D&&!Attack.bCancelled&&Clock()<Attack.StartedAt+D->Duration(); }
+{
+    if (GetOwner()->HasAuthority()) return bAttackRunning;
+    const auto* D=CurrentAttack(); return D&&!Attack.bCancelled&&Attack.Phase!=EAetherAttackPhase::Finished&&Clock()<Attack.StartedAt+D->Duration();
+}
 bool UAetherEquipmentComponent::IsAttackActive() const
-{ const auto* D=CurrentAttack(); const float T=Clock()-Attack.StartedAt; return D&&!Attack.bCancelled&&T>=D->WindupSeconds&&T<D->WindupSeconds+D->ActiveSeconds; }
-bool UAetherEquipmentComponent::StartAttack(FName Id)
+{ const auto* D=CurrentAttack(); const float T=Clock()-Attack.StartedAt; return IsBusy()&&D&&T>=D->WindupSeconds&&T<D->WindupSeconds+D->ActiveSeconds; }
+bool UAetherEquipmentComponent::CanStartAttack(FName Id) const
 {
     if (!GetOwner()->HasAuthority() || IsBusy() || (CanAct.IsBound()&&!CanAct.Execute())) return false;
-    auto* Item=InSlot(TEXT("MainHand")); const auto* D=Item?Item->FindAttack(Id):nullptr;
-    auto* ASC=UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner());
-    if (!D || !D->IsValid() || !ASC || !StaminaAttribute.IsValid() || ASC->GetNumericAttribute(StaminaAttribute)<D->StaminaCost) return false;
-    ASC->ApplyModToAttribute(StaminaAttribute,EGameplayModOp::Additive,-D->StaminaCost);
-    Attack.ItemId=Item->ItemId; Attack.AttackId=Id; Attack.StartedAt=Clock(); Attack.bCancelled=false; ++Attack.Serial;
-    HitActors.Reset(); LastAttackElapsed=-1; ++AcceptedAttackCount; GetOwner()->ForceNetUpdate(); return true;
+    const auto* Item=InSlot(TEXT("MainHand")); const auto* D=Item?Item->FindAttack(Id):nullptr;
+    return D&&D->IsValid();
 }
-void UAetherEquipmentComponent::CancelAttack()
-{ if (GetOwner()->HasAuthority() && !Attack.bCancelled) { Attack.bCancelled=true; HitActors.Reset(); GetOwner()->ForceNetUpdate(); } }
+bool UAetherEquipmentComponent::StartAttack(FName Id)
+{ return GetOwner()->HasAuthority()&&RequestAttack.IsBound()&&RequestAttack.Execute(Id); }
+bool UAetherEquipmentComponent::BeginCommittedAttack(FName Id,FName ExpectedItem,int32 ExpectedRevision)
+{
+    if (!CanStartAttack(Id) || LoadoutRevision!=ExpectedRevision) return false;
+    auto* Item=InSlot(TEXT("MainHand")); if (!Item||Item->ItemId!=ExpectedItem) return false;
+    ActiveDefinition=*Item->FindAttack(Id);
+    Attack.ItemId=Item->ItemId; Attack.AttackId=Id; Attack.StartedAt=Clock(); Attack.bCancelled=false;
+    if (++Attack.Serial==0) ++Attack.Serial;
+    bAttackRunning=true; HitActors.Reset(); LastAttackElapsed=-1; ++AcceptedAttackCount;
+    // The caller binds lifecycle delegates before publishing this transition.
+    SetAttackPhase(EAetherAttackPhase::Windup); GetOwner()->ForceNetUpdate(); return true;
+}
+void UAetherEquipmentComponent::SetAttackPhase(EAetherAttackPhase Phase)
+{ if (Attack.Phase!=Phase) { Attack.Phase=Phase; OnAttackPhaseChanged.Broadcast(Attack.Serial,Phase); GetOwner()->ForceNetUpdate(); } }
+void UAetherEquipmentComponent::FinishAttack(bool Cancelled)
+{
+    if (!GetOwner()->HasAuthority()||!bAttackRunning) return;
+    const uint32 Serial=Attack.Serial;
+    bAttackRunning=false; Attack.bCancelled=Cancelled; HitActors.Reset();
+    SetAttackPhase(Cancelled?EAetherAttackPhase::Cancelled:EAetherAttackPhase::Finished);
+    OnAttackFinished.Broadcast(Serial,Cancelled); GetOwner()->ForceNetUpdate();
+}
+void UAetherEquipmentComponent::CancelAttack() { FinishAttack(true); }
 void UAetherEquipmentComponent::ResolveHits(const FAetherAttackDefinition& D)
 {
+    const uint32 Serial=Attack.Serial;
     const FVector Start=GetOwner()->GetActorLocation(),Forward=GetOwner()->GetActorForwardVector();
     FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherEquipmentSweep),false,GetOwner());
     FCollisionObjectQueryParams Types; Types.AddObjectTypesToQuery(ECC_Pawn); Types.AddObjectTypesToQuery(ECC_WorldDynamic); Types.AddObjectTypesToQuery(ECC_WorldStatic);
@@ -112,7 +135,7 @@ void UAetherEquipmentComponent::ResolveHits(const FAetherAttackDefinition& D)
     for (const auto& H:Hits)
     {
         // A parry/death callback may cancel this attack during hit dispatch.
-        if (Attack.bCancelled) break;
+        if (!bAttackRunning||Attack.bCancelled||Attack.Serial!=Serial) break;
         AActor* Target=H.GetActor(); if (!Target || Target==GetOwner() || HitActors.Contains(Target) || !Target->Implements<UAetherHitReceiver>()) continue;
         FHitResult Block; const FVector Point=H.bStartPenetrating?Target->GetActorLocation():FVector(H.ImpactPoint);
         if (GetWorld()->LineTraceSingleByChannel(Block,Start,Point,ECC_Visibility,Q) && Block.GetActor()!=Target) continue;
@@ -125,11 +148,25 @@ void UAetherEquipmentComponent::TickComponent(float Dt,ELevelTick TickType,FActo
 {
     Super::TickComponent(Dt,TickType,F);
     const auto* D=CurrentAttack(); const float Elapsed=Clock()-Attack.StartedAt;
-    if (D&&!Attack.bCancelled&&GetOwner()->HasAuthority())
+    if (bAttackRunning&&GetOwner()->HasAuthority())
     {
-        // A hitch crossing the complete active interval still resolves one authoritative sample.
-        if (Elapsed>=D->WindupSeconds && LastAttackElapsed<D->WindupSeconds+D->ActiveSeconds) ResolveHits(*D);
-        LastAttackElapsed=Elapsed;
+        if (!D || (CanContinueAttack.IsBound()&&!CanContinueAttack.Execute())) CancelAttack();
+        else
+        {
+            const uint32 Serial=Attack.Serial; const FAetherAttackDefinition Definition=*D;
+            if (Elapsed>=Definition.WindupSeconds&&LastAttackElapsed<Definition.WindupSeconds+Definition.ActiveSeconds)
+            {
+                SetAttackPhase(EAetherAttackPhase::Active);
+                // Keep one authoritative sample when a frame crosses the complete active window.
+                if (bAttackRunning&&Attack.Serial==Serial) ResolveHits(Definition);
+            }
+            if (bAttackRunning&&Attack.Serial==Serial)
+            {
+                LastAttackElapsed=Elapsed;
+                if (Elapsed>=Definition.Duration()) FinishAttack(false);
+                else if (Elapsed>=Definition.WindupSeconds+Definition.ActiveSeconds) SetAttackPhase(EAetherAttackPhase::Recovery);
+            }
+        }
     }
     if (auto* Visual=VisualForSlot(TEXT("MainHand")))
     {
@@ -163,4 +200,4 @@ void UAetherEquipmentComponent::RebuildVisuals()
     }
 }
 void UAetherEquipmentComponent::EndPlay(const EEndPlayReason::Type Reason)
-{ for (auto& Pair:Visuals) if (Pair.Value) Pair.Value->DestroyComponent(); Visuals.Reset(); Super::EndPlay(Reason); }
+{ CancelAttack(); RequestAttack.Unbind(); CanContinueAttack.Unbind(); for (auto& Pair:Visuals) if (Pair.Value) Pair.Value->DestroyComponent(); Visuals.Reset(); Super::EndPlay(Reason); }

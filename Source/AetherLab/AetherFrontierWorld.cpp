@@ -1,4 +1,5 @@
 #include "AetherFrontier.h"
+#include "AetherPhysicsDamage.h"
 #include "AetherContent.h"
 #include "AetherRules.h"
 #include "AetherInventoryRules.h"
@@ -28,6 +29,7 @@
 AAetherFrontierProp::AAetherFrontierProp()
 {
     Mechanism=CreateDefaultSubobject<UReactiveMechanismComponent>(TEXT("Mechanism"));
+    PhysicsDamage=CreateDefaultSubobject<UAetherPhysicsDamageComponent>(TEXT("PhysicsDamage"));
     Person=CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("UEMannequin"));Person->SetupAttachment(Mesh);
     Person->SetAbsolute(false,true,true);Person->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
@@ -230,7 +232,7 @@ AAetherFrontierProp* AAetherFrontierMode::Make(FName Id,FName Service,FVector P,
     if(Service=="Source"){A->Reactive->ReceiverLoad=0;A->Mechanism->PowerW=1000;A->Mechanism->RemainingEnergyJ=3600000;}
     if(Service=="Receiver"){A->Reactive->ReceiverLoad=4;A->Reactive->ReceiverCapacityJ=500;A->Reactive->ElectricalHeatFraction=.05;A->Reactive->bElectricalTerminal=true;}
     A->Mechanism->bBuoyant=Service=="Crate";
-    A->Mechanism->bImpactDamage=Service=="Bridge"||Service=="Conductor"||Service=="Crate";
+    A->Mechanism->bReportImpacts=Service=="Bridge"||Service=="Conductor"||Service=="Crate";
     if(Service=="Bridge"||Service=="HingedGate"){A->Reactive->bParticipatesInSimulation=true;A->Spec.bInteractiveMaterial=true;}
     A->bCarryable=Service=="Conductor"||Service=="Crate";A->Reactive->bTrackMovement=A->bCarryable||Service=="Bridge"||Service=="HingedGate";
     if(Kind==EAetherObjectKind::Water)A->Reactive->InitialWaterKg=.5;

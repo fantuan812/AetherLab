@@ -99,7 +99,6 @@ AAetherCharacter::AAetherCharacter()
     BodyVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surcoat")); BodyVisual->SetupAttachment(RootComponent);
     BodyVisual->SetStaticMesh(Cube.Object); BodyVisual->SetRelativeScale3D(FVector(.5,.6,1.45)); BodyVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Equipment = CreateDefaultSubobject<UAetherEquipmentComponent>(TEXT("Equipment"));
-    Equipment->StaminaAttribute=UAetherAttributes::GetStaminaAttribute();
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Nameplate = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Nameplate")); Nameplate->SetupAttachment(RootComponent);
     Nameplate->SetRelativeLocation(FVector(0,0,120)); Nameplate->SetHorizontalAlignment(EHTA_Center); Nameplate->SetWorldSize(22); Nameplate->SetTextRenderColor(FColor::White);
@@ -124,6 +123,9 @@ void AAetherCharacter::BeginPlay()
     if(HasAuthority())MaxHealth=Fighter==EAetherFighter::BellKnight?320:Fighter==EAetherFighter::Golem?160:Fighter==EAetherFighter::Player?100:80;
     Super::BeginPlay(); Home = GetActorLocation(); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(), this);
     Equipment->CanAct.BindUObject(this,&AAetherCharacter::Ready);
+    Equipment->RequestAttack.BindUObject(this,&AAetherCharacter::RequestMelee);
+    Equipment->CanContinueAttack.BindLambda([this](){return Alive()&&CombatTime()>=StunUntil&&AbilitySystem&&AbilitySystem->GetAvatarActor()==this;});
+    Equipment->AddTickPrerequisiteActor(this);
     if (auto* Content=UAetherGameContent::Load(bUseBasicAssets))
     {
         Equipment->Catalog=Content->EquipmentCatalog;
@@ -211,7 +213,26 @@ void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
 void AAetherCharacter::PossessedBy(AController* C)
-{ Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
+{ CancelActions(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
+void AAetherCharacter::CancelActions()
+{
+    if(!HasAuthority())return;
+    Equipment->CancelAttack();
+    // A PlayerState ASC may already have moved to a replacement pawn.
+    if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->CancelAllAbilities();
+}
+void AAetherCharacter::UnPossessed()
+{
+    CancelActions();
+    if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
+    Super::UnPossessed();
+}
+void AAetherCharacter::EndPlay(const EEndPlayReason::Type Reason)
+{
+    CancelActions();
+    if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
+    Super::EndPlay(Reason);
+}
 void AAetherCharacter::OnRep_Controller()
 { Super::OnRep_Controller(); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
 void AAetherCharacter::GrantSpells()
@@ -242,21 +263,22 @@ bool AAetherCharacter::TrySpell(int32 Spell)
     return false;
 }
 bool AAetherCharacter::Ready() const
-{ const float T = CombatTime(); return Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy(); }
+{ const float T = CombatTime(); return AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy(); }
 float AAetherCharacter::CombatTime() const
 { const auto* GS = GetWorld()->GetGameState(); return GS ? GS->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds(); }
 void AAetherCharacter::SetVitals(float HP, float MP, float SP)
 {
-    if (!HasAuthority()) return;
+    if (!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this) return;
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(), FMath::Clamp(HP,0.f,MaxHealth));
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(), FMath::Clamp(MP,0.f,100.f));
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(), FMath::Clamp(SP,0.f,100.f));
+    if(!Alive())CancelActions();
 }
 void AAetherCharacter::ResetCombat()
 {
     ActionUntil = CastLockUntil = StunUntil = InvulnerableUntil = 0; NextAI = 0; LastDamageAt = -100;
     bWindingUp = bBlocking = false; NextShockStun = 0;
-    Equipment->CancelAttack();
+    CancelActions();
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), bUseBasicAssets ? 100 : 0);
     GetCharacterMovement()->StopMovementImmediately();
 }
@@ -317,8 +339,15 @@ void AAetherCharacter::ServerAttack_Implementation(bool Heavy)
     PerformMelee(Heavy);
 }
 void AAetherCharacter::PerformMelee(bool Heavy)
+{ RequestMelee(Heavy?TEXT("Heavy"):TEXT("Light")); }
+bool AAetherCharacter::RequestMelee(FName Id)
 {
-    if(!HasAuthority())return;for(const auto& Spec:AbilitySystem->GetActivatableAbilities())if(Spec.Ability&&Spec.Ability->IsA<UAetherMeleeAbility>()&&Spec.Level==(Heavy?2:1)){AbilitySystem->TryActivateAbility(Spec.Handle);break;}
+    if(!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this||(Id!=TEXT("Light")&&Id!=TEXT("Heavy")))return false;
+    const uint64 Before=Equipment->AcceptedAttackCount;
+    for(const auto& Spec:AbilitySystem->GetActivatableAbilities())
+        if(Spec.Ability&&Spec.Ability->IsA<UAetherMeleeAbility>()&&Spec.Level==(Id==TEXT("Heavy")?2:1))
+        {AbilitySystem->TryActivateAbility(Spec.Handle);break;}
+    return Equipment->AcceptedAttackCount>Before;
 }
 void AAetherCharacter::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
 { ReceiveHit(Hit.Damage,Hit.PostureDamage,Cast<AAetherCharacter>(Hit.Source),true); }
@@ -345,23 +374,29 @@ void AAetherCharacter::ReceiveHit(float Damage, float PostureDamage, AAetherChar
     const auto* Guard=Equipment->GuardDefinition();
     if (CanBlock && bBlocking && Front && Guard)
     {
-        if (T - BlockStarted < Guard->ParryWindowSeconds) { if (Source) { Source->StunUntil = T + 1.1f; Source->Equipment->CancelAttack(); } return; }
+        if (T - BlockStarted < Guard->ParryWindowSeconds) { if (Source) { Source->StunUntil = T + 1.1f; Source->CancelActions(); } return; }
         const float Cost = PostureDamage * Guard->GuardStaminaMultiplier;
         if (Stamina() >= Cost) { AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(), EGameplayModOp::Additive, -Cost); return; }
-        bBlocking = false; StunUntil = T + 1.2f; Equipment->CancelAttack();
+        bBlocking = false; StunUntil = T + 1.2f; CancelActions();
     }
-    float Posture = bUseBasicAssets ? Attributes->Posture.GetCurrentValue() - PostureDamage : Attributes->Posture.GetCurrentValue() + PostureDamage;
-    if (bUseBasicAssets ? Posture <= 0 : Posture >= 100) { StunUntil = T + 1.5f; Posture = 0; bBlocking = false; Equipment->CancelAttack(); }
-    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), Posture);
+    ApplyPostureDamage(PostureDamage);
     FDamageEvent Event; TakeDamage(Damage, Event, Source ? Source->GetController() : nullptr, Source);
+}
+void AAetherCharacter::ApplyPostureDamage(float Amount)
+{
+    if(!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this||!Alive()||!FMath::IsFinite(Amount)||Amount<=0)return;
+    float Posture=bUseBasicAssets?Attributes->Posture.GetCurrentValue()-Amount:Attributes->Posture.GetCurrentValue()+Amount;
+    if(bUseBasicAssets?Posture<=0:Posture>=100)
+    {StunUntil=CombatTime()+1.5f;Posture=0;bBlocking=false;CancelActions();}
+    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),Posture);
 }
 float AAetherCharacter::TakeDamage(float Amount, const FDamageEvent& Event, AController* EventInstigator, AActor* Causer)
 {
-    if (!HasAuthority() || !Alive() || !FMath::IsFinite(Amount) || Amount <= 0) return 0;
+    if (!HasAuthority() || !AbilitySystem || AbilitySystem->GetAvatarActor()!=this || !Alive() || !FMath::IsFinite(Amount) || Amount <= 0) return 0;
     const float Applied = FMath::Min(Health(), Amount);
     AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetHealthAttribute(), EGameplayModOp::Additive, -Applied);
     LastDamager = Causer; ++DamageReceivedCount; LastDamageAt = CombatTime();
-    if (!Alive()) { Equipment->CancelAttack(); bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); }
+    if (!Alive()) { CancelActions(); bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); }
     return Applied;
 }
 void AAetherCharacter::Reaction(EReactiveReaction Kind, double Magnitude, FVector Vector)
@@ -372,10 +407,10 @@ void AAetherCharacter::Reaction(EReactiveReaction Kind, double Magnitude, FVecto
         FDamageEvent Event; AActor* Source = Reactive->GetLastSourceActor();
         TakeDamage(float(Magnitude / 140 * (1 + Reactive->State.ElectricalWetness01 * .25)), Event, Source ? Source->GetInstigatorController() : nullptr, Source);
         const float T = CombatTime();
-        if (Magnitude > 300 && T > NextShockStun) { Equipment->CancelAttack(); StunUntil = T + .7f; NextShockStun = T + 3; bBlocking = false; }
+        if (Magnitude > 300 && T > NextShockStun) { StunUntil = T + .7f; CancelActions(); NextShockStun = T + 3; bBlocking = false; }
     }
 }
-void AAetherCharacter::Pacify() { if (HasAuthority()) { Equipment->CancelAttack(); bPacified = true; bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); } }
+void AAetherCharacter::Pacify() { if (HasAuthority()) { bPacified = true; CancelActions(); bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); } }
 void AAetherCharacter::Think(float Dt)
 {
     if (const auto* Mode = GetWorld()->GetAuthGameMode<AAetherAdventureMode>(); Mode && Mode->bSmoke) return;
@@ -428,11 +463,11 @@ void AAetherCharacter::Think(float Dt)
 void AAetherCharacter::Tick(float Dt)
 {
     Super::Tick(Dt); const float T = CombatTime();
-    if (HasAuthority() && (!Alive() || T<StunUntil)) Equipment->CancelAttack();
+    if (HasAuthority() && (!Alive() || T<StunUntil)) CancelActions();
     NetworkProbe(Dt);
-    if (HasAuthority() && Alive())
+    if (HasAuthority() && Alive() && AbilitySystem->GetAvatarActor()==this)
     {
-        const float Regen = T > ActionUntil && !bBlocking ? 20 : 4;
+        const float Regen = T > ActionUntil && !bBlocking && !Equipment->IsBusy() ? 20 : 4;
         SetVitals(Health(), Mana() + Dt * 5, Stamina() + Dt * Regen);
         if (T - LastDamageAt > 2) AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), bUseBasicAssets ? FMath::Min(100.f, Attributes->Posture.GetCurrentValue() + Dt * 12) : FMath::Max(0.f, Attributes->Posture.GetCurrentValue() - Dt * 12));
         const double Temp = Reactive->State.TemperatureC;

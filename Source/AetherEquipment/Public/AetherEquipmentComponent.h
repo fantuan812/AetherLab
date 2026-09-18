@@ -2,7 +2,6 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Components/ActorComponent.h"
-#include "AttributeSet.h"
 #include "UObject/Interface.h"
 #include "AetherEquipmentComponent.generated.h"
 
@@ -90,6 +89,9 @@ public:
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable) void ReceiveEquipmentHit(const FAetherEquipmentHit& Hit);
 };
 
+UENUM(BlueprintType)
+enum class EAetherAttackPhase : uint8 { Idle, Windup, Active, Recovery, Finished, Cancelled };
+
 USTRUCT()
 struct FAetherReplicatedAttack
 {
@@ -99,10 +101,14 @@ struct FAetherReplicatedAttack
     UPROPERTY() FName AttackId;
     UPROPERTY() float StartedAt = -100;
     UPROPERTY() bool bCancelled = false;
+    UPROPERTY() EAetherAttackPhase Phase = EAetherAttackPhase::Idle;
 };
 DECLARE_DELEGATE_RetVal(bool, FAetherEquipmentCanAct);
 DECLARE_DELEGATE_RetVal_OneParam(bool, FAetherEquipmentOwnsItem, FName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAetherLoadoutChanged);
+DECLARE_DELEGATE_RetVal_OneParam(bool, FAetherAttackRequest, FName);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FAetherAttackFinished, uint32, bool);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FAetherAttackPhaseChanged, uint32, EAetherAttackPhase);
 
 // This module knows no character class, quest, material solver, or weapon enum.
 UCLASS(ClassGroup=(Aether), meta=(BlueprintSpawnableComponent))
@@ -114,10 +120,13 @@ public:
     UPROPERTY(ReplicatedUsing=OnRep_Loadout, EditAnywhere, BlueprintReadOnly) TObjectPtr<UAetherEquipmentCatalog> Catalog;
     UPROPERTY(ReplicatedUsing=OnRep_Loadout, BlueprintReadOnly) TArray<FAetherEquippedSlot> Slots;
     UPROPERTY(ReplicatedUsing=OnRep_Loadout, BlueprintReadOnly) int32 LoadoutRevision = 0;
-    UPROPERTY(EditAnywhere) FGameplayAttribute StaminaAttribute;
     UPROPERTY(BlueprintAssignable) FAetherLoadoutChanged OnLoadoutChanged;
     FAetherEquipmentCanAct CanAct;
     FAetherEquipmentOwnsItem OwnsItem;
+    FAetherEquipmentCanAct CanContinueAttack;
+    FAetherAttackRequest RequestAttack;
+    FAetherAttackFinished OnAttackFinished;
+    FAetherAttackPhaseChanged OnAttackPhaseChanged;
     bool bProfileManaged = false;
     UPROPERTY(Replicated) FAetherReplicatedAttack Attack;
     UFUNCTION(BlueprintCallable) bool Equip(FName ItemId);
@@ -126,7 +135,10 @@ public:
     UFUNCTION(Server, Reliable) void ServerUnequip(FName Slot);
     bool ValidateLoadout(const TArray<FAetherEquippedSlot>& Loadout) const;
     bool RestoreLoadout(const TArray<FAetherEquippedSlot>& Loadout);
+    // Public requests always use the gameplay cost owner; equipment never debits attributes.
     bool StartAttack(FName AttackId);
+    bool CanStartAttack(FName AttackId) const;
+    bool BeginCommittedAttack(FName AttackId, FName ExpectedItem, int32 ExpectedRevision);
     void CancelAttack();
     bool IsBusy() const;
     bool IsAttackActive() const;
@@ -145,6 +157,10 @@ private:
     UFUNCTION() void OnRep_Loadout();
     void RebuildVisuals();
     void ResolveHits(const FAetherAttackDefinition& Definition);
+    void FinishAttack(bool Cancelled);
+    void SetAttackPhase(EAetherAttackPhase Phase);
+    bool bAttackRunning = false;
+    UPROPERTY(Transient) FAetherAttackDefinition ActiveDefinition;
     UPROPERTY(Transient) TObjectPtr<USkinnedMeshComponent> AttachmentTarget;
     UPROPERTY(Transient) TMap<FName,TObjectPtr<UStaticMeshComponent>> Visuals;
     TSet<TWeakObjectPtr<AActor>> HitActors;

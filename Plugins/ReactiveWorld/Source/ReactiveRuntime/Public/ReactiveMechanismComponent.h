@@ -6,6 +6,18 @@ class UPrimitiveComponent;
 class UReactiveBodyComponent;
 class UPhysicsConstraintComponent;
 
+// Authoritative physical observation. Energy is an impulse-derived proxy, not health damage.
+// EventId is monotonic within this mechanism lifetime, never a persistent player identifier.
+struct REACTIVERUNTIME_API FReactiveImpactEvent
+{
+    TWeakObjectPtr<AActor> Mechanism,Receiver,Source;
+    FName MechanismId,ReceiverId;
+    uint64 EventId=0;
+    double TimeSeconds=0,EnergyJ=0;
+    FVector ImpulseNs=FVector::ZeroVector,PositionCm=FVector::ZeroVector;
+};
+DECLARE_MULTICAST_DELEGATE_OneParam(FReactiveImpactObserved,const FReactiveImpactEvent&);
+
 // Authored mechanisms only: supports, hinge/rope constraints and finite power sources.
 UCLASS(ClassGroup=(Reactive),meta=(BlueprintSpawnableComponent))
 class REACTIVERUNTIME_API UReactiveMechanismComponent : public UActorComponent
@@ -19,8 +31,8 @@ public:
     UPROPERTY(Replicated,EditAnywhere,Category="Mechanism") bool bGateOpen = false;
     UPROPERTY(EditAnywhere,Category="Mechanism") bool bBuoyant = false;
     UPROPERTY(Replicated,BlueprintReadOnly,Category="Mechanism") bool bReleased = false;
-    UPROPERTY(EditAnywhere,Category="Mechanism") bool bImpactDamage = false;
-    UPROPERTY(EditAnywhere,Category="Mechanism") double ImpactThresholdJ = 80;
+    UPROPERTY(EditAnywhere,Category="Mechanism") bool bReportImpacts = false;
+    FReactiveImpactObserved OnImpact;
     UPROPERTY(EditAnywhere,Category="Power") double PowerW = 0;
     UPROPERTY(Replicated,EditAnywhere,BlueprintReadOnly,Category="Power") double RemainingEnergyJ = 0;
     UPROPERTY(Replicated,EditAnywhere,BlueprintReadOnly,Category="Power") bool bPowerEnabled = true;
@@ -36,7 +48,7 @@ public:
 private:
     void ReleaseSupport();
     UFUNCTION() void Hit(UPrimitiveComponent* HitComponent,AActor* Other,UPrimitiveComponent* OtherComponent,FVector NormalImpulse,const FHitResult& Result);
-    TMap<TWeakObjectPtr<AActor>,double> LastImpacts;
+    uint64 ImpactSequence = 0;
     uint64 PulseSequence = 0;
     TWeakObjectPtr<AActor> ImpactSource;
     double ImpactSourceExpiresAt = -1;

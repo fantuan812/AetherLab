@@ -86,6 +86,8 @@ public:
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystem; }
     virtual void BeginPlay() override;
     virtual void PossessedBy(AController* NewController) override;
+    virtual void UnPossessed() override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     virtual void OnRep_Controller() override;
     virtual void Tick(float Dt) override;
     virtual void SetupPlayerInputComponent(UInputComponent* Input) override;
@@ -107,6 +109,9 @@ public:
     void ResetCombat();
     void ReceiveHit(float Damage, float PostureDamage, AAetherCharacter* Source, bool bCanBlock);
     void PerformMelee(bool bHeavy);
+    bool RequestMelee(FName AttackId);
+    void CancelActions();
+    void ApplyPostureDamage(float Amount);
     FVector SafeMoveDirection(FVector Destination);
     float NextSteeringAt=0;
     FVector SteeringDirection=FVector::ZeroVector;

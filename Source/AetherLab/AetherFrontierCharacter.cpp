@@ -28,7 +28,15 @@ AAetherPlayerState* AAetherFrontierCharacter::ProfileState() const {return GetPl
 void AAetherFrontierCharacter::BindPersistentAbilities()
 {
     if (auto* PS=ProfileState())
-    { AbilitySystem=PS->AbilitySystem; Attributes=PS->Attributes; AbilitySystem->InitAbilityActorInfo(PS,this); }
+    {
+        if(HasAuthority())
+        {
+            if(AbilitySystem!=PS->AbilitySystem)
+            {CancelActions();if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();}
+            if(auto* Old=Cast<AAetherCharacter>(PS->AbilitySystem->GetAvatarActor());Old&&Old!=this)Old->CancelActions();
+        }
+        AbilitySystem=PS->AbilitySystem; Attributes=PS->Attributes; AbilitySystem->InitAbilityActorInfo(PS,this);
+    }
 }
 void AAetherFrontierCharacter::BeginPlay()
 {
