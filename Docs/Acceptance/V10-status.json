@@ -15,7 +15,7 @@
     {
       "id": "V10-03",
       "status": "in_progress",
-      "acceptance": "transaction_value_contracts_and_revision_bound_command_IDs_implemented; typed_gameplay_gateway_pending"
+      "acceptance": "finite_typed_command_and_result_codecs; revision_bound_IDs; pure_offer_contract; 21_rule_tests_pass; authenticated_gameplay_gateway_and_RPC_cutover_pending"
     },
     {
       "id": "V10-04",
