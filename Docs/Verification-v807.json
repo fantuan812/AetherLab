@@ -1,0 +1,169 @@
+{
+  "FixtureVersion": 807,
+  "CommitSha": "bf1d087809e8863ca4d0653e3ef8b7fdd471b035",
+  "Engine": "5.8.0-55116800+++UE5+Release-5.8",
+  "Target": "Editor Development dedicated process + 2 remote clients",
+  "Started": "2026-09-18T14:49:20.1260994+08:00",
+  "Finished": "2026-09-18T14:50:48.8741030+08:00",
+  "SavePrefix": "AetherV807_79ab5978dbf1",
+  "Passed": [
+    "AUD8-20 loot competition and carry exclusion",
+    "AUD8-21 private server contract and independent quests",
+    "Remote AI ownership commands",
+    "AUD8-22 late replicated fire ice bridge power",
+    "AUD8-23 voluntary disconnect/rejoin and server restart"
+  ],
+  "NotRun": [
+    "Listen mode",
+    "Loss/latency injection",
+    "Four players",
+    "Stress/Cook/package",
+    "Visual physics smoothing measurement",
+    "Active encounter late-join",
+    "Private-fire remote casting animation",
+    "Crash or abrupt network loss",
+    "Audio listening review",
+    "Full RX regression"
+  ],
+  "Logs": [
+    "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+    "Saved/Logs/AetherV807_79ab5978dbf1-Alpha.log",
+    "Saved/Logs/AetherV807_79ab5978dbf1-Beta.log",
+    "Saved/Logs/AetherV807_79ab5978dbf1-Beta-Rejoin.log",
+    "Saved/Logs/AetherV807_79ab5978dbf1-Server-Restart.log",
+    "Saved/Logs/AetherV807_79ab5978dbf1-Alpha-Restart.log",
+    "Saved/Logs/AetherV807_79ab5978dbf1-Beta-Restart.log"
+  ],
+  "Command": "Scripts/TestV807Closure.ps1 (default port 7798, random isolated save prefix)",
+  "ScopeNotes": [
+    "Private fire checks are authority-side stimulus contracts with two connected players, not a remote spell animation test.",
+    "AUD8-22 covers fire, ice, released bridge and source switch; active encounter late-join is not included.",
+    "One LAN scenario; does not mark all RX/AUD8 cases as accepted."
+  ],
+  "CaseEvidence": [
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS fixture advanced Alpha only"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS shared supply transaction"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CLIENT_ACK PASS id=Alpha phase=1 revision=2"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CLIENT_ACK PASS id=Beta phase=1 revision=0"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AUD8-21 different quest progress"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AUD8-21 foreign private stimulus rejected"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AUD8-21 owner private stimulus accepted"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AI ignores another player's command"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AI accepts owner's remote command"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS shared loot fixture durable"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AUD8-20 two remote requests one loot receipt"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_RECEIPT id=A375E807000000000000000000000014 owner=Alpha generation=7"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AUD8-20 one carrier after two remote requests"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AUD8-20 prop carrier consistent"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS disconnect while carrying fixture"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AUD8-23 voluntary disconnect releases carry"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CLIENT_ACK PASS id=Alpha phase=2 revision=3"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CLIENT_ACK PASS id=Beta phase=2 revision=0"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_CASE PASS AUD8-23 rejoin rewards remain unique"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server.log",
+      "Result": "Display: V807_SESSION_PASS generation=11 correction=authoritative/no-prediction"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Alpha.log",
+      "Result": "Display: V807_CLIENT_STATE PASS id=Alpha phase=1 revision=2 private=1 fire=1 ice=2 bridge=1 navversion=1 crate=(5750.0,4350.0,50.0)"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Alpha.log",
+      "Result": "Display: V807_CLIENT_STATE PASS id=Alpha phase=2 revision=3 private=1 fire=0 ice=2 bridge=1 navversion=1 crate=(5074.6,4999.9,50.0)"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Beta.log",
+      "Result": "Display: V807_CLIENT_STATE PASS id=Beta phase=1 revision=0 private=1 fire=1 ice=2 bridge=1 navversion=1 crate=(5750.0,4350.0,50.0)"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Beta-Rejoin.log",
+      "Result": "Display: V807_CLIENT_STATE PASS id=Beta phase=2 revision=0 private=1 fire=0 ice=2 bridge=1 navversion=1 crate=(5074.7,4999.4,50.0)"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server-Restart.log",
+      "Result": "Display: V807_CLIENT_ACK PASS id=Alpha phase=100 revision=3"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server-Restart.log",
+      "Result": "Display: V807_CLIENT_ACK PASS id=Beta phase=100 revision=0"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server-Restart.log",
+      "Result": "Display: V807_CASE PASS AUD8-23 restart reward receipt and quantity"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server-Restart.log",
+      "Result": "Display: V807_CASE PASS AUD8-23 restart world transaction"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Server-Restart.log",
+      "Result": "Display: V807_RELOAD_PASS generation=12 receipt=A375E807000000000000000000000014"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Alpha-Restart.log",
+      "Result": "Display: V807_CLIENT_STATE PASS id=Alpha phase=100 revision=3 private=1 fire=0 ice=2 bridge=1 navversion=1 crate=(5100.0,5000.0,50.0)"
+    },
+    {
+      "Log": "Saved/Logs/AetherV807_79ab5978dbf1-Beta-Restart.log",
+      "Result": "Display: V807_CLIENT_STATE PASS id=Beta phase=100 revision=0 private=1 fire=0 ice=2 bridge=1 navversion=1 crate=(5100.0,5000.0,50.0)"
+    }
+  ]
+}
