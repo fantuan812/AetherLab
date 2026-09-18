@@ -56,6 +56,7 @@ public:
     UPROPERTY(Replicated) bool bBridgeReleased = false;
     UPROPERTY(Replicated) bool bPowerOn = true;
     UPROPERTY(Replicated) int32 ActivityKills = 0;
+    UPROPERTY(Replicated) int32 ClosurePhase = 0;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
 UCLASS()
@@ -130,6 +131,11 @@ public:
     UFUNCTION(Server,Reliable) void ServerSprint(bool Enabled);
     UFUNCTION(Client,Reliable) void Notify(const FString& Message);
     void ReleaseCarry();
+    void CheckClosureClient(float Dt);
+    UFUNCTION(Client,Reliable) void ClientClosureAction(FName Action,FRotator Look);
+    UFUNCTION(Server,Reliable) void ServerClosureAck(int32 Phase,bool Passed);
+    float ClosureClientTime=0;
+    int32 ClosureSeenPhase=0;
 private:
     void PressAttack(); void ReleaseAttack();
     void SprintOn(){ServerSprint(true);} void SprintOff(){ServerSprint(false);}
@@ -218,6 +224,8 @@ public:
     FString SavePrefix = TEXT("AetherFrontier_v4");
     bool bSmoke = false;
     bool bFailWrites = false;
+    TMap<FString,int32> ClosureAcks;
+    bool bClosureFailed=false;
     bool bFailAfterDataWrite = false;
     bool Commit(AAetherPlayerState* PS, FAetherProfile Next,FName WorldFact=NAME_None,FName FactSource=NAME_None);
     bool CommitOffline(FAetherProfile Next);
@@ -249,6 +257,11 @@ private:
     void CheckReactions();
     void CheckServices();
     void CheckDataContracts();
+    void CheckClosure();
+    int32 ClosureStage=0;
+    float ClosureAt=0;
+    int32 ClosureMaterialTotal=0;
+    TWeakObjectPtr<AAetherFrontierCharacter> ClosureBuddy;
     float WeatherTimer = 0;
     float AreaTimer = 0;
     float Elapsed = 0; float SaveTimer = 0; float PowerTimer = 0;

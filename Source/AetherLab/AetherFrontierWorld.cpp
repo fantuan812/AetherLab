@@ -91,7 +91,7 @@ void AAetherFrontierProp::OnMaterialReaction(EReactiveReaction K,double Magnitud
 void AAetherFrontierState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierState,bSupplyRestored);DOREPLIFETIME(AAetherFrontierState,bWorkshopRestored);
-    DOREPLIFETIME(AAetherFrontierState,bBridgeReleased);DOREPLIFETIME(AAetherFrontierState,bPowerOn);DOREPLIFETIME(AAetherFrontierState,ActivityKills);
+    DOREPLIFETIME(AAetherFrontierState,bBridgeReleased);DOREPLIFETIME(AAetherFrontierState,bPowerOn);DOREPLIFETIME(AAetherFrontierState,ActivityKills);DOREPLIFETIME(AAetherFrontierState,ClosurePhase);
 }
 AAetherFrontierMode::AAetherFrontierMode()
 {
@@ -224,8 +224,9 @@ void AAetherFrontierMode::RestartPlayer(AController* C)
 {
     auto* PS=C?C->GetPlayerState<AAetherPlayerState>():nullptr;
     const FVector P=FParse::Param(FCommandLine::Get(),TEXT("AetherV4NetServer"))?FVector(-6500,-28700,120+GetNumPlayers()*10):PS&&PS->Profile.bRegistered?FVector(-500,-500,120):FVector(-6500,-29000,120);
+    const bool Closure=FParse::Param(FCommandLine::Get(),TEXT("AetherV807Server"));
     const bool Capture=FParse::Param(FCommandLine::Get(),TEXT("AetherV4Capture"));
-    RestartPlayerAtTransform(C,FTransform(FRotator(0,90,0),Capture?FVector(1100,-1700,120):P));if(C)C->SetControlRotation(FRotator(-8,Capture?120:90,0));
+    RestartPlayerAtTransform(C,FTransform(FRotator(0,90,0),Closure?FVector(4900,5100,110):Capture?FVector(1100,-1700,120):P));if(C)C->SetControlRotation(FRotator(-8,Capture?120:90,0));
 }
 AAetherFrontierProp* AAetherFrontierMode::Make(FName Id,FName Service,FVector P,FVector Scale,EAetherObjectKind Kind,const FString& Label)
 {
@@ -368,6 +369,7 @@ void AAetherFrontierMode::BeginPlay()
 void AAetherFrontierMode::Logout(AController* C)
 {
     auto* Pawn=C?Cast<AAetherFrontierCharacter>(C->GetPawn()):nullptr;
+    if(Pawn)Pawn->ReleaseCarry();
     if(C)LeaveParty(C->GetPlayerState<AAetherPlayerState>());
     for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Reactive->bOwnerOnlyStimuli&&It->GetOwner()==Pawn)It->Destroy();
     for(AAetherFrontierCharacter* Buddy:Companions)if(IsValid(Buddy)&&Buddy->CompanionOwner==Pawn)Buddy->Destroy();
@@ -446,6 +448,7 @@ void AAetherFrontierMode::Tick(float Dt)
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherServiceCheck"))&&Elapsed>2)CheckServices();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherDataCheck"))&&Elapsed>2)CheckDataContracts();
     if(bSmoke)SmokeStep();
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherV807Server")))CheckClosure();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherV806Capture")))CaptureWorkshop();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherV4Capture")))
     { static bool Taken=false;if(Elapsed>8&&!Taken){Taken=true;FScreenshotRequest::RequestScreenshot(FPaths::ProjectDir()/TEXT("Docs/Images/AetherFrontier.png"),true,false);}if(Elapsed>11)FPlatformMisc::RequestExit(false); }

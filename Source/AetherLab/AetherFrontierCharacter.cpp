@@ -294,6 +294,7 @@ void AAetherFrontierCharacter::ReceiveEquipmentHit_Implementation(const FAetherE
 void AAetherFrontierCharacter::Tick(float Dt)
 {
     Super::Tick(Dt);
+    CheckClosureClient(Dt);
     if(IsLocallyControlled()&&LockedTarget)
     {
         if(!IsValid(LockedTarget)||!LockedTarget->Alive()||FVector::DistSquared(GetActorLocation(),LockedTarget->GetActorLocation())>FMath::Square(1800.))LockedTarget=nullptr;
