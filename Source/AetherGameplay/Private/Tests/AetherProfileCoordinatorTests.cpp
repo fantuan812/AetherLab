@@ -132,6 +132,12 @@ bool FAetherProfilePrepareTest::RunTest(const FString&)
     C=Command(EAetherCommandType::DropItem,0);C.ItemInstanceId=FGuid(9,8,7,6);C.Quantity=1;C.ExpectedWorldRevision=0;
     TestFalse(TEXT("Unimplemented cross-domain commands never succeed as no-op"),Prepare(TEXT("Alice")));
     TestTrue(TEXT("Explicit unsupported action result"),R.Code==EAetherCommandCode::UnsupportedAction);
+    FAetherV10ItemInstance I;I.DefinitionId=TEXT("Potion");I.InstanceId=FGuid(1,2,3,4);I.SlotIndex=0;I.Quantity=3;P.Inventory.Items.Add(I);
+    I.InstanceId=FGuid(5,6,7,8);I.SlotIndex=1;I.Quantity=2;P.Inventory.Items.Add(I);
+    C=Command(EAetherCommandType::SortInventory,0);C.Enabled=true;Context.bCanManageInventory=true;
+    TestTrue(TEXT("Sort candidate records consumed source identities"),Prepare(TEXT("Alice")));
+    FAetherCommandResult Reply;
+    TestTrue(TEXT("Sort merge relations survive durable result codec"),AetherCommands::DecodeResult(T.Result,Reply,Reason)&&Reply.Transfers.Num()==1&&Reply.AffectedIds.Contains(Reply.Transfers[0].From)&&Reply.AffectedIds.Contains(Reply.Transfers[0].To));
     return true;
 }
 #endif

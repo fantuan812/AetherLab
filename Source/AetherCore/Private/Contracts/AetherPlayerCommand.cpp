@@ -161,16 +161,19 @@ bool AetherCommands::ValidateResult(const FAetherCommandResult& R, FString& Reas
 {
     const auto Reject=[&](const TCHAR* Why){Reason=Why;return false;};
     if(!R.CommandId.IsValid() || uint8(R.Code)>uint8(EAetherCommandCode::Busy) ||
-        R.FinalProfileRevision < -1 || R.FinalWorldRevision < -1 || R.ActualQuantity<0 || R.ActualQuantity>1000)
+        R.FinalProfileRevision < -1 || R.FinalWorldRevision < -1 || R.ActualQuantity<0 || R.ActualQuantity>1000000)
         return Reject(TEXT("Invalid command result header"));
     const bool Committed=R.Code==EAetherCommandCode::Applied || R.Code==EAetherCommandCode::Replayed;
     if((Committed && R.FinalProfileRevision<0) || (!Committed && R.ActualQuantity!=0))
         return Reject(TEXT("Uncommitted result cannot claim a transfer"));
-    if(R.AffectedIds.Num()>32 || R.AffectedDefinitionIds.Num()>32 || R.ReasonParameters.Num()>8)
+    if(R.AffectedIds.Num()>512 || R.Transfers.Num()>512 || R.AffectedDefinitionIds.Num()>32 || R.ReasonParameters.Num()>8)
         return Reject(TEXT("Command result exceeds bounds"));
     TSet<FGuid> Guids;TSet<FString> Ids;
     for(const auto& Id:R.AffectedIds)
     {if(!Id.IsValid()||Guids.Contains(Id))return Reject(TEXT("Invalid affected instance"));Guids.Add(Id);}
+    for(const auto& Transfer:R.Transfers)
+        if(!Committed||!Transfer.From.IsValid()||!Transfer.To.IsValid()||Transfer.Quantity<1||Transfer.Quantity>1000||
+            !Guids.Contains(Transfer.From)||!Guids.Contains(Transfer.To))return Reject(TEXT("Invalid committed transfer record"));
     for(const auto& Id:R.AffectedDefinitionIds)
     {if(!IsId(Id)||Ids.Contains(Id))return Reject(TEXT("Invalid affected definition"));Ids.Add(Id);}
     for(const auto& Pair:R.ReasonParameters)
@@ -184,15 +187,17 @@ bool AetherCommands::ValidateResult(const FAetherCommandResult& R, FString& Reas
 bool AetherCommands::EncodeResult(const FAetherCommandResult& R,TArray<uint8>& Bytes,FString& Reason)
 {
     Bytes.Reset();if(!ValidateResult(R,Reason))return false;
-    FWireWriter W;W.UInt(0x4152,2);W.UInt(ProtocolVersion,2);W.Guid(R.CommandId);W.UInt(uint8(R.Code),1);
+    FWireWriter W;W.UInt(0x4152,2);W.UInt(ResultSchemaVersion,2);W.Guid(R.CommandId);W.UInt(uint8(R.Code),1);
     W.UInt(R.FinalProfileRevision<0?MAX_uint64:uint64(R.FinalProfileRevision),8);
     W.UInt(R.FinalWorldRevision<0?MAX_uint64:uint64(R.FinalWorldRevision),8);W.UInt(uint32(R.ActualQuantity),4);
-    W.UInt(R.AffectedIds.Num(),1);for(const auto& Id:R.AffectedIds)W.Guid(Id);
+    W.UInt(R.AffectedIds.Num(),2);for(const auto& Id:R.AffectedIds)W.Guid(Id);
     W.UInt(R.AffectedDefinitionIds.Num(),1);for(const auto& Id:R.AffectedDefinitionIds)W.Id(Id);
     // TMap 的遍历顺序不是协议；键排序使重启后的回执字节仍然一致。
     TArray<FString> Keys;R.ReasonParameters.GenerateKeyArray(Keys);
     Keys.Sort([](const FString& A,const FString& B){return A.Compare(B,ESearchCase::CaseSensitive)<0;});
     W.UInt(Keys.Num(),1);for(const auto& Key:Keys){W.Id(Key);W.Text(R.ReasonParameters.FindChecked(Key));}
+    W.UInt(R.Transfers.Num(),2);for(const auto& T:R.Transfers){W.Guid(T.From);W.Guid(T.To);W.UInt(T.Quantity,4);}
+    if(W.Bytes.Num()>16384){Reason=TEXT("Encoded result exceeds total wire budget");return false;}
     Bytes=MoveTemp(W.Bytes);return true;
 }
 
@@ -202,14 +207,16 @@ bool AetherCommands::DecodeResult(const TArray<uint8>& Bytes,FAetherCommandResul
     const auto Reject=[&](const TCHAR* Why){Reason=Why;return false;};
     if(Bytes.IsEmpty()||Bytes.Num()>16384)return Reject(TEXT("Result wire size exceeds bounds"));
     FWireReader W{Bytes};FAetherCommandResult R;
-    if(W.UInt(2)!=0x4152 || W.UInt(2)!=ProtocolVersion)return Reject(TEXT("Unknown result protocol"));
+    if(W.UInt(2)!=0x4152)return Reject(TEXT("Unknown result magic"));
+    const uint64 Format=W.UInt(2);
+    if(Format!=1&&Format!=ResultSchemaVersion)return Reject(TEXT("Unknown result format"));
     R.CommandId=W.Guid();R.Code=EAetherCommandCode(W.UInt(1));
     const uint64 Profile=W.UInt(8),World=W.UInt(8),Quantity=W.UInt(4);
-    if((Profile!=MAX_uint64&&Profile>uint64(MAX_int64))||(World!=MAX_uint64&&World>uint64(MAX_int64))||Quantity>1000)
+    if((Profile!=MAX_uint64&&Profile>uint64(MAX_int64))||(World!=MAX_uint64&&World>uint64(MAX_int64))||Quantity>(Format==1?1000:1000000))
         return Reject(TEXT("Result scalar overflow"));
     R.FinalProfileRevision=Profile==MAX_uint64?-1:int64(Profile);
     R.FinalWorldRevision=World==MAX_uint64?-1:int64(World);R.ActualQuantity=int32(Quantity);
-    int32 N=int32(W.UInt(1));if(N>32)return Reject(TEXT("Too many affected instances"));
+    int32 N=int32(W.UInt(Format==1?1:2));if(N>(Format==1?32:512))return Reject(TEXT("Too many affected instances"));
     for(int32 I=0;I<N;++I)R.AffectedIds.Add(W.Guid());
     N=int32(W.UInt(1));if(N>32)return Reject(TEXT("Too many affected definitions"));
     for(int32 I=0;I<N;++I)R.AffectedDefinitionIds.Add(W.Id());
@@ -219,6 +226,15 @@ bool AetherCommands::DecodeResult(const TArray<uint8>& Bytes,FAetherCommandResul
         FString Key=W.Id(),Value=W.Text();
         if(R.ReasonParameters.Contains(Key))return Reject(TEXT("Duplicate reason parameter"));
         R.ReasonParameters.Add(MoveTemp(Key),MoveTemp(Value));
+    }
+    if(Format>=2)
+    {
+        N=int32(W.UInt(2));if(N>512)return Reject(TEXT("Too many transfer records"));
+        for(int32 I=0;I<N&&W.Valid;++I)
+        {
+            FAetherCommandTransfer T;T.From=W.Guid();T.To=W.Guid();const uint64 QuantityMoved=W.UInt(4);
+            if(QuantityMoved>1000)return Reject(TEXT("Transfer quantity overflow"));T.Quantity=int32(QuantityMoved);R.Transfers.Add(T);
+        }
     }
     if(!W.Valid||W.Offset!=Bytes.Num())return Reject(TEXT("Truncated, invalid UTF8 or trailing result bytes"));
     if(!ValidateResult(R,Reason))return false;

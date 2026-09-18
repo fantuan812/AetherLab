@@ -15,7 +15,7 @@
     {
       "id": "V10-03",
       "status": "in_progress",
-      "acceptance": "finite_typed_codecs_and_offer_contract; 17_profile_command_candidates; nonblocking_receipt_first_SQLite_coordinator_with_session_and_Pawn_epoch_guards; 46_rule_tests_pass; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
+      "acceptance": "typed_request_v1_and_backward_readable_result_v2_with_transfer_relations; 17_profile_command_candidates; nonblocking_receipt_first_SQLite_coordinator_with_session_and_Pawn_epoch_guards; 49_rule_tests_pass; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
     },
     {
       "id": "V10-04",
@@ -50,7 +50,7 @@
     {
       "id": "V10-10",
       "status": "in_progress",
-      "acceptance": "server_shop_catalogs_and_atomic_buy_sell_repair_pending_reward_claim_handlers; default_state_stacking_preserves_instance_metadata; 46_rules_with_real_SQLite_recovery_pass; live_NPC_trade_sessions_UI_drops_and_containers_pending"
+      "acceptance": "shop_and_reward_atomic_handlers; owned_container_DTO_and_full_instance_transfer_rules; partial_capacity_and_three_aggregate_concurrent_pickup_SQLite_recovery_pass; 49_rule_tests_pass; container_command_gateway_live_NPC_world_drop_actors_and_UI_pending"
     },
     {
       "id": "V10-11",

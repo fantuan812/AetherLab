@@ -76,6 +76,10 @@ struct AETHERCORE_API FAetherInventoryStateV10
     // 新购/奖励只生成定义默认状态；先填相同完整 StackKey 的堆，再占空格，容量不足全回滚。
     FAetherInventoryMutation AddNew(const FString& DefinitionId,int32 Quantity,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation RemoveForSale(FGuid Id,int32 Quantity,const FString& ServerCharacterId,const FAetherV10ItemDefinitions& Definitions);
+    // 两个已授权容器的纯值转移；调用方先校验绑定/任务/掉落/归属权限，再将两份候选一起提交。
+    // 整堆搬到空格保留 GUID；拆分/合并记录明确的 From/To/Quantity，容量不足可选择部分转移。
+    FAetherInventoryMutation TransferTo(FAetherInventoryStateV10& Destination,FGuid Id,int32 Quantity,
+        bool AllowPartial,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Move(FGuid Id,int32 Destination,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Swap(FGuid A,FGuid B,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Split(FGuid Id,int32 Quantity,FGuid NewId,int32 Destination,const FAetherV10ItemDefinitions& Definitions);

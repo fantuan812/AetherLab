@@ -54,7 +54,8 @@ bool FAetherEconomyRulesTest::RunTest(const FString&)
     FAetherPendingRewardV10 Reward;Reward.RewardId=FGuid(8,7,6,5);Reward.SourceId=TEXT("Quest.Test");Reward.Gold=37;Reward.Items={{TEXT("Potion"),1},{TEXT("Ration"),1}};P.PendingRewards.Add(Reward);
     C=Make(EAetherCommandType::ClaimReward,0);C.DefinitionId=TEXT("Reward.")+Reward.RewardId.ToString(EGuidFormats::Digits);
     T.ActorId=TEXT("Sentinel");TestFalse(TEXT("Partial-fit reward rejected atomically"),Prepare());
-    TestTrue(TEXT("Full bag retains all pending value and currency"),Result.Code==EAetherCommandCode::Capacity&&P.Gold==1000&&P.PendingRewards.Num()==1&&P.Inventory.At(0)->Quantity==19&&P.ClaimedRewardIds.IsEmpty()&&T.ActorId==TEXT("Sentinel"));
+    TestTrue(TEXT("Full bag retains all pending value and currency"),Result.Code==EAetherCommandCode::Capacity&&Result.ActualQuantity==0&&Result.AffectedIds.IsEmpty()&&P.Gold==1000&&P.PendingRewards.Num()==1&&P.Inventory.At(0)->Quantity==19&&P.ClaimedRewardIds.IsEmpty()&&T.ActorId==TEXT("Sentinel"));
+    TArray<uint8> FailureReply;TestTrue(TEXT("Partial-fit rejection is a valid non-transfer reply"),AetherCommands::EncodeResult(Result,FailureReply,Reason));
     P.Inventory.Items.RemoveAt(31);TestTrue(TEXT("Freeing one slot allows entire reward"),Prepare());
     AetherProfileCodec::Decode(T.Writes[0].Value.Payload,Items,Skills,Rules,Next,Reason);
     TestTrue(TEXT("Full reward and claim ledger share candidate"),Next.Gold==1037&&Next.PendingRewards.IsEmpty()&&Next.ClaimedRewardIds.Contains(Reward.RewardId)&&Next.Inventory.At(0)->Quantity==20&&Next.Inventory.At(31)->DefinitionId==TEXT("Ration"));

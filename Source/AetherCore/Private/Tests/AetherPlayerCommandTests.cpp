@@ -121,6 +121,21 @@ bool FAetherCommandResultTest::RunTest(const FString&)
         TArray<uint8> Truncated;Truncated.Append(A.GetData(),N);
         TestFalse(TEXT("Every truncated result rejected"),AetherCommands::DecodeResult(Truncated,Out,Reason));
     }
+    // 格式 2 尾部为空转移数组，且实例数量变为 uint16；构造明确的旧格式 1 样本复验兼容。
+    auto Legacy=A;Legacy.RemoveAt(Legacy.Num()-2,2);Legacy.RemoveAt(42);Legacy[2]=1;
+    TestTrue(TEXT("Frozen result format one remains readable"),AetherCommands::DecodeResult(Legacy,Out,Reason)&&Out.Transfers.IsEmpty()&&Out.ActualQuantity==3);
+    auto Transfer=R;Transfer.AffectedIds.Add(FGuid(9,8,7,6));Transfer.Transfers.Add({Transfer.AffectedIds[0],Transfer.AffectedIds[1],3});
+    TestTrue(TEXT("Transfer relation persists in result format two"),AetherCommands::EncodeResult(Transfer,B,Reason)&&AetherCommands::DecodeResult(B,Out,Reason)&&Out.Transfers.Num()==1&&Out.Transfers[0].Quantity==3);
+    Transfer.ActualQuantity=1001;
+    TestTrue(TEXT("Aggregate reward quantity can exceed per-request item quantity"),AetherCommands::EncodeResult(Transfer,B,Reason)&&AetherCommands::DecodeResult(B,Out,Reason)&&Out.ActualQuantity==1001);
+    auto TooLarge=Transfer;TooLarge.Transfers.Reset();
+    for(int32 I=0;I<512;++I)TooLarge.Transfers.Add({TooLarge.AffectedIds[0],TooLarge.AffectedIds[1],1});
+    TestFalse(TEXT("Aggregate reply byte budget still bounds transfer arrays"),AetherCommands::EncodeResult(TooLarge,B,Reason));
+    TestTrue(TEXT("Oversized encoded result leaves no stale output"),B.IsEmpty());
+    auto BadFormat=A;BadFormat[2]=99;TestFalse(TEXT("Unknown reply format fails closed"),AetherCommands::DecodeResult(BadFormat,Out,Reason));
+    auto HugeCount=A;HugeCount[41]=255;HugeCount[42]=255;TestFalse(TEXT("Reply transfer count bounded before allocation"),AetherCommands::DecodeResult(HugeCount,Out,Reason));
+    Transfer.Code=EAetherCommandCode::Capacity;Transfer.ActualQuantity=0;
+    TestFalse(TEXT("Failure cannot carry successful transfer relations"),AetherCommands::EncodeResult(Transfer,B,Reason));
     R.Code=EAetherCommandCode::Capacity;
     TestFalse(TEXT("Failure cannot report transferred items"),AetherCommands::EncodeResult(R,B,Reason));
     R.ActualQuantity=0;R.ReasonParameters.Add(TEXT("Huge"),FString::ChrN(129,'x'));

@@ -36,6 +36,12 @@ struct FAetherPlayerCommand
     EAetherTransferDirection TransferDirection = EAetherTransferDirection::IntoContainer;
 };
 
+// 回执格式 2 保存拆分/合并/转移关系；请求协议仍为 1，旧格式 1 回执保留只读兼容。
+struct FAetherCommandTransfer
+{
+    FGuid From,To;
+    int32 Quantity=0;
+};
 struct FAetherCommandResult
 {
     FGuid CommandId;
@@ -43,6 +49,7 @@ struct FAetherCommandResult
     int64 FinalProfileRevision = -1, FinalWorldRevision = -1;
     int32 ActualQuantity = 0;
     TArray<FGuid> AffectedIds;
+    TArray<FAetherCommandTransfer> Transfers;
     TArray<FString> AffectedDefinitionIds; // 技能、任务等没有物品 GUID 的受影响对象。
     // 本地化按有限结果码选择文案；参数只传事实，UI 不解析任意可执行字符串。
     TMap<FString, FString> ReasonParameters;
@@ -52,6 +59,7 @@ namespace AetherCommands
 {
     inline constexpr uint16 ProtocolVersion = 1;
     inline constexpr int32 MaxWireBytes = 1024;
+    inline constexpr uint16 ResultSchemaVersion = 2;
     // 这里只检查协议形状；是否持有物品、目标距离、权限和版本仍由权威处理器复验。
     AETHERCORE_API bool Validate(const FAetherPlayerCommand& Command, FString& Reason);
     // 使用固定小端整数和有界 ASCII 定义 ID；不写内存布局、FName 索引或 UObject 指针。

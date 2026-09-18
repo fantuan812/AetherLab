@@ -23,7 +23,11 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
     FAetherTransaction& Transaction,FAetherCommandResult& Result,const FAetherEconomyDefinitionsV10& Economy)
 {
     Result={};Result.CommandId=C.CommandId;Result.FinalProfileRevision=Current.Revision;FString Reason;
-    const auto Fail=[&](EAetherCommandCode Code){Result.Code=Code;return false;};
+    const auto Fail=[&](EAetherCommandCode Code)
+    {
+        Result.Code=Code;Result.ActualQuantity=0;Result.AffectedIds.Reset();Result.AffectedDefinitionIds.Reset();Result.Transfers.Reset();
+        Result.ReasonParameters.Reset();Result.FinalProfileRevision=Current.Revision;Result.FinalWorldRevision=-1;return false;
+    };
     if(C.ProtocolVersion!=AetherCommands::ProtocolVersion)return Fail(EAetherCommandCode::UnsupportedProtocol);
     if(!AetherCommands::Validate(C,Reason))return Fail(EAetherCommandCode::Invalid);
     if(Actor!=Current.CharacterId)return Fail(EAetherCommandCode::Unauthorized);
@@ -85,13 +89,14 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
     {
         Result.Code=InventoryCode(Inventory.Code);Result.ActualQuantity=Inventory.ActualQuantity;
         Result.AffectedIds=MoveTemp(Inventory.AffectedIds);
+        for(const auto& T:Inventory.Transitions){Result.Transfers.Add({T.From,T.To,T.Quantity});Result.AffectedIds.AddUnique(T.From);Result.AffectedIds.AddUnique(T.To);}
     }
     if(IsSkill)
     {
         Result.Code=SkillCode(Skill.Code);Result.AffectedDefinitionIds=MoveTemp(Skill.AffectedSkills);
         Result.ReasonParameters.Add(TEXT("SkillPointsChanged"),FString::FromInt(Skill.PointsChanged));
     }
-    if(Result.Code!=EAetherCommandCode::Applied)return false;
+    if(Result.Code!=EAetherCommandCode::Applied)return Fail(Result.Code);
     ++Next.Revision;FAetherTransaction Candidate;
     Candidate.ActorId=Actor;Candidate.CommandId=C.CommandId;Candidate.ExpectedProfileRevision=Current.Revision;
     Candidate.ProtocolVersion=C.ProtocolVersion;Result.FinalProfileRevision=Next.Revision;
