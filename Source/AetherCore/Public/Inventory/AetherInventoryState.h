@@ -73,6 +73,9 @@ struct AETHERCORE_API FAetherInventoryStateV10
     bool Validate(const FAetherV10ItemDefinitions& Definitions, FString& Reason) const;
 
     // 以下均先计算副本并校验，再一次性替换本值对象；数据库发布仍由事务协调者负责。
+    // 新购/奖励只生成定义默认状态；先填相同完整 StackKey 的堆，再占空格，容量不足全回滚。
+    FAetherInventoryMutation AddNew(const FString& DefinitionId,int32 Quantity,const FAetherV10ItemDefinitions& Definitions);
+    FAetherInventoryMutation RemoveForSale(FGuid Id,int32 Quantity,const FString& ServerCharacterId,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Move(FGuid Id,int32 Destination,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Swap(FGuid A,FGuid B,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Split(FGuid Id,int32 Quantity,FGuid NewId,int32 Destination,const FAetherV10ItemDefinitions& Definitions);

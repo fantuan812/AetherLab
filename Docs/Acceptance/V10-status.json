@@ -15,7 +15,7 @@
     {
       "id": "V10-03",
       "status": "in_progress",
-      "acceptance": "finite_typed_codecs_and_offer_contract; 13_profile_command_candidates; nonblocking_receipt_first_SQLite_coordinator_with_session_and_Pawn_epoch_guards; 44_rule_tests_and_five_process_commit_recovery_pass; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
+      "acceptance": "finite_typed_codecs_and_offer_contract; 17_profile_command_candidates; nonblocking_receipt_first_SQLite_coordinator_with_session_and_Pawn_epoch_guards; 46_rule_tests_pass; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
     },
     {
       "id": "V10-04",
@@ -35,7 +35,7 @@
     {
       "id": "V10-07",
       "status": "in_progress",
-      "acceptance": "ten_slot_loadout_and_durability_candidate_rules; runtime_GAS_wear_repair_economy_and_visuals_pending"
+      "acceptance": "ten_slot_loadout_and_durability_candidate_rules; repair_cost_and_durability_in_one_profile_transaction_with_rollback_replay_tests; runtime_GAS_wear_repair_service_and_visuals_pending"
     },
     {
       "id": "V10-08",
@@ -49,8 +49,8 @@
     },
     {
       "id": "V10-10",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "server_shop_catalogs_and_atomic_buy_sell_repair_pending_reward_claim_handlers; default_state_stacking_preserves_instance_metadata; 46_rules_with_real_SQLite_recovery_pass; live_NPC_trade_sessions_UI_drops_and_containers_pending"
     },
     {
       "id": "V10-11",

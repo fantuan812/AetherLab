@@ -129,7 +129,7 @@ bool FAetherProfilePrepareTest::RunTest(const FString&)
     FAetherProfileStateV10 Next;TestTrue(TEXT("Candidate is complete profile DTO"),AetherProfileCodec::Decode(T.Writes[0].Value.Payload,Items,Skills,Rules,Next,Reason)&&Next.Revision==1&&Next.Skills.AvailableSkillPoints==2);
     C.Type=EAetherCommandType::LearnSkill;TestFalse(TEXT("Learn does not silently upgrade existing skill"),Prepare(TEXT("Alice")));
     C=Command(EAetherCommandType::ResetSkills,0);TestFalse(TEXT("Reset requires current service authorization"),Prepare(TEXT("Alice")));
-    C=Command(EAetherCommandType::ClaimReward,0);C.DefinitionId=TEXT("Reward.Pending");
+    C=Command(EAetherCommandType::DropItem,0);C.ItemInstanceId=FGuid(9,8,7,6);C.Quantity=1;C.ExpectedWorldRevision=0;
     TestFalse(TEXT("Unimplemented cross-domain commands never succeed as no-op"),Prepare(TEXT("Alice")));
     TestTrue(TEXT("Explicit unsupported action result"),R.Code==EAetherCommandCode::UnsupportedAction);
     return true;

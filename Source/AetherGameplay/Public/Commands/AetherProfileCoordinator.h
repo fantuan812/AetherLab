@@ -27,7 +27,7 @@ class AETHERGAMEPLAY_API FAetherProfileCoordinator
 {
 public:
     FAetherProfileCoordinator(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,
-        FAetherV10ItemDefinitions Items,FAetherSkillDefinitionsV10 Skills,FAetherRules Rules);
+        FAetherV10ItemDefinitions Items,FAetherSkillDefinitionsV10 Skills,FAetherRules Rules,FAetherEconomyDefinitionsV10 Economy={});
     ~FAetherProfileCoordinator();
     FAetherProfileSession BeginSession(const FString& ServerCharacterId);
     FAetherProfileSession ReplacePawn(const FAetherProfileSession& Session);

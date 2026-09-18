@@ -1,0 +1,39 @@
+{
+  "SchemaVersion": 1,
+  "Shops": [
+    {
+      "Id": "Shop",
+      "Products": [
+        "Potion",
+        "ManaPotion",
+        "Ration"
+      ],
+      "AcceptedCategories": [
+        "Consumable",
+        "Material"
+      ],
+      "Repair": false,
+      "RepairGoldPerPoint": 0
+    },
+    {
+      "Id": "Armorer",
+      "Products": [
+        "LeatherCap",
+        "LeatherVest",
+        "LeatherGloves",
+        "LeatherLeggings",
+        "LeatherBoots",
+        "CopperNecklace",
+        "CopperRing"
+      ],
+      "AcceptedCategories": [
+        "Weapon",
+        "Shield",
+        "Armor",
+        "Accessory"
+      ],
+      "Repair": true,
+      "RepairGoldPerPoint": 1
+    }
+  ]
+}

@@ -26,12 +26,12 @@ struct FAetherProfileCoordinator::FImpl
         TFuture<FAetherStoreReadResult> ReadFuture;
     };
     TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
-    FAetherV10ItemDefinitions Items;FAetherSkillDefinitionsV10 Skills;FAetherRules Rules;
+    FAetherV10ItemDefinitions Items;FAetherSkillDefinitionsV10 Skills;FAetherRules Rules;FAetherEconomyDefinitionsV10 Economy;
     TMap<FString,FAetherProfileSession> Sessions;
     TArray<TUniquePtr<FJob>> Jobs;
     bool bPolling=false;
-    FImpl(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> S,FAetherV10ItemDefinitions I,FAetherSkillDefinitionsV10 K,FAetherRules R)
-        :Store(MoveTemp(S)),Items(MoveTemp(I)),Skills(MoveTemp(K)),Rules(MoveTemp(R)){}
+    FImpl(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> S,FAetherV10ItemDefinitions I,FAetherSkillDefinitionsV10 K,FAetherRules R,FAetherEconomyDefinitionsV10 E)
+        :Store(MoveTemp(S)),Items(MoveTemp(I)),Skills(MoveTemp(K)),Rules(MoveTemp(R)),Economy(MoveTemp(E)){}
     bool Current(const FAetherProfileSession& S) const
     {const auto* Bound=Sessions.Find(S.CharacterId);return Bound&&*Bound==S;}
     bool Decode(const FAetherStoreReadResult& Read,const FString& Actor,FAetherProfileStateV10& P) const
@@ -52,8 +52,8 @@ struct FAetherProfileCoordinator::FImpl
     }
 };
 FAetherProfileCoordinator::FAetherProfileCoordinator(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,
-    FAetherV10ItemDefinitions Items,FAetherSkillDefinitionsV10 Skills,FAetherRules Rules)
-    :Impl(MakeUnique<FImpl>(MoveTemp(Store),MoveTemp(Items),MoveTemp(Skills),MoveTemp(Rules)))
+    FAetherV10ItemDefinitions Items,FAetherSkillDefinitionsV10 Skills,FAetherRules Rules,FAetherEconomyDefinitionsV10 Economy)
+    :Impl(MakeUnique<FImpl>(MoveTemp(Store),MoveTemp(Items),MoveTemp(Skills),MoveTemp(Rules),MoveTemp(Economy)))
 {check(IsInGameThread());}
 FAetherProfileCoordinator::~FAetherProfileCoordinator()
 {
@@ -139,7 +139,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
         if(!Resolve||!Resolve(J.Session,Current,Context))
         {J.Result.Code=EAetherCommandCode::NotReady;J.Result.FinalProfileRevision=Current.Revision;Finish(MoveTemp(Current));continue;}
         FAetherTransaction Transaction;
-        if(!AetherProfileCommands::Prepare(J.Command,J.Session.CharacterId,Current,Context,Impl->Items,Impl->Skills,Impl->Rules,Transaction,J.Result))
+        if(!AetherProfileCommands::Prepare(J.Command,J.Session.CharacterId,Current,Context,Impl->Items,Impl->Skills,Impl->Rules,Transaction,J.Result,Impl->Economy))
         {Finish(MoveTemp(Current));continue;}
         // 候选仅移交后台，直到持久提交成功并重读才可产生面向玩家的新快照。
         J.Stage=E::Commit;J.StoreFuture=Impl->Store->Commit(MoveTemp(Transaction));

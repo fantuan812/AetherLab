@@ -1,5 +1,6 @@
 #include "Commands/AetherProfileCommand.h"
 #include "Profile/AetherProfileCodec.h"
+#include "AetherProfileEconomy.h"
 namespace
 {
 EAetherCommandCode InventoryCode(EAetherInventoryMutationCode C)
@@ -19,7 +20,7 @@ EAetherCommandCode SkillCode(EAetherSkillMutationCode C)
 bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString& Actor,
     const FAetherProfileStateV10& Current,const FAetherProfileCommandContext& Context,
     const FAetherV10ItemDefinitions& Items,const FAetherSkillDefinitionsV10& Skills,const FAetherRules& Rules,
-    FAetherTransaction& Transaction,FAetherCommandResult& Result)
+    FAetherTransaction& Transaction,FAetherCommandResult& Result,const FAetherEconomyDefinitionsV10& Economy)
 {
     Result={};Result.CommandId=C.CommandId;Result.FinalProfileRevision=Current.Revision;FString Reason;
     const auto Fail=[&](EAetherCommandCode Code){Result.Code=Code;return false;};
@@ -74,7 +75,10 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
         }
         break;
     }
-    // 价格、距离、掉落/容器版本、治疗投递等尚需专门的跨域处理器，不能按成功空操作提交。
+    case E::BuyItem:case E::SellItem:case E::RepairItem:case E::ClaimReward:
+        Result.Code=AetherProfileEconomy::Apply(C,Next,Context,Items,Economy,Result);
+        break;
+    // 掉落/容器版本与治疗投递仍需专门的跨域处理器，不能按成功空操作提交。
     default:return Fail(EAetherCommandCode::UnsupportedAction);
     }
     if(IsInventory)
