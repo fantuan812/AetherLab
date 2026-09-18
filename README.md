@@ -33,3 +33,5 @@ WASD 移动，Shift 冲刺，Ctrl 跳跃，Space 闪避；左键轻击/按住重
 反应与物理后续：[v7 实现记录](Docs/Reactions-v7.zh-CN.md)。新增有限水桶的原子水量/焓转移、独立剑刃切割、限时落物归属及材料签名兼容。`Scripts/TestReactionLight.ps1` 运行 8 个规则小测试；`Scripts/CheckReactions.ps1` 运行一次短场景检查。
 
 审计后续按 [v8 工作记录](Docs/Execution-v8.zh-CN.md) 推进。`Scripts/VerifyV8.ps1 -World -Network` 聚合小规则、短反应场景与独立编辑器服务器双客户端基线；不运行规模、Cook 或长循环。测试注册清单与 RX 未验收项分别见 [Tests-v8.json](Docs/Tests-v8.json)、[RX-v8.json](Docs/RX-v8.json)。
+
+供水与电源现在通过持久化事务更新；失败保持原状态，重试不重复切换或领奖。`Scripts/CheckServices.ps1` 覆盖故障/重试/重启；本轮已实测的完整记录见 [Verification-v8-services.json](Docs/Verification-v8-services.json)。后续数据化与接触契约仍按 v8 计划推进。

@@ -1,0 +1,364 @@
+{
+  "CommitSha": "ae0133409c17e9b811413274e59869c2a08b500e",
+  "WorktreeDirtyAtStart": false,
+  "EngineBuild": "5.8.0-55116800",
+  "Target": "AetherLabEditor Win64 Development",
+  "FixtureVersion": "synthetic-v6-tagged-record-1",
+  "StartedUtc": "2026-09-18T02:45:00.4084566Z",
+  "FinishedUtc": "2026-09-18T02:46:53.6447511Z",
+  "Command": [
+    "UnrealEditor-Cmd AetherLab.uproject -nullrhi -ExecCmds=\"Automation RunTests Aether.V5.AreaPulseMergesReceiverOnce+Aether.V5.CharacterEndpointCannotBridgeWater+Aether.V5.ContentDefinitionsValidate+Aether.V5.DailyRewardAtomicAndRollover+Aether.V5.ExtractionFloorAccountsRejectedBudget+Aether.V5.InputReplayRejectsSecondRelease+Aether.V5.PathRefinementAndRegistrationOrder+Aether.V5.RainCannotReactivateDrainedElectricalWater+Aether.V5.UniqueReceiverCapacityAndLedger+Aether.V8.LegacyTaggedRecordMigration+Aether.V8.ServiceReceiptCorruptionRejected+Reactive.Adventure.ConductionPreservesAttribution+Reactive.Adventure.LiquidTransferConservesMassAndEnthalpy+Reactive.Adventure.RestoreIsAtomicAndClearsTransientInput+Reactive.Adventure.WeatherChangesProjectileEnergyAndTrajectory+Reactive.Core.AreaBudgetAndValidation+Reactive.Core.BoundedQueuesAndElectricalBudget+Reactive.Core.BurnExtinguish+Reactive.Core.BurningWoodSpreadsAndCollapses+Reactive.Core.ContactAndOcclusion+Reactive.Core.ElectricalCycleConservation+Reactive.Core.FrozenBrittlenessAndBreakOnce+Reactive.Core.LatentHeat+Reactive.Core.OpenFuelVersusSealedBurst+Reactive.Core.SleepWakeWeather+Reactive.Core.SpatialMoveRemoval+Reactive.Core.SteamEnergyMassBalance+Reactive.Core.ThermalConservationAndStability+Reactive.Core.WaterAndMetalConduction+Reactive.Core.WindBiasesHeatTransport+Reactive.Frontier.ElectricalContactIndependentOfHeatVisibility+Reactive.Frontier.ElectricalDistanceLossAndPulseLifetime+Reactive.Frontier.InventoryAtomicCapacityAndOwnership+Reactive.Frontier.PersonalQuestsAndRewardIdempotency+Reactive.Frontier.RainCannotCreateElectricalWetnessOrEdges+Reactive.Frontier.SplashOnRainSoakedBodyStillDecays+Reactive.V7.CuttingIsNotImpulseOrHeat+Reactive.V7.InvalidCuttingInputIsAtomic+Reactive.V7.LiquidCapacityAndEnthalpy+Reactive.V7.LiquidTransferAuthorizationIsAtomic+Reactive.V7.PartialIceOnlyTransfersLiquid+Reactive.V7.TransfersPreserveRainElectricalSeparation+Reactive.V7.VaporCarriesMixedElectricalWaterFraction+Reactive.V7.WithdrawalBoundaryLedger\" -TestExit=\"Automation Test Queue Empty\"",
+    "Scripts/CheckReactions.ps1",
+    "Scripts/TestV8NetworkBaseline.ps1",
+    "Scripts/CheckServices.ps1"
+  ],
+  "Cases": [
+    {
+      "Id": "Aether.V5.AreaPulseMergesReceiverOnce",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V5.CharacterEndpointCannotBridgeWater",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V5.ContentDefinitionsValidate",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V5.DailyRewardAtomicAndRollover",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V5.ExtractionFloorAccountsRejectedBudget",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V5.InputReplayRejectsSecondRelease",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V5.PathRefinementAndRegistrationOrder",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V5.RainCannotReactivateDrainedElectricalWater",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V5.UniqueReceiverCapacityAndLedger",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V8.LegacyTaggedRecordMigration",
+      "Result": "Success"
+    },
+    {
+      "Id": "Aether.V8.ServiceReceiptCorruptionRejected",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Adventure.ConductionPreservesAttribution",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Adventure.LiquidTransferConservesMassAndEnthalpy",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Adventure.RestoreIsAtomicAndClearsTransientInput",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Adventure.WeatherChangesProjectileEnergyAndTrajectory",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.AreaBudgetAndValidation",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.BoundedQueuesAndElectricalBudget",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.BurnExtinguish",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.BurningWoodSpreadsAndCollapses",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.ContactAndOcclusion",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.ElectricalCycleConservation",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.FrozenBrittlenessAndBreakOnce",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.LatentHeat",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.OpenFuelVersusSealedBurst",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.SleepWakeWeather",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.SpatialMoveRemoval",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.SteamEnergyMassBalance",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.ThermalConservationAndStability",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.WaterAndMetalConduction",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Core.WindBiasesHeatTransport",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Frontier.ElectricalContactIndependentOfHeatVisibility",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Frontier.ElectricalDistanceLossAndPulseLifetime",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Frontier.InventoryAtomicCapacityAndOwnership",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Frontier.PersonalQuestsAndRewardIdempotency",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Frontier.RainCannotCreateElectricalWetnessOrEdges",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.Frontier.SplashOnRainSoakedBodyStillDecays",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.V7.CuttingIsNotImpulseOrHeat",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.V7.InvalidCuttingInputIsAtomic",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.V7.LiquidCapacityAndEnthalpy",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.V7.LiquidTransferAuthorizationIsAtomic",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.V7.PartialIceOnlyTransfersLiquid",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.V7.TransfersPreserveRainElectricalSeparation",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.V7.VaporCarriesMixedElectricalWaterFraction",
+      "Result": "Success"
+    },
+    {
+      "Id": "Reactive.V7.WithdrawalBoundaryLedger",
+      "Result": "Success"
+    },
+    {
+      "Id": "world-reactions",
+      "Result": "Success",
+      "Seconds": 17.177831
+    },
+    {
+      "Id": "network-baseline",
+      "Result": "Success",
+      "Seconds": 30.5463676
+    },
+    {
+      "Id": "world-services",
+      "Result": "Success",
+      "Seconds": 43.3663563
+    }
+  ],
+  "Passed": 47,
+  "Failed": 0,
+  "Skipped": 0,
+  "NotRun": [
+    "Scale4096",
+    "rendered-play",
+    "full-RX-acceptance",
+    "cook-hlod",
+    "four-player-stress",
+    "V8-07-network-acceptance"
+  ],
+  "ArtifactLocation": "Saved/Automation/V8-20260918-104500-dbf1e1",
+  "date": "2026-09-18",
+  "build": {
+    "result": "Succeeded",
+    "command": "Scripts/Build.ps1",
+    "incrementalSeconds": 7.02,
+    "artifact": "Saved/Logs/V8Service-Build.log"
+  },
+  "interpretation": "Passed=44 individual rule cases + 3 grouped checks (world, network, services); grouped assertion counts below. Tested code at clean CommitSha; this report is a subsequent documentation-only commit.",
+  "rules": {
+    "passed": 44,
+    "failed": 0,
+    "seconds": 0.3643718957901001
+  },
+  "world": {
+    "passed": 16,
+    "failed": 0,
+    "rendering": "NullRHI"
+  },
+  "services": {
+    "passedAssertions": 21,
+    "failedAssertions": 0,
+    "processStarts": 3,
+    "fixturePrefix": "AetherService_49a0d8e7660343f4",
+    "cases": [
+      {
+        "phase": "Fail",
+        "id": "SETUP persisted isolated profile and world",
+        "result": "PASS"
+      },
+      {
+        "phase": "Fail",
+        "id": "SETUP expected initial state",
+        "result": "PASS"
+      },
+      {
+        "phase": "Fail",
+        "id": "GUARD unpowered receiver rejected",
+        "result": "PASS"
+      },
+      {
+        "phase": "Fail",
+        "id": "AUD8-01 supply failed write changes nothing",
+        "result": "PASS"
+      },
+      {
+        "phase": "Fail",
+        "id": "AUD8-02 source failed write changes nothing",
+        "result": "PASS"
+      },
+      {
+        "phase": "Fail",
+        "id": "AUD8-01 inactive data without commit marker changes nothing",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "AUD8-01 restart ignores failed candidate generation",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "AUD8-03 supply retry commits world profile reward and receipt together",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "AUD8-03 duplicate supply receipt has no second reward",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "GUARD reused command id cannot change payload",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "GUARD expired receipt rejected by old revision",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "GUARD server reselect rejects remote target",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "AUD8-02 source retry still fails atomically",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "AUD8-02 incomplete source generation not published",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "AUD8-03 source retry publishes exactly one toggle",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "AUD8-02 source checkpoint agrees with committed switch",
+        "result": "PASS"
+      },
+      {
+        "phase": "Retry",
+        "id": "AUD8-03 duplicate source does not toggle back",
+        "result": "PASS"
+      },
+      {
+        "phase": "Reload",
+        "id": "AUD8-03 restarted process restores committed world and one reward",
+        "result": "PASS"
+      },
+      {
+        "phase": "Reload",
+        "id": "AUD8-02 stopped source energy survives process restart",
+        "result": "PASS"
+      },
+      {
+        "phase": "Reload",
+        "id": "AUD8-03 supply receipt survives process restart",
+        "result": "PASS"
+      },
+      {
+        "phase": "Reload",
+        "id": "AUD8-03 source receipt survives process restart",
+        "result": "PASS"
+      }
+    ]
+  },
+  "network": {
+    "result": "PASS",
+    "topology": "one independent editor server and two editor clients, one round",
+    "artifactPrefix": "AetherNetV8_fc46252046b544fb",
+    "scope": "minimal baseline only; not V8-07 targeted acceptance"
+  },
+  "limitations": [
+    "No rendered gameplay acceptance",
+    "New service RPC competition and adverse network behavior remain for V8-07",
+    "No full RX-01..RX-50 acceptance",
+    "No heavy scale, Cook or HLOD",
+    "Synchronous disk I/O; no OS power-loss durability claim"
+  ]
+}
