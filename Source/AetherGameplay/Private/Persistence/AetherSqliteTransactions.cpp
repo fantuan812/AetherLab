@@ -23,6 +23,22 @@ FAetherStoreReadResult ReadAggregate(sqlite3* DB, const FAetherAggregateKey& Key
     return R;
 }
 
+FAetherStoreResult LookupReceipt(sqlite3* DB,const FAetherReceiptQuery& Q)
+{
+    FAetherStoreResult R;
+    FStatement Receipt(DB,"SELECT protocol,request,result,final_revision FROM receipts WHERE actor=? AND command=?");
+    if(!Receipt.Text(1,Q.ActorId)||!Receipt.Text(2,Q.CommandId.ToString(EGuidFormats::Digits))){R.Detail=Error(DB);return R;}
+    const int Step=Receipt.Step();
+    if(Step==SQLITE_DONE){R.Code=EAetherStoreCode::Missing;return R;}
+    if(Step!=SQLITE_ROW){R.Detail=Error(DB);return R;}
+    TArray<uint8> SavedRequest;
+    if(!Receipt.ColumnBlob(1,SavedRequest,16384)||!Receipt.ColumnBlob(2,R.Result,16384)||Receipt.ColumnInt(3)<0)
+    {R.Code=EAetherStoreCode::Corrupt;R.Detail=TEXT("Invalid persisted receipt");return R;}
+    if(Receipt.ColumnInt(0)!=Q.ProtocolVersion||SavedRequest!=Q.Request)
+    {R.Code=EAetherStoreCode::Conflict;R.Result.Reset();R.Detail=TEXT("Command ID reused with different payload");return R;}
+    R.Code=EAetherStoreCode::Replayed;R.FinalProfileRevision=Receipt.ColumnInt(3);return R;
+}
+
 FAetherStoreResult CommitTransaction(sqlite3* DB, const FAetherTransaction& T, const FAetherSqliteOptions& Options)
 {
     FAetherStoreResult R;
@@ -33,22 +49,9 @@ FAetherStoreResult CommitTransaction(sqlite3* DB, const FAetherTransaction& T, c
     FTransactionGuard Tx(DB);
     if (!Tx.Active) return Failure((sqlite3_errcode(DB)&0xff)==SQLITE_BUSY ? EAetherStoreCode::Busy : EAetherStoreCode::Unavailable);
 
-    // 去重与版本查询同属写事务，不能先在另一个连接上查回执再提交。
-    {
-        FStatement Receipt(DB,"SELECT protocol,request,result,final_revision FROM receipts WHERE actor=? AND command=?");
-        if (!Receipt.Text(1,T.ActorId) || !Receipt.Text(2,T.CommandId.ToString(EGuidFormats::Digits))) return Failure();
-        const int Step=Receipt.Step();
-        if (Step==SQLITE_ROW)
-        {
-            TArray<uint8> SavedRequest;
-            if (!Receipt.ColumnBlob(1,SavedRequest,16384) || !Receipt.ColumnBlob(2,R.Result,16384)) return Failure(EAetherStoreCode::Corrupt);
-            if (Receipt.ColumnInt(0)!=T.ProtocolVersion || SavedRequest!=T.Request)
-            { R.Code=EAetherStoreCode::Conflict; R.Detail=TEXT("Command ID reused with different payload"); return R; }
-            R.Code=EAetherStoreCode::Replayed; R.FinalProfileRevision=Receipt.ColumnInt(3);
-            return R;
-        }
-        if (Step!=SQLITE_DONE) return Failure();
-    }
+    // 外层预查询只优化重试；真正提交仍在此写事务内再次检查，消除检查/提交之间的竞争窗口。
+    const auto ExistingReceipt=LookupReceipt(DB,{T.ActorId,T.CommandId,T.ProtocolVersion,T.Request});
+    if(ExistingReceipt.Code!=EAetherStoreCode::Missing)return ExistingReceipt;
 
     const auto Profile=ReadAggregate(DB,{EAetherAggregateKind::Profile,T.ActorId});
     if (Profile.Code!=EAetherStoreCode::Found && Profile.Code!=EAetherStoreCode::Missing)

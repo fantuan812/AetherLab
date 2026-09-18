@@ -15,7 +15,7 @@
     {
       "id": "V10-03",
       "status": "in_progress",
-      "acceptance": "finite_typed_command_and_result_codecs; revision_bound_IDs; pure_offer_contract; 21_rule_tests_pass; authenticated_gameplay_gateway_and_RPC_cutover_pending"
+      "acceptance": "finite_typed_codecs_and_offer_contract; 13_profile_command_candidates; nonblocking_receipt_first_SQLite_coordinator_with_session_and_Pawn_epoch_guards; 44_rule_tests_and_five_process_commit_recovery_pass; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
     },
     {
       "id": "V10-04",
@@ -30,7 +30,7 @@
     {
       "id": "V10-06",
       "status": "in_progress",
-      "acceptance": "fixed_grid_and_stateful_stack_rules; explicit_inventory_DTO_and_SQLite_close_reopen_rollback_pass; 27_rule_tests_pass; profile_gateway_and_UI_pending"
+      "acceptance": "fixed_grid_stateful_stack_rules_and_inventory_DTO; nine_inventory_command_candidates_use_profile_SQLite_coordinator; replay_rollback_reopen_and_epoch_tests_pass; runtime_gateway_and_UI_pending"
     },
     {
       "id": "V10-07",

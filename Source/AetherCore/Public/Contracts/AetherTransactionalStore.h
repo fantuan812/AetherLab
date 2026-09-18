@@ -2,6 +2,14 @@
 #include "Contracts/AetherTransaction.h"
 #include "Async/Future.h"
 
+// 仅查询完整命令身份对应的持久回执；Missing 不是执行许可，提交时仍原子复验版本与回执。
+struct FAetherReceiptQuery
+{
+    FString ActorId;
+    FGuid CommandId;
+    int32 ProtocolVersion=1;
+    TArray<uint8> Request;
+};
 struct FAetherStoreReadResult
 {
     EAetherStoreCode Code = EAetherStoreCode::Unavailable;
@@ -36,6 +44,7 @@ public:
     IAetherTransactionalStore();
     virtual ~IAetherTransactionalStore();
     virtual TFuture<FAetherStoreResult> Commit(FAetherTransaction Transaction) = 0;
+    virtual TFuture<FAetherStoreResult> LookupReceipt(FAetherReceiptQuery Query) = 0;
     // 仅接受空数据库或同一已导入来源的重试；不能覆盖已有游戏数据。
     virtual TFuture<FAetherStoreResult> ImportLegacy(FAetherLegacyImport Import) = 0;
     virtual TFuture<FAetherStoreReadResult> Read(FAetherAggregateKey Key) = 0;

@@ -67,6 +67,7 @@ namespace AetherSQLite::Private
     };
 
     FAetherStoreReadResult ReadAggregate(sqlite3* DB, const FAetherAggregateKey& Key);
+    FAetherStoreResult LookupReceipt(sqlite3* DB,const FAetherReceiptQuery& Query);
     FAetherStoreResult CommitTransaction(sqlite3* DB, const FAetherTransaction& Transaction, const FAetherSqliteOptions& Options);
     FAetherStoreResult ImportLegacy(sqlite3* DB,const FAetherLegacyImport& Import,const FAetherSqliteOptions& Options);
     FAetherStoreEffectsResult ReadEffects(sqlite3* DB, const FString& Actor);

@@ -156,6 +156,16 @@ public:
         FAetherStoreResult Rejected; Rejected.Code=EAetherStoreCode::Busy; Rejected.Detail=TEXT("Writer closed or queue full");
         return Enqueue<FAetherStoreResult>([T=MoveTemp(T), O=Options](sqlite3* DB) { return CommitTransaction(DB,T,O); }, MoveTemp(Rejected));
     }
+    virtual TFuture<FAetherStoreResult> LookupReceipt(FAetherReceiptQuery Query) override
+    {
+        FTCHARToUTF8 Actor(*Query.ActorId);FUTF8ToTCHAR Back(Actor.Get(),Actor.Length());
+        bool Valid=!Query.ActorId.IsEmpty()&&Query.ActorId.Len()<=128&&FString(Back.Length(),Back.Get())==Query.ActorId;
+        for(TCHAR C:Query.ActorId)Valid&=C>=32;
+        if(!Valid||!Query.CommandId.IsValid()||Query.ProtocolVersion!=1||Query.Request.IsEmpty()||Query.Request.Num()>16384)
+        {FAetherStoreResult R;R.Code=EAetherStoreCode::Invalid;return Completed(MoveTemp(R));}
+        FAetherStoreResult Rejected;Rejected.Code=EAetherStoreCode::Busy;
+        return Enqueue<FAetherStoreResult>([Query=MoveTemp(Query)](sqlite3* DB){return AetherSQLite::Private::LookupReceipt(DB,Query);},MoveTemp(Rejected));
+    }
     virtual TFuture<FAetherStoreResult> ImportLegacy(FAetherLegacyImport Import) override
     {
         FString Reason;
