@@ -24,7 +24,7 @@ bool Names(const TSharedPtr<FJsonObject>& O,const TCHAR* Field,TArray<FString>& 
 bool Kind(const FString& S,EAetherInteractionActionKind& Out)
 {
     static const TCHAR* Names[]={TEXT("Talk"),TEXT("TrackObjective"),TEXT("Register"),TEXT("BindInn"),TEXT("Rest"),
-        TEXT("LearnStorySkills"),TEXT("Train"),TEXT("ResetSkills"),TEXT("Trade"),TEXT("Repair"),TEXT("ClaimQuest")};
+        TEXT("LearnStorySkills"),TEXT("Train"),TEXT("ResetSkills"),TEXT("Trade"),TEXT("Repair"),TEXT("ClaimQuest"),TEXT("ClaimSkillPoints")};
     for(int32 I=0;I<UE_ARRAY_COUNT(Names);++I)if(S.Equals(Names[I],ESearchCase::CaseSensitive)){Out=EAetherInteractionActionKind(I);return true;}return false;
 }
 }
@@ -50,7 +50,7 @@ bool FAetherInteractionDefinitions::Validate(const FAetherRules& Rules,const FAe
         TSet<FString> Actions;
         for(const auto& A:D.Actions)
         {
-            if(!Id(A.Id)||Actions.Contains(A.Id)||uint8(A.Kind)>uint8(EAetherInteractionActionKind::ClaimQuest)||
+            if(!Id(A.Id)||Actions.Contains(A.Id)||uint8(A.Kind)>uint8(EAetherInteractionActionKind::ClaimSkillPoints)||
                 !Text(A.Verb,64)||!Id(A.IconId)||A.Priority<0||A.Priority>1000)return Fail(TEXT("Invalid action identity/presentation"));
             Actions.Add(A.Id);
             if(!References(A.RequiredClaims)||!References(A.HideAfterClaims))return Fail(TEXT("Unknown/duplicate quest condition"));
@@ -72,6 +72,8 @@ bool FAetherInteractionDefinitions::Validate(const FAetherRules& Rules,const FAe
                 if(!Found)return Fail(TEXT("Unknown objective reference"));
             }
             using K=EAetherInteractionActionKind;
+            if((A.Kind==K::Register&&!A.ObjectiveId.Equals(TEXT("Register"),ESearchCase::CaseSensitive))||
+                (A.Kind==K::BindInn&&!A.ObjectiveId.Equals(TEXT("Inn"),ESearchCase::CaseSensitive)))return Fail(TEXT("Action kind/objective mismatch"));
             if(A.Kind==K::Talk){if(!D.Dialogue.Contains(A.DialogueId))return Fail(TEXT("Talk requires known dialogue"));}
             else if(!A.DialogueId.IsEmpty())return Fail(TEXT("Non-talk action cannot silently execute dialogue"));
             if(A.Kind==K::Trade||A.Kind==K::Repair)

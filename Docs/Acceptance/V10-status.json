@@ -15,7 +15,7 @@
     {
       "id": "V10-03",
       "status": "in_progress",
-      "acceptance": "typed_requests_v1_v2_with_explicit_interaction_revision_and_backward_readable_result_v2; 21_command_handlers_including_atomic_consumable_outbox; receipt_first_async_coordinator_with_consistent_multi_aggregate_reads_session_and_Pawn_epochs; 58_rule_tests_pass_and_exact_identity_stack_metadata_checks; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
+      "acceptance": "typed_requests_v1_v2_with_explicit_interaction_revision_and_backward_readable_result_v2; 22_opcode_routes_with_partial_interaction_service_coverage_and_atomic_consumable_outbox; receipt_first_async_coordinator_with_consistent_multi_aggregate_reads_session_and_Pawn_epochs; 61_rule_tests_pass_and_exact_identity_stack_metadata_checks; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
     },
     {
       "id": "V10-04",
@@ -55,12 +55,12 @@
     {
       "id": "V10-11",
       "status": "in_progress",
-      "acceptance": "stable_SkillId_GAS_and_real_rank_effects; independent_sources_and_paid_rank_point_ledger; cascade_refund_rules_and_explicit_skill_DTO; all_16_legacy_masks_convert_without_invented_refunds; 35_rule_tests_pass; dedicated_rank_replication_cast_reconnect_restart_pass; production_point_awards_profile_transactions_and_full_migration_pending"
+      "acceptance": "stable_SkillId_GAS_and_real_rank_effects; independent_sources_and_paid_rank_point_ledger; cascade_refund_and_explicit_skill_DTO; v9_masks_convert_without_invented_refunds; teacher_story_grants_and_unique_quest_point_claim_candidates_use_SQLite_coordinator; 61_rule_tests_pass; dedicated_rank_replication_cast_reconnect_restart_pass; production_event_RPC_ASC_cutover_and_full_migration_pending"
     },
     {
       "id": "V10-12",
       "status": "in_progress",
-      "acceptance": "finite_dialogue_definitions_and_immutable_offer_dialogue_queries_for_seven_initial_target_types; personal_objective_guidance_and_exact_target_action_profile_world_interaction_version_revalidation; request_v2_interaction_revision_check; 58_rule_tests_pass; live_registry_handlers_CommonUI_and_remaining_services_pending"
+      "acceptance": "finite_dialogue_and_offer_queries; request_v2_full_target_revision_revalidation; Register_BindInn_story_grants_quest_settlement_and_skill_point_claim_through_consistent_SQLite_coordinator; whole_deferred_rewards_and_unique_quest_point_sources; 61_rule_tests_pass; live_registry_RPC_ASC_CommonUI_and_remaining_services_pending"
     },
     {
       "id": "V10-13",

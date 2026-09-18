@@ -99,6 +99,25 @@
           "HideAfterEvidence": [],
           "SafeOnly": false,
           "HideLocked": false
+        },
+        {
+          "Id": "ClaimArrival",
+          "Kind": "ClaimQuest",
+          "Verb": "领取来访奖励",
+          "IconId": "ClaimQuest",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "Q_Main_01",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [
+            "Q_Main_01"
+          ],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
         }
       ],
       "Dialogue": [
@@ -115,6 +134,11 @@
             {
               "Label": "追踪当前目标",
               "ActionId": "TrackObjective",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "领取来访奖励",
+              "ActionId": "ClaimArrival",
               "NextNodeId": ""
             },
             {
@@ -272,7 +296,7 @@
           "RequiredEvidence": [],
           "HideAfterClaims": [],
           "HideAfterEvidence": [],
-          "SafeOnly": false,
+          "SafeOnly": true,
           "HideLocked": false
         },
         {
@@ -331,6 +355,44 @@
           "HideAfterEvidence": [],
           "SafeOnly": false,
           "HideLocked": false
+        },
+        {
+          "Id": "ClaimSkillPoints",
+          "Kind": "ClaimSkillPoints",
+          "Verb": "领取任务成长点数",
+          "IconId": "ClaimSkillPoints",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        },
+        {
+          "Id": "ClaimTraining",
+          "Kind": "ClaimQuest",
+          "Verb": "领取训练奖励",
+          "IconId": "ClaimQuest",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "Q_Main_03",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [
+            "Q_Main_03"
+          ],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
         }
       ],
       "Dialogue": [
@@ -357,6 +419,16 @@
             {
               "Label": "追踪当前目标",
               "ActionId": "TrackObjective",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "领取任务成长点数",
+              "ActionId": "ClaimSkillPoints",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "领取训练奖励",
+              "ActionId": "ClaimTraining",
               "NextNodeId": ""
             },
             {

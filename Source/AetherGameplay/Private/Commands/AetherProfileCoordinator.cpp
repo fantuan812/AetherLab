@@ -1,6 +1,7 @@
 #include "Commands/AetherProfileCoordinator.h"
 #include "Profile/AetherProfileCodec.h"
 #include "Commands/AetherContainerCommand.h"
+#include "Commands/AetherInteractionCommand.h"
 #include "World/AetherWorldCodec.h"
 #include "World/AetherContainerCodec.h"
 namespace
@@ -28,15 +29,17 @@ struct FAetherProfileCoordinator::FImpl
         TFuture<FAetherStoreResult> StoreFuture;
         TFuture<FAetherStoreReadResult> ReadFuture;
         TFuture<FAetherStoreSnapshotResult> SnapshotFuture;
-        FString ContainerKey;
+        FString ContainerKey,InteractionDefinitionId;
     };
     TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
     FAetherV10ItemDefinitions Items;FAetherSkillDefinitionsV10 Skills;FAetherRules Rules;FAetherEconomyDefinitionsV10 Economy;
+    FAetherInteractionDefinitions Interactions;FAetherQuestProgressionDefinitions Progression;
     TMap<FString,FAetherProfileSession> Sessions;
     TArray<TUniquePtr<FJob>> Jobs;
     bool bPolling=false;
-    FImpl(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> S,FAetherV10ItemDefinitions I,FAetherSkillDefinitionsV10 K,FAetherRules R,FAetherEconomyDefinitionsV10 E)
-        :Store(MoveTemp(S)),Items(MoveTemp(I)),Skills(MoveTemp(K)),Rules(MoveTemp(R)),Economy(MoveTemp(E)){}
+    FImpl(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> S,FAetherV10ItemDefinitions I,FAetherSkillDefinitionsV10 K,FAetherRules R,FAetherEconomyDefinitionsV10 E,
+        FAetherInteractionDefinitions Inter,FAetherQuestProgressionDefinitions Prog)
+        :Store(MoveTemp(S)),Items(MoveTemp(I)),Skills(MoveTemp(K)),Rules(MoveTemp(R)),Economy(MoveTemp(E)),Interactions(MoveTemp(Inter)),Progression(MoveTemp(Prog)){}
     bool Current(const FAetherProfileSession& S) const
     {const auto* Bound=Sessions.Find(S.CharacterId);return Bound&&*Bound==S;}
     bool Decode(const FAetherStoreReadResult& Read,const FString& Actor,FAetherProfileStateV10& P) const
@@ -47,9 +50,9 @@ struct FAetherProfileCoordinator::FImpl
     }
     FAetherStoreSnapshotQuery Query(const FJob& J) const
     {
-        FAetherStoreSnapshotQuery Q;Q.Keys={{EAetherAggregateKind::Profile,J.Session.CharacterId},
-            {EAetherAggregateKind::World,TEXT("Main")},{EAetherAggregateKind::Container,J.ContainerKey}};
-        Q.bIncludeProfileRevisions=true;Q.bIncludeContainerCount=true;return Q;
+        FAetherStoreSnapshotQuery Q;Q.Keys={{EAetherAggregateKind::Profile,J.Session.CharacterId},{EAetherAggregateKind::World,TEXT("Main")}};
+        if(AetherContainerCommands::Handles(J.Command.Type)){Q.Keys.Add({EAetherAggregateKind::Container,J.ContainerKey});Q.bIncludeContainerCount=true;}
+        Q.bIncludeProfileRevisions=true;return Q;
     }
     bool DecodeProfile(const FAetherStoreSnapshotResult& S,const FString& Actor,FAetherProfileStateV10& P) const
     {
@@ -74,13 +77,22 @@ struct FAetherProfileCoordinator::FImpl
             {J.Result.Code=EAetherCommandCode::StorageUnavailable;return false;}
             J.Stage=EStage::RefreshBundle;J.SnapshotFuture=Store->ReadSnapshot(Query(J));
         }
+        else if(J.Command.Type==EAetherCommandType::ExecuteInteraction)
+        {
+            int64 TargetRevision=-1;
+            if(J.Result.FinalWorldRevision<0||!LexTryParseString(TargetRevision,*J.Result.ReasonParameters.FindRef(TEXT("InteractionRevision")))||
+                TargetRevision!=J.Command.ExpectedInteractionRevision)
+            {J.Result.Code=EAetherCommandCode::StorageUnavailable;return false;}
+            J.Stage=EStage::RefreshBundle;J.SnapshotFuture=Store->ReadSnapshot(Query(J));
+        }
         else {J.Stage=EStage::Refresh;J.ReadFuture=Store->Read({EAetherAggregateKind::Profile,J.Session.CharacterId});}
         return true;
     }
 };
 FAetherProfileCoordinator::FAetherProfileCoordinator(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,
-    FAetherV10ItemDefinitions Items,FAetherSkillDefinitionsV10 Skills,FAetherRules Rules,FAetherEconomyDefinitionsV10 Economy)
-    :Impl(MakeUnique<FImpl>(MoveTemp(Store),MoveTemp(Items),MoveTemp(Skills),MoveTemp(Rules),MoveTemp(Economy)))
+    FAetherV10ItemDefinitions Items,FAetherSkillDefinitionsV10 Skills,FAetherRules Rules,FAetherEconomyDefinitionsV10 Economy,
+    FAetherInteractionDefinitions Interactions,FAetherQuestProgressionDefinitions Progression)
+    :Impl(MakeUnique<FImpl>(MoveTemp(Store),MoveTemp(Items),MoveTemp(Skills),MoveTemp(Rules),MoveTemp(Economy),MoveTemp(Interactions),MoveTemp(Progression)))
 {check(IsInGameThread());}
 FAetherProfileCoordinator::~FAetherProfileCoordinator()
 {
@@ -175,6 +187,14 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             if(J.Stage==E::RefreshBundle)
             {
                 const auto* WorldRow=Snapshot.Values.Find({EAetherAggregateKind::World,TEXT("Main")});
+                if(J.Command.Type==EAetherCommandType::ExecuteInteraction)
+                {
+                    FAetherWorldStateV10 World;FString Reason;
+                    if(!WorldRow||WorldRow->SchemaVersion!=10||!AetherWorldCodec::Decode(WorldRow->Payload,Impl->Items,Impl->Rules,Snapshot.ProfileRevisions,World,Reason)||
+                        World.Revision!=WorldRow->Revision||World.Revision<J.Result.FinalWorldRevision||Profile.Revision<J.Result.FinalProfileRevision)
+                    {J.Result.Code=EAetherCommandCode::StorageUnavailable;Finish();continue;}
+                    Finish(MoveTemp(Profile),MoveTemp(World));continue;
+                }
                 const auto* ContainerRow=Snapshot.Values.Find({EAetherAggregateKind::Container,J.ContainerKey});
                 FAetherWorldStateV10 World;FAetherContainerStateV10 Container;FString Reason;int64 MinimumContainer=-1;
                 const FString MinimumText=J.Result.ReasonParameters.FindRef(TEXT("ContainerRevision"));
@@ -192,6 +212,15 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             FAetherProfileCommandContext Context;FString Key;
             if(!Resolve||!Resolve(J.Session,J.Command,Profile,Context))
             {J.Result.Code=EAetherCommandCode::NotReady;Finish(MoveTemp(Profile));continue;}
+            if(J.Command.Type==EAetherCommandType::ExecuteInteraction)
+            {
+                if(!Context.Interaction.DefinitionId.Equals(J.InteractionDefinitionId,ESearchCase::CaseSensitive))
+                {J.Result.Code=EAetherCommandCode::Conflict;Finish(MoveTemp(Profile));continue;}
+                FAetherTransaction Transaction;
+                if(!AetherInteractionCommands::Prepare(J.Command,J.Session.CharacterId,Snapshot,Context,Impl->Items,Impl->Skills,Impl->Rules,
+                    Impl->Economy,Impl->Interactions,Impl->Progression,Transaction,J.Result)){Finish(MoveTemp(Profile));continue;}
+                J.Stage=E::Commit;J.StoreFuture=Impl->Store->Commit(MoveTemp(Transaction));continue;
+            }
             const auto Allowed=AetherContainerCommands::AuthorizeRead(J.Command,Context,Key);
             if(Allowed!=EAetherCommandCode::Applied||!Key.Equals(J.ContainerKey,ESearchCase::CaseSensitive))
             {J.Result.Code=Allowed==EAetherCommandCode::Applied?EAetherCommandCode::Conflict:Allowed;Finish(MoveTemp(Profile));continue;}
@@ -216,6 +245,13 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
         FAetherProfileCommandContext Context;
         if(!Resolve||!Resolve(J.Session,J.Command,Current,Context))
         {J.Result.Code=EAetherCommandCode::NotReady;J.Result.FinalProfileRevision=Current.Revision;Finish(MoveTemp(Current));continue;}
+        if(J.Command.Type==EAetherCommandType::ExecuteInteraction)
+        {
+            const auto Allowed=AetherInteractionCommands::AuthorizeRead(J.Command,J.Session.CharacterId,Context);
+            if(Allowed!=EAetherCommandCode::Applied){J.Result.Code=Allowed;Finish(MoveTemp(Current));continue;}
+            J.InteractionDefinitionId=Context.Interaction.DefinitionId;
+            J.Stage=E::WorldRead;J.SnapshotFuture=Impl->Store->ReadSnapshot(Impl->Query(J));continue;
+        }
         if(AetherContainerCommands::Handles(J.Command.Type))
         {
             const auto Allowed=AetherContainerCommands::AuthorizeRead(J.Command,Context,J.ContainerKey);

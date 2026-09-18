@@ -19,7 +19,7 @@ FAetherInteractionSnapshot Snapshot(const FString& Definition)
 {
     FAetherInteractionSnapshot S;S.CharacterId=TEXT("Alice");S.TargetStableId=TEXT("NPC.Test");S.DefinitionId=Definition;
     S.ProfileRevision=7;S.WorldRevision=4;S.InteractionRevision=2;S.bLoaded=S.bInRange=S.bLineOfSight=S.bActorCanAct=true;
-    for(uint8 I=0;I<=uint8(EAetherInteractionActionKind::ClaimQuest);++I)S.RegisteredHandlers.Add(EAetherInteractionActionKind(I));return S;
+    for(uint8 I=0;I<=uint8(EAetherInteractionActionKind::ClaimSkillPoints);++I)S.RegisteredHandlers.Add(EAetherInteractionActionKind(I));return S;
 }
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherInteractionDefinitionTest,"Aether.V10.Interaction.BoundedFiniteDialogueDefinitions",

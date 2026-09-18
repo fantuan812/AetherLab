@@ -59,6 +59,7 @@ TArray<FAetherInteractionOffer> FAetherInteractionProvider::Query(const FAetherI
         if(A.bHideLocked&&(!Quest.IsEmpty()||!Fact.IsEmpty()))continue;
         if(A.Kind==EAetherInteractionActionKind::TrackObjective&&!Guide.bHasTarget)continue;
         if(A.Kind==EAetherInteractionActionKind::LearnStorySkills&&!Snapshot.bHasStoryGrantAvailable)continue;
+        if(A.Kind==EAetherInteractionActionKind::ClaimSkillPoints&&!Snapshot.bHasClaimableSkillPoints)continue;
         FAetherInteractionOffer O;O.TargetStableId=Snapshot.TargetStableId;O.TargetRevision=Snapshot.InteractionRevision;
         O.ProfileRevision=Snapshot.ProfileRevision;O.WorldRevision=Snapshot.WorldRevision;
         O.ActionId=A.Id;O.DisplayVerb=A.Verb;O.IconId=A.IconId;O.Priority=A.Priority;O.DialogueId=A.DialogueId;
