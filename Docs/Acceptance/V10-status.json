@@ -55,7 +55,7 @@
     {
       "id": "V10-11",
       "status": "in_progress",
-      "acceptance": "stable_SkillId_GAS_specs_and_real_rank_effects; 30_rule_tests_pass; dedicated_two_client_rank_replication_cast_reconnect_restart_pass; progression_transactions_and_profile_migration_pending"
+      "acceptance": "stable_SkillId_GAS_and_real_rank_effects; independent_sources_and_paid_rank_point_ledger; cascade_refund_rules_and_explicit_skill_DTO; all_16_legacy_masks_convert_without_invented_refunds; 35_rule_tests_pass; dedicated_rank_replication_cast_reconnect_restart_pass; production_point_awards_profile_transactions_and_full_migration_pending"
     },
     {
       "id": "V10-12",

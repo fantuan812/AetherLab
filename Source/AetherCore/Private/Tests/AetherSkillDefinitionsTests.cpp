@@ -36,7 +36,7 @@ bool FAetherSkillDefinitionTest::RunTest(const FString&)
     Bad=D;Bad.Skills[TEXT("Water.Draw")].Prerequisites.Add({TEXT("Missing"),1});
     TestFalse(TEXT("Missing prerequisite rejected"),Bad.Validate(Reason));
     Bad=D;Bad.Skills[TEXT("Water.Draw")].Prerequisites.Add({TEXT("Fire.Ignite"),1});
-    Bad.Skills[TEXT("Fire.Ignite")].Prerequisites.Add({TEXT("Water.Draw"),2});
+    Bad.Skills[TEXT("Fire.Ignite")].Prerequisites.Add({TEXT("Water.Draw"),1});
     TestFalse(TEXT("Cycle rejected"),Bad.Validate(Reason));
     Bad.Skills[TEXT("Fire.Ignite")].Prerequisites.Reset();
     TestTrue(TEXT("Valid dependency graph accepted"),Bad.Validate(Reason));

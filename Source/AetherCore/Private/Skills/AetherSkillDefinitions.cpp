@@ -46,6 +46,8 @@ bool FAetherSkillDefinitionsV10::Validate(FString& Reason) const
             const auto* Parent=Skills.Find(P.SkillId);
             if(!Parent||P.SkillId==D.SkillId||P.Rank<1||P.Rank>Parent->Ranks.Num()||Seen.Contains(P.SkillId))
                 return Fail(TEXT("Unknown/duplicate skill prerequisite"));
+            // 必得故事基础不能反向依赖需要自由点数的节点，避免洗点/耗尽点数锁死主线。
+            if(D.bStoryBase&&(!Parent->bStoryBase||P.Rank!=1))return Fail(TEXT("Story base depends on a paid rank"));
             Seen.Add(P.SkillId);
         }
         for(const auto& R:D.Ranks)
