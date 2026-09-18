@@ -1,4 +1,7 @@
 #include "AetherFrontier.h"
+#include "AetherGuide.h"
+#include "Framework/AetherPlayerController.h"
+#include "GameFramework/HUD.h"
 #include "AetherPhysicsDamage.h"
 #include "AetherTraversal.h"
 #include "AetherContent.h"
@@ -104,7 +107,8 @@ void AAetherFrontierState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 AAetherFrontierMode::AAetherFrontierMode()
 {
     PrimaryActorTick.bCanEverTick=true;DefaultPawnClass=AAetherFrontierCharacter::StaticClass();
-    PlayerStateClass=AAetherPlayerState::StaticClass();HUDClass=AAetherFrontierHUD::StaticClass();GameStateClass=AAetherFrontierState::StaticClass();
+    PlayerStateClass=AAetherPlayerState::StaticClass();HUDClass=AHUD::StaticClass();GameStateClass=AAetherFrontierState::StaticClass();
+    PlayerControllerClass=AAetherPlayerController::StaticClass();
 }
 void AAetherFrontierMode::InitGame(const FString& Map,const FString& Options,FString& Error)
 {

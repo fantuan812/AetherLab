@@ -5,5 +5,4 @@
 #include "Characters/AetherFrontierCharacter.h"
 #include "Persistence/AetherFrontierSave.h"
 #include "Framework/AetherFrontierMode.h"
-#include "UI/AetherFrontierHUD.h"
 #include "AetherWorldCapability.h"

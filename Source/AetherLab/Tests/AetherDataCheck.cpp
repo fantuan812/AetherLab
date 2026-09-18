@@ -1,4 +1,5 @@
 #include "../AetherFrontier.h"
+#include "AetherGuide.h"
 #include "../AetherInventoryRules.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"

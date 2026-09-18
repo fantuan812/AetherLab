@@ -9,3 +9,5 @@
 第二步将地图作者工具迁入 AetherEditor，外壳定义共享到 Core。Runtime 不再引用 UnrealEd。精确的旧作者工具类路径重定向、44 个静态几何定义和冻结旧档回读通过（2 个 v10 测试）。启动验证发现 PreDefault 会提前加载游戏 CDO 与动画资源，改为 Default 后短启动与测试通过。
 
 原生补充验证：锁定 CPU 模型的上游 inference-model 用例实际通过（1.74 秒），覆盖输入适配、输出帧/骨骼、确定性和所有权；这不是 UE 端帧预算测量。可用 BuildNativeMotion.ps1 -TestInference 重现。
+
+UI 迁移前置：本地 PlayerController 经 Core 表现工厂选择 HUD，HUD 退出主动移除 Widget；Guide 调用方显式包含头，公开查询类型增加导出，Smoke 实现归入 Tests。增量编译通过，CheckV9 Run/Reload 通过。实际 UI 文件尚未迁移，旧 UMG 依赖暂留。

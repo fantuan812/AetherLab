@@ -1,4 +1,5 @@
 #include "Characters/AetherFrontierCharacter.h"
+#include "AetherGuide.h"
 #include "AetherFrontier.h"
 #include "AetherContent.h"
 #include "AetherRules.h"

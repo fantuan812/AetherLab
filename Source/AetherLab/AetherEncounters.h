@@ -32,7 +32,7 @@ struct FAetherCamp
  bool bRewardCreated=false;
 };
 UCLASS()
-class AAetherEncounterDirector : public AActor
+class AETHERLAB_API AAetherEncounterDirector : public AActor
 {
     GENERATED_BODY()
 public:

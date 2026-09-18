@@ -1,4 +1,5 @@
 #include "AetherFrontierPanel.h"
+#include "AetherGuide.h"
 #include "AetherFrontier.h"
 #include "Blueprint/WidgetTree.h"
 #include "Blueprint/WidgetLayoutLibrary.h"

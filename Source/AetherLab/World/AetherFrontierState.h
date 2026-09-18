@@ -15,7 +15,7 @@ struct FAetherWorldPlacement;
 
 // 只复制公开世界事实；个人背包和任务不放入全局 GameState。
 UCLASS()
-class AAetherFrontierState : public AAetherAdventureState
+class AETHERLAB_API AAetherFrontierState : public AAetherAdventureState
 {
     GENERATED_BODY()
 public:

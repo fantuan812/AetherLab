@@ -19,11 +19,11 @@ struct FAetherInteractionTarget
 };
 namespace AetherGuide
 {
- FName SelectQuest(const FAetherProfile& Profile,FName Preferred,bool Cycle=false);
- FString ObjectiveLabel(FName Id);
- FAetherGuidance Resolve(AAetherFrontierCharacter* Character);
- FAetherInteractionTarget SelectInteraction(AAetherFrontierCharacter* Character);
- bool IsPersonalFire(FName Service);
- AAetherFrontierProp* SelectWaterReceiver(AAetherFrontierCharacter* Character,AAetherFrontierProp* Container);
- bool CanInspectFire(const AAetherFrontierProp* Fire);
+ AETHERLAB_API FName SelectQuest(const FAetherProfile& Profile,FName Preferred,bool Cycle=false);
+ AETHERLAB_API FString ObjectiveLabel(FName Id);
+ AETHERLAB_API FAetherGuidance Resolve(AAetherFrontierCharacter* Character);
+ AETHERLAB_API FAetherInteractionTarget SelectInteraction(AAetherFrontierCharacter* Character);
+ AETHERLAB_API bool IsPersonalFire(FName Service);
+ AETHERLAB_API AAetherFrontierProp* SelectWaterReceiver(AAetherFrontierCharacter* Character,AAetherFrontierProp* Container);
+ AETHERLAB_API bool CanInspectFire(const AAetherFrontierProp* Fire);
 }

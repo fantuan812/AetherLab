@@ -21,6 +21,7 @@ class AAetherFrontierHUD : public AHUD
     GENERATED_BODY()
 public:
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     UPROPERTY() TObjectPtr<UAetherFrontierPanel> PanelWidget;
     virtual void DrawHUD() override;
     FAetherGuidance Guidance;

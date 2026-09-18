@@ -12,7 +12,7 @@ struct FAetherItemStack
     UPROPERTY() int32 Count = 0;
 };
 USTRUCT(BlueprintType)
-struct FAetherInventoryData
+struct AETHERLAB_API FAetherInventoryData
 {
     GENERATED_BODY()
     UPROPERTY() TArray<FAetherInventoryReceipt> InventoryReceipts;
@@ -28,7 +28,7 @@ struct FAetherInventoryData
     bool Equip(FGuid Id, const FAetherRules& Rules=FAetherRules::Get());
 };
 USTRUCT(BlueprintType)
-struct FAetherProfile : public FAetherInventoryData
+struct AETHERLAB_API FAetherProfile : public FAetherInventoryData
 {
     GENERATED_BODY()
     UPROPERTY() FString CharacterId;

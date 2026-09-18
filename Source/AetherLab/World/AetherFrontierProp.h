@@ -17,7 +17,7 @@ struct FAetherWorldPlacement;
 
 // 世界交互实体拥有组件与复制状态，持久身份由 Spec.Id 表达。
 UCLASS()
-class AAetherFrontierProp : public AAetherWorldObject, public IAetherWorldCapability
+class AETHERLAB_API AAetherFrontierProp : public AAetherWorldObject, public IAetherWorldCapability
 {
     GENERATED_BODY()
 public:

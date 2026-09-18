@@ -17,7 +17,7 @@ struct FAetherWorldPlacement;
 
 // 角色身体与组件的生命周期入口；菜单状态将在 UI 工作包迁入 LocalPlayer。
 UCLASS()
-class AAetherFrontierCharacter : public AAetherCharacter
+class AETHERLAB_API AAetherFrontierCharacter : public AAetherCharacter
 {
     GENERATED_BODY()
 public:

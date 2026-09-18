@@ -1,4 +1,5 @@
 #include "AetherFrontier.h"
+#include "AetherGuide.h"
 #include "AetherRules.h"
 #include "AetherActions.h"
 #include "ReactiveWorldSubsystem.h"
