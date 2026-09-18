@@ -1,6 +1,7 @@
 #include "AetherFrontierPanel.h"
 #include "AetherFrontier.h"
 #include "Blueprint/WidgetTree.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Border.h"
 #include "Components/VerticalBox.h"
 #include "Components/HorizontalBox.h"
@@ -75,7 +76,7 @@ void UAetherFrontierPanel::NativeTick(const FGeometry& G,float Dt)
  SettingsRow->SetVisibility(Open&&C->Panel==6?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(Open&&C->Panel==6&&BindingAction->GetOptionCount()==0)
  {TArray<FName> Names;C->InputActions.GetKeys(Names);Names.Sort(FNameLexicalLess());for(auto Name:Names)if(Name!="LookX"&&Name!="LookY"&&Name!="Escape")BindingAction->AddOption(Name.ToString());BindingAction->SetSelectedOption(TEXT("Cast"));}
- if(Open){Model->Refresh(C);Heading->SetText(Model->Heading);Body->SetText(Model->Body);PrimaryText->SetText(Model->PrimaryLabel);SecondaryText->SetText(Model->SecondaryLabel);int32 W,H;PC->GetViewportSize(W,H);SetPositionInViewport(FVector2D(W*.17,H*.16));SetDesiredSizeInViewport(FVector2D(W*.66,H*.65));}
+ if(Open){Model->Refresh(C);Heading->SetText(Model->Heading);Body->SetText(Model->Body);PrimaryText->SetText(Model->PrimaryLabel);SecondaryText->SetText(Model->SecondaryLabel);SecondaryText->GetParent()->SetVisibility(Model->SecondaryLabel.ToString()==TEXT("Close")?ESlateVisibility::Collapsed:ESlateVisibility::Visible);int32 W,H;PC->GetViewportSize(W,H);SetPositionInViewport(FVector2D(W*.17,H*.16));SetDesiredSizeInViewport(FVector2D(W*.66,H*.65)/FMath::Max(.1f,UWidgetLayoutLibrary::GetViewportScale(this)));}
  if(Open!=WasOpen){WasOpen=Open;PC->bShowMouseCursor=Open;if(Open){FInputModeGameAndUI Mode;Mode.SetHideCursorDuringCapture(false);PC->SetInputMode(Mode);}else PC->SetInputMode(FInputModeGameOnly());}
 }
 void UAetherFrontierPanel::Primary()

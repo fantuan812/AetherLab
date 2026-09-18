@@ -39,19 +39,24 @@ EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCha
     auto* Target=Selection.Prop.Get();
     if(Selection.Rescue.IsValid()||!Target||Target->Spec.Id!=Command.TargetId||!AetherServices::IsService(Target->Service))
         return EAetherServiceResult::TargetChanged;
-    if(Target->Service=="Receiver"&&!State->bSupplyRestored&&Target->ReceivedPower<1)
+    if(Target->Service=="Receiver"&&!(Target->bWorkshopService?State->bWorkshopRestored:State->bSupplyRestored)&&Target->ReceivedPower<1)
         return EAetherServiceResult::InsufficientPower;
 
     auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);
     if(!CaptureWorldCandidate(Candidate))return EAetherServiceResult::Busy;
     auto Profile=PS->Profile;
     Profile.RefreshDaily(FDateTime::UtcNow().ToString(TEXT("%Y%m%d")));
-    if(Target->Service=="Source")Candidate->bPowerOn=!State->bPowerOn;
+    const bool NewPower=!Target->Mechanism->bPowerEnabled;
+    if(Target->Service=="Source")
+    {
+        if(Target->bGlobalPowerService)Candidate->bPowerOn=NewPower;
+        auto* Record=Candidate->World.FindByPredicate([&](const auto& R){return R.StableId==Target->Reactive->StableId;});
+        if(!Record||!Record->bHasMechanism)return EAetherServiceResult::InvalidCommand;
+        Record->bSourceEnabled=NewPower;
+    }
+    else if(Target->bWorkshopService)Candidate->bWorkshopRestored=true;
     else {Candidate->bSupplyRestored=true;Candidate->WorldFacts.Record("SupplyRestored",Target->Spec.Id);Profile.Observe("SupplyRestored");}
     AetherQuests::Settle(Profile,Candidate->WorldFacts,false);
-    // The saved source switch and the public flag must describe the same transaction.
-    for(auto& Record:Candidate->World)if(Record.StableId==Prop("PowerSource")->Reactive->StableId)
-        Record.bSourceEnabled=Candidate->bPowerOn;
     ++Profile.Revision;
     if(!Profile.Validate())return EAetherServiceResult::InvalidCommand;
     if(auto* Stored=Candidate->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==Profile.CharacterId;}))*Stored=Profile;
@@ -65,7 +70,8 @@ EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCha
 
     PS->Profile=MoveTemp(Profile);PS->ForceNetUpdate();
     State->bSupplyRestored=Candidate->bSupplyRestored;State->bPowerOn=Candidate->bPowerOn;State->ForceNetUpdate();
-    auto* Source=Prop("PowerSource");Source->Mechanism->bPowerEnabled=State->bPowerOn;Source->ForceNetUpdate();
+    State->bWorkshopRestored=Candidate->bWorkshopRestored;
+    if(Target->Service=="Source"){Target->Mechanism->bPowerEnabled=NewPower;Target->ForceNetUpdate();}
     return EAetherServiceResult::Committed;
 }
 

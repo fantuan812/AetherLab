@@ -23,7 +23,7 @@ UReactiveBodyComponent::UReactiveBodyComponent() { PrimaryComponentTick.bCanEver
 void UReactiveBodyComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(UReactiveBodyComponent, State);DOREPLIFETIME(UReactiveBodyComponent,IceSupport);
+    DOREPLIFETIME(UReactiveBodyComponent, bElectricalContact); DOREPLIFETIME(UReactiveBodyComponent, State);DOREPLIFETIME(UReactiveBodyComponent,IceSupport);
     DOREPLIFETIME(UReactiveBodyComponent, bIceControlsPawnCollision);
 }
 void UReactiveBodyComponent::OnRep_State() { RefreshPresentation(); }

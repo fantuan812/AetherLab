@@ -10,8 +10,8 @@ class UAetherTraversalComponent : public UActorComponent
 public:
  UAetherTraversalComponent();
  UPROPERTY(EditAnywhere) bool bAuthoredBridge=false;
- UPROPERTY(EditAnywhere) FVector StartLocal=FVector(-45,0,60);
- UPROPERTY(EditAnywhere) FVector EndLocal=FVector(45,0,60);
+ UPROPERTY(EditAnywhere) FVector StartLocal=FVector(-42,0,60);
+ UPROPERTY(EditAnywhere) FVector EndLocal=FVector(42,0,60);
  UPROPERTY(EditAnywhere) float SettleSeconds=.75f;
  UPROPERTY(EditAnywhere) float MaxSpeedCm=8;
  UPROPERTY(Replicated) bool bRouteOpen=false;

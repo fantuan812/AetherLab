@@ -51,11 +51,12 @@ void AAetherFrontierProp::Tick(float Dt)
 {
     Super::Tick(Dt);
     if(Person->GetSkeletalMeshAsset())Mesh->SetVisibility(false,false);
+    UpdateReactionFeedback();
     if(HasAuthority()&&GetWorld()->GetTimeSeconds()-LastPowerTime>.3)ReceivedPower=0;
 }
 void AAetherFrontierProp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierProp,Service);DOREPLIFETIME(AAetherFrontierProp,bCarryable);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierProp,bGlobalPowerService);DOREPLIFETIME(AAetherFrontierProp,bWorkshopService);DOREPLIFETIME(AAetherFrontierProp,bExtinguished);DOREPLIFETIME(AAetherFrontierProp,Service);DOREPLIFETIME(AAetherFrontierProp,bCarryable);
     DOREPLIFETIME(AAetherFrontierProp,Carrier);DOREPLIFETIME(AAetherFrontierProp,ReceivedPower);DOREPLIFETIME(AAetherFrontierProp,bAcceptsWater);DOREPLIFETIME(AAetherFrontierProp,bInspectableFire);
 }
 void AAetherFrontierProp::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
@@ -78,18 +79,18 @@ void AAetherFrontierProp::OnElectricalWindow(const FReactiveElectricalWindow& Wi
 void AAetherFrontierProp::OnMaterialReaction(EReactiveReaction K,double Magnitude,FVector Vector)
 {
     if(!HasAuthority())return;
-    if(K==EReactiveReaction::Ignited)bWasBurning=true;
+    if(K==EReactiveReaction::Ignited){bWasBurning=true;bExtinguished=false;}
     if(K==EReactiveReaction::Extinguished && bWasBurning)
     {
         if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>())
             if(auto* C=Cast<AAetherCharacter>(Reactive->GetLastSourceActor()))
                 if((Service!="TrainingExtinguished"&&!Service.ToString().StartsWith("DailyFire")) || GetOwner()==C)M->Observe(C,Service);
-        bWasBurning=false;
+        bWasBurning=false;bExtinguished=true;
     }
 }
 void AAetherFrontierState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierState,bSupplyRestored);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierState,bSupplyRestored);DOREPLIFETIME(AAetherFrontierState,bWorkshopRestored);
     DOREPLIFETIME(AAetherFrontierState,bBridgeReleased);DOREPLIFETIME(AAetherFrontierState,bPowerOn);DOREPLIFETIME(AAetherFrontierState,ActivityKills);
 }
 AAetherFrontierMode::AAetherFrontierMode()
@@ -196,7 +197,7 @@ bool AAetherFrontierMode::CaptureWorldCandidate(UAetherFrontierSave* Candidate) 
 {
     if(!Candidate)return false;
     if(!GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->Capture(Candidate->World))return false;
-    auto* S=GetGameState<AAetherFrontierState>();Candidate->bSupplyRestored=S->bSupplyRestored;Candidate->bBridgeReleased=S->bBridgeReleased;Candidate->bPowerOn=S->bPowerOn;
+    auto* S=GetGameState<AAetherFrontierState>();Candidate->bWorkshopRestored=S->bWorkshopRestored;Candidate->bSupplyRestored=S->bSupplyRestored;Candidate->bBridgeReleased=S->bBridgeReleased;Candidate->bPowerOn=S->bPowerOn;
     const auto& Environment=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->GetSimulation()->GetEnvironment();Candidate->AmbientTemperatureC=Environment.TemperatureC;Candidate->RainKgPerM2Sec=Environment.RainKgPerM2Sec;Candidate->WindMPerSec=Environment.WindMPerSec;
     if(Encounters){Candidate->Abbey=Encounters->Abbey;Candidate->Relay=Encounters->Relay;}
     CollectPublicFacts(Candidate->WorldFacts);
@@ -327,7 +328,7 @@ void AAetherFrontierMode::BuildWorld()
         Left.LocalPositionCm=FVector(-50,0,0);Left.TargetLocalPositionCm=FVector(50,0,0);East->Reactive->LiquidPorts.Add(Left);
     }
     Make("Pump","SupplyRestored",{28100,0,80},{1,1,1.6},EAetherObjectKind::Stone,TEXT("E / RESTORE SUPPLY / OR INSPECT COMPLETED WORK"));
-    Make("PowerSource","Source",{28200,650,40},{1,1,.8},EAetherObjectKind::Stone,TEXT("E / FIXED POWER SOURCE ON-OFF"));
+    Make("PowerSource","Source",{28200,650,40},{1,1,.8},EAetherObjectKind::Stone,TEXT("E / FIXED POWER SOURCE ON-OFF"))->bGlobalPowerService=true;
     Make("PowerReceiver","Receiver",{28500,650,40},{1,1,.8},EAetherObjectKind::Stone,TEXT("E / POWERED PUMP / MOVE ROD TO CONNECT"));
     Make("MetalRod","Conductor",{28350,350,40},{2.1,.3,.3},EAetherObjectKind::Stone,TEXT("G / CARRY-DROP CONDUCTOR / V PUSH"));
     Make("Crate","Crate",{26500,-700,50},{.8,.8,1},EAetherObjectKind::Timber,TEXT("G / CARRY WOODEN CRATE"));
@@ -351,13 +352,14 @@ void AAetherFrontierMode::BuildWorld()
 }
 void AAetherFrontierMode::BeginPlay()
 {
-    Super::BeginPlay();BuildWorld();
+    Super::BeginPlay();BuildWorld();BuildWorkshop();
     for(const auto& Loot:Database->Loot)if(Loot.ClaimedBy.IsEmpty())SpawnLoot(Loot);
     Encounters=GetWorld()->SpawnActor<AAetherEncounterDirector>();
     if(Database->Abbey.Phase==EAetherEncounterPhase::Succeeded)Encounters->Abbey=Database->Abbey;
     if(Database->Relay.Phase==EAetherEncounterPhase::Succeeded)Encounters->Relay=Database->Relay;
-    auto* S=GetGameState<AAetherFrontierState>();S->bSupplyRestored=Database->bSupplyRestored;S->bBridgeReleased=Database->bBridgeReleased;S->bPowerOn=Database->bPowerOn;
+    auto* S=GetGameState<AAetherFrontierState>();S->bWorkshopRestored=Database->bWorkshopRestored;S->bSupplyRestored=Database->bSupplyRestored;S->bBridgeReleased=Database->bBridgeReleased;S->bPowerOn=Database->bPowerOn;
     if(!Database->World.IsEmpty()&&!GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->Restore(Database->World))UE_LOG(LogTemp,Warning,TEXT("V4 world snapshot incompatible; profile records retained."));
+    if(!Database->World.ContainsByPredicate([](const auto& R){return R.StableId=="LabFire";})){FReactiveStimulus H;H.HeatJ=60000;Prop("LabFire")->Reactive->Inject(H);}
     for(AAetherFrontierProp* P:Props)if(P->bCarryable)P->Mesh->SetSimulatePhysics(true);
     Prop("PowerSource")->Mechanism->bPowerEnabled=S->bPowerOn;
     GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->SetWeather(Database->AmbientTemperatureC,Database->RainKgPerM2Sec,Database->WindMPerSec);S->bRain=Database->RainKgPerM2Sec>0;
@@ -444,6 +446,7 @@ void AAetherFrontierMode::Tick(float Dt)
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherServiceCheck"))&&Elapsed>2)CheckServices();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherDataCheck"))&&Elapsed>2)CheckDataContracts();
     if(bSmoke)SmokeStep();
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherV806Capture")))CaptureWorkshop();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherV4Capture")))
     { static bool Taken=false;if(Elapsed>8&&!Taken){Taken=true;FScreenshotRequest::RequestScreenshot(FPaths::ProjectDir()/TEXT("Docs/Images/AetherFrontier.png"),true,false);}if(Elapsed>11)FPlatformMisc::RequestExit(false); }
 }

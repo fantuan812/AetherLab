@@ -17,6 +17,9 @@ public:
     UPROPERTY(EditAnywhere, Category="Reactive") bool bOwnerOnlyStimuli = false;
     UPROPERTY(EditAnywhere, Category="Reactive") bool bParticipatesInSimulation = true;
     UPROPERTY(EditAnywhere, Category="Reactive|Persistence") FName StableId;
+    // Opt-in only for newly authored content; existing required records must still be present.
+    UPROPERTY(EditAnywhere, Category="Reactive|Persistence") bool bAllowAbsentFromOlderSave = false;
+    UPROPERTY(Replicated, BlueprintReadOnly, Category="Reactive|Electrical") bool bElectricalContact = false;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Reactive") EReactiveMaterialPreset Preset = EReactiveMaterialPreset::Wood;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Reactive") TObjectPtr<UReactiveMaterialAsset> MaterialAsset;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Reactive", meta=(ClampMin="1", ClampMax="1000")) double InteractionRadiusCm = 50;

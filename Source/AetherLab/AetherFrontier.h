@@ -38,6 +38,11 @@ public:
     virtual void ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit) override;
     UFUNCTION() void OnMaterialReaction(EReactiveReaction Kind,double Magnitude,FVector Vector);
     UFUNCTION() void OnElectricalWindow(const FReactiveElectricalWindow& Window);
+    UPROPERTY(Replicated) bool bGlobalPowerService = false;
+    UPROPERTY(Replicated) bool bWorkshopService = false;
+    UPROPERTY(Replicated) bool bExtinguished = false;
+    uint8 LastFeedback = 255;
+    void UpdateReactionFeedback();
     bool bWasBurning = false;
     float LastPowerTime = -100;
 };
@@ -47,6 +52,7 @@ class AAetherFrontierState : public AAetherAdventureState
     GENERATED_BODY()
 public:
     UPROPERTY(Replicated) bool bSupplyRestored = false;
+    UPROPERTY(Replicated) bool bWorkshopRestored = false;
     UPROPERTY(Replicated) bool bBridgeReleased = false;
     UPROPERTY(Replicated) bool bPowerOn = true;
     UPROPERTY(Replicated) int32 ActivityKills = 0;
@@ -179,6 +185,7 @@ public:
     UPROPERTY() FAetherWorldFacts WorldFacts;
     bool ValidateWorldLedger() const;
     UPROPERTY() bool bSupplyRestored = false;
+    UPROPERTY() bool bWorkshopRestored = false;
     UPROPERTY() bool bBridgeReleased = false;
     UPROPERTY() bool bPowerOn = true;
     UPROPERTY() double RainKgPerM2Sec = 0;
@@ -229,6 +236,8 @@ public:
     AAetherFrontierProp* Make(FName Id,FName Service,FVector Location,FVector Scale,EAetherObjectKind Kind,const FString& Label);
 private:
     void BuildWorld();
+    void BuildWorkshop();
+    void CaptureWorkshop();
     AAetherFrontierCharacter* SpawnFighter(FVector P,EAetherFighter Type,FName Id);
     bool WriteDatabase(UAetherFrontierSave* Next);
     void CollectPublicFacts(FAetherWorldFacts& Facts) const;

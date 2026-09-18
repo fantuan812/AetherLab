@@ -245,7 +245,7 @@ bool UReactiveWorldSubsystem::Restore(const TArray<FReactiveSaveRecord>& Records
     for (const auto& Pair : Components)
         if (UReactiveBodyComponent* B = Pair.Value.Get(); IsValid(B) && !B->StableId.IsNone())
         { if (ByName.Contains(B->StableId)) return false; ByName.Add(B->StableId, B); }
-    if (Records.Num() != ByName.Num()) return false;
+    if (Records.Num() > ByName.Num()) return false;
     TSet<FName> Seen;
     TMap<Reactive::FBodyId, Reactive::FState> States;
     for (const FReactiveSaveRecord& R : Records)
@@ -260,6 +260,7 @@ bool UReactiveWorldSubsystem::Restore(const TArray<FReactiveSaveRecord>& Records
         S.GasEnergyJ = R.GasEnergyJ; S.bBurning = R.bBurning; S.bBroken = R.bBroken; S.bBurst = R.bBurst;
         States.Add(B->GetBodyId(), S);
     }
+    for(const auto& Pair:ByName)if(!Seen.Contains(Pair.Key)&&!Pair.Value->bAllowAbsentFromOlderSave)return false;
     if (!Simulation->RestoreStates(States)) return false;
     ContactCache.Reset();ElectricalContacts.Reset();ElectricalAdjacency.Reset();ThermalContacts.Reset();LiquidContacts.Reset();ElectricalRecipients.Reset(); Accumulator = 0;
     for(const auto& Pair:Components)if(auto* B=Pair.Value.Get())B->ResetElectricalWindow();
@@ -351,6 +352,7 @@ void UReactiveWorldSubsystem::UpdateElectricalContacts(uint64 StepId)
     for(const auto& Pair:ElectricalContacts)if(Pair.Value.Record.bValid)
     {const auto& R=Pair.Value.Record;ElectricalAdjacency.FindOrAdd(R.BodyA).Add(R.BodyB);ElectricalAdjacency.FindOrAdd(R.BodyB).Add(R.BodyA);}
     for(auto& Pair:ElectricalAdjacency)Pair.Value.Sort();
+    for(const auto& Pair:Components)if(auto* B=Pair.Value.Get())B->bElectricalContact=ElectricalAdjacency.Contains(Pair.Key);
 }
 bool UReactiveWorldSubsystem::CanBodiesTransferLiquid(Reactive::FBodyId A,Reactive::FBodyId B) const
 {

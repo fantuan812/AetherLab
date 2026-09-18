@@ -95,6 +95,16 @@ FAetherInteractionTarget SelectInteraction(AAetherFrontierCharacter* C)
  else if(S.ToString().StartsWith("Patrol"))R.Prompt=Key+TEXT("记录巡逻位置");
  else if(S=="Support")R.Prompt=TEXT("用训练剑切断，或用引焰烧毁支撑绳索");
  else if(S=="Water")R.Prompt=TEXT("对浅水释放霜凝，可形成承重冰面");
+ if(Target->bWorkshopService)R.Prompt+=TEXT(" · 修复练习工坊（电路或手动泵均可）");
+ if(S=="Inn"||S=="Well"||S=="Bucket")R.Prompt+=TEXT(" · 缺水可到旅店休息补充施法储水");
+ const auto& State=Target->Reactive->State;
+ if(State.bBroken)R.Prompt+=TEXT(" · 已断裂");
+ else if(State.bBurning)R.Prompt+=TEXT(" · 正在燃烧");
+ else if(Target->bExtinguished)R.Prompt+=TEXT(" · 已熄灭");
+ if(Target->Reactive->IceSupport==EReactiveIceSupport::FreezePending)R.Prompt+=TEXT(" · 冻结等待，请离开水面");
+ if(Target->Reactive->IceSupport==EReactiveIceSupport::Thawing)R.Prompt+=TEXT(" · 冰面融化，立即撤离");
+ if(Target->ReceivedPower>1)R.Prompt+=TEXT(" · 已通电");
+ else if(Target->Reactive->bElectricalContact)R.Prompt+=TEXT(" · 已接触导体，尚未获得有效功率");
  return R;
 }
 }
