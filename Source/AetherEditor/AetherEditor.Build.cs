@@ -1,0 +1,13 @@
+using UnrealBuildTool;
+
+// 编辑器向运行时依赖；运行时不得反向依赖地图制作工具。
+public class AetherEditor : ModuleRules
+{
+    public AetherEditor(ReadOnlyTargetRules Target) : base(Target)
+    {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        bUseUnity = false;
+        PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine" });
+        PrivateDependencyModuleNames.AddRange(new[] { "AetherCore", "AetherLab", "UnrealEd", "NavigationSystem" });
+    }
+}

@@ -10,7 +10,7 @@
     {
       "id": "V10-02",
       "status": "in_progress",
-      "acceptance": "Core_rules_extracted; Frontier_headers_split; Editor_build_pass; 12_baseline_and_inventory_tests_pass; Gameplay_UI_Editor_module_separation_pending"
+      "acceptance": "Core_rules_and_Editor_tools_extracted; no_Runtime_UnrealEd_dependency; Editor_build_and_2_migration_tests_pass; Gameplay_UI_separation_pending"
     },
     {
       "id": "V10-03",
@@ -75,7 +75,7 @@
     {
       "id": "V10-15",
       "status": "in_progress",
-      "acceptance": "CPU_library_build_pass; inference_and_UE_integration_pending"
+      "acceptance": "CPU_library_and_real_model_inference_pass; Vulkan_and_UE_integration_pending"
     },
     {
       "id": "V10-16",

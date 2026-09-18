@@ -4,7 +4,7 @@
 #include "AetherContent.h"
 #include "AetherRules.h"
 #include "AetherInventoryRules.h"
-#include "AetherWorldAuthoring.h"
+#include "World/AetherShellDefinition.h"
 #include "AetherWorldDefinition.h"
 #include "AetherAssetPreload.h"
 #include "TimerManager.h"
@@ -231,7 +231,7 @@ void AAetherFrontierMode::RestartPlayer(AController* C)
 }
 AAetherFrontierProp* AAetherFrontierMode::Make(FName Id,FName Service,FVector P,FVector Scale,EAetherObjectKind Kind,const FString& Label)
 {
-    if(GetWorld()->GetWorldSettings()->ActorHasTag("AetherPartitionShell")&&UAetherWorldAuthoring::IsShellPiece(Id))return nullptr;
+    if(GetWorld()->GetWorldSettings()->ActorHasTag("AetherPartitionShell")&&AetherShell::IsShellPiece(Id))return nullptr;
     auto* A=GetWorld()->SpawnActorDeferred<AAetherFrontierProp>(AAetherFrontierProp::StaticClass(),FTransform(P),nullptr,nullptr,ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
     A->Spec.Id=Id;A->Spec.Kind=Kind;A->Spec.Scale=Scale;A->Spec.Label=Label;A->Service=Service;
     A->Spec.Color=Kind==EAetherObjectKind::Water?FLinearColor(.03,.25,.5):Kind==EAetherObjectKind::Rope||Kind==EAetherObjectKind::Timber?FLinearColor(.45,.23,.08):FLinearColor(.34,.39,.44);

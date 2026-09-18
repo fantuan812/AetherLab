@@ -1,4 +1,4 @@
-param([ValidateSet('CPU','Vulkan')][string]$Backend='CPU',[string]$CMake='cmake')
+param([ValidateSet('CPU','Vulkan')][string]$Backend='CPU',[string]$CMake='cmake',[switch]$TestInference)
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $taskLock=Get-Content (Join-Path $taskRoot 'Build/ThirdParty/MotionBricks.lock.json') -Raw | ConvertFrom-Json
@@ -19,7 +19,7 @@ $taskGgml=Join-Path $taskSource 'ggml'
 if((& git -c "safe.directory=$taskGgml" -C $taskGgml rev-parse HEAD) -ne $taskLock.ggmlRevision){throw 'GGML revision mismatch.'}
 $taskVulkan=if($Backend -eq 'Vulkan'){'ON'}else{'OFF'}
 # 单独使用 C++23 和 DLL 的运行库设置，不改变 UE 游戏模块的 C++ 标准。
-& $CMake -S $taskSource -B $taskBuild -G 'Visual Studio 17 2022' -A x64 '-DMOTIONBRICKS_ENABLE_GGML=ON' '-DMOTIONBRICKS_ENABLE_PHYSICS=OFF' '-DMOTIONBRICKS_DOWNLOAD_MODELS=OFF' '-DMOTIONBRICKS_CPU_ALL_VARIANTS=ON' "-DMOTIONBRICKS_ENABLE_VULKAN=$taskVulkan" '-DMOTIONBRICKS_BUILD_TESTS=ON'
+& $CMake -S $taskSource -B $taskBuild -G 'Visual Studio 17 2022' -A x64 '-DMOTIONBRICKS_ENABLE_GGML=ON' '-DMOTIONBRICKS_ENABLE_PHYSICS=OFF' '-DMOTIONBRICKS_DOWNLOAD_MODELS=OFF' '-DMOTIONBRICKS_CPU_ALL_VARIANTS=ON' "-DMOTIONBRICKS_ENABLE_VULKAN=$taskVulkan" '-DMOTIONBRICKS_BUILD_TESTS=ON' "-DMOTIONBRICKS_REFERENCE_BUNDLE=$taskRoot/Saved/ThirdParty/MotionBundle/g1-f32" "-DMOTIONBRICKS_REFERENCE_STYLES=$taskRoot/Saved/ThirdParty/MotionBundle/styles"
 if($LASTEXITCODE -ne 0){throw 'Native configure failed.'}
 & $CMake --build $taskBuild --config Release --target motionbricks_shared motionbricks-cli --parallel 6
 if($LASTEXITCODE -ne 0){throw 'Native build failed.'}
@@ -30,3 +30,15 @@ $taskFiles=Get-ChildItem -LiteralPath $taskBin -File -Filter '*.dll' | ForEach-O
 }
 [ordered]@{schemaVersion=1;revision=$taskRevision;ggml=$taskLock.ggmlRevision;backend=$Backend;files=@($taskFiles)} | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $taskBuild 'artifacts.json') -Encoding utf8
 Write-Output "MotionBricks $Backend build completed: $taskBin"
+
+if($TestInference) {
+ # 模型缺失时目标不存在并明确失败，不能把未执行推理当作成功。
+ & $CMake --build $taskBuild --config Release --target motionbricks-inference-model-test --parallel 4
+ if($LASTEXITCODE -ne 0){throw 'Native model test build failed; prepare the pinned bundle first.'}
+ $taskTest=Join-Path $taskBin 'motionbricks-inference-model-test.exe'
+ $taskTestArgs=@((Join-Path $taskRoot 'Saved/ThirdParty/MotionBundle/g1-f32'),(Join-Path $taskRoot 'Saved/ThirdParty/MotionBundle/styles/walk.mbstyle'))
+ if($Backend -eq 'Vulkan'){$taskTestArgs+='vulkan'}
+ & $taskTest @taskTestArgs
+ if($LASTEXITCODE -ne 0){throw "Real $Backend model inference failed."}
+ Write-Output "Real $Backend model inference passed."
+}

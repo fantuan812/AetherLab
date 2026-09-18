@@ -18,6 +18,11 @@
       "Name": "AetherLab",
       "Type": "Runtime",
       "LoadingPhase": "Default"
+    },
+    {
+      "Name": "AetherEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
     }
   ],
   "Plugins": [

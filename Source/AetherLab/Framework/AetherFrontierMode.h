@@ -8,6 +8,8 @@
 #include "AetherFrontierMode.generated.h"
 
 class AAetherFrontierProp;
+class AAetherPlayerState;
+enum class EAetherFighter : uint8;
 class AAetherFrontierCharacter;
 class UAetherPhysicsDamageComponent;
 class UAetherTraversalComponent;
@@ -19,7 +21,7 @@ struct FAetherWorldPlacement;
 
 // 权威装配与事务协调入口；不允许 UI 直接发布候选数据库。
 UCLASS()
-class AAetherFrontierMode : public AGameModeBase
+class AETHERLAB_API AAetherFrontierMode : public AGameModeBase
 {
     GENERATED_BODY()
 public:

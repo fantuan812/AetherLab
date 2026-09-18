@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
+#include "ReactiveTypes.h"
 #include "GameFramework/SaveGame.h"
 #include "AetherProfile.h"
 #include "AetherQuestRuntime.h"
