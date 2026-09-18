@@ -1,0 +1,189 @@
+{
+  "ContentSchemaVersion": 3,
+  "Skills": [
+    {
+      "SkillId": "Fire.Ignite",
+      "DisplayName": "引焰",
+      "IconId": "Fire.Ignite",
+      "RequiredQuest": "Q_Main_02",
+      "Active": true,
+      "StoryBase": true,
+      "Mechanic": 0,
+      "LegacyBit": 0,
+      "Prerequisites": [],
+      "Ranks": [
+        {
+          "PointCost": 0,
+          "RequiredLevel": 1,
+          "ManaCost": 18,
+          "Cooldown": 0.65,
+          "RangeCm": 1800,
+          "TargetRadiusCm": 12,
+          "HeatJ": 60000,
+          "WaterKg": 0,
+          "ElectricalJ": 0
+        },
+        {
+          "PointCost": 1,
+          "RequiredLevel": 1,
+          "ManaCost": 21,
+          "Cooldown": 0.6,
+          "RangeCm": 1900,
+          "TargetRadiusCm": 12,
+          "HeatJ": 75000,
+          "WaterKg": 0,
+          "ElectricalJ": 0
+        },
+        {
+          "PointCost": 2,
+          "RequiredLevel": 1,
+          "ManaCost": 24,
+          "Cooldown": 0.55,
+          "RangeCm": 2000,
+          "TargetRadiusCm": 12,
+          "HeatJ": 90000,
+          "WaterKg": 0,
+          "ElectricalJ": 0
+        }
+      ]
+    },
+    {
+      "SkillId": "Water.Draw",
+      "DisplayName": "引泉",
+      "IconId": "Water.Draw",
+      "RequiredQuest": "Q_Main_02",
+      "Active": true,
+      "StoryBase": true,
+      "Mechanic": 1,
+      "LegacyBit": 1,
+      "Prerequisites": [],
+      "Ranks": [
+        {
+          "PointCost": 0,
+          "RequiredLevel": 1,
+          "ManaCost": 12,
+          "Cooldown": 0.65,
+          "RangeCm": 1800,
+          "TargetRadiusCm": 12,
+          "HeatJ": 0,
+          "WaterKg": 0.5,
+          "ElectricalJ": 0
+        },
+        {
+          "PointCost": 1,
+          "RequiredLevel": 1,
+          "ManaCost": 15,
+          "Cooldown": 0.65,
+          "RangeCm": 1900,
+          "TargetRadiusCm": 12,
+          "HeatJ": 0,
+          "WaterKg": 0.75,
+          "ElectricalJ": 0
+        },
+        {
+          "PointCost": 2,
+          "RequiredLevel": 1,
+          "ManaCost": 18,
+          "Cooldown": 0.6,
+          "RangeCm": 2000,
+          "TargetRadiusCm": 12,
+          "HeatJ": 0,
+          "WaterKg": 1,
+          "ElectricalJ": 0
+        }
+      ]
+    },
+    {
+      "SkillId": "Frost.Freeze",
+      "DisplayName": "霜凝",
+      "IconId": "Frost.Freeze",
+      "RequiredQuest": "Q_Main_04",
+      "Active": true,
+      "StoryBase": true,
+      "Mechanic": 2,
+      "LegacyBit": 2,
+      "Prerequisites": [],
+      "Ranks": [
+        {
+          "PointCost": 0,
+          "RequiredLevel": 1,
+          "ManaCost": 20,
+          "Cooldown": 0.8,
+          "RangeCm": 1800,
+          "TargetRadiusCm": 12,
+          "HeatJ": -250000,
+          "WaterKg": 0,
+          "ElectricalJ": 0
+        },
+        {
+          "PointCost": 1,
+          "RequiredLevel": 1,
+          "ManaCost": 24,
+          "Cooldown": 0.8,
+          "RangeCm": 1900,
+          "TargetRadiusCm": 12,
+          "HeatJ": -300000,
+          "WaterKg": 0,
+          "ElectricalJ": 0
+        },
+        {
+          "PointCost": 2,
+          "RequiredLevel": 1,
+          "ManaCost": 28,
+          "Cooldown": 0.75,
+          "RangeCm": 2000,
+          "TargetRadiusCm": 12,
+          "HeatJ": -350000,
+          "WaterKg": 0,
+          "ElectricalJ": 0
+        }
+      ]
+    },
+    {
+      "SkillId": "Storm.Strike",
+      "DisplayName": "雷击",
+      "IconId": "Storm.Strike",
+      "RequiredQuest": "Q_Main_05",
+      "Active": true,
+      "StoryBase": true,
+      "Mechanic": 3,
+      "LegacyBit": 3,
+      "Prerequisites": [],
+      "Ranks": [
+        {
+          "PointCost": 0,
+          "RequiredLevel": 1,
+          "ManaCost": 25,
+          "Cooldown": 0.65,
+          "RangeCm": 1800,
+          "TargetRadiusCm": 12,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 6000
+        },
+        {
+          "PointCost": 1,
+          "RequiredLevel": 1,
+          "ManaCost": 30,
+          "Cooldown": 0.65,
+          "RangeCm": 1900,
+          "TargetRadiusCm": 12,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 8000
+        },
+        {
+          "PointCost": 2,
+          "RequiredLevel": 1,
+          "ManaCost": 35,
+          "Cooldown": 0.6,
+          "RangeCm": 2000,
+          "TargetRadiusCm": 12,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 10000
+        }
+      ]
+    }
+  ]
+}

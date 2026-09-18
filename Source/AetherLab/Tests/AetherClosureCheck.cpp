@@ -1,4 +1,6 @@
 #include "../AetherFrontier.h"
+#include "Skills/AetherSkillAbilityBinding.h"
+#include "Skills/AetherSkillDefinitions.h"
 #include "Presentation/AetherPresentation.h"
 #include "Modules/ModuleManager.h"
 #include "GameFramework/HUD.h"
@@ -66,6 +68,24 @@ void AAetherFrontierCharacter::CheckClosureClient(float Dt)
         &&AbilitySystem==PS->AbilitySystem&&AbilitySystem->GetOwnerActor()==PS
         &&GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->GetSimulation()->GetStats().Registered==0
         &&(PS->Profile.CharacterId=="Alpha"?PS->Profile.Claims.Contains("Q_Main_03"):PS->Profile.Claims.IsEmpty());
+    // 检查客户端收到的是真实 Spec 身份和等级，不以服务器本地日志代替复制证据。
+    bool SkillSpecs=true;
+    for(int32 Bit=0;Bit<4;++Bit)
+    {
+        const auto* Definition=FAetherSkillDefinitionsV10::Get().Legacy(Bit);
+        const auto* Spec=Definition?AetherSkillBinding::Find(*AbilitySystem,Definition->SkillId):nullptr;
+        const int32 Expected=PS->Profile.CharacterId=="Alpha"&&S->ClosurePhase!=100?(Bit==0?3:Bit==1?2:1):1;
+        SkillSpecs&=Spec&&Spec->Level==Expected;
+    }
+    static bool RequestedSkill=false,ObservedSkillCost=false;
+    if(SkillSpecs&&PS->Profile.CharacterId=="Alpha"&&S->ClosurePhase==1)
+    {
+        // 朝天空释放，不干扰闭环用例的持久化物理场景。
+        if(!RequestedSkill&&Controller){Controller->SetControlRotation(FRotator(90,0,0));RequestedSkill=TrySkill(TEXT("Fire.Ignite"));}
+        if(RequestedSkill&&Mana()<90)ObservedSkillCost=true;
+        SkillSpecs&=ObservedSkillCost;
+    }
+    Pass&=SkillSpecs;
     // Late join observes durable physical states, not a server-only success marker.
     if(S->ClosurePhase==1)Pass&=Bridge->Mechanism->bReleased&&Ice->Reactive->IceSupport==EReactiveIceSupport::Bearing&&Fire->Reactive->State.bBurning;
     if(S->ClosurePhase==2)Pass&=!Crate->Carrier;
@@ -73,6 +93,7 @@ void AAetherFrontierCharacter::CheckClosureClient(float Dt)
     // Allow normal initial property replication to catch up before reporting failure.
     if(!Pass&&ClosureClientTime<12)return;
     ClosureSeenPhase=S->ClosurePhase;ClosureClientTime=0;
+    UE_LOG(LogTemp,Display,TEXT("V10_CLIENT_SKILL_SPECS %s remote_cost=%d"),SkillSpecs?TEXT("PASS"):TEXT("FAIL"),ObservedSkillCost);
     UE_LOG(LogTemp,Display,TEXT("V10_CLIENT_HUD %s"),HasLocalHUD?TEXT("PASS"):TEXT("FAIL"));
     UE_LOG(LogTemp,Display,TEXT("V807_CLIENT_STATE %s id=%s phase=%d revision=%d private=%d fire=%d ice=%d bridge=%d navversion=%u crate=(%.1f,%.1f,%.1f)"),Pass?TEXT("PASS"):TEXT("FAIL"),*PS->Profile.CharacterId,S->ClosurePhase,PS->Profile.Revision,Private,Fire->Reactive->State.bBurning,int(Ice->Reactive->IceSupport),Bridge->Mechanism->bReleased,Bridge->Traversal->Revision,Crate->GetActorLocation().X,Crate->GetActorLocation().Y,Crate->GetActorLocation().Z);
     ServerClosureAck(S->ClosurePhase,Pass);
@@ -111,6 +132,13 @@ void AAetherFrontierMode::CheckClosure()
         auto P=A->ProfileState()->Profile;
         for(FName Q:{FName("Q_Main_01"),FName("Q_Main_02"),FName("Q_Main_03")}){for(FName O:FAetherProfile::Objectives(Q))P.Observe(O);P.Claim(Q);}
         P.LearnedSpells=15;Check(Commit(A->ProfileState(),P),TEXT("fixture advanced Alpha only"));
+        // 仅该独立合成夹具设置等级；正式玩家升级仍必须经后续持久事务入口。
+        for(const auto& Pair:TMap<FString,int32>{{TEXT("Fire.Ignite"),3},{TEXT("Water.Draw"),2}})
+        {
+            auto* Spec=AetherSkillBinding::Find(*A->AbilitySystem,Pair.Key);
+            Check(Spec!=nullptr,TEXT("V10 authoritative stable skill spec"));
+            if(Spec){Spec->Level=Pair.Value;A->AbilitySystem->MarkAbilitySpecDirty(*Spec);}
+        }
         Move(A,Prop("Pump")->GetActorLocation()+FVector(0,-160,100));
         Next(1);return;
     }

@@ -1,4 +1,6 @@
 #include "AetherCombat.h"
+#include "Skills/AetherSkillAbilityBinding.h"
+#include "Skills/AetherSkillDefinitions.h"
 #include "AetherAdventure.h"
 #include "AetherFrontier.h"
 #include "AetherActions.h"
@@ -61,27 +63,51 @@ void UAetherAttributes::OnRep_Posture(const FGameplayAttributeData& Old) { GAMEP
 
 UAetherSpellAbility::UAetherSpellAbility()
 { InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor; NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly; }
-float UAetherSpellAbility::Cost(int32 Spell) { const float Costs[] = {18, 12, 20, 25}; return Costs[FMath::Clamp(Spell, 0, 3)]; }
-bool UAetherSpellAbility::CheckCost(FGameplayAbilitySpecHandle H, const FGameplayAbilityActorInfo* Info, FGameplayTagContainer* Tags) const
+namespace
 {
-    const auto* C = Info ? Cast<AAetherCharacter>(Info->AvatarActor.Get()) : nullptr;
-    const int32 Spell = GetAbilityLevel(H, Info) - 1;
-    return C && C->Ready() && C->SpellUnlocked(Spell) && Spell >= 0 && Spell < 4 && C->Mana() >= Cost(Spell)
-        && (Spell != 1 || C->WaterReserveKg >= 0.5f) && Super::CheckCost(H, Info, Tags);
+// 每次都由权威 ASC 的 Spec 解析，绝不接受客户端传入的 Rank 或效果数值。
+bool ResolveSkill(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FString& Id,int32& Rank)
+{
+    const auto* ASC=Info?Info->AbilitySystemComponent.Get():nullptr;
+    const auto* Spec=ASC?ASC->FindAbilitySpecFromHandle(H):nullptr;
+    if(!Spec)return false;
+    Id=AetherSkillBinding::Identify(*Spec);Rank=Spec->Level;
+    return FAetherSkillDefinitionsV10::Get().Effect(Id,Rank)!=nullptr;
 }
-void UAetherSpellAbility::ApplyCost(FGameplayAbilitySpecHandle H, const FGameplayAbilityActorInfo* Info, FGameplayAbilityActivationInfo A) const
-{
-    Info->AbilitySystemComponent->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(), EGameplayModOp::Additive, -Cost(GetAbilityLevel(H, Info) - 1));
 }
-void UAetherSpellAbility::ActivateAbility(FGameplayAbilitySpecHandle H, const FGameplayAbilityActorInfo* Info, FGameplayAbilityActivationInfo A, const FGameplayEventData* Event)
+float UAetherSpellAbility::Cost(int32 Spell)
 {
-    auto* C = Cast<AAetherCharacter>(Info->AvatarActor.Get()); const int32 Spell = GetAbilityLevel(H, Info) - 1;
-    FHitResult Hit; FVector Origin, Direction;
-    if (!C || !C->HasAuthority() || !C->FindSpellTarget(Spell, Hit, Origin, Direction) || !CommitAbility(H, Info, A))
-    { EndAbility(H, Info, A, true, true); return; }
-    const bool Executed = C->ExecuteSpell(Spell);
-    if (!Executed) C->AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(), EGameplayModOp::Additive, Cost(Spell));
-    EndAbility(H, Info, A, true, !Executed);
+    const auto& D=FAetherSkillDefinitionsV10::Get();const auto* S=D.Legacy(Spell);
+    const auto* E=S?D.Effect(S->SkillId,1):nullptr;
+    return E?float(E->ManaCost):0.f;
+}
+bool UAetherSpellAbility::CheckCost(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayTagContainer* Tags) const
+{
+    FString Id;int32 Rank=0;if(!ResolveSkill(H,Info,Id,Rank))return false;
+    const auto* C=Info?Cast<AAetherCharacter>(Info->AvatarActor.Get()):nullptr;
+    const auto& E=*FAetherSkillDefinitionsV10::Get().Effect(Id,Rank);
+    return C&&C->Ready()&&C->SkillUnlocked(Id)&&C->Mana()>=E.ManaCost
+        &&C->WaterReserveKg>=E.WaterKg&&Super::CheckCost(H,Info,Tags);
+}
+void UAetherSpellAbility::ApplyCost(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A) const
+{
+    FString Id;int32 Rank=0;if(!ResolveSkill(H,Info,Id,Rank))return;
+    const auto& E=*FAetherSkillDefinitionsV10::Get().Effect(Id,Rank);
+    Info->AbilitySystemComponent->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(),EGameplayModOp::Additive,-float(E.ManaCost));
+}
+void UAetherSpellAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,const FGameplayEventData* Event)
+{
+    FString Id;int32 Rank=0;
+    auto* C=Info?Cast<AAetherCharacter>(Info->AvatarActor.Get()):nullptr;
+    FHitResult Hit;FVector Origin,Direction;
+    if(!C||!C->HasAuthority()||!ResolveSkill(H,Info,Id,Rank)||!C->FindSkillTarget(Id,Rank,Hit,Origin,Direction))
+    {EndAbility(H,Info,A,true,true);return;}
+    // 复制身份/等级/成本再 Commit，属性通知可能改变 ASC 列表，不能跨回调持有 Spec 指针。
+    const float ManaCost=float(FAetherSkillDefinitionsV10::Get().Effect(Id,Rank)->ManaCost);
+    if(!CommitAbility(H,Info,A)){EndAbility(H,Info,A,true,true);return;}
+    const bool Executed=C->ExecuteSkill(Id,Rank);
+    if(!Executed)Info->AbilitySystemComponent->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(),EGameplayModOp::Additive,ManaCost);
+    EndAbility(H,Info,A,true,!Executed);
 }
 
 AAetherCharacter::AAetherCharacter()
@@ -249,22 +275,36 @@ void AAetherCharacter::GrantSpells()
     }
     if (!HasAuthority()) return;
     SpellHandles.Reset();
-    for (int32 I=0;I<4;++I)
+    const auto& D=FAetherSkillDefinitionsV10::Get();
+    for(int32 I=0;I<4;++I)
     {
-        bool Exists=false;
-        for (const FGameplayAbilitySpec& Spec:AbilitySystem->GetActivatableAbilities())
-            if (Spec.Ability && Spec.Ability->GetClass()==UAetherSpellAbility::StaticClass() && Spec.InputID==I)
-            { SpellHandles.Add(Spec.Handle);Exists=true;break; }
-        if (!Exists) SpellHandles.Add(AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherSpellAbility::StaticClass(),I+1,I)));
+        const auto* Skill=D.Legacy(I);if(!Skill)continue;
+        // PlayerState ASC 跨 Pawn 保留：再次授权复用原 Handle 和等级，不能降级或叠加。
+        if(const auto* Existing=AetherSkillBinding::Find(*AbilitySystem,Skill->SkillId))
+        {SpellHandles.Add(Existing->Handle);continue;}
+        FGameplayAbilitySpec Spec(UAetherSpellAbility::StaticClass(),1,INDEX_NONE);
+        Spec.GetDynamicSpecSourceTags().AddTag(AetherSkillBinding::TagFor(Skill->SkillId));
+        SpellHandles.Add(AbilitySystem->GiveAbility(Spec));
     }
+}
+bool AAetherCharacter::SkillUnlocked(const FString& SkillId) const
+{
+    const auto* D=FAetherSkillDefinitionsV10::Get().Skills.Find(SkillId);
+    // 档案迁移前保持旧故事解锁条件；后续由技能来源账本替换这个兼容入口。
+    return D&&D->bActive&&D->LegacyBit>=0&&SpellUnlocked(D->LegacyBit);
+}
+bool AAetherCharacter::TrySkill(const FString& SkillId)
+{
+    if(!AbilitySystem||!SkillUnlocked(SkillId))return false;
+    const auto* Spec=AetherSkillBinding::Find(*AbilitySystem,SkillId);
+    return Spec&&AbilitySystem->TryActivateAbility(Spec->Handle);
 }
 bool AAetherCharacter::TrySpell(int32 Spell)
 {
-    if (Spell < 0 || Spell > 3 || !SpellUnlocked(Spell)) return false;
-    for (const FGameplayAbilitySpec& Spec : AbilitySystem->GetActivatableAbilities())
-        if (Spec.InputID == Spell) return AbilitySystem->TryActivateAbility(Spec.Handle);
-    return false;
+    const auto* D=FAetherSkillDefinitionsV10::Get().Legacy(Spell);
+    return D&&TrySkill(D->SkillId);
 }
+
 bool AAetherCharacter::Ready() const
 { const float T = CombatTime(); return AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy(); }
 float AAetherCharacter::CombatTime() const
@@ -285,38 +325,56 @@ void AAetherCharacter::ResetCombat()
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), bUseBasicAssets ? 100 : 0);
     GetCharacterMovement()->StopMovementImmediately();
 }
-bool AAetherCharacter::FindSpellTarget(int32 Spell, FHitResult& Hit, FVector& Origin, FVector& Direction) const
+bool AAetherCharacter::FindSpellTarget(int32 Spell,FHitResult& Hit,FVector& Origin,FVector& Direction) const
 {
-    if (Spell < 0 || Spell > 3 || !SpellUnlocked(Spell)) return false;
-    Origin = GetActorLocation() + FVector(0,0,55); Direction = GetControlRotation().Vector();
-    FCollisionQueryParams Params(SCENE_QUERY_STAT(AetherSpell), false, this);
-    GetWorld()->SweepSingleByChannel(Hit, Origin, Origin + Direction * 1800, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeSphere(12), Params);
-    if(Spell>=2&&Fighter==EAetherFighter::Player)if(auto* Other=Cast<AAetherCharacter>(Hit.GetActor());Other&&Other->Fighter==EAetherFighter::Player)return false;
-    return Spell == 0 || (Hit.GetActor() && Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>());
+    const auto* D=FAetherSkillDefinitionsV10::Get().Legacy(Spell);
+    const auto* Spec=D&&AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,D->SkillId):nullptr;
+    return D&&FindSkillTarget(D->SkillId,Spec?Spec->Level:1,Hit,Origin,Direction);
 }
 bool AAetherCharacter::ExecuteSpell(int32 Spell)
 {
-    if (!HasAuthority() || !Alive()) return false;
-    FHitResult Hit; FVector Origin, Direction; if (!FindSpellTarget(Spell, Hit, Origin, Direction)) return false;
-    bool Accepted = false;
-    if (Spell == 0)
+    const auto* D=FAetherSkillDefinitionsV10::Get().Legacy(Spell);
+    const auto* Spec=D&&AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,D->SkillId):nullptr;
+    return D&&ExecuteSkill(D->SkillId,Spec?Spec->Level:1);
+}
+bool AAetherCharacter::FindSkillTarget(const FString& SkillId,int32 Rank,FHitResult& Hit,FVector& Origin,FVector& Direction) const
+{
+    const auto& Definitions=FAetherSkillDefinitionsV10::Get();
+    const auto* D=Definitions.Skills.Find(SkillId);const auto* E=Definitions.Effect(SkillId,Rank);
+    if(!D||!E||!SkillUnlocked(SkillId))return false;
+    Origin=GetActorLocation()+FVector(0,0,55);Direction=GetControlRotation().Vector();
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(AetherSpell),false,this);
+    GetWorld()->SweepSingleByChannel(Hit,Origin,Origin+Direction*E->RangeCm,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(float(E->TargetRadiusCm)),Params);
+    if((D->Mechanic==EAetherSkillMechanic::Frost||D->Mechanic==EAetherSkillMechanic::Lightning)&&Fighter==EAetherFighter::Player)
+        if(auto* Other=Cast<AAetherCharacter>(Hit.GetActor());Other&&Other->Fighter==EAetherFighter::Player)return false;
+    return D->Mechanic==EAetherSkillMechanic::Fire||(Hit.GetActor()&&Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>());
+}
+bool AAetherCharacter::ExecuteSkill(const FString& SkillId,int32 Rank)
+{
+    if(!HasAuthority()||!Alive())return false;
+    const auto& Definitions=FAetherSkillDefinitionsV10::Get();
+    const auto* D=Definitions.Skills.Find(SkillId);const auto* E=Definitions.Effect(SkillId,Rank);
+    FHitResult Hit;FVector Origin,Direction;
+    if(!D||!E||!FindSkillTarget(SkillId,Rank,Hit,Origin,Direction))return false;
+    bool Accepted=false;
+    if(D->Mechanic==EAetherSkillMechanic::Fire)
     {
-        FActorSpawnParameters P; P.Owner = this; P.Instigator = this; P.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        if (auto* Projectile = GetWorld()->SpawnActor<AAetherProjectile>(Origin, Direction.Rotation(), P))
-        { Projectile->VelocityCm = Direction * 1300; Accepted = true; }
+        FActorSpawnParameters P;P.Owner=this;P.Instigator=this;P.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        if(auto* Projectile=GetWorld()->SpawnActor<AAetherProjectile>(Origin,Direction.Rotation(),P))
+        {Projectile->VelocityCm=Direction*1300;Projectile->HeatJ=E->HeatJ;Accepted=true;}
     }
-    else if (auto* Body = Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>())
+    else if(auto* Body=Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>())
     {
-        FReactiveStimulus S; S.SourceActor = this;
-        if (Spell == 1) { if (WaterReserveKg < .5f) return false; S.WaterKg = .5; }
-        if (Spell == 2) S.HeatJ = -250000;
-        if (Spell == 3) S.ElectricalJ = 6000;
-        Accepted = Body->Inject(S);
-        if (Accepted && Spell == 1) WaterReserveKg -= .5f;
+        if(WaterReserveKg<E->WaterKg)return false;
+        FReactiveStimulus S;S.SourceActor=this;S.WaterKg=E->WaterKg;S.HeatJ=E->HeatJ;S.ElectricalJ=E->ElectricalJ;
+        Accepted=Body->Inject(S);
+        // 只扣除模拟接受的水量。等级提升不能凭空造水，也不能在注入失败时丢失水。
+        if(Accepted)WaterReserveKg-=float(E->WaterKg);
     }
-    if (Accepted) CastLockUntil = CombatTime() + (Spell == 2 ? .8f : .65f);
+    if(Accepted)CastLockUntil=CombatTime()+float(E->Cooldown);
     return Accepted;
 }
+
 void AAetherCharacter::MoveForward(float V) { if (Alive()) AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::X), V); }
 void AAetherCharacter::MoveRight(float V) { if (Alive()) AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::Y), V); }
 void AAetherCharacter::SetupPlayerInputComponent(UInputComponent* I)

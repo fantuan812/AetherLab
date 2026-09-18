@@ -37,7 +37,7 @@ private:
     UFUNCTION() void OnRep_Posture(const FGameplayAttributeData& Old);
 };
 
-// One granted spec per spell; level 1..4 selects heat/water/frost/lightning.
+// 同一个 GA 可承载多个技能：Spec 标签决定 SkillId，Level 只表示实际等级。
 UCLASS()
 class AETHERLAB_API UAetherSpellAbility : public UGameplayAbility
 {
@@ -101,6 +101,11 @@ public:
     float CombatTime() const;
     bool FindSpellTarget(int32 Spell, FHitResult& Hit, FVector& Origin, FVector& Direction) const;
     bool ExecuteSpell(int32 Spell);
+    // 旧编号接口仅供尚未迁移的快捷键/任务调用，内部立即转换为稳定身份。
+    bool FindSkillTarget(const FString& SkillId,int32 Rank,FHitResult& Hit,FVector& Origin,FVector& Direction) const;
+    bool ExecuteSkill(const FString& SkillId,int32 Rank);
+    bool TrySkill(const FString& SkillId);
+    bool SkillUnlocked(const FString& SkillId) const;
     void GrantSpells();
     bool TrySpell(int32 Spell);
     virtual bool SpellUnlocked(int32 Spell) const { return true; }

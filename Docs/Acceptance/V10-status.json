@@ -54,8 +54,8 @@
     },
     {
       "id": "V10-11",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "stable_SkillId_GAS_specs_and_real_rank_effects; 30_rule_tests_pass; dedicated_two_client_rank_replication_cast_reconnect_restart_pass; progression_transactions_and_profile_migration_pending"
     },
     {
       "id": "V10-12",
