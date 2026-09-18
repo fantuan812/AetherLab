@@ -104,7 +104,15 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
         auto& J=*Impl->Jobs[I];
         const auto Finish=[&](TOptional<FAetherProfileStateV10> Snapshot={})
         {
+            // 候选结果可能在等待 COMMIT 时已填数量/关系；持久失败必须清除这些未确认事实。
+            if(J.Result.Code!=EAetherCommandCode::Applied&&J.Result.Code!=EAetherCommandCode::Replayed)
+            {
+                J.Result.ActualQuantity=0;J.Result.AffectedIds.Reset();J.Result.AffectedDefinitionIds.Reset();
+                J.Result.Transfers.Reset();J.Result.ReasonParameters.Reset();J.Result.FinalWorldRevision=-1;
+                if(Snapshot.IsSet())J.Result.FinalProfileRevision=Snapshot->Revision;
+            }
             FAetherProfileCompletion C;C.Session=J.Session;C.Result=J.Result;C.bMayPublish=Impl->Current(J.Session);
+            if(!C.bMayPublish)C.Result.FinalProfileRevision=-1;
             if(C.bMayPublish)C.Snapshot=MoveTemp(Snapshot);
             Out.Add(MoveTemp(C));Impl->Jobs.RemoveAtSwap(I);
         };

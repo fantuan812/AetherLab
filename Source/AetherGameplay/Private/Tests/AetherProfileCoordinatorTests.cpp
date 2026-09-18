@@ -67,6 +67,9 @@ bool FAetherCoordinatorTest::RunTest(const FString&)
     auto Lock=Command(EAetherCommandType::SetItemLock,1);Lock.ItemInstanceId=Potion.InstanceId;Lock.Enabled=true;
     O.Fault->Store(EAetherStoreFault::AfterFirstWrite);Service.Submit(Session,Lock,Reject);
     TestTrue(TEXT("Storage failure cannot publish candidate"),Wait(Service,Context,Done).Code==EAetherCommandCode::StorageUnavailable&&!Done.Snapshot.IsSet());
+    TArray<uint8> FailureBytes;
+    TestTrue(TEXT("Storage failure reply contains no speculative transfer or affected identity"),
+        Done.Result.ActualQuantity==0&&Done.Result.AffectedIds.IsEmpty()&&Done.Result.Transfers.IsEmpty()&&AetherCommands::EncodeResult(Done.Result,FailureBytes,Reason));
     auto Still=DB.Store->Read(Row.Value.Key).Get();TestEqual(TEXT("Failed lock did not advance storage"),Still.Value->Revision,int64(1));
     Service.Submit(Session,Lock,Reject);TestTrue(TEXT("Retry after rollback succeeds once"),Wait(Service,Context,Done).Code==EAetherCommandCode::Applied&&Done.Snapshot->Inventory.Find(Potion.InstanceId)->bLocked);
     auto Upgrade=Command(EAetherCommandType::UpgradeSkill,2);Upgrade.SkillId=TEXT("Fire.Ignite");
@@ -85,6 +88,8 @@ bool FAetherCoordinatorTest::RunTest(const FString&)
     const auto PriorPawn=Session;Session=Service.ReplacePawn(Session);
     Wait(Service,Context,Done);
     TestTrue(TEXT("Committed old-pawn result cannot publish to replacement"),!Done.bMayPublish&&!Done.Snapshot.IsSet()&&Done.Session==PriorPawn);
+    TestTrue(TEXT("Discarded epoch result is not an applied transfer acknowledgement"),
+        Done.Result.ActualQuantity==0&&Done.Result.Transfers.IsEmpty()&&Done.Result.FinalProfileRevision==-1&&AetherCommands::EncodeResult(Done.Result,FailureBytes,Reason));
     Service.Submit(Session,Move,Reject);
     TestTrue(TEXT("New pawn can recover committed result via durable receipt"),Wait(Service,Context,Done).Code==EAetherCommandCode::Replayed&&Done.bMayPublish&&Done.Snapshot.IsSet()&&Done.Snapshot->Revision==4&&Done.Snapshot->Inventory.At(5)->InstanceId==NewId);
     // 在提交前失效则直接撤销，不产生回执或资产变化。
