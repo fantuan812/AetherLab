@@ -1,3 +1,4 @@
+#include "UI/AetherFrontierHUD.h"
 #include "AetherFrontier.h"
 #include "AetherFrontierPanel.h"
 #include "Engine/Canvas.h"

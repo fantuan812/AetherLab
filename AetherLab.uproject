@@ -5,6 +5,11 @@
   "Description": "Physics-driven magic: Reactive World architecture prototype for UE 5.8",
   "Modules": [
     {
+      "Name": "AetherCore",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
       "Name": "AetherEquipment",
       "Type": "Runtime",
       "LoadingPhase": "Default"

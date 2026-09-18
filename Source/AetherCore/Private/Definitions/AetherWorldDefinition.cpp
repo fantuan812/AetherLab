@@ -1,4 +1,4 @@
-#include "AetherWorldDefinition.h"
+#include "Definitions/AetherWorldDefinition.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"

@@ -9,8 +9,8 @@
     },
     {
       "id": "V10-02",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "Core_rules_extracted; Frontier_headers_split; Editor_build_pass; 12_baseline_and_inventory_tests_pass; Gameplay_UI_Editor_module_separation_pending"
     },
     {
       "id": "V10-03",

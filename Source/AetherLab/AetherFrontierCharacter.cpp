@@ -1,3 +1,4 @@
+#include "Characters/AetherFrontierCharacter.h"
 #include "AetherFrontier.h"
 #include "AetherContent.h"
 #include "AetherRules.h"
