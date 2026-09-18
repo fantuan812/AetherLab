@@ -10,6 +10,11 @@
       "LoadingPhase": "Default"
     },
     {
+      "Name": "AetherGameplay",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
       "Name": "AetherEquipment",
       "Type": "Runtime",
       "LoadingPhase": "Default"

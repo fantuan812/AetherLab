@@ -1,0 +1,180 @@
+#include "Misc/AutomationTest.h"
+#include "Persistence/AetherSqliteStore.h"
+#include "../Persistence/AetherSqliteInternal.h"
+#include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
+
+#if WITH_DEV_AUTOMATION_TESTS
+namespace
+{
+constexpr auto TestFlags=EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter;
+FAetherSqliteOptions TestOptions()
+{
+    FAetherSqliteOptions O;
+    O.DatabasePath=FPaths::ProjectSavedDir()/TEXT("Automation/V10Store")/FGuid::NewGuid().ToString(EGuidFormats::Digits)/TEXT("state.sqlite");
+    O.Fault=MakeShared<TAtomic<EAetherStoreFault>,ESPMode::ThreadSafe>(EAetherStoreFault::None);
+    return O;
+}
+FAetherTransaction Request(int64 Revision, uint8 Value, bool WithWorld=false)
+{
+    FAetherTransaction T;
+    T.ActorId=TEXT("SyntheticAlice");
+    T.ExpectedProfileRevision=Revision;
+    T.CommandId=AetherTransactions::NewCommandId(Revision);
+    T.Request={Value,uint8(Revision+1)}; T.Result={0xAC,Value};
+    FAetherAggregateWrite Profile;
+    Profile.ExpectedRevision=Revision;
+    Profile.Value.Key={EAetherAggregateKind::Profile,T.ActorId};
+    Profile.Value.Revision=Revision+1; Profile.Value.Payload={Value};
+    T.Writes.Add(Profile);
+    if (WithWorld)
+    {
+        auto World=Profile; World.Value.Key={EAetherAggregateKind::World,TEXT("SyntheticWorld")};
+        T.Writes.Add(World);
+    }
+    return T;
+}
+int64 Revision(IAetherTransactionalStore& Store, EAetherAggregateKind Kind=EAetherAggregateKind::Profile)
+{
+    auto R=Store.Read({Kind,Kind==EAetherAggregateKind::Profile?TEXT("SyntheticAlice"):TEXT("SyntheticWorld")}).Get();
+    return R.Code==EAetherStoreCode::Found && R.Value.IsSet()?R.Value->Revision:-999;
+}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherStoreAtomicTest,"Aether.V10.Store.AtomicRecoveryAndBackup",TestFlags)
+bool FAetherStoreAtomicTest::RunTest(const FString&)
+{
+    TestEqual(TEXT("Pinned SQLite is actually linked"),AetherSQLite::RuntimeVersion(),FString(TEXT("3.53.4")));
+    auto Options=TestOptions();
+    auto Opened=AetherSQLite::Open(Options);
+    if (!TestTrue(TEXT("Open durable writer"),Opened.Code==EAetherStoreCode::Ready && Opened.Store.IsValid()))
+    { AddError(Opened.Detail); return false; }
+    auto Store=Opened.Store;
+    TestTrue(TEXT("Missing is explicit"),Store->Read({EAetherAggregateKind::Profile,TEXT("Nobody")}).Get().Code==EAetherStoreCode::Missing);
+    auto First=Request(-1,1,true);
+    TestTrue(TEXT("Create profile and world together"),Store->Commit(First).Get().Code==EAetherStoreCode::Committed);
+    auto Second=Request(0,2,true);
+    FAetherEffectDelivery Effect;
+    Effect.ActorId=Second.ActorId; Effect.Id=AetherTransactions::NewCommandId(0); Effect.Payload={90,100};
+    Second.Effects.Add(Effect);
+    Options.Fault->Store(EAetherStoreFault::AfterFirstWrite);
+    auto Failed=Store->Commit(Second).Get();
+    TestTrue(TEXT("Injected mid-write fails"),Failed.Code==EAetherStoreCode::Unavailable);
+    TestEqual(TEXT("Failure reports committed revision"),Failed.FinalProfileRevision,int64(0));
+    TestEqual(TEXT("Profile rolled back"),Revision(*Store),int64(0));
+    TestEqual(TEXT("World rolled back"),Revision(*Store,EAetherAggregateKind::World),int64(0));
+    TestEqual(TEXT("No effect before commit"),Store->PendingEffects(Second.ActorId).Get().Values.Num(),0);
+    TestTrue(TEXT("Same ID can retry uncommitted transaction"),Store->Commit(Second).Get().Code==EAetherStoreCode::Committed);
+    Store->Close(); Store.Reset(); Opened.Store.Reset();
+
+    Opened=AetherSQLite::Open(Options); Store=Opened.Store;
+    if (!TestTrue(TEXT("Reopen exact committed database"),Store.IsValid())) { AddError(Opened.Detail); return false; }
+    TestTrue(TEXT("Durable receipt replays after reopen"),Store->Commit(Second).Get().Code==EAetherStoreCode::Replayed);
+    TestEqual(TEXT("Reopen does not replay writes"),Revision(*Store),int64(1));
+    auto Effects=Store->PendingEffects(Second.ActorId).Get();
+    TestTrue(TEXT("Effect survives restart"),Effects.Code==EAetherStoreCode::Found && Effects.Values.Num()==1 && Effects.Values[0].Id==Effect.Id && Effects.Values[0].Payload==Effect.Payload);
+    Store->AcknowledgeEffect(TEXT("OtherActor"),Effect.Id).Get();
+    TestEqual(TEXT("Other actor cannot remove delivery"),Store->PendingEffects(Second.ActorId).Get().Values.Num(),1);
+    TestTrue(TEXT("Acknowledge committed effect"),Store->AcknowledgeEffect(Second.ActorId,Effect.Id).Get());
+    Store->Commit(Second).Get();
+    TestEqual(TEXT("Retry cannot re-create acknowledged effect"),Store->PendingEffects(Second.ActorId).Get().Values.Num(),0);
+    auto Third=Request(1,3,true);
+    Third.Effects.Add({AetherTransactions::NewCommandId(1),Third.ActorId,1,{70,100}});
+    Options.Fault->Store(EAetherStoreFault::AfterCommitBeforeReply);
+    TestTrue(TEXT("Response may be lost after commit"),Store->Commit(Third).Get().Code==EAetherStoreCode::Unavailable);
+    TestEqual(TEXT("Lost response still committed both domains"),Revision(*Store,EAetherAggregateKind::World),int64(2));
+    TestTrue(TEXT("Lost response retry is replay"),Store->Commit(Third).Get().Code==EAetherStoreCode::Replayed);
+    TestEqual(TEXT("One durable effect only"),Store->PendingEffects(Third.ActorId).Get().Values.Num(),1);
+    auto Fourth=Request(2,4,true);
+    Options.Fault->Store(EAetherStoreFault::BeforeCommit);
+    TestTrue(TEXT("Precommit failure is not success"),Store->Commit(Fourth).Get().Code==EAetherStoreCode::Unavailable);
+    TestEqual(TEXT("Precommit rollback retains old profile"),Revision(*Store),int64(2));
+    TestEqual(TEXT("Precommit rollback retains old world"),Revision(*Store,EAetherAggregateKind::World),int64(2));
+    auto Changed=Third; Changed.Request.Add(7);
+    TestTrue(TEXT("Same ID changed request rejected"),Store->Commit(Changed).Get().Code==EAetherStoreCode::Conflict);
+
+    const FString Backup=FPaths::GetPath(Options.DatabasePath)/TEXT("consistent-backup.sqlite");
+    TestTrue(TEXT("Online WAL backup succeeds"),Store->Backup(Backup).Get());
+    TestFalse(TEXT("Existing backup not overwritten"),Store->Backup(Backup).Get());
+    auto BackupOptions=Options; BackupOptions.DatabasePath=Backup;
+    auto BackupStore=AetherSQLite::Open(BackupOptions);
+    if (TestTrue(TEXT("Backup opens independently"),BackupStore.Store.IsValid()))
+    {
+        TestEqual(TEXT("Backup profile revision"),Revision(*BackupStore.Store),int64(2));
+        TestEqual(TEXT("Backup world revision"),Revision(*BackupStore.Store,EAetherAggregateKind::World),int64(2));
+        TestEqual(TEXT("Backup retains undelivered effect"),BackupStore.Store->PendingEffects(Third.ActorId).Get().Values.Num(),1);
+        BackupStore.Store->Close();
+    }
+    Store->Close();
+    TestTrue(TEXT("Closed read is not missing record"),Store->Read(First.Writes[0].Value.Key).Get().Code==EAetherStoreCode::Unavailable);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherStoreExpiryTest,"Aether.V10.Store.BoundedReceiptsAndConcurrentWriters",TestFlags)
+bool FAetherStoreExpiryTest::RunTest(const FString&)
+{
+    auto Options=TestOptions(); auto Opened=AetherSQLite::Open(Options);
+    if (!TestTrue(TEXT("Open writer"),Opened.Store.IsValid())) { AddError(Opened.Detail); return false; }
+    auto Store=Opened.Store; const auto First=Request(-1,1);
+    TestTrue(TEXT("First commit"),Store->Commit(First).Get().Code==EAetherStoreCode::Committed);
+    for (int32 I=1;I<=65;++I)
+        if (!TestTrue(TEXT("Advance bounded receipt window"),Store->Commit(Request(I-1,uint8(I))).Get().Code==EAetherStoreCode::Committed)) return false;
+    TestTrue(TEXT("Evicted old request cannot execute again"),Store->Commit(First).Get().Code==EAetherStoreCode::Expired);
+    auto Reused=Request(65,99); Reused.CommandId=First.CommandId;
+    TestTrue(TEXT("Old ID cannot be rebound to new version"),Store->Commit(Reused).Get().Code==EAetherStoreCode::Invalid);
+    auto Other=AetherSQLite::Open(Options);
+    if (!TestTrue(TEXT("Second OS connection opens"),Other.Store.IsValid())) { AddError(Other.Detail); return false; }
+    auto A=Store->Commit(Request(65,10)); auto B=Other.Store->Commit(Request(65,11));
+    const auto AR=A.Get().Code, BR=B.Get().Code;
+    TestTrue(TEXT("Exactly one competing writer commits"),(AR==EAetherStoreCode::Committed && BR==EAetherStoreCode::Expired)||(BR==EAetherStoreCode::Committed && AR==EAetherStoreCode::Expired));
+    TestEqual(TEXT("Conflict advances once"),Revision(*Store),int64(66));
+    Other.Store->Close(); Store->Close();
+
+    // 直接检查物理回执数量，不能仅因旧请求失败便声称存储有界。
+    sqlite3* DB=nullptr; FTCHARToUTF8 Path(*Options.DatabasePath);
+    TestEqual(TEXT("Inspect test database"),sqlite3_open(Path.Get(),&DB),SQLITE_OK);
+    if (DB)
+    {
+        { AetherSQLite::Private::FStatement Count(DB,"SELECT count(*) FROM receipts"); TestTrue(TEXT("Receipt index is capped at 64"),Count.Step()==SQLITE_ROW && Count.ColumnInt(0)==64); }
+        TestTrue(TEXT("Install unknown future schema fixture"),AetherSQLite::Private::Exec(DB,"PRAGMA user_version=999"));
+        sqlite3_close(DB);
+    }
+    TArray<uint8> Before,After; FFileHelper::LoadFileToArray(Before,*Options.DatabasePath);
+    auto FutureSchema=AetherSQLite::Open(Options);
+    TestTrue(TEXT("Unknown major schema explicitly rejected"),FutureSchema.Code==EAetherStoreCode::UnsupportedSchema && !FutureSchema.Store);
+    FFileHelper::LoadFileToArray(After,*Options.DatabasePath);
+    TestTrue(TEXT("Unknown database preserved byte-for-byte"),Before==After);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherStoreContractTest,"Aether.V10.Store.ContractAndCloseDrain",TestFlags)
+bool FAetherStoreContractTest::RunTest(const FString&)
+{
+    FString Reason;
+    auto T=Request(-1,1);
+    TestTrue(TEXT("Valid shape"),AetherTransactions::Validate(T,Reason));
+    auto Invalid=T; Invalid.ProtocolVersion=999;
+    TestFalse(TEXT("Unknown protocol rejected"),AetherTransactions::Validate(Invalid,Reason));
+    Invalid=T; const auto DuplicateWrite=Invalid.Writes[0]; Invalid.Writes.Add(DuplicateWrite);
+    TestFalse(TEXT("Duplicate aggregate write rejected"),AetherTransactions::Validate(Invalid,Reason));
+    Invalid=T; Invalid.Writes[0].Value.Revision=42;
+    TestFalse(TEXT("Skipped revision rejected"),AetherTransactions::Validate(Invalid,Reason));
+    Invalid=T; Invalid.Writes[0].Value.Key.Id=TEXT("OtherActor");
+    TestFalse(TEXT("Missing actor version rejected"),AetherTransactions::Validate(Invalid,Reason));
+    Invalid=T; Invalid.Writes[0].Value.Payload.SetNum(AetherTransactions::MaxPayloadBytes+1);
+    TestFalse(TEXT("Unbounded payload rejected"),AetherTransactions::Validate(Invalid,Reason));
+    auto O=TestOptions(); auto Opened=AetherSQLite::Open(O);
+    if (!TestTrue(TEXT("Open close-drain fixture"),Opened.Store.IsValid())) { AddError(Opened.Detail); return false; }
+    TArray<TFuture<FAetherStoreResult>> Pending;
+    for (int32 I=0;I<10;++I) Pending.Add(Opened.Store->Commit(Request(I-1,uint8(I))));
+    Opened.Store->Close();
+    for (auto& Future:Pending) TestTrue(TEXT("Close drains accepted work"),Future.Get().Code==EAetherStoreCode::Committed);
+    auto Reopened=AetherSQLite::Open(O);
+    if (TestTrue(TEXT("Drained database reopens"),Reopened.Store.IsValid()))
+    {
+        TestEqual(TEXT("All ten writes persisted"),Revision(*Reopened.Store),int64(9));
+        Reopened.Store->Close();
+    }
+    return true;
+}
+#endif

@@ -14,13 +14,13 @@
     },
     {
       "id": "V10-03",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "transaction_value_contracts_and_revision_bound_command_IDs_implemented; typed_gameplay_gateway_pending"
     },
     {
       "id": "V10-04",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "SQLite_3.53.4_single_writer_backend; 17_rule_tests_pass; forced_process_exit_before_after_commit_recovery_pass; legacy_migration_and_gameplay_cutover_pending"
     },
     {
       "id": "V10-05",
