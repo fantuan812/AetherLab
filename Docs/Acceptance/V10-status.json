@@ -15,7 +15,7 @@
     {
       "id": "V10-03",
       "status": "in_progress",
-      "acceptance": "typed_request_v1_and_backward_readable_result_v2; 21_command_handlers_including_atomic_consumable_outbox; receipt_first_async_coordinator_with_consistent_multi_aggregate_reads_session_and_Pawn_epochs; 56_rule_tests_pass_and_exact_identity_stack_metadata_checks; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
+      "acceptance": "typed_requests_v1_v2_with_explicit_interaction_revision_and_backward_readable_result_v2; 21_command_handlers_including_atomic_consumable_outbox; receipt_first_async_coordinator_with_consistent_multi_aggregate_reads_session_and_Pawn_epochs; 58_rule_tests_pass_and_exact_identity_stack_metadata_checks; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
     },
     {
       "id": "V10-04",
@@ -60,7 +60,7 @@
     {
       "id": "V10-12",
       "status": "in_progress",
-      "acceptance": "finite_dialogue_definitions_and_immutable_offer_dialogue_queries_for_seven_initial_target_types; personal_objective_guidance_and_exact_target_action_profile_world_interaction_version_revalidation; 55_rule_tests_pass; protocol_upgrade_live_registry_handlers_CommonUI_and_remaining_services_pending"
+      "acceptance": "finite_dialogue_definitions_and_immutable_offer_dialogue_queries_for_seven_initial_target_types; personal_objective_guidance_and_exact_target_action_profile_world_interaction_version_revalidation; request_v2_interaction_revision_check; 58_rule_tests_pass; live_registry_handlers_CommonUI_and_remaining_services_pending"
     },
     {
       "id": "V10-13",

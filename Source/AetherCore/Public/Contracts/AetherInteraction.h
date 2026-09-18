@@ -17,8 +17,8 @@ struct FAetherInteractionQuery
     FString ServerActorId;
     FString TargetStableId;
 };
-// UI 保存所见动作的完整身份，不用数组下标或“当前最近对象”替代。它尚未加入请求 v1 线格式；
-// 正式 RPC 接入须显式升级协议以携带 InteractionRevision，不能偷偷复用别的字段。
+// UI 保存所见动作的完整身份，不用数组下标或“当前最近对象”替代。
+// 请求 v2 携带独立 InteractionRevision；v1 仅保留读取，不授权新交互执行。
 struct FAetherInteractionSelection
 {
     FString TargetStableId,ActionId;

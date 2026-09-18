@@ -1,5 +1,6 @@
 #include "Contracts/AetherTransaction.h"
 #include "Contracts/AetherTransactionalStore.h"
+#include "Contracts/AetherPlayerCommand.h"
 
 IAetherTransactionalStore::IAetherTransactionalStore() = default;
 IAetherTransactionalStore::~IAetherTransactionalStore() = default;
@@ -18,7 +19,7 @@ bool AetherTransactions::Validate(const FAetherTransaction& T, FString& Reason)
     const auto Reject = [&Reason](const TCHAR* Text) { Reason = Text; return false; };
     if (!T.CommandId.IsValid() || T.ActorId.IsEmpty() || T.ActorId.Len() > 128)
         return Reject(TEXT("Invalid command or server actor identity"));
-    if (T.ProtocolVersion != ProtocolVersion || T.ExpectedProfileRevision < -1 || T.ExpectedProfileRevision == MAX_int64)
+    if (!AetherCommands::IsSupportedProtocol(T.ProtocolVersion) || T.ExpectedProfileRevision < -1 || T.ExpectedProfileRevision == MAX_int64)
         return Reject(TEXT("Unsupported protocol or invalid profile revision"));
     const uint64 BoundRevision = (uint64(T.CommandId.A) << 32) | T.CommandId.B;
     if (BoundRevision != uint64(T.ExpectedProfileRevision + 1))

@@ -16,7 +16,7 @@ QueryDialogue 只开放当前能交谈入口的可达节点。选项再次通过
 
 Selection 保存 TargetStableId、ActionId、ProfileRevision、WorldRevision、InteractionRevision。服务器构建新的当前快照后 CheckSelection 复验完整身份及版本。错误目标不会自动换成附近 NPC；卸载、遮挡、变化的个人/世界/目标版本均拒绝原选择。稳定目标、动作和定义引用采用显式区分大小写比较，避免 FString 默认大小写折叠掩盖错拼。
 
-Selection 目前是值契约，没有偷偷改动请求 v1。请求 v1 的 ExecuteInteraction 没有独立 InteractionRevision 字段，仍未接入实际执行；正式接入时必须显式升级协议并保留旧格式处理策略。
+Selection 通过已新增的请求 v2 ExpectedInteractionRevision 映射到 CheckCommand；v1 字节保持不变且不能授权新的交互执行。详见 [请求 v2](V10-request-v2.zh-CN.md)。具体副作用处理器和网络入口仍待接入。
 
 ## 验证与剩余范围
 

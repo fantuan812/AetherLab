@@ -94,7 +94,7 @@ struct FWireReader
 bool AetherCommands::Validate(const FAetherPlayerCommand& C, FString& Reason)
 {
     const auto Reject=[&](const TCHAR* Why){Reason=Why;return false;};
-    if(C.ProtocolVersion!=ProtocolVersion)return Reject(TEXT("Unsupported protocol version"));
+    if(!IsSupportedProtocol(C.ProtocolVersion))return Reject(TEXT("Unsupported protocol version"));
     const uint32 Mask=Fields(C.Type);
     if(Mask==MAX_uint32)return Reject(TEXT("Unknown typed command"));
     if(C.ExpectedProfileRevision<0 || C.ExpectedProfileRevision==MAX_int64 || !C.CommandId.IsValid() ||
@@ -103,6 +103,9 @@ bool AetherCommands::Validate(const FAetherPlayerCommand& C, FString& Reason)
     if(C.ExpectedWorldRevision < -1 || C.ExpectedWorldRevision==MAX_int64 ||
         ((Mask&World)!=0 ? C.ExpectedWorldRevision<0 : C.ExpectedWorldRevision!=-1))
         return Reject(TEXT("World revision does not match command domain"));
+    const bool NeedsInteraction=C.ProtocolVersion>=2&&C.Type==EAetherCommandType::ExecuteInteraction;
+    if(NeedsInteraction ? (C.ExpectedInteractionRevision<0||C.ExpectedInteractionRevision==MAX_int64) : C.ExpectedInteractionRevision!=-1)
+        return Reject(TEXT("Interaction revision does not match protocol/action"));
     const auto GuidField=[&](uint32 Bit,const FGuid& G){return (Mask&Bit)!=0 ? G.IsValid() : G==FGuid();};
     if(!GuidField(Item,C.ItemInstanceId)||!GuidField(Other,C.OtherInstanceId)||
         ((Mask&Other)!=0 && C.ItemInstanceId==C.OtherInstanceId))return Reject(TEXT("Invalid or unexpected instance identity"));
@@ -132,6 +135,8 @@ bool AetherCommands::Encode(const FAetherPlayerCommand& C, TArray<uint8>& Bytes,
     W.Guid(C.ItemInstanceId);W.Guid(C.OtherInstanceId);
     W.Id(C.TargetStableId);W.Id(C.ContainerId);W.Id(C.DefinitionId);W.Id(C.SkillId);W.Id(C.SlotId);W.Id(C.ActionId);
     W.UInt(uint32(C.Quantity),4);W.UInt(uint32(C.DestinationIndex),4);W.UInt(C.Enabled?1:0,1);W.UInt(uint8(C.TransferDirection),1);
+    // v1 的所有字节保持原样；v2 在固定尾部添加一个有符号版本，不复用其他业务字段。
+    if(C.ProtocolVersion>=2)W.UInt(C.ExpectedInteractionRevision<0?MAX_uint64:uint64(C.ExpectedInteractionRevision),8);
     Bytes=MoveTemp(W.Bytes);return true;
 }
 
@@ -142,6 +147,7 @@ bool AetherCommands::Decode(const TArray<uint8>& Bytes, FAetherPlayerCommand& Ou
     FWireReader R{Bytes};FAetherPlayerCommand C;
     if(R.UInt(2)!=0x4143){Reason=TEXT("Invalid command wire signature");return false;}
     C.ProtocolVersion=uint16(R.UInt(2));C.Type=EAetherCommandType(R.UInt(1));C.CommandId=R.Guid();
+    if(!IsSupportedProtocol(C.ProtocolVersion)){Reason=TEXT("Unsupported protocol version");return false;}
     const uint64 Profile=R.UInt(8),World=R.UInt(8);
     if(Profile>=uint64(MAX_int64)||(World!=MAX_uint64 && World>=uint64(MAX_int64)))
     {Reason=TEXT("Revision overflows supported range");return false;}
@@ -152,6 +158,12 @@ bool AetherCommands::Decode(const TArray<uint8>& Bytes, FAetherPlayerCommand& Ou
     if(Quantity>1000 || (Index!=MAX_uint32 && Index>=256) || Enabled>1 || Direction>1)
     {Reason=TEXT("Scalar payload outside bounds");return false;}
     C.Quantity=int32(Quantity);C.DestinationIndex=Index==MAX_uint32?-1:int32(Index);C.Enabled=Enabled!=0;C.TransferDirection=EAetherTransferDirection(Direction);
+    if(C.ProtocolVersion>=2)
+    {
+        const uint64 Interaction=R.UInt(8);
+        if(Interaction!=MAX_uint64&&Interaction>=uint64(MAX_int64)){Reason=TEXT("Interaction revision overflow");return false;}
+        C.ExpectedInteractionRevision=Interaction==MAX_uint64?-1:int64(Interaction);
+    }
     if(!R.Valid || R.Offset!=Bytes.Num()){Reason=TEXT("Truncated or trailing command bytes");return false;}
     if(!Validate(C,Reason))return false;
     Out=MoveTemp(C);return true;

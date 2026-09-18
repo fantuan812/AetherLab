@@ -116,7 +116,7 @@ bool FAetherProfileCoordinator::Submit(const FAetherProfileSession& S,const FAet
     Rejection={};Rejection.CommandId=C.CommandId;
     const auto Fail=[&](EAetherCommandCode Why){Rejection.Code=Why;return false;};
     if(!Impl->Current(S))return Fail(EAetherCommandCode::Unauthorized);
-    if(C.ProtocolVersion!=AetherCommands::ProtocolVersion)return Fail(EAetherCommandCode::UnsupportedProtocol);
+    if(!AetherCommands::IsSupportedProtocol(C.ProtocolVersion))return Fail(EAetherCommandCode::UnsupportedProtocol);
     TArray<uint8> Request;FString Reason;if(!AetherCommands::Encode(C,Request,Reason))return Fail(EAetherCommandCode::Invalid);
     // 同一角色包括刚断开的旧会话最多一个在途命令；总量也有界，不能堆积大 Profile 副本。
     if(Impl->Jobs.Num()>=16||Impl->Jobs.ContainsByPredicate([&](const auto& J){return J->Session.CharacterId==S.CharacterId;}))

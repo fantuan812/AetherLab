@@ -28,6 +28,8 @@ struct FAetherPlayerCommand
     EAetherCommandType Type = EAetherCommandType::Invalid;
     int64 ExpectedProfileRevision = 0;
     int64 ExpectedWorldRevision = -1; // 不涉及世界聚合时必须为 -1。
+    // 请求 v2 新增。ExecuteInteraction 必须携带；v1 和其他动作一律为 -1。
+    int64 ExpectedInteractionRevision = -1;
     FGuid ItemInstanceId, OtherInstanceId;
     FString TargetStableId, ContainerId, DefinitionId, SkillId, SlotId, ActionId;
     int32 Quantity = 0;
@@ -36,7 +38,7 @@ struct FAetherPlayerCommand
     EAetherTransferDirection TransferDirection = EAetherTransferDirection::IntoContainer;
 };
 
-// 回执格式 2 保存拆分/合并/转移关系；请求协议仍为 1，旧格式 1 回执保留只读兼容。
+// 回执格式独立于请求版本；格式 2 保存转移关系，旧格式 1 回执保留只读兼容。
 struct FAetherCommandTransfer
 {
     FGuid From,To;
@@ -57,7 +59,9 @@ struct FAetherCommandResult
 
 namespace AetherCommands
 {
-    inline constexpr uint16 ProtocolVersion = 1;
+    inline constexpr uint16 ProtocolVersion = 1; // 保留旧调用者默认值，不改变已保存请求。
+    inline constexpr uint16 LatestProtocolVersion = 2;
+    inline constexpr bool IsSupportedProtocol(int32 Version) { return Version==1||Version==2; }
     inline constexpr int32 MaxWireBytes = 1024;
     inline constexpr uint16 ResultSchemaVersion = 2;
     // 这里只检查协议形状；是否持有物品、目标距离、权限和版本仍由权威处理器复验。

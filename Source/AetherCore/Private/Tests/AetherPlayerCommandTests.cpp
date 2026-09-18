@@ -148,4 +148,35 @@ bool FAetherCommandResultTest::RunTest(const FString&)
     TestTrue(TEXT("Transfer direction is part of the durable request"),AetherCommands::Encode(C,From,Reason)&&Into!=From);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherCommandV2Test,"Aether.V10.Commands.V2InteractionRevisionAndV1WireCompatibility",
+    EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FAetherCommandV2Test::RunTest(const FString&)
+{
+    FString Reason;
+    for(uint8 Type=1;Type<=uint8(EAetherCommandType::SetItemFavorite);++Type)
+    {
+        auto Legacy=Example(EAetherCommandType(Type));TArray<uint8> V1,V2;FAetherPlayerCommand Decoded;
+        if(!TestTrue(TEXT("Encode unchanged v1 command"),AetherCommands::Encode(Legacy,V1,Reason)))return false;
+        auto Current=Legacy;Current.ProtocolVersion=2;
+        if(Current.Type==EAetherCommandType::ExecuteInteraction)Current.ExpectedInteractionRevision=42;
+        if(!TestTrue(TEXT("Encode version 2 command"),AetherCommands::Encode(Current,V2,Reason)))return false;
+        TestEqual(TEXT("V2 adds exactly one int64 trailer"),V2.Num(),V1.Num()+8);
+        auto Compatible=V2;Compatible.SetNum(V1.Num());Compatible[2]=1;
+        TestTrue(TEXT("V1 bytes were not silently redefined"),Compatible==V1);
+        TestTrue(TEXT("Version 2 round trip preserves target version"),AetherCommands::Decode(V2,Decoded,Reason)&&Decoded.ProtocolVersion==2&&Decoded.ExpectedInteractionRevision==Current.ExpectedInteractionRevision);
+        for(int32 Size=V1.Num();Size<V2.Num();++Size)
+        {auto Truncated=V2;Truncated.SetNum(Size);TestFalse(TEXT("Truncated revision suffix rejected"),AetherCommands::Decode(Truncated,Decoded,Reason));}
+        TestTrue(TEXT("Old request remains readable with absent target revision"),AetherCommands::Decode(V1,Decoded,Reason)&&Decoded.ProtocolVersion==1&&Decoded.ExpectedInteractionRevision==-1);
+    }
+    auto Interaction=Example(EAetherCommandType::ExecuteInteraction);Interaction.ProtocolVersion=2;
+    TestFalse(TEXT("V2 interaction cannot omit target version"),AetherCommands::Validate(Interaction,Reason));
+    Interaction.ExpectedInteractionRevision=0;TestTrue(TEXT("Initial target version is valid"),AetherCommands::Validate(Interaction,Reason));
+    Interaction.ProtocolVersion=1;TestFalse(TEXT("V1 cannot smuggle an in-memory target version"),AetherCommands::Validate(Interaction,Reason));
+    auto Move=Example(EAetherCommandType::MoveItem);Move.ProtocolVersion=2;Move.ExpectedInteractionRevision=0;
+    TestFalse(TEXT("Non-interaction commands must not carry unused target revision"),AetherCommands::Validate(Move,Reason));
+    Interaction.ProtocolVersion=2;TArray<uint8> Wire;AetherCommands::Encode(Interaction,Wire,Reason);
+    // 最高有效位为 1、但不是 -1 哨兵的无符号值，不能截断成合法正版本。
+    Wire.Last()=0x80;FAetherPlayerCommand Output;TestFalse(TEXT("Unsigned target-version overflow rejected"),AetherCommands::Decode(Wire,Output,Reason));
+    return true;
+}
 #endif

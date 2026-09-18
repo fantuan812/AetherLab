@@ -11,3 +11,7 @@ ProtocolVersion=1 与 SaveSchemaVersion=10、内容 schema、模型 revision 分
 后续已实现完整角色 DTO、17 类角色候选及异步 SQLite 协调器，仍未替换旧 RPC 和游戏保存入口。请求协议保持 1；标准回执格式现为 2，并兼容读取格式 1，详见 [容器与转移回执](V10-container-transfers.zh-CN.md)。V10-03 仍为 in_progress。
 
 验证：Editor 增量编译成功；21 项轻量规则测试全部通过，报告 Rules-3cf04cb5d3314e4599fc3543d4f3f5ee。新增用例覆盖全部 21 个操作的往返、所有截断位置、尾随数据、版本/ID 绑定、无关字段、容器方向、装备槽、中文参数、结果上限与字典顺序。
+
+## 请求 v2 补充
+
+请求 v2 已实现独立交互版本尾字段；v1 字节和回执读取不变，结果 schema 2 独立。详见 [请求 v2](V10-request-v2.zh-CN.md)。新交互执行只允许 v2，具体服务处理器仍在迁移。

@@ -29,7 +29,7 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
         Result.Code=Code;Result.ActualQuantity=0;Result.AffectedIds.Reset();Result.AffectedDefinitionIds.Reset();Result.Transfers.Reset();
         Result.ReasonParameters.Reset();Result.FinalProfileRevision=Current.Revision;Result.FinalWorldRevision=-1;return false;
     };
-    if(C.ProtocolVersion!=AetherCommands::ProtocolVersion)return Fail(EAetherCommandCode::UnsupportedProtocol);
+    if(!AetherCommands::IsSupportedProtocol(C.ProtocolVersion))return Fail(EAetherCommandCode::UnsupportedProtocol);
     if(!AetherCommands::Validate(C,Reason))return Fail(EAetherCommandCode::Invalid);
     if(!Actor.Equals(Current.CharacterId,ESearchCase::CaseSensitive))return Fail(EAetherCommandCode::Unauthorized);
     if(!Current.Validate(Items,Skills,Rules,Reason))return Fail(EAetherCommandCode::StorageUnavailable);

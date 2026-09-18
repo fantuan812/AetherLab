@@ -138,3 +138,11 @@ TOptional<FAetherDialogueView> FAetherInteractionProvider::QueryDialogue(const F
     }
     return View;
 }
+
+EAetherCommandCode FAetherInteractionProvider::CheckCommand(const FString& Actor,const FAetherPlayerCommand& C) const
+{
+    if(C.Type!=EAetherCommandType::ExecuteInteraction)return EAetherCommandCode::UnsupportedAction;
+    if(C.ProtocolVersion!=AetherCommands::LatestProtocolVersion)return EAetherCommandCode::UnsupportedProtocol;
+    FString Reason;if(!AetherCommands::Validate(C,Reason))return EAetherCommandCode::Invalid;
+    return CheckSelection({Actor,C.TargetStableId},{C.TargetStableId,C.ActionId,C.ExpectedProfileRevision,C.ExpectedWorldRevision,C.ExpectedInteractionRevision});
+}

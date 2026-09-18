@@ -55,7 +55,7 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
         Result.Code=Code;Result.FinalProfileRevision=ProfileRevision;Result.FinalWorldRevision=WorldRevision;
         Result.ActualQuantity=0;Result.AffectedIds.Reset();Result.Transfers.Reset();Result.ReasonParameters.Reset();return false;
     };
-    FString Reason,Key;if(!AetherCommands::Validate(C,Reason))return Fail(C.ProtocolVersion==1?R::Invalid:R::UnsupportedProtocol);
+    FString Reason,Key;if(!AetherCommands::Validate(C,Reason))return Fail(AetherCommands::IsSupportedProtocol(C.ProtocolVersion)?R::Invalid:R::UnsupportedProtocol);
     const auto Authorized=AuthorizeRead(C,Context,Key);if(Authorized!=R::Applied)return Fail(Authorized);
     if(Snapshot.Code!=EAetherStoreCode::Found)return Fail(R::StorageUnavailable);
     const auto* ProfileRow=Snapshot.Values.Find({EAetherAggregateKind::Profile,Actor});

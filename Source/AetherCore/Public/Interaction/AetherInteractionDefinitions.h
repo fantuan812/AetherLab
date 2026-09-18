@@ -80,6 +80,8 @@ public:
     // 只能进入当前可交谈入口及其可达节点；动作选项由同一 Offer 过滤，隐藏条件不从对话旁路泄露。
     TOptional<FAetherDialogueView> QueryDialogue(const FAetherInteractionQuery& Context,const FString& NodeId) const;
     EAetherCommandCode CheckSelection(const FAetherInteractionQuery& Context,const FAetherInteractionSelection& Selection) const;
+    // v1 虽可解码用于回执兼容，但缺少目标版本，不得授权新交互执行。
+    EAetherCommandCode CheckCommand(const FString& ServerCharacterId,const FAetherPlayerCommand& Command) const;
     FAetherObjectiveGuidance Guidance() const;
 private:
     const FAetherInteractionDefinition Definition;
