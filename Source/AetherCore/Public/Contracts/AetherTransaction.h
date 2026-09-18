@@ -2,7 +2,8 @@
 #include "CoreMinimal.h"
 
 // 聚合是并发控制边界。库存、成长和任务共享角色聚合版本，不能各自提交后再拼接。
-enum class EAetherAggregateKind : uint8 { Profile, World, Container };
+// Migration 只允许离线导入器写入；普通玩家事务仍限制到 Container。
+enum class EAetherAggregateKind : uint8 { Profile, World, Container, Migration };
 enum class EAetherStoreCode : uint8
 {
     Ready, Found, Missing, Committed, Replayed, Conflict, Expired, Invalid, Busy, Unavailable, Corrupt, UnsupportedSchema

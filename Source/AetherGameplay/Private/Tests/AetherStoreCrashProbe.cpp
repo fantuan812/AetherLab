@@ -25,6 +25,36 @@ bool FAetherStoreCrashProbe::RunTest(const FString&)
     auto Opened=AetherSQLite::Open(Options);
     if (!TestTrue(TEXT("Open crash probe database"),Opened.Store.IsValid())) { AddError(Opened.Detail); return false; }
     auto Store=Opened.Store;
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherStoreProbeImport")))
+    {
+        FAetherLegacyImport Import;Import.SourceSha256=FString::ChrN(64,'a');
+        for(auto Kind:{EAetherAggregateKind::Profile,EAetherAggregateKind::World})
+        {
+            FAetherStoredAggregate V;V.Key={Kind,TEXT("CrashImport")};V.Revision=Kind==EAetherAggregateKind::Profile?17:31;V.Payload={8,9};
+            Import.Values.Add(V);
+        }
+        const FAetherAggregateKey Marker{EAetherAggregateKind::Migration,TEXT("LegacyV9")};
+        if(Phase==TEXT("Seed"))TestTrue(TEXT("Migration destination starts empty"),Store->Read(Marker).Get().Code==EAetherStoreCode::Missing);
+        else if(Phase==TEXT("CrashBefore")||Phase==TEXT("CrashAfter"))
+        {
+            Options.Fault->Store(Phase==TEXT("CrashBefore")?EAetherStoreFault::CrashBeforeCommit:EAetherStoreFault::CrashAfterCommit);
+            Store->ImportLegacy(Import).Get();AddError(TEXT("Expected import process termination did not occur"));
+        }
+        else if(Phase==TEXT("VerifyBefore")||Phase==TEXT("VerifyAfter"))
+        {
+            const bool Committed=Phase==TEXT("VerifyAfter");
+            for(const auto& V:Import.Values)
+            {
+                const auto Row=Store->Read(V.Key).Get();
+                TestTrue(TEXT("All imported rows share durable boundary"),Committed?
+                    Row.Value.IsSet()&&Row.Value->Revision==V.Revision&&Row.Value->Payload==V.Payload:Row.Code==EAetherStoreCode::Missing);
+            }
+            TestTrue(TEXT("Import marker shares the same commit boundary"),Store->Read(Marker).Get().Code==(Committed?EAetherStoreCode::Found:EAetherStoreCode::Missing));
+            if(Committed)TestTrue(TEXT("Process retry replays completed import"),Store->ImportLegacy(Import).Get().Code==EAetherStoreCode::Replayed);
+        }
+        else AddError(TEXT("Unknown import crash phase"));
+        Store->Close();return true;
+    }
     const auto Make=[](int64 Expected,uint8 Value) {
         FAetherTransaction T; T.ActorId=TEXT("CrashFixture"); T.ExpectedProfileRevision=Expected;
         // 固定身份用于跨进程重试；高 64 位仍绑定原请求版本。

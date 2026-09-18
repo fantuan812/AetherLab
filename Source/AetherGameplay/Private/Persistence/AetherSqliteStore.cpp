@@ -23,25 +23,31 @@ class FStore final : public IAetherTransactionalStore, public FRunnable
     FCriticalSection Mutex;
     FCriticalSection ShutdownMutex;
     int32 Pending = 0;
+    bool ImportPending = false;
     bool Accepting = true;
     FEvent* Wake = FPlatformProcess::GetSynchEventFromPool(false);
     TUniquePtr<FRunnableThread> Thread;
     TPromise<FAetherStoreResult> Ready;
 
     template<typename Result, typename Function>
-    TFuture<Result> Enqueue(Function Work, Result Rejected)
+    TFuture<Result> Enqueue(Function Work, Result Rejected, bool IsImport=false)
     {
         auto Promise = MakeShared<TPromise<Result>, ESPMode::ThreadSafe>();
         auto Future = Promise->GetFuture();
         {
             FScopeLock Lock(&Mutex);
-            if (!Accepting || Pending >= Options.QueueCapacity)
+            if (!Accepting || Pending >= Options.QueueCapacity || (IsImport && ImportPending))
             {
                 Promise->SetValue(MoveTemp(Rejected));
                 return Future;
             }
             ++Pending;
-            Jobs.Enqueue([Promise, Work=MoveTemp(Work)](sqlite3* DB) mutable { Promise->SetValue(Work(DB)); });
+            ImportPending |= IsImport;
+            Jobs.Enqueue([this, Promise, IsImport, Work=MoveTemp(Work)](sqlite3* DB) mutable {
+                auto Value=Work(DB);
+                if(IsImport){FScopeLock ImportLock(&Mutex);ImportPending=false;}
+                Promise->SetValue(MoveTemp(Value));
+            });
         }
         Wake->Trigger();
         return Future;
@@ -149,6 +155,15 @@ public:
         }
         FAetherStoreResult Rejected; Rejected.Code=EAetherStoreCode::Busy; Rejected.Detail=TEXT("Writer closed or queue full");
         return Enqueue<FAetherStoreResult>([T=MoveTemp(T), O=Options](sqlite3* DB) { return CommitTransaction(DB,T,O); }, MoveTemp(Rejected));
+    }
+    virtual TFuture<FAetherStoreResult> ImportLegacy(FAetherLegacyImport Import) override
+    {
+        FString Reason;
+        if(!AetherImports::Validate(Import,Reason))
+        {FAetherStoreResult Invalid;Invalid.Code=EAetherStoreCode::Invalid;Invalid.Detail=MoveTemp(Reason);return Completed(MoveTemp(Invalid));}
+        // 同时最多一份大导入负载入队，避免 64 个 32 MiB 快照挤占游戏内存。
+        FAetherStoreResult Rejected;Rejected.Code=EAetherStoreCode::Busy;Rejected.Detail=TEXT("Import already queued or writer unavailable");
+        return Enqueue<FAetherStoreResult>([Import=MoveTemp(Import),O=Options](sqlite3* DB){return AetherSQLite::Private::ImportLegacy(DB,Import,O);},MoveTemp(Rejected),true);
     }
     virtual TFuture<FAetherStoreReadResult> Read(FAetherAggregateKey Key) override
     { return Enqueue<FAetherStoreReadResult>([Key=MoveTemp(Key)](sqlite3* DB){ return ReadAggregate(DB,Key); }, FAetherStoreReadResult()); }

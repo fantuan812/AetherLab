@@ -1,4 +1,4 @@
-param([string]$EngineRoot='C:\Program Files\Epic Games\UE_5.8')
+param([string]$EngineRoot='C:\Program Files\Epic Games\UE_5.8',[switch]$Import)
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $taskRun=Join-Path $taskRoot ('Saved/Automation/V10Crash/'+[guid]::NewGuid().ToString('N'))
@@ -10,6 +10,7 @@ foreach($taskPhase in @('Seed','CrashBefore','VerifyBefore','CrashAfter','Verify
  $taskReport=Join-Path $taskRun $taskPhase
  New-Item -ItemType Directory -Path $taskReport -Force | Out-Null
  $taskArgs=@('"'+(Join-Path $taskRoot 'AetherLab.uproject')+'"','-unattended','-nop4','-nullrhi','-nosound','-nosplash','-AetherAllowSyntheticStoreCrash',"-AetherStoreProbePhase=$taskPhase",'-AetherStoreProbeDb="'+$taskDb+'"','-ExecCmds="Automation RunTests Aether.CrashProbe.SQLiteProcessRecovery"','-TestExit="Automation Test Queue Empty"','-ReportExportPath="'+$taskReport+'"','-abslog="'+(Join-Path $taskReport 'Engine.log')+'"')
+ if($Import){$taskArgs+='-AetherStoreProbeImport'}
  $taskProcess=Start-Process -FilePath $taskExe -ArgumentList $taskArgs -PassThru -WindowStyle Hidden
  try {
   if(!$taskProcess.WaitForExit(60000)){throw "Crash probe phase timed out: $taskPhase"}
@@ -23,5 +24,5 @@ foreach($taskPhase in @('Seed','CrashBefore','VerifyBefore','CrashAfter','Verify
   Write-Output "Process recovery PASS: $taskPhase"
  } finally {if(!$taskProcess.HasExited){Stop-Process -Id $taskProcess.Id}}
 }
-[ordered]@{schema=1;database=$taskDb;phases=$taskResults;boundary='Forced process exit before and after SQLite COMMIT; not a power-loss or hardware-damage test'}|ConvertTo-Json -Depth 6|Set-Content -LiteralPath (Join-Path $taskRun 'result.json') -Encoding utf8
+[ordered]@{schema=1;scenario=$(if($Import){'legacy_import'}else{'normal_commit'});database=$taskDb;phases=$taskResults;boundary='Forced process exit before and after SQLite COMMIT; not a power-loss or hardware-damage test'}|ConvertTo-Json -Depth 6|Set-Content -LiteralPath (Join-Path $taskRun 'result.json') -Encoding utf8
 Write-Output "Crash recovery PASS: $taskRun"

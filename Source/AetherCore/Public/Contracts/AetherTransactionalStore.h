@@ -15,6 +15,19 @@ struct FAetherStoreEffectsResult
     FString Detail;
 };
 
+// 完成全部领域转换/不变量校验后才能提交；保留旧版本，不能拆成若干普通玩家事务。
+struct FAetherLegacyImport
+{
+    int32 SourceSchema=5;
+    FString SourceSha256;
+    TArray<FAetherStoredAggregate> Values;
+};
+namespace AetherImports
+{
+    inline constexpr int32 MaxValues=129; // 128 个角色 + 1 个完整世界聚合。
+    inline constexpr int32 MaxBytes=32*1024*1024;
+    AETHERCORE_API bool Validate(const FAetherLegacyImport& Import,FString& Reason);
+}
 // 单写者拥有数据库连接。输入都是值对象，后台线程不得捕获 Actor/UObject 裸指针。
 // Future 只表示持久提交结果；协调者回到游戏线程并复核会话 epoch 后，才能发布复制状态。
 class AETHERCORE_API IAetherTransactionalStore
@@ -23,6 +36,8 @@ public:
     IAetherTransactionalStore();
     virtual ~IAetherTransactionalStore();
     virtual TFuture<FAetherStoreResult> Commit(FAetherTransaction Transaction) = 0;
+    // 仅接受空数据库或同一已导入来源的重试；不能覆盖已有游戏数据。
+    virtual TFuture<FAetherStoreResult> ImportLegacy(FAetherLegacyImport Import) = 0;
     virtual TFuture<FAetherStoreReadResult> Read(FAetherAggregateKey Key) = 0;
     virtual TFuture<FAetherStoreEffectsResult> PendingEffects(FString ActorId) = 0;
     virtual TFuture<bool> AcknowledgeEffect(FString ActorId, FGuid DeliveryId) = 0;
