@@ -28,8 +28,9 @@ uint32 Fields(EAetherCommandType Type)
     case E::SellItem: return Target|Item|Quantity;
     case E::MoveItem: return Item|Index;
     case E::SwapItems: return Item|Other;
-    case E::SetItemLock: return Item|Enabled;
-    case E::SortInventory: case E::ResetSkills: return 0;
+    case E::SetItemLock: case E::SetItemFavorite: return Item|Enabled;
+    case E::SortInventory: return Enabled;
+    case E::ResetSkills: return 0;
     case E::DropItem: return Item|Quantity|World;
     case E::PickUpItem: return Target|Item|Quantity|World;
     case E::TransferItem: return Target|Container|Item|Quantity|World;

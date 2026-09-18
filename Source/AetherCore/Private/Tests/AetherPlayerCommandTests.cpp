@@ -22,7 +22,7 @@ FAetherPlayerCommand Example(EAetherCommandType Type)
     case E::SellItem: Item();C.TargetStableId=TEXT("TownMerchant");C.Quantity=2;break;
     case E::MoveItem: Item();C.DestinationIndex=5;break;
     case E::SwapItems: Item();Other();break;
-    case E::SetItemLock: Item();C.Enabled=true;break;
+    case E::SetItemLock: case E::SetItemFavorite: Item();C.Enabled=true;break;
     case E::SortInventory: case E::ResetSkills: break;
     case E::DropItem: Item();C.Quantity=2;C.ExpectedWorldRevision=4;break;
     case E::PickUpItem: Item();C.TargetStableId=TEXT("Loot_1234");C.Quantity=2;C.ExpectedWorldRevision=4;break;
@@ -42,7 +42,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherCommandWireTest,"Aether.V10.Commands.Can
     EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FAetherCommandWireTest::RunTest(const FString&)
 {
-    for(uint8 Op=1;Op<=uint8(EAetherCommandType::ClaimReward);++Op)
+    for(uint8 Op=1;Op<=uint8(EAetherCommandType::SetItemFavorite);++Op)
     {
         const auto Command=Example(EAetherCommandType(Op));
         FString Reason;TArray<uint8> Bytes,Again;FAetherPlayerCommand Decoded;

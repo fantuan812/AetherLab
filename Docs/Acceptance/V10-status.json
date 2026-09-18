@@ -29,13 +29,13 @@
     },
     {
       "id": "V10-06",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "fixed_grid_and_stateful_stack_rules; 25_rule_tests_pass; persistent_DTO_gateway_and_UI_pending"
     },
     {
       "id": "V10-07",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "ten_slot_loadout_and_durability_candidate_rules; runtime_GAS_wear_repair_economy_and_visuals_pending"
     },
     {
       "id": "V10-08",

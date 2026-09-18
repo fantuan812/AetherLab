@@ -9,7 +9,7 @@ enum class EAetherCommandType : uint8
     MoveItem = 8, SwapItems = 9, SetItemLock = 10, SortInventory = 11,
     DropItem = 12, PickUpItem = 13, TransferItem = 14, RepairItem = 15,
     LearnSkill = 16, UpgradeSkill = 17, ResetSkills = 18, BindSkill = 19,
-    ExecuteInteraction = 20, ClaimReward = 21
+    ExecuteInteraction = 20, ClaimReward = 21, SetItemFavorite = 22
 };
 enum class EAetherTransferDirection : uint8 { IntoContainer, FromContainer };
 enum class EAetherCommandCode : uint8
@@ -32,7 +32,7 @@ struct FAetherPlayerCommand
     FString TargetStableId, ContainerId, DefinitionId, SkillId, SlotId, ActionId;
     int32 Quantity = 0;
     int32 DestinationIndex = -1;
-    bool Enabled = false;
+    bool Enabled = false; // 锁定/收藏的目标值；SortInventory 中表示是否合并相同堆。
     EAetherTransferDirection TransferDirection = EAetherTransferDirection::IntoContainer;
 };
 

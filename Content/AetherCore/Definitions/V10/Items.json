@@ -1,0 +1,527 @@
+{
+  "ContentSchemaVersion": 3,
+  "DefaultCapacity": 32,
+  "Slots": [
+    {
+      "Id": "MainHand",
+      "AllowedCategories": [
+        "Weapon"
+      ]
+    },
+    {
+      "Id": "OffHand",
+      "AllowedCategories": [
+        "Shield"
+      ]
+    },
+    {
+      "Id": "Head",
+      "AllowedCategories": [
+        "Armor"
+      ]
+    },
+    {
+      "Id": "Chest",
+      "AllowedCategories": [
+        "Armor"
+      ]
+    },
+    {
+      "Id": "Hands",
+      "AllowedCategories": [
+        "Armor"
+      ]
+    },
+    {
+      "Id": "Legs",
+      "AllowedCategories": [
+        "Armor"
+      ]
+    },
+    {
+      "Id": "Feet",
+      "AllowedCategories": [
+        "Armor"
+      ]
+    },
+    {
+      "Id": "Neck",
+      "AllowedCategories": [
+        "Accessory"
+      ]
+    },
+    {
+      "Id": "Ring1",
+      "AllowedCategories": [
+        "Accessory"
+      ]
+    },
+    {
+      "Id": "Ring2",
+      "AllowedCategories": [
+        "Accessory"
+      ]
+    }
+  ],
+  "Items": [
+    {
+      "Id": "Potion",
+      "DisplayName": "生命药剂",
+      "Category": "Consumable",
+      "IconId": "Potion",
+      "EquipmentId": "",
+      "UseId": "Heal",
+      "MaxStack": 20,
+      "BuyPrice": 20,
+      "SellPrice": 5,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "ManaPotion",
+      "DisplayName": "法力药剂",
+      "Category": "Consumable",
+      "IconId": "Potion",
+      "EquipmentId": "",
+      "UseId": "Mana",
+      "MaxStack": 20,
+      "BuyPrice": 24,
+      "SellPrice": 6,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "Ration",
+      "DisplayName": "口粮",
+      "Category": "Consumable",
+      "IconId": "Potion",
+      "EquipmentId": "",
+      "UseId": "Food",
+      "MaxStack": 20,
+      "BuyPrice": 8,
+      "SellPrice": 2,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "Supply",
+      "DisplayName": "补给",
+      "Category": "Material",
+      "IconId": "Material",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 20,
+      "BuyPrice": 0,
+      "SellPrice": 0,
+      "MaxDurability": 0,
+      "Sellable": false,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "Material",
+      "DisplayName": "材料",
+      "Category": "Material",
+      "IconId": "Material",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 99,
+      "BuyPrice": 0,
+      "SellPrice": 1,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "Herb",
+      "DisplayName": "草药",
+      "Category": "Material",
+      "IconId": "Material",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 99,
+      "BuyPrice": 0,
+      "SellPrice": 2,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "Wood",
+      "DisplayName": "木材",
+      "Category": "Material",
+      "IconId": "Material",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 99,
+      "BuyPrice": 0,
+      "SellPrice": 2,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "Ore",
+      "DisplayName": "矿石",
+      "Category": "Material",
+      "IconId": "Material",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 99,
+      "BuyPrice": 0,
+      "SellPrice": 3,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "TrainingSword",
+      "DisplayName": "练习剑",
+      "Category": "Weapon",
+      "IconId": "Weapon",
+      "EquipmentId": "TrainingSword",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 0,
+      "SellPrice": 0,
+      "MaxDurability": 0,
+      "Sellable": false,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "MainHand"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "TrainingShield",
+      "DisplayName": "练习盾",
+      "Category": "Shield",
+      "IconId": "Shield",
+      "EquipmentId": "TrainingShield",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 0,
+      "SellPrice": 0,
+      "MaxDurability": 0,
+      "Sellable": false,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "OffHand"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "TrainingHammer",
+      "DisplayName": "练习战锤",
+      "Category": "Weapon",
+      "IconId": "Weapon",
+      "EquipmentId": "TrainingHammer",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 0,
+      "SellPrice": 0,
+      "MaxDurability": 0,
+      "Sellable": false,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "MainHand"
+      ],
+      "AdditionalOccupiedSlots": [
+        "OffHand"
+      ],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "TideStaff",
+      "DisplayName": "潮汐法杖",
+      "Category": "Weapon",
+      "IconId": "Weapon",
+      "EquipmentId": "TideStaff",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 0,
+      "SellPrice": 0,
+      "MaxDurability": 0,
+      "Sellable": false,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "MainHand"
+      ],
+      "AdditionalOccupiedSlots": [
+        "OffHand"
+      ],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "AncientSeal",
+      "DisplayName": "古代封印",
+      "Category": "Material",
+      "IconId": "Material",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 0,
+      "SellPrice": 0,
+      "MaxDurability": 0,
+      "Sellable": false,
+      "Droppable": false,
+      "QuestLocked": true,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "BellHammer",
+      "DisplayName": "鸣钟战锤",
+      "Category": "Material",
+      "IconId": "Material",
+      "EquipmentId": "BellHammer",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 0,
+      "SellPrice": 0,
+      "MaxDurability": 0,
+      "Sellable": false,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "EmberFocus",
+      "DisplayName": "余烬法器",
+      "Category": "Material",
+      "IconId": "Material",
+      "EquipmentId": "EmberFocus",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 0,
+      "SellPrice": 0,
+      "MaxDurability": 0,
+      "Sellable": false,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {}
+    },
+    {
+      "Id": "LeatherCap",
+      "DisplayName": "皮帽",
+      "Category": "Armor",
+      "IconId": "Head",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 40,
+      "SellPrice": 10,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Head"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 2
+      }
+    },
+    {
+      "Id": "LeatherVest",
+      "DisplayName": "皮背心",
+      "Category": "Armor",
+      "IconId": "Chest",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 40,
+      "SellPrice": 10,
+      "MaxDurability": 100,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Chest"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 5
+      }
+    },
+    {
+      "Id": "LeatherGloves",
+      "DisplayName": "皮手套",
+      "Category": "Armor",
+      "IconId": "Hands",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 40,
+      "SellPrice": 10,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Hands"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 1
+      }
+    },
+    {
+      "Id": "LeatherLeggings",
+      "DisplayName": "皮护腿",
+      "Category": "Armor",
+      "IconId": "Legs",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 40,
+      "SellPrice": 10,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Legs"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 3
+      }
+    },
+    {
+      "Id": "LeatherBoots",
+      "DisplayName": "皮靴",
+      "Category": "Armor",
+      "IconId": "Feet",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 40,
+      "SellPrice": 10,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Feet"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 2
+      }
+    },
+    {
+      "Id": "CopperNecklace",
+      "DisplayName": "铜项链",
+      "Category": "Accessory",
+      "IconId": "Neck",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 40,
+      "SellPrice": 10,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Neck"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "MaxHealth": 10
+      }
+    },
+    {
+      "Id": "CopperRing",
+      "DisplayName": "铜戒指",
+      "Category": "Accessory",
+      "IconId": "Ring1",
+      "EquipmentId": "",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 40,
+      "SellPrice": 10,
+      "MaxDurability": 0,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Ring1",
+        "Ring2"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "MaxStamina": 5
+      }
+    }
+  ]
+}
