@@ -35,13 +35,13 @@ bool FMaterial::IsValid() const
 {
     const double Values[] = { DryMassKg, SpecificHeatJPerKgK, WaterCapacityKg, InitialFuelKg,
         IgnitionC, BurnRateKgPerSec, CombustionJPerKg, RetainedHeatFraction, Conductivity,
-        ThermalCouplingWPerK, CoolingWPerK, StrengthNs, FrozenStrengthMultiplier,
+        ThermalCouplingWPerK, CoolingWPerK, StrengthNs, CutResistanceJ, FrozenStrengthMultiplier,
         SealedVolumeM3, BurstGaugePressurePa };
     for (double V : Values) { if (!Finite(V)) return false; }
     return DryMassKg > 0 && SpecificHeatJPerKgK > 0 && WaterCapacityKg >= 0 && InitialFuelKg >= 0
         && IgnitionC > 100 && BurnRateKgPerSec >= 0 && CombustionJPerKg >= 0
         && RetainedHeatFraction >= 0 && RetainedHeatFraction <= 1 && Conductivity >= 0 && Conductivity <= 1
-        && ThermalCouplingWPerK >= 0 && CoolingWPerK >= 0 && StrengthNs > 0
+        && ThermalCouplingWPerK >= 0 && CoolingWPerK >= 0 && StrengthNs > 0 && CutResistanceJ >= 0
         && FrozenStrengthMultiplier > 0 && FrozenStrengthMultiplier <= 1
         && SealedVolumeM3 >= 0 && BurstGaugePressurePa > 0;
 }
@@ -111,6 +111,7 @@ bool FSimulation::Enqueue(const FStimulus& S)
     if (!PositionValid(S.PositionCm) || !Finite(S.RadiusCm) || S.RadiusCm < 0 || S.RadiusCm > 2000
         || !Finite(S.HeatJ) || FMath::Abs(S.HeatJ) > 1.e8 || !Finite(S.WaterKg) || S.WaterKg < 0 || S.WaterKg > 100
         || !Finite(S.ElectricalJ) || S.ElectricalJ < 0 || S.ElectricalJ > 1.e8
+        || !Finite(S.CuttingWorkJ) || S.CuttingWorkJ < 0 || S.CuttingWorkJ > 1.e6
         || S.ImpulseNs.ContainsNaN() || S.ImpulseNs.Size() > 1.e6
         || (S.Target != InvalidBody && !Bodies.Contains(S.Target)) || Pending.Num() >= Settings.MaxPendingInputs)
     { ++Stats.RejectedInputs; return false; }
@@ -179,6 +180,7 @@ void FSimulation::Resolve(FBodyId Id, FBody& B)
     {
         const double VaporKg = FMath::Min(S.WaterKg, (S.EnthalpyJ - BoilH) / VaporizationJPerKg);
         const double CarriedJ = VaporKg * (FusionJPerKg + WaterCp * 100 + VaporizationJPerKg);
+        S.ElectricalWaterKg *= FMath::Max(0.0, 1.0 - VaporKg / S.WaterKg);
         S.WaterKg -= VaporKg; S.EnthalpyJ -= CarriedJ;
         if (B.Material.SealedVolumeM3 > 0 && !S.bBurst) S.GasEnergyJ += CarriedJ;
         else Stats.VentedEnergyJ += CarriedJ;
@@ -200,13 +202,21 @@ void FSimulation::Apply(FBodyId Id, const FStimulus& Input, double Weight)
     FBody* B = Bodies.Find(Id); if (!B) return;
     Wake(Id);
     FState& S = B->State;
-    if (FMath::Abs(Input.HeatJ) > 1 || Input.ElectricalJ > 0 || Input.WaterKg > 0 || !Input.ImpulseNs.IsNearlyZero()) { S.LastSource = Input.Source; S.RootCauseId = Input.RootCauseId; }
+    if (FMath::Abs(Input.HeatJ) > 1 || Input.ElectricalJ > 0 || Input.WaterKg > 0 || Input.CuttingWorkJ > 0 || !Input.ImpulseNs.IsNearlyZero()) { S.LastSource = Input.Source; S.RootCauseId = Input.RootCauseId; }
     const double Water = FMath::Min(Input.WaterKg * Weight, FMath::Max(0.0, B->Material.WaterCapacityKg - S.WaterKg));
     Stats.RejectedWaterKg += Input.WaterKg * Weight - Water;
     S.WaterKg += Water; S.ElectricalWaterKg=FMath::Min(S.WaterKg,S.ElectricalWaterKg+Water);
     if (Input.WaterKg * Weight > 0) S.ElectricalWetness01 = FMath::Clamp(S.ElectricalWetness01 + Input.WaterKg * Weight * 2, 0.0, 1.0);
     S.EnthalpyJ += Input.HeatJ * Weight + Water * WaterEnthalpy(FMath::Max(0.0, Environment.TemperatureC));
     Resolve(Id, *B);
+    const double Cut = Input.CuttingWorkJ * Weight;
+    if (Cut > 0)
+    {
+        const double Resistance = B->Material.CutResistanceJ;
+        const double Absorbed = Resistance > 0 ? FMath::Min(Cut, S.Integrity * Resistance) : 0;
+        if (Resistance > 0) S.Integrity = FMath::Max(0.0, S.Integrity - Absorbed / Resistance);
+        Stats.CuttingDeliveredJ += Cut; Stats.CuttingAbsorbedJ += Absorbed; Stats.CuttingUnusedJ += Cut - Absorbed;
+    }
     const FVector Impulse = Input.ImpulseNs * Weight;
     if (!Impulse.IsNearlyZero())
     {
@@ -392,19 +402,24 @@ void FSimulation::React(FBodyId Id, FBody& B)
     if (!S.bBurning && NearAmbient && RainStable && S.ElectricalWetness01 <= 1.e-8) B.QuietSeconds += Dt; else B.QuietSeconds = 0;
     if (B.QuietSeconds >= 1) Active.Remove(Id);
 }
-double FSimulation::TransferLiquid(FBodyId From, FBodyId To, double MaxKg)
+double FSimulation::TransferLiquid(FBodyId From, FBodyId To, double MaxKg, FBodyId Source)
 {
     FBody* A = Bodies.Find(From); FBody* B = Bodies.Find(To);
     if (!A || !B || From == To || !Finite(MaxKg) || MaxKg <= 0 || (CanExchange && !CanExchange(From, To))) return 0;
+    if ((Source != InvalidBody && !Bodies.Contains(Source)) || (CanReceiveInput && (!CanReceiveInput(From, Source) || !CanReceiveInput(To, Source)))) return 0;
     const double Kg = FMath::Min3(MaxKg, A->State.WaterKg * (1 - A->State.IceFraction),
         FMath::Max(0.0, B->Material.WaterCapacityKg - B->State.WaterKg));
     if (Kg <= 1.e-9) return 0;
     const double J = Kg * WaterEnthalpy(FMath::Max(0.0, A->State.TemperatureC));
-    A->State.ElectricalWaterKg=FMath::Max(0.0,A->State.ElectricalWaterKg-Kg);
-    B->State.ElectricalWaterKg=FMath::Min(B->State.WaterKg+Kg,B->State.ElectricalWaterKg+Kg);
+    // Uniform mixture: moving rain water cannot mint electrical eligibility.
+    const double ElectricalKg = Kg * FMath::Clamp(A->State.ElectricalWaterKg / A->State.WaterKg, 0.0, 1.0);
+    A->State.ElectricalWaterKg = FMath::Max(0.0, A->State.ElectricalWaterKg - ElectricalKg);
+    B->State.ElectricalWaterKg += ElectricalKg;
     A->State.WaterKg -= Kg; A->State.EnthalpyJ -= J;
     B->State.WaterKg += Kg; B->State.EnthalpyJ += J;
-    B->State.ElectricalWetness01 = FMath::Clamp(B->State.ElectricalWetness01 + Kg * 2, 0.0, 1.0); B->State.LastSource = A->State.LastSource; B->State.RootCauseId=A->State.RootCauseId;
+    B->State.ElectricalWetness01 = FMath::Clamp(B->State.ElectricalWetness01 + ElectricalKg * 2, 0.0, 1.0);
+    B->State.LastSource = Source == InvalidBody ? A->State.LastSource : Source; B->State.RootCauseId = NextCause++;
+    Stats.TransferredWaterKg += Kg; Stats.TransferredEnthalpyJ += J;
     Resolve(From, *A); Resolve(To, *B); Wake(From); Wake(To);
     return Kg;
 }
@@ -440,7 +455,9 @@ double FSimulation::WithdrawLiquid(FBodyId From, double MaxKg)
     if (!B || !Finite(MaxKg) || MaxKg <= 0) return 0;
     const double Kg = FMath::Min(MaxKg, B->State.WaterKg * (1 - B->State.IceFraction));
     const double J = Kg * WaterEnthalpy(FMath::Max(0.0, B->State.TemperatureC));
-    B->State.ElectricalWaterKg=FMath::Max(0.0,B->State.ElectricalWaterKg-Kg);
+    if (Kg <= 1.e-9) return 0;
+    B->State.ElectricalWaterKg *= FMath::Max(0.0, 1.0 - Kg / B->State.WaterKg);
+    Stats.WithdrawnWaterKg += Kg; Stats.WithdrawnEnthalpyJ += J;
     B->State.WaterKg -= Kg; B->State.EnthalpyJ -= J; Resolve(From, *B); Wake(From); return Kg;
 }
 void FSimulation::Step()

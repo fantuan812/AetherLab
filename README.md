@@ -29,3 +29,5 @@ WASD 移动，Shift 冲刺，Ctrl 跳跃，Space 闪避；左键轻击/按住重
 轻量验证：`Scripts/TestLight.ps1` 仅运行 9 个小型规则测试；本轮不跑 `TestFrontierNetwork.ps1`、规模压力测试和旧模式回归。如需短启动/重启检查，运行 `Scripts/CheckFrontier.ps1`，使用独立测试存档。完整报告见 [Verification-v5.json](Docs/Verification-v5.json)。
 
 后续玩法记录见 [Gameplay-v6.zh-CN.md](Docs/Gameplay-v6.zh-CN.md)。J 面板中 Tab / 下一项切换任务，M 查看同一目标的位置。`Scripts/CheckAnimation.ps1` 和 `Scripts/CheckGuidance.ps1` 各进行一次隔离存档的短启动检查，无需多人压力或全量 Cook；结果见 [Verification-v6.json](Docs/Verification-v6.json)。
+
+反应与物理后续：[v7 实现记录](Docs/Reactions-v7.zh-CN.md)。新增有限水桶的原子水量/焓转移、独立剑刃切割、限时落物归属及材料签名兼容。`Scripts/TestReactionLight.ps1` 运行 8 个规则小测试；`Scripts/CheckReactions.ps1` 运行一次短场景检查。

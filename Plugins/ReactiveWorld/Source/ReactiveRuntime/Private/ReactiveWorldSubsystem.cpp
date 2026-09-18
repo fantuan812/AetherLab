@@ -81,7 +81,7 @@ bool UReactiveWorldSubsystem::Submit(UReactiveBodyComponent* Target, const FReac
     if (IsValid(Input.SourceActor) && Input.SourceActor->GetWorld() == GetWorld())
         if (auto* Source = Input.SourceActor->FindComponentByClass<UReactiveBodyComponent>()) S.Source = Source->GetBodyId();
     S.PositionCm = Input.PositionCm; S.RadiusCm = Input.RadiusCm; S.HeatJ = Input.HeatJ;
-    S.WaterKg = Input.WaterKg; S.ElectricalJ = Input.ElectricalJ; S.ImpulseNs = Input.ImpulseNs;S.bApplyPhysicsImpulse=Input.bApplyPhysicsImpulse;
+    S.WaterKg = Input.WaterKg; S.ElectricalJ = Input.ElectricalJ; S.ImpulseNs = Input.ImpulseNs;S.bApplyPhysicsImpulse=Input.bApplyPhysicsImpulse;S.CuttingWorkJ=Input.CuttingWorkJ;
     return Simulation->Enqueue(S);
 }
 bool UReactiveWorldSubsystem::SetWeather(double T, double Rain, FVector Wind)
@@ -154,28 +154,40 @@ AActor* UReactiveWorldSubsystem::GetBodyOwner(Reactive::FBodyId Id) const
     const auto* Entry = Components.Find(Id);
     return Entry && Entry->IsValid() ? Entry->Get()->GetOwner() : nullptr;
 }
-double UReactiveWorldSubsystem::TransferWater(UReactiveBodyComponent* From, UReactiveBodyComponent* To, double MaxKg)
+double UReactiveWorldSubsystem::TransferWater(UReactiveBodyComponent* From, UReactiveBodyComponent* To, double MaxKg, AActor* SourceActor)
 {
     if (!IsAuthority() || !Simulation || !IsValid(From) || !IsValid(To) || From->GetWorld() != GetWorld() || To->GetWorld() != GetWorld()) return 0;
+    Reactive::FBodyId Source = Reactive::InvalidBody;
+    if (SourceActor)
+    {
+        if (!IsValid(SourceActor) || SourceActor->GetWorld() != GetWorld()) return 0;
+        const auto* Body = SourceActor->FindComponentByClass<UReactiveBodyComponent>();
+        if (!Body || Body->GetBodyId() == Reactive::InvalidBody) return 0;
+        Source = Body->GetBodyId();
+    }
     ContactCache.Reset();
-    return Simulation->TransferLiquid(From->GetBodyId(), To->GetBodyId(), MaxKg);
+    const double Moved = Simulation->TransferLiquid(From->GetBodyId(), To->GetBodyId(), MaxKg, Source);
+    if (Moved > 0) { From->AcceptState(*Simulation->Find(From->GetBodyId())); To->AcceptState(*Simulation->Find(To->GetBodyId())); }
+    return Moved;
 }
 namespace
 {
-uint32 MaterialSignature(const Reactive::FMaterial& M)
+uint32 MaterialSignature(const Reactive::FMaterial& M, int32 Schema)
 {
     const double Values[] = { M.DryMassKg, M.SpecificHeatJPerKgK, M.WaterCapacityKg, M.InitialFuelKg, M.IgnitionC,
         M.BurnRateKgPerSec, M.CombustionJPerKg, M.RetainedHeatFraction, M.Conductivity, M.ThermalCouplingWPerK,
         M.CoolingWPerK, M.StrengthNs, M.FrozenStrengthMultiplier, M.SealedVolumeM3, M.BurstGaugePressurePa };
     uint32 Hash = GetTypeHash(M.bLiquidConductor);
     for (double V : Values) Hash = HashCombineFast(Hash, GetTypeHash(V));
-    return Hash;
+    return Schema == 1 ? HashCombineFast(Hash, GetTypeHash(M.CutResistanceJ)) : Hash;
 }
 }
 double UReactiveWorldSubsystem::WithdrawWater(UReactiveBodyComponent* From, double MaxKg)
 {
     if (!IsAuthority() || !Simulation || !IsValid(From) || From->GetWorld() != GetWorld()) return 0;
-    return Simulation->WithdrawLiquid(From->GetBodyId(), MaxKg);
+    const double Taken=Simulation->WithdrawLiquid(From->GetBodyId(), MaxKg);
+    if(Taken>0)From->AcceptState(*Simulation->Find(From->GetBodyId()));
+    return Taken;
 }
 bool UReactiveWorldSubsystem::Capture(TArray<FReactiveSaveRecord>& Records) const
 {
@@ -189,7 +201,7 @@ bool UReactiveWorldSubsystem::Capture(TArray<FReactiveSaveRecord>& Records) cons
         Names.Add(Body->StableId);
         const Reactive::FState* S = Simulation->Find(Pair.Key); if (!S) return false;
         FReactiveSaveRecord R; R.StableId = Body->StableId; R.Transform = Body->GetOwner()->GetActorTransform();
-        R.MaterialSignature = MaterialSignature(Body->GetMaterial());
+        R.MaterialSchema = 1; R.MaterialSignature = MaterialSignature(Body->GetMaterial(), R.MaterialSchema);
         R.ElectricalWaterKg=S->ElectricalWaterKg; R.ElectricalWetness01 = S->ElectricalWetness01; R.EnthalpyJ = S->EnthalpyJ; R.WaterKg = S->WaterKg; R.FuelKg = S->FuelKg; R.Integrity = S->Integrity;
         R.GasEnergyJ = S->GasEnergyJ; R.bBurning = S->bBurning; R.bBroken = S->bBroken; R.bBurst = S->bBurst;
         if(auto* M=Body->GetOwner()->FindComponentByClass<UReactiveMechanismComponent>())
@@ -212,7 +224,7 @@ bool UReactiveWorldSubsystem::Restore(const TArray<FReactiveSaveRecord>& Records
     for (const FReactiveSaveRecord& R : Records)
     {
         UReactiveBodyComponent* B = ByName.FindRef(R.StableId);
-        if (!B || Seen.Contains(R.StableId) || R.MaterialSignature != MaterialSignature(B->GetMaterial())
+        if (!B || Seen.Contains(R.StableId) || (R.MaterialSchema != 0 && R.MaterialSchema != 1) || R.MaterialSignature != MaterialSignature(B->GetMaterial(), R.MaterialSchema)
             || !R.Transform.IsValid() || R.Transform.GetLocation().GetAbsMax() > 1.e8
             || R.Transform.GetScale3D().GetMin() <= 0 || R.Transform.GetScale3D().GetMax() > 1000) return false;
         if(!FMath::IsFinite(R.RemainingEnergyJ)||R.RemainingEnergyJ<0||!FMath::IsFinite(R.SourceAge)||R.SourceAge<0)return false;

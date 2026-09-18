@@ -62,8 +62,6 @@ void AAetherFrontierProp::ReceiveEquipmentHit_Implementation(const FAetherEquipm
             for(FName F:{FName("Melee1"),FName("Melee2"),FName("Melee3")})if(!PS->Profile.Evidence.Contains(F)){M->Observe(C,F);break;}
         return;
     }
-    if(Spec.Kind==EAetherObjectKind::Rope && Hit.ItemId=="TrainingSword")
-    { FReactiveStimulus S;S.SourceActor=Hit.Source;S.ImpulseNs=FVector(40,0,0);Reactive->Inject(S);return; }
     if(Spec.bInteractiveMaterial)Super::ReceiveEquipmentHit_Implementation(Hit);
 }
 void AAetherFrontierProp::OnMaterialReaction(EReactiveReaction K,double Magnitude,FVector Vector)
@@ -392,6 +390,7 @@ void AAetherFrontierMode::Tick(float Dt)
     }
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherAnimationCheck"))&&Elapsed>2)CheckAnimation();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherGuidanceCheck"))&&Elapsed>2)CheckGuidance();
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherReactionCheck"))&&Elapsed>2)CheckReactions();
     if(bSmoke)SmokeStep();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherV4Capture")))
     { static bool Taken=false;if(Elapsed>8&&!Taken){Taken=true;FScreenshotRequest::RequestScreenshot(FPaths::ProjectDir()/TEXT("Docs/Images/AetherFrontier.png"),true,false);}if(Elapsed>11)FPlatformMisc::RequestExit(false); }

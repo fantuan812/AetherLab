@@ -27,6 +27,7 @@ struct REACTIVECORE_API FMaterial
     double ThermalCouplingWPerK = 4.0;
     double CoolingWPerK = 0.1;
     double StrengthNs = 30.0;
+    double CutResistanceJ = 0; // Zero: not cuttable. Work required to consume full integrity; separate from impulse.
     double FrozenStrengthMultiplier = 0.25;
     double SealedVolumeM3 = 0.0; // Zero = open. Simplified caloric gas reservoir.
     double BurstGaugePressurePa = 150000.0;
@@ -77,6 +78,7 @@ struct FStimulus
     double HeatJ = 0.0; // Negative = extraction.
     double WaterKg = 0.0;
     double ElectricalJ = 0.0;
+    double CuttingWorkJ = 0; // Mechanical cutting work, not heat or momentum.
     bool bApplyPhysicsImpulse = true;
     FVector ImpulseNs = FVector::ZeroVector;
 };
@@ -119,6 +121,10 @@ struct FStats
     double RejectedExtractionJ = 0;
     double VentedEnergyJ = 0.0;
     double RejectedWaterKg = 0.0;
+    double TransferredWaterKg = 0, TransferredEnthalpyJ = 0;
+    double WithdrawnWaterKg = 0, WithdrawnEnthalpyJ = 0; // Leaves the material model (e.g. water flask).
+    double CuttingDeliveredJ = 0, CuttingAbsorbedJ = 0, CuttingUnusedJ = 0;
+
 };
 
 struct FSettings
@@ -145,7 +151,7 @@ public:
     bool Enqueue(const FStimulus& Input);
     bool SetEnvironment(const FEnvironment& InEnvironment);
     // Transfers only liquid water, carrying its enthalpy. No water is created or lost.
-    double TransferLiquid(FBodyId From, FBodyId To, double MaxKg);
+    double TransferLiquid(FBodyId From, FBodyId To, double MaxKg, FBodyId Source = InvalidBody);
     double WithdrawLiquid(FBodyId From, double MaxKg);
     // Validates the entire batch before mutation; transient inputs/events are discarded on success.
     bool RestoreStates(const TMap<FBodyId, FState>& States);

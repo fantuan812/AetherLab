@@ -46,6 +46,6 @@
   "git": {
     "baseAssetsCommit": "988bda4",
     "animationCommit": "ea7705a",
-    "push": "Blocked by automatic approval review pending explicit destination authorization"
+    "push": "Pushed after explicit destination authorization; local and remote main verified at 38d5839"
   }
 }

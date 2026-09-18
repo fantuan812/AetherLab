@@ -102,10 +102,9 @@ FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
         AAetherFrontierProp* Fire=nullptr;double Distance=FMath::Square(600.0);
         for(AAetherFrontierProp* P:Props)if(P->Spec.Id.ToString().StartsWith("ForestFire")){double D=FVector::DistSquared(P->GetActorLocation(),Nearest->GetActorLocation());if(D<Distance){Distance=D;Fire=P;}}
         if(!Fire)return TEXT("No fire beside this bucket.");
-        const double Water=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->WithdrawWater(Nearest->Reactive,.5);
-        if(Water>0){FReactiveStimulus Splash;Splash.SourceActor=C;Splash.WaterKg=Water;Fire->Reactive->Inject(Splash);}
-        else if(AetherGuide::CanInspectFire(Fire)){Observe(C,Fire->Service);return TEXT("水桶已空，已检查清理后的火点。");}
-        return Water>0?TEXT("已把桶中现有的水泼向火点。"):TEXT("水桶已空；火点仍不安全，需补水或使用引泉。");
+        if(AetherGuide::CanInspectFire(Fire)){Observe(C,Fire->Service);return TEXT("已检查清理后的火点，未额外消耗桶中水。");}
+        const double Water=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->TransferWater(Nearest->Reactive,Fire->Reactive,.5,C);
+        return Water>0?FString::Printf(TEXT("已转移 %.3f kg 水；未被接收的水保留在桶中。"),Water):TEXT("无法转移：水源无液态水、目标已满或通路受阻。");
     }
     else if(Service=="HingedGate"){Nearest->Mechanism->bGateOpen=!Nearest->Mechanism->bGateOpen;return TEXT("Gate motor toggled; physical obstructions resist its limited force.");}
     else if(Service=="Source"){State->bPowerOn=!State->bPowerOn;SaveWorld();return State->bPowerOn?TEXT("Power on."):TEXT("Power off; no residual charge in the rod.");}

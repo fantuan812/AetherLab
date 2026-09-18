@@ -16,7 +16,7 @@
 
 ## 版本提交
 
-基础代码、模型与地图：988bda4。现有 origin 指向 git@github.com:fantuan812/AetherLab.git；第一次推送被自动审批要求明确目的地授权，目前已询问用户。未将本地提交描述为已上传。
+基础代码、模型与地图：988bda4。现有 origin 指向 git@github.com:fantuan812/AetherLab.git。用户随后确认目的地，基础、动画与任务指引三次提交已成功推送，远端核对到 38d5839。
 
 ## 任务指引与交互
 

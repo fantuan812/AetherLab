@@ -1,5 +1,6 @@
 #include "ReactiveBodyComponent.h"
 #include "ReactiveWorldSubsystem.h"
+#include "ReactiveMechanismComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/GameplayAbilityTypes.h"
 #include "Components/PrimitiveComponent.h"
@@ -108,7 +109,10 @@ void UReactiveBodyComponent::AcceptEvent(const Reactive::FEvent& Event)
         if (auto* World = GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()) World->TrackMovement(BodyId);
     }
     if (Event.Kind == Reactive::EEvent::Impulse && P && P->IsSimulatingPhysics())
+    {
+        if(auto* M=GetOwner()->FindComponentByClass<UReactiveMechanismComponent>())if(auto* World=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>())M->RecordImpactSource(World->GetBodyOwner(Event.Source));
         P->AddImpulse(Event.Vector * 100.0); // SI kg.m/s -> UE kg.cm/s.
+    }
     if (Event.Kind == Reactive::EEvent::Broken && bEnableChaosOnBreak)
     {
         if (auto* Collection = Cast<UGeometryCollectionComponent>(P))

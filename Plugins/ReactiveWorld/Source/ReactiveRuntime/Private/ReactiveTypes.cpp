@@ -8,7 +8,7 @@ Reactive::FMaterial FReactiveMaterialParameters::ToCore() const
     M.IgnitionC = IgnitionC; M.BurnRateKgPerSec = BurnRateKgPerSec;
     M.CombustionJPerKg = CombustionJPerKg; M.RetainedHeatFraction = RetainedHeatFraction;
     M.bLiquidConductor = bLiquidConductor; M.Conductivity = Conductivity; M.ThermalCouplingWPerK = ThermalCouplingWPerK;
-    M.CoolingWPerK = CoolingWPerK; M.StrengthNs = StrengthNs;
+    M.CoolingWPerK = CoolingWPerK; M.StrengthNs = StrengthNs; M.CutResistanceJ = CutResistanceJ;
     M.FrozenStrengthMultiplier = FrozenStrengthMultiplier;
     M.SealedVolumeM3 = SealedVolumeM3; M.BurstGaugePressurePa = BurstGaugePressurePa;
     return M;

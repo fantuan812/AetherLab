@@ -24,6 +24,7 @@ void UReactiveMechanismComponent::GetLifetimeReplicatedProps(TArray<FLifetimePro
 void UReactiveMechanismComponent::ReleaseSupport()
 {
     if(bReleased)return;bReleased=true;
+    for(const auto& S:Supports)if(IsValid(S)&&S->State.bBroken&&S->GetLastSourceActor()){RecordImpactSource(S->GetLastSourceActor());break;}
     if(Constraint)Constraint->BreakConstraint();
     if(Primitive.IsValid())Primitive->SetSimulatePhysics(true);
     if(auto* B=GetOwner()->FindComponentByClass<UReactiveBodyComponent>())
@@ -33,9 +34,11 @@ void UReactiveMechanismComponent::ReleaseSupport()
 void UReactiveMechanismComponent::RestoreMechanism(bool Released,double EnergyJ,double Age,bool Enabled)
 {
     if(!GetOwner()->HasAuthority()||!FMath::IsFinite(EnergyJ)||EnergyJ<0||!FMath::IsFinite(Age)||Age<0)return;
-    RemainingEnergyJ=EnergyJ;SourceAge=Age;bPowerEnabled=Enabled;PowerAccumulator=0;
+    RemainingEnergyJ=EnergyJ;SourceAge=Age;bPowerEnabled=Enabled;
+    ImpactSource.Reset();ImpactSourceExpiresAt=-1;
     bReleased=false;if(Released)ReleaseSupport();else if(Constraint){if(Primitive.IsValid())Primitive->SetSimulatePhysics(true);Constraint->InitComponentConstraint();}
-    LastImpacts.Reset();
+    // Restoring a released constraint is not a new player-caused break.
+    ImpactSource.Reset();ImpactSourceExpiresAt=-1;LastImpacts.Reset();
 }
 void UReactiveMechanismComponent::TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Tick)
 {
@@ -80,9 +83,21 @@ void UReactiveMechanismComponent::Hit(UPrimitiveComponent* HitComponent,AActor* 
     if(Joules<ImpactThresholdJ)return;
     LastImpacts.Add(Other,Now);
     for(auto It=LastImpacts.CreateIterator();It;++It)if(!It.Key().IsValid()||Now-It.Value()>2)It.RemoveCurrent();
-    AActor* Instigator=GetOwner()->GetInstigator();if(!Instigator)if(auto* B=GetOwner()->FindComponentByClass<UReactiveBodyComponent>())Instigator=B->GetLastSourceActor();if(!Instigator)Instigator=GetOwner();
-    auto* Pawn=Cast<APawn>(Instigator);AController* Controller=Pawn?Pawn->GetController():Instigator->GetInstigatorController();
+    AActor* Instigator=GetImpactSource();
+    auto* Pawn=Cast<APawn>(Instigator);AController* Controller=Pawn?Pawn->GetController():Instigator?Instigator->GetInstigatorController():nullptr;
     UGameplayStatics::ApplyDamage(Other,FMath::Clamp(float((Joules-ImpactThresholdJ)/35),0.f,70.f),Controller,GetOwner(),nullptr);
     if(auto* Body=Other->FindComponentByClass<UReactiveBodyComponent>())
     {FReactiveStimulus S;S.SourceActor=Instigator;S.bApplyPhysicsImpulse=false;S.ImpulseNs=NormalImpulse/100.;Body->Inject(S);}
+}
+
+void UReactiveMechanismComponent::RecordImpactSource(AActor* Source)
+{
+    if(!GetOwner()->HasAuthority())return;
+    ImpactSource=IsValid(Source)&&Source->GetWorld()==GetWorld()?Source:nullptr;
+    const double Duration=FMath::IsFinite(ImpactCreditSeconds)?FMath::Clamp(ImpactCreditSeconds,0.0,30.0):0;
+    ImpactSourceExpiresAt=GetWorld()->GetTimeSeconds()+Duration;
+}
+AActor* UReactiveMechanismComponent::GetImpactSource() const
+{
+    return GetWorld()&&GetWorld()->GetTimeSeconds()<ImpactSourceExpiresAt?ImpactSource.Get():nullptr;
 }

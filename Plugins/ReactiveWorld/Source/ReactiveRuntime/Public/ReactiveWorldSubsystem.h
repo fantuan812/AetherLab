@@ -23,7 +23,7 @@ public:
     const Reactive::FSimulation* GetSimulation() const { return Simulation.Get(); }
     void TrackMovement(Reactive::FBodyId Id) { Moving.Add(Id); }
     AActor* GetBodyOwner(Reactive::FBodyId Id) const;
-    double TransferWater(UReactiveBodyComponent* From, UReactiveBodyComponent* To, double MaxKg);
+    double TransferWater(UReactiveBodyComponent* From, UReactiveBodyComponent* To, double MaxKg, AActor* SourceActor = nullptr);
     double WithdrawWater(UReactiveBodyComponent* From, double MaxKg);
     bool Capture(TArray<FReactiveSaveRecord>& Records) const;
     bool Restore(const TArray<FReactiveSaveRecord>& Records);

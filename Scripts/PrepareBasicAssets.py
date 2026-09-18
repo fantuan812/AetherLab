@@ -20,6 +20,10 @@ for name,scale,two,off in [('TrainingSword',(.07,.1,.9),False,False),('TrainingH
     item=create('DA_'+name,ue.AetherEquipmentDefinition)
     props(item,item_id=name,display_name=name,slot='OffHand' if off else 'MainHand',socket='hand_l' if off else 'hand_r',mesh=cylinder if off else cube,occupies_both_hands=two,allows_guard=off,grip_transform=ue.Transform(location=ue.Vector(0,0,30),rotation=ue.Rotator(0,0,0),scale=ue.Vector(*scale)))
     item.set_editor_property('attacks',[] if off else [attack('Light',26 if two else 16,16 if two else 8,210 if two else 165,18 if two else 6,.2 if two else .08),attack('Heavy',45 if two else 32,30 if two else 24,230 if two else 180,50 if two else 32,.3)])
+    if name=='TrainingSword':
+        attacks=list(item.get_editor_property('attacks'))
+        for a in attacks:a.set_editor_property('cutting_work_j',24.0 if str(a.id)=='Light' else 40.0)
+        item.set_editor_property('attacks',attacks)
     L.save_loaded_asset(item);items.append(item)
 cat=create('DA_EquipmentCatalog',ue.AetherEquipmentCatalog);cat.set_editor_property('items',items);L.save_loaded_asset(cat)
 body=L.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple')

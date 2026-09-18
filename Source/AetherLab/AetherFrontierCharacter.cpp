@@ -165,7 +165,7 @@ void AAetherFrontierCharacter::Notify_Implementation(const FString& Message){Fee
 void AAetherFrontierCharacter::ReleaseCarry()
 {
     if(!HasAuthority())return; CarryHandle->ReleaseComponent();
-    if(Carried){Carried->Carrier=nullptr; Carried->Mesh->IgnoreActorWhenMoving(this,false);GetCapsuleComponent()->IgnoreActorWhenMoving(Carried,false); Carried->ForceNetUpdate();}
+    if(Carried){Carried->Mechanism->RecordImpactSource(this);Carried->Carrier=nullptr; Carried->Mesh->IgnoreActorWhenMoving(this,false);GetCapsuleComponent()->IgnoreActorWhenMoving(Carried,false); Carried->ForceNetUpdate();}
     Carried=nullptr;
 }
 void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason){ReleaseCarry();Super::EndPlay(Reason);}
@@ -211,7 +211,7 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
     {if(Action=="PartyCommand"&&Mode->Encounters&&Mode->Encounters->Abbey.Phase==EAetherEncounterPhase::Channel&&FVector::DistSquared(GetActorLocation(),Mode->Prop("AbbeyValve")->GetActorLocation())<FMath::Square(300.)){Notify(Mode->Encounters->Channel(this,true));return;}for(const auto& B:Mode->Companions)if(IsValid(B)&&B->CompanionOwner==this){if(Action=="Dismiss")B->Destroy();else B->bCompanionHold=!B->bCompanionHold;}return;}
     if(Action=="Recruit"){Notify(Mode->RecruitCompanion(this));return;}
     if(Action=="Throw")
-    {if(Carried){auto* P=Carried.Get();ReleaseCarry();P->Mesh->AddImpulse(GetControlRotation().Vector()*P->Mesh->GetMass()*500);P->SetInstigator(this);}return;}
+    {if(Carried){auto* P=Carried.Get();ReleaseCarry();P->Mesh->AddImpulse(GetControlRotation().Vector()*P->Mesh->GetMass()*500);P->Mechanism->RecordImpactSource(this);}return;}
     if(Action=="Claim")
     {auto Next=PS->Profile;bool Changed=Next.CollectPending();for(int Q=0;Q<8;++Q)Changed|=Next.Claim(Q);if(Changed)Notify(Mode->Commit(PS,Next)?TEXT("Pending rewards received."):TEXT("Reward save failed; retry."));return;}
     if(Action=="Carry"||Action=="Push")
@@ -222,7 +222,7 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
         GetWorld()->LineTraceSingleByChannel(H,GetActorLocation()+FVector(0,0,25),GetActorLocation()+FVector(0,0,25)+GetControlRotation().Vector()*220,ECC_Visibility,Q);
         auto* P=Cast<AAetherFrontierProp>(H.GetActor());
         if(!P||!P->bCarryable||P->Carrier||P->Reactive->State.bBroken||!P->Mesh->IsSimulatingPhysics()||P->Mesh->GetMass()>80)return;
-        P->SetInstigator(this);if(Action=="Push"){P->Mesh->AddImpulse(GetActorForwardVector()*15000);return;}
+        P->Mechanism->RecordImpactSource(this);if(Action=="Push"){P->Mesh->AddImpulse(GetActorForwardVector()*15000);return;}
         P->Carrier=this;Carried=P;P->Mesh->IgnoreActorWhenMoving(this,true);GetCapsuleComponent()->IgnoreActorWhenMoving(P,true);
         CarryHandle->GrabComponentAtLocationWithRotation(P->Mesh,NAME_None,P->GetActorLocation(),P->GetActorRotation());return;
     }

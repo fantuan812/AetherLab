@@ -217,6 +217,7 @@ private:
     void SmokeStep();
     void CheckAnimation();
     void CheckGuidance();
+    void CheckReactions();
     float WeatherTimer = 0;
     float AreaTimer = 0;
     float Elapsed = 0; float SaveTimer = 0; float PowerTimer = 0;

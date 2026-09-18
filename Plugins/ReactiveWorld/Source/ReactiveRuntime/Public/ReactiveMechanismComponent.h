@@ -26,6 +26,9 @@ public:
     UPROPERTY(Replicated,EditAnywhere,BlueprintReadOnly,Category="Power") bool bPowerEnabled = true;
     UPROPERTY(EditAnywhere,Category="Power") double LifetimeSeconds = 0; // Zero: no lifetime cap; energy still finite.
     UPROPERTY(Replicated) double SourceAge = 0;
+    UPROPERTY(EditAnywhere,Category="Mechanism",meta=(ClampMin="0",ClampMax="30")) double ImpactCreditSeconds = 5;
+    void RecordImpactSource(AActor* Source);
+    AActor* GetImpactSource() const;
     void RestoreMechanism(bool Released, double EnergyJ, double Age, bool Enabled);
     virtual void BeginPlay() override;
     virtual void TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Tick) override;
@@ -35,6 +38,7 @@ private:
     UFUNCTION() void Hit(UPrimitiveComponent* HitComponent,AActor* Other,UPrimitiveComponent* OtherComponent,FVector NormalImpulse,const FHitResult& Result);
     TMap<TWeakObjectPtr<AActor>,double> LastImpacts;
     uint64 PulseSequence = 0;
-    double PowerAccumulator = 0;
+    TWeakObjectPtr<AActor> ImpactSource;
+    double ImpactSourceExpiresAt = -1;
     TWeakObjectPtr<UPrimitiveComponent> Primitive;
 };

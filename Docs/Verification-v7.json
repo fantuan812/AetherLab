@@ -1,0 +1,34 @@
+{
+  "date": "2026-09-18",
+  "engine": "UE 5.8.0",
+  "build": "AetherLabEditor Win64 Development: Succeeded",
+  "assetUpdate": "DA_TrainingSword.uasset: Light 24 J, Heavy 40 J; other assets unchanged",
+  "pureRules": {
+    "succeeded": 8,
+    "succeededWithWarnings": 0,
+    "failed": 0,
+    "notRun": 0,
+    "totalDuration": 0.06557919085025787
+  },
+  "world": {
+    "result": "PASS",
+    "checksPassed": 16,
+    "checksFailed": 0,
+    "gameSeconds": 3,
+    "rendering": "NullRHI",
+    "legacyFixture": "AetherV5Check_20260918a0 (read-only local test fixture; not committed)"
+  },
+  "commands": [
+    "Scripts/Build.ps1",
+    "UnrealEditor-Cmd -run=pythonscript -script=Scripts/UpdateReactionAssets.py -nullrhi",
+    "Scripts/TestReactionLight.ps1",
+    "Scripts/CheckReactions.ps1 -LegacyFixture AetherV5Check_20260918a0"
+  ],
+  "notRun": [
+    "Multiclient/network latency tests",
+    "Soak and stress tests",
+    "Full Cook/HLOD baking",
+    "Rendered visual and physics feel acceptance",
+    "Complete RX-01..RX-50 acceptance"
+  ]
+}

@@ -27,6 +27,7 @@ struct REACTIVERUNTIME_API FReactiveMaterialParameters
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Thermal", meta=(ClampMin="0")) double ThermalCouplingWPerK = 4;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Thermal", meta=(ClampMin="0")) double CoolingWPerK = 0.1;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Structure", meta=(ClampMin="0.01")) double StrengthNs = 30;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Structure", meta=(ClampMin="0")) double CutResistanceJ = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Structure", meta=(ClampMin="0.01", ClampMax="1")) double FrozenStrengthMultiplier = 0.25;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pressure", meta=(ClampMin="0")) double SealedVolumeM3 = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pressure", meta=(ClampMin="1")) double BurstGaugePressurePa = 150000;
@@ -53,6 +54,7 @@ struct REACTIVERUNTIME_API FReactiveStimulus
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive") double HeatJ = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive", meta=(ClampMin="0")) double WaterKg = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive", meta=(ClampMin="0")) double ElectricalJ = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive", meta=(ClampMin="0")) double CuttingWorkJ = 0;
     UPROPERTY() bool bApplyPhysicsImpulse = true;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Reactive") FVector ImpulseNs = FVector::ZeroVector;
 };
@@ -70,6 +72,7 @@ struct REACTIVERUNTIME_API FReactiveSaveRecord
     UPROPERTY() double RemainingEnergyJ = 0;
     UPROPERTY() double SourceAge = 0;
     UPROPERTY() uint32 MaterialSignature = 0;
+    UPROPERTY() int32 MaterialSchema = 0; // Legacy saves omit this field; new captures write 1.
     UPROPERTY() double EnthalpyJ = 0;
     UPROPERTY() double WaterKg = 0;
     UPROPERTY() double ElectricalWaterKg = 0;

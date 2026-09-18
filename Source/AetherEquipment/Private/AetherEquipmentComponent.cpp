@@ -9,10 +9,10 @@
 
 bool FAetherAttackDefinition::IsValid() const
 {
-    for (float V : {Damage,PostureDamage,ImpulseNs,StaminaCost,ReachCm,RadiusCm,WindupSeconds,ActiveSeconds,RecoverySeconds})
+    for (float V : {Damage,PostureDamage,ImpulseNs,CuttingWorkJ,StaminaCost,ReachCm,RadiusCm,WindupSeconds,ActiveSeconds,RecoverySeconds})
         if (!FMath::IsFinite(V) || V<0) return false;
     return !Id.IsNone() && ReachCm>0 && ReachCm<=1000 && RadiusCm>0 && RadiusCm<=200
-        && ActiveSeconds>0 && Duration()<=10 && StaminaCost<=100 && Damage<=10000;
+        && ActiveSeconds>0 && Duration()<=10 && StaminaCost<=100 && Damage<=10000 && CuttingWorkJ<=1000000;
 }
 const FAetherAttackDefinition* UAetherEquipmentDefinition::FindAttack(FName Id) const
 { return Attacks.FindByPredicate([Id](const auto& A){return A.Id==Id;}); }
@@ -117,7 +117,7 @@ void UAetherEquipmentComponent::ResolveHits(const FAetherAttackDefinition& D)
         FHitResult Block; const FVector Point=H.bStartPenetrating?Target->GetActorLocation():FVector(H.ImpactPoint);
         if (GetWorld()->LineTraceSingleByChannel(Block,Start,Point,ECC_Visibility,Q) && Block.GetActor()!=Target) continue;
         HitActors.Add(Target); FAetherEquipmentHit Hit; Hit.Source=GetOwner(); Hit.ItemId=Attack.ItemId; Hit.AttackId=Attack.AttackId;
-        Hit.Damage=D.Damage; Hit.PostureDamage=D.PostureDamage; Hit.ImpulseNs=Forward*D.ImpulseNs;
+        Hit.Damage=D.Damage; Hit.PostureDamage=D.PostureDamage; Hit.ImpulseNs=Forward*D.ImpulseNs; Hit.CuttingWorkJ=D.CuttingWorkJ;
         IAetherHitReceiver::Execute_ReceiveEquipmentHit(Target,Hit); ++AppliedHitCount;
     }
 }

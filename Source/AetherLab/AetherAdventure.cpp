@@ -49,6 +49,8 @@ void AAetherWorldObject::ConfigureMaterial()
         : Spec.Kind == EAetherObjectKind::Oil ? EReactiveMaterialPreset::Oil : EReactiveMaterialPreset::Stone;
     Reactive->InteractionRadiusCm = Spec.Kind == EAetherObjectKind::Water ? 145 : Spec.Kind == EAetherObjectKind::Rope ? 25 : 60;
     Reactive->bIceControlsPawnCollision = Spec.Kind == EAetherObjectKind::Water;
+    if (Spec.Kind == EAetherObjectKind::Rope)
+    {auto* Asset=NewObject<UReactiveMaterialAsset>(this);Asset->Parameters.CutResistanceJ=20;Reactive->MaterialAsset=Asset;}
     if (Spec.Kind == EAetherObjectKind::Cistern)
     {
         auto* Asset = NewObject<UReactiveMaterialAsset>(this);
@@ -70,7 +72,7 @@ void AAetherWorldObject::BeginPlay() { Super::BeginPlay(); ApplySpec(); }
 void AAetherWorldObject::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
 {
     if (!HasAuthority() || !bEnabled) return;
-    FReactiveStimulus S; S.SourceActor=Hit.Source; S.ImpulseNs=Hit.ImpulseNs; Reactive->Inject(S);
+    FReactiveStimulus S; S.SourceActor=Hit.Source; S.ImpulseNs=Hit.ImpulseNs; S.CuttingWorkJ=Hit.CuttingWorkJ; Reactive->Inject(S);
 }
 void AAetherWorldObject::ResetFragments()
 { for (auto& F : Fragments) if (F.IsValid()) F->Destroy(); Fragments.Reset(); bFragmentsSpawned = false; }

@@ -20,6 +20,7 @@ struct AETHEREQUIPMENT_API FAetherAttackDefinition
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float Damage = 16;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float PostureDamage = 14;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float ImpulseNs = 6;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0")) float CuttingWorkJ = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float StaminaCost = 8;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float ReachCm = 165;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float RadiusCm = 52;
@@ -78,6 +79,7 @@ struct AETHEREQUIPMENT_API FAetherEquipmentHit
     UPROPERTY(BlueprintReadOnly) float Damage = 0;
     UPROPERTY(BlueprintReadOnly) float PostureDamage = 0;
     UPROPERTY(BlueprintReadOnly) FVector ImpulseNs = FVector::ZeroVector;
+    UPROPERTY(BlueprintReadOnly) float CuttingWorkJ = 0;
 };
 UINTERFACE(BlueprintType)
 class AETHEREQUIPMENT_API UAetherHitReceiver : public UInterface { GENERATED_BODY() };
