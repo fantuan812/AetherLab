@@ -4,7 +4,7 @@
 
 AetherGameplay 的 FAetherProfileCoordinator 在游戏线程持有会话和在途命令，以有界 Future 轮询调度 SQLite；它不持有 Actor/UObject，不在游戏线程等待磁盘。当前为可接入运行时的服务及实际数据库测试，尚未替换旧 PlayerController/RPC、复制快照或游戏保存入口。
 
-已支持 17 个命令：九种库存编辑、四种技能操作，以及购买、出售、维修、待领奖励领取。经济规则详见 [经济事务](V10-economy-transactions.zh-CN.md)。其余世界/治疗命令返回 UnsupportedAction，不提交空成功。
+已支持 20 个命令：九种库存编辑、四种技能操作、购买/出售/维修/待领奖励领取，以及丢弃/拾取/容器转移。详见 [经济事务](V10-economy-transactions.zh-CN.md) 与 [容器协调](V10-container-coordinator.zh-CN.md)。其余交互/治疗命令返回 UnsupportedAction，不提交空成功。
 
 ## 执行顺序与回执
 

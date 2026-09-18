@@ -15,7 +15,7 @@
     {
       "id": "V10-03",
       "status": "in_progress",
-      "acceptance": "typed_request_v1_and_backward_readable_result_v2_with_transfer_relations; 17_profile_command_candidates; nonblocking_receipt_first_SQLite_coordinator_with_session_and_Pawn_epoch_guards; 49_rule_tests_pass; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
+      "acceptance": "typed_request_v1_and_backward_readable_result_v2; 20_command_handlers; receipt_first_async_coordinator_with_consistent_multi_aggregate_reads_session_and_Pawn_epochs; 50_rule_tests_pass; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
     },
     {
       "id": "V10-04",
@@ -50,7 +50,7 @@
     {
       "id": "V10-10",
       "status": "in_progress",
-      "acceptance": "shop_and_reward_atomic_handlers; owned_container_DTO_and_full_instance_transfer_rules; partial_capacity_and_three_aggregate_concurrent_pickup_SQLite_recovery_pass; 49_rule_tests_pass; container_command_gateway_live_NPC_world_drop_actors_and_UI_pending"
+      "acceptance": "shop_reward_and_container_handlers_on_real_async_SQLite_coordinator; consistent_read_transactions_and_bounded_indexes; drop_reuse_concurrent_pickup_partial_capacity_live_context_revalidation_and_personal_owner_checks; 50_rule_tests_pass; scene_adapters_network_NPC_sessions_and_UI_pending"
     },
     {
       "id": "V10-11",

@@ -177,6 +177,25 @@ public:
     }
     virtual TFuture<FAetherStoreReadResult> Read(FAetherAggregateKey Key) override
     { return Enqueue<FAetherStoreReadResult>([Key=MoveTemp(Key)](sqlite3* DB){ return ReadAggregate(DB,Key); }, FAetherStoreReadResult()); }
+    virtual TFuture<FAetherStoreRevisionIndex> ReadRevisions(EAetherAggregateKind Kind) override
+    {
+        if(uint8(Kind)>uint8(EAetherAggregateKind::Container))
+        {FAetherStoreRevisionIndex R;R.Code=EAetherStoreCode::Invalid;return Completed(MoveTemp(R));}
+        return Enqueue<FAetherStoreRevisionIndex>([Kind](sqlite3* DB){return AetherSQLite::Private::ReadRevisions(DB,Kind);},FAetherStoreRevisionIndex());
+    }
+    virtual TFuture<FAetherStoreSnapshotResult> ReadSnapshot(FAetherStoreSnapshotQuery Query) override
+    {
+        bool Valid=!Query.Keys.IsEmpty()&&Query.Keys.Num()<=4;TSet<FAetherAggregateKey> Seen;
+        for(const auto& K:Query.Keys)
+        {
+            FTCHARToUTF8 U(*K.Id);FUTF8ToTCHAR Back(U.Get(),U.Length());
+            Valid&=uint8(K.Kind)<=uint8(EAetherAggregateKind::Container)&&!K.Id.IsEmpty()&&K.Id.Len()<=128&&
+                FString(Back.Length(),Back.Get())==K.Id&&!Seen.Contains(K);
+            for(TCHAR C:K.Id)Valid&=C>=32;Seen.Add(K);
+        }
+        if(!Valid){FAetherStoreSnapshotResult R;R.Code=EAetherStoreCode::Invalid;return Completed(MoveTemp(R));}
+        return Enqueue<FAetherStoreSnapshotResult>([Query=MoveTemp(Query)](sqlite3* DB){return AetherSQLite::Private::ReadSnapshot(DB,Query);},FAetherStoreSnapshotResult());
+    }
     virtual TFuture<FAetherStoreEffectsResult> PendingEffects(FString Actor) override
     { return Enqueue<FAetherStoreEffectsResult>([Actor=MoveTemp(Actor)](sqlite3* DB){ return ReadEffects(DB,Actor); }, FAetherStoreEffectsResult()); }
     virtual TFuture<bool> AcknowledgeEffect(FString Actor, FGuid Id) override

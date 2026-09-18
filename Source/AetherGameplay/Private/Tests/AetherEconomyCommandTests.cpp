@@ -102,7 +102,7 @@ bool FAetherEconomyTransactionTest::RunTest(const FString&)
         const auto Session=Coordinator.BeginSession(P.CharacterId);FAetherCommandResult Rejection;
         TestTrue(TEXT("Purchase accepted by asynchronous coordinator"),Coordinator.Submit(Session,C,Rejection));
         TArray<FAetherProfileCompletion> Completed;const double Deadline=FPlatformTime::Seconds()+5;
-        const FAetherResolveProfileContext Resolve=[&](const auto&,const auto&,auto& Out){Out=Context;return true;};
+        const FAetherResolveProfileContext Resolve=[&](const auto&,const auto&,const auto&,auto& Out){Out=Context;return true;};
         while(Completed.IsEmpty()&&FPlatformTime::Seconds()<Deadline){Completed=Coordinator.Poll(Resolve);FPlatformProcess::Sleep(.001f);}
         if(!TestTrue(TEXT("Coordinator forwards authoritative economy catalog and publishes committed purchase"),
             Completed.Num()==1&&Completed[0].Result.Code==EAetherCommandCode::Applied&&Completed[0].bMayPublish&&Completed[0].Snapshot.IsSet()))

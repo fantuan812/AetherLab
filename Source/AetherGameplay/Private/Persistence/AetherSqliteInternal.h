@@ -61,11 +61,13 @@ namespace AetherSQLite::Private
     {
         sqlite3* DB;
         bool Active;
-        explicit FTransactionGuard(sqlite3* InDB) : DB(InDB), Active(Exec(DB, "BEGIN IMMEDIATE")) {}
+        explicit FTransactionGuard(sqlite3* InDB,bool ReadOnly=false) : DB(InDB), Active(Exec(DB, ReadOnly?"BEGIN":"BEGIN IMMEDIATE")) {}
         ~FTransactionGuard() { if (Active) Exec(DB, "ROLLBACK"); }
         bool Commit() { if (!Active || !Exec(DB, "COMMIT")) return false; Active = false; return true; }
     };
 
+    FAetherStoreSnapshotResult ReadSnapshot(sqlite3* DB,const FAetherStoreSnapshotQuery& Query);
+    FAetherStoreRevisionIndex ReadRevisions(sqlite3* DB,EAetherAggregateKind Kind);
     FAetherStoreReadResult ReadAggregate(sqlite3* DB, const FAetherAggregateKey& Key);
     FAetherStoreResult LookupReceipt(sqlite3* DB,const FAetherReceiptQuery& Query);
     FAetherStoreResult CommitTransaction(sqlite3* DB, const FAetherTransaction& Transaction, const FAetherSqliteOptions& Options);

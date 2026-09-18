@@ -4,6 +4,14 @@
 #include "Profile/AetherProfileState.h"
 #include "Inventory/AetherEconomyDefinitions.h"
 
+struct FAetherContainerAccessContext
+{
+    FString ContainerId,TargetStableId,RegionId;
+    FVector DropLocation=FVector::ZeroVector;
+    bool bAuthorized=false,bTargetReady=false,bInventoryPickup=false,bContainerSession=false;
+    bool bCanDeposit=false,bCanWithdraw=false,bSafeToStore=false,bValidDropLocation=false;
+};
+
 // 此上下文只由服务器当前状态构造，不能作为客户端 RPC 参数。
 // 不含 Actor/UObject 指针；需要现场权限的命令由协调者在发起提交前重新查询。
 struct FAetherProfileCommandContext
@@ -12,6 +20,7 @@ struct FAetherProfileCommandContext
     // 服务器在每次提交前复验会话、目标存活/已加载、范围/视线及战斗限制；客户端不能填 true。
     bool bTradeSessionValid=false;
     FString TradeTargetStableId,ShopId;
+    FAetherContainerAccessContext Container;
     FAetherSkillRuleContext Skill;
     TArray<FAetherExternalSkillGrant> ExternalSkillGrants;
 };

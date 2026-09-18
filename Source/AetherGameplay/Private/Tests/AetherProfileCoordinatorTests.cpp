@@ -44,7 +44,7 @@ bool FAetherCoordinatorTest::RunTest(const FString&)
     FAetherProfileCoordinator Service(DB.Store.ToSharedRef(),Items,Skills,Rules);
     auto Session=Service.BeginSession(Profile.CharacterId);FAetherCommandResult Reject;FAetherProfileCompletion Done;
     int32 Resolved=0;
-    const FAetherResolveProfileContext Context=[&](const auto&,const auto&,FAetherProfileCommandContext& C)
+    const FAetherResolveProfileContext Context=[&](const auto&,const auto&,const auto&,FAetherProfileCommandContext& C)
     {++Resolved;C.bCanManageInventory=true;C.Skill.bAtResetService=true;return true;};
     auto Split=Command(EAetherCommandType::SplitStack,0);Split.ItemInstanceId=Potion.InstanceId;Split.Quantity=3;Split.DestinationIndex=4;
     TestTrue(TEXT("Valid session accepted"),Service.Submit(Session,Split,Reject));

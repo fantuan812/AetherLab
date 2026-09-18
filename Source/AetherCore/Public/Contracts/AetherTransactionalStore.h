@@ -16,6 +16,28 @@ struct FAetherStoreReadResult
     TOptional<FAetherStoredAggregate> Value;
     FString Detail;
 };
+// 启动恢复/跨域验证使用的有界索引；不含 Profile/Container 私有负载，不能直接作为客户端列表。
+struct FAetherStoreRevisionIndex
+{
+    EAetherStoreCode Code=EAetherStoreCode::Unavailable;
+    TMap<FString,int64> Revisions;
+    FString Detail;
+};
+struct FAetherStoreSnapshotQuery
+{
+    TArray<FAetherAggregateKey> Keys;
+    bool bIncludeProfileRevisions=false;
+    bool bIncludeContainerCount=false;
+};
+struct FAetherStoreSnapshotResult
+{
+    EAetherStoreCode Code=EAetherStoreCode::Unavailable;
+    // 不存在的 key 不加入 Values，便于区分新掉落创建与已有容器；其他错误整个读取失败。
+    TMap<FAetherAggregateKey,FAetherStoredAggregate> Values;
+    TMap<FString,int64> ProfileRevisions;
+    int32 ContainerCount=-1;
+    FString Detail;
+};
 struct FAetherStoreEffectsResult
 {
     EAetherStoreCode Code = EAetherStoreCode::Unavailable;
@@ -48,6 +70,9 @@ public:
     // 仅接受空数据库或同一已导入来源的重试；不能覆盖已有游戏数据。
     virtual TFuture<FAetherStoreResult> ImportLegacy(FAetherLegacyImport Import) = 0;
     virtual TFuture<FAetherStoreReadResult> Read(FAetherAggregateKey Key) = 0;
+    virtual TFuture<FAetherStoreRevisionIndex> ReadRevisions(EAetherAggregateKind Kind) = 0;
+    // 多聚合及相关索引共享同一个 SQLite 读事务，不能拼接不同提交时刻的数据。
+    virtual TFuture<FAetherStoreSnapshotResult> ReadSnapshot(FAetherStoreSnapshotQuery Query) = 0;
     virtual TFuture<FAetherStoreEffectsResult> PendingEffects(FString ActorId) = 0;
     virtual TFuture<bool> AcknowledgeEffect(FString ActorId, FGuid DeliveryId) = 0;
     virtual TFuture<bool> Backup(FString Destination) = 0;

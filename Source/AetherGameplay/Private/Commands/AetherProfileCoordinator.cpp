@@ -1,5 +1,8 @@
 #include "Commands/AetherProfileCoordinator.h"
 #include "Profile/AetherProfileCodec.h"
+#include "Commands/AetherContainerCommand.h"
+#include "World/AetherWorldCodec.h"
+#include "World/AetherContainerCodec.h"
 namespace
 {
 EAetherCommandCode Code(EAetherStoreCode C)
@@ -17,13 +20,15 @@ bool CharacterId(const FString& S)
 }
 struct FAetherProfileCoordinator::FImpl
 {
-    enum class EStage:uint8 {Receipt,Read,Commit,Refresh};
+    enum class EStage:uint8 {Receipt,Read,WorldRead,Commit,Refresh,RefreshBundle};
     struct FJob
     {
         FAetherProfileSession Session;FAetherPlayerCommand Command;FAetherCommandResult Result;
         EStage Stage=EStage::Receipt;
         TFuture<FAetherStoreResult> StoreFuture;
         TFuture<FAetherStoreReadResult> ReadFuture;
+        TFuture<FAetherStoreSnapshotResult> SnapshotFuture;
+        FString ContainerKey;
     };
     TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
     FAetherV10ItemDefinitions Items;FAetherSkillDefinitionsV10 Skills;FAetherRules Rules;FAetherEconomyDefinitionsV10 Economy;
@@ -40,6 +45,19 @@ struct FAetherProfileCoordinator::FImpl
         return Read.Code==EAetherStoreCode::Found&&Read.Value.IsSet()&&Read.Value->SchemaVersion==10&&
             AetherProfileCodec::Decode(Read.Value->Payload,Items,Skills,Rules,P,Reason)&&P.CharacterId==Actor&&P.Revision==Read.Value->Revision;
     }
+    FAetherStoreSnapshotQuery Query(const FJob& J) const
+    {
+        FAetherStoreSnapshotQuery Q;Q.Keys={{EAetherAggregateKind::Profile,J.Session.CharacterId},
+            {EAetherAggregateKind::World,TEXT("Main")},{EAetherAggregateKind::Container,J.ContainerKey}};
+        Q.bIncludeProfileRevisions=true;Q.bIncludeContainerCount=true;return Q;
+    }
+    bool DecodeProfile(const FAetherStoreSnapshotResult& S,const FString& Actor,FAetherProfileStateV10& P) const
+    {
+        const auto* Row=S.Values.Find({EAetherAggregateKind::Profile,Actor});FString Reason;
+        return S.Code==EAetherStoreCode::Found&&Row&&Row->SchemaVersion==10&&
+            AetherProfileCodec::Decode(Row->Payload,Items,Skills,Rules,P,Reason)&&P.CharacterId==Actor&&P.Revision==Row->Revision&&
+            S.ProfileRevisions.Contains(Actor)&&S.ProfileRevisions[Actor]==P.Revision;
+    }
     bool Receipt(FJob& J,const FAetherStoreResult& R)
     {
         FString Reason;FAetherCommandResult Result;
@@ -48,7 +66,16 @@ struct FAetherProfileCoordinator::FImpl
         {J.Result.Code=EAetherCommandCode::StorageUnavailable;return false;}
         J.Result=MoveTemp(Result);
         if(R.Code==EAetherStoreCode::Replayed)J.Result.Code=EAetherCommandCode::Replayed;
-        J.Stage=EStage::Refresh;J.ReadFuture=Store->Read({EAetherAggregateKind::Profile,J.Session.CharacterId});return true;
+        if(AetherContainerCommands::Handles(J.Command.Type))
+        {
+            J.ContainerKey=J.Result.ReasonParameters.FindRef(TEXT("ContainerId"));
+            if(J.ContainerKey.IsEmpty()||J.Result.FinalWorldRevision<0||
+                (J.Command.Type==EAetherCommandType::TransferItem&&J.ContainerKey!=J.Command.ContainerId))
+            {J.Result.Code=EAetherCommandCode::StorageUnavailable;return false;}
+            J.Stage=EStage::RefreshBundle;J.SnapshotFuture=Store->ReadSnapshot(Query(J));
+        }
+        else {J.Stage=EStage::Refresh;J.ReadFuture=Store->Read({EAetherAggregateKind::Profile,J.Session.CharacterId});}
+        return true;
     }
 };
 FAetherProfileCoordinator::FAetherProfileCoordinator(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,
@@ -102,7 +129,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
     for(int32 I=Impl->Jobs.Num()-1;I>=0;--I)
     {
         auto& J=*Impl->Jobs[I];
-        const auto Finish=[&](TOptional<FAetherProfileStateV10> Snapshot={})
+        const auto Finish=[&](TOptional<FAetherProfileStateV10> Snapshot={},TOptional<FAetherWorldStateV10> World={},TOptional<FAetherContainerStateV10> Container={})
         {
             // 候选结果可能在等待 COMMIT 时已填数量/关系；持久失败必须清除这些未确认事实。
             if(J.Result.Code!=EAetherCommandCode::Applied&&J.Result.Code!=EAetherCommandCode::Replayed)
@@ -113,7 +140,13 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             }
             FAetherProfileCompletion C;C.Session=J.Session;C.Result=J.Result;C.bMayPublish=Impl->Current(J.Session);
             if(!C.bMayPublish)C.Result.FinalProfileRevision=-1;
-            if(C.bMayPublish)C.Snapshot=MoveTemp(Snapshot);
+            if(C.bMayPublish)
+            {
+                C.Snapshot=MoveTemp(Snapshot);C.WorldSnapshot=MoveTemp(World);
+                // 旧回执仍能回答操作结果，但不得把其他角色的个人仓储内容传给当前会话。
+                if(Container.IsSet()&&(Container->Kind!=EAetherContainerKind::PersonalStorage||Container->OwnerCharacterId==J.Session.CharacterId))
+                    C.ContainerSnapshot=MoveTemp(Container);
+            }
             Out.Add(MoveTemp(C));Impl->Jobs.RemoveAtSwap(I);
         };
         using E=FImpl::EStage;
@@ -130,6 +163,40 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             {J.Stage=E::Read;J.ReadFuture=Impl->Store->Read({EAetherAggregateKind::Profile,J.Session.CharacterId});continue;}
             J.Result.Code=Code(R.Code);J.Result.FinalProfileRevision=R.FinalProfileRevision;Finish();continue;
         }
+        if(J.Stage==E::WorldRead||J.Stage==E::RefreshBundle)
+        {
+            if(!J.SnapshotFuture.IsReady())continue;
+            const auto Snapshot=J.SnapshotFuture.Get();FAetherProfileStateV10 Profile;
+            if(!Impl->DecodeProfile(Snapshot,J.Session.CharacterId,Profile))
+            {J.Result.Code=EAetherCommandCode::StorageUnavailable;Finish();continue;}
+            if(J.Stage==E::RefreshBundle)
+            {
+                const auto* WorldRow=Snapshot.Values.Find({EAetherAggregateKind::World,TEXT("Main")});
+                const auto* ContainerRow=Snapshot.Values.Find({EAetherAggregateKind::Container,J.ContainerKey});
+                FAetherWorldStateV10 World;FAetherContainerStateV10 Container;FString Reason;int64 MinimumContainer=-1;
+                const FString MinimumText=J.Result.ReasonParameters.FindRef(TEXT("ContainerRevision"));
+                if(!WorldRow||!ContainerRow||WorldRow->SchemaVersion!=10||ContainerRow->SchemaVersion!=10||
+                    !LexTryParseString(MinimumContainer,*MinimumText)||MinimumContainer<0||
+                    !AetherWorldCodec::Decode(WorldRow->Payload,Impl->Items,Impl->Rules,Snapshot.ProfileRevisions,World,Reason)||
+                    World.Revision!=WorldRow->Revision||World.Revision<J.Result.FinalWorldRevision||
+                    !AetherContainerCodec::Decode(ContainerRow->Payload,Impl->Items,Container,Reason)||
+                    Container.ContainerId!=J.ContainerKey||Container.Revision!=ContainerRow->Revision||Container.Revision<MinimumContainer||
+                    Profile.Revision<J.Result.FinalProfileRevision)
+                {J.Result.Code=EAetherCommandCode::StorageUnavailable;Finish();continue;}
+                Finish(MoveTemp(Profile),MoveTemp(World),MoveTemp(Container));continue;
+            }
+            // 读事务等待期间玩家可能离开、目标卸载或服务关闭；发起写事务之前再次询问当前权威状态。
+            FAetherProfileCommandContext Context;FString Key;
+            if(!Resolve||!Resolve(J.Session,J.Command,Profile,Context))
+            {J.Result.Code=EAetherCommandCode::NotReady;Finish(MoveTemp(Profile));continue;}
+            const auto Allowed=AetherContainerCommands::AuthorizeRead(J.Command,Context,Key);
+            if(Allowed!=EAetherCommandCode::Applied||Key!=J.ContainerKey)
+            {J.Result.Code=Allowed==EAetherCommandCode::Applied?EAetherCommandCode::Conflict:Allowed;Finish(MoveTemp(Profile));continue;}
+            FAetherTransaction Transaction;
+            if(!AetherContainerCommands::Prepare(J.Command,J.Session.CharacterId,Snapshot,Context,Impl->Items,Impl->Skills,Impl->Rules,Transaction,J.Result))
+            {Finish(MoveTemp(Profile));continue;}
+            J.Stage=E::Commit;J.StoreFuture=Impl->Store->Commit(MoveTemp(Transaction));continue;
+        }
         if(!J.ReadFuture.IsReady())continue;
         const auto Read=J.ReadFuture.Get();FAetherProfileStateV10 Current;
         if(!Impl->Decode(Read,J.Session.CharacterId,Current))
@@ -144,8 +211,14 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
         if(Current.Revision!=J.Command.ExpectedProfileRevision)
         {J.Result.Code=EAetherCommandCode::StaleRevision;J.Result.FinalProfileRevision=Current.Revision;Finish(MoveTemp(Current));continue;}
         FAetherProfileCommandContext Context;
-        if(!Resolve||!Resolve(J.Session,Current,Context))
+        if(!Resolve||!Resolve(J.Session,J.Command,Current,Context))
         {J.Result.Code=EAetherCommandCode::NotReady;J.Result.FinalProfileRevision=Current.Revision;Finish(MoveTemp(Current));continue;}
+        if(AetherContainerCommands::Handles(J.Command.Type))
+        {
+            const auto Allowed=AetherContainerCommands::AuthorizeRead(J.Command,Context,J.ContainerKey);
+            if(Allowed!=EAetherCommandCode::Applied){J.Result.Code=Allowed;Finish(MoveTemp(Current));continue;}
+            J.Stage=E::WorldRead;J.SnapshotFuture=Impl->Store->ReadSnapshot(Impl->Query(J));continue;
+        }
         FAetherTransaction Transaction;
         if(!AetherProfileCommands::Prepare(J.Command,J.Session.CharacterId,Current,Context,Impl->Items,Impl->Skills,Impl->Rules,Transaction,J.Result,Impl->Economy))
         {Finish(MoveTemp(Current));continue;}
