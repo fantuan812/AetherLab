@@ -9,6 +9,6 @@ public class AetherEditor : ModuleRules
         bUseUnity = false;
         AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine" });
-        PrivateDependencyModuleNames.AddRange(new[] { "AetherCore", "AetherLab", "UnrealEd", "NavigationSystem", "Json" });
+        PrivateDependencyModuleNames.AddRange(new[] { "AetherCore", "AetherGameplay", "AetherLab", "UnrealEd", "NavigationSystem", "Json" });
     }
 }

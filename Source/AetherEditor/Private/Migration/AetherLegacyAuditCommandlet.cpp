@@ -2,6 +2,8 @@
 #include "Persistence/AetherLegacyV9Reader.h"
 #include "Persistence/AetherLegacyProfileConverter.h"
 #include "Profile/AetherProfileCodec.h"
+#include "Persistence/AetherLegacyWorldConverter.h"
+#include "Persistence/AetherSqliteStore.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 #include "Misc/Paths.h"
@@ -37,7 +39,7 @@ int32 UAetherLegacyAuditCommandlet::Main(const FString& Params)
     // GenericPlatform 的 SHA256 在 Windows 没有实现；使用引擎自带 OpenSSL。
     if (!SHA256(Bytes.GetData(), Bytes.Num(), Signature.Signature)) return 2;
     auto Root = MakeShared<FJsonObject>();
-    Root->SetStringField(TEXT("phase"), TEXT("legacy_decode_and_profile_conversion"));
+    Root->SetStringField(TEXT("phase"), TEXT("legacy_complete_snapshot_conversion"));
     Root->SetStringField(TEXT("sourceSha256"), Signature.ToString().ToLower());
     Root->SetStringField(TEXT("layoutFingerprint"), AetherLegacyV9::LayoutFingerprint());
     Root->SetBoolField(TEXT("databaseWritten"), false);
@@ -45,7 +47,14 @@ int32 UAetherLegacyAuditCommandlet::Main(const FString& Params)
     auto Result = AetherLegacyV9::Read(Bytes);
     bool Valid = Result.Code == EAetherLegacyReadCode::Ready;
     bool ProfilesConverted = false;
-    FString ConversionDetail;
+    FString ConversionDetail,SnapshotDetail,ImportDetail;
+    bool SnapshotConverted=false,DatabaseWritten=false,ImportVerified=false;
+    const bool ImportRequested=FParse::Param(*Params,TEXT("Import"));
+    Root->SetBoolField(TEXT("importRequested"),ImportRequested);
+    // 导入器只创建本次备份目录下的新库，不接受覆盖生产库的路径参数。
+    const FString DatabasePath=FPaths::GetPath(Report)/TEXT("state.sqlite");
+    if(ImportRequested&&(!FPaths::IsUnderDirectory(Source,ReportRoot)||FPaths::GetPath(Source)!=FPaths::GetPath(Report)||
+        IFileManager::Get().FileExists(*DatabasePath)))return 2;
     if (Valid)
     {
         const auto& Save = *Result.Snapshot;
@@ -103,7 +112,56 @@ int32 UAetherLegacyAuditCommandlet::Main(const FString& Params)
             Profiles.Add(MakeShared<FJsonValueObject>(Row));
         }
         Root->SetArrayField(TEXT("profiles"), Profiles);
+        FAetherLegacyImport Import;
+        SnapshotConverted=ProfilesConverted&&AetherLegacyV9::ConvertSnapshot(Save,Signature.ToString().ToLower(),
+            Items,FAetherSkillDefinitionsV10::Get(),FAetherRules::Get(),Import,SnapshotDetail);
+        if(SnapshotConverted)
+        {
+            const auto& World=Import.Values.Last();
+            Root->SetNumberField(TEXT("worldDtoBytes"),World.Payload.Num());
+            Root->SetNumberField(TEXT("newWorldRevision"),World.Revision);
+            Root->SetNumberField(TEXT("convertedAggregates"),Import.Values.Num());
+        }
+        if(ImportRequested&&SnapshotConverted)
+        {
+            FAetherSqliteOptions Options;Options.DatabasePath=DatabasePath;
+            auto DB=AetherSQLite::Open(Options);
+            if(DB.Store)
+            {
+                const auto Committed=DB.Store->ImportLegacy(Import).Get();
+                DatabaseWritten=Committed.Code==EAetherStoreCode::Committed;
+                ImportDetail=Committed.Detail;
+                DB.Store->Close();DB.Store.Reset();
+                // 关闭并重新打开，复核全部行的版本和负载；不能只凭一次提交返回值宣布可采用。
+                if(DatabaseWritten)
+                {
+                    DB=AetherSQLite::Open(Options);ImportVerified=DB.Store.IsValid();
+                    if(DB.Store)
+                    {
+                        for(const auto& Expected:Import.Values)
+                        {
+                            const auto Actual=DB.Store->Read(Expected.Key).Get();
+                            ImportVerified&=Actual.Code==EAetherStoreCode::Found&&Actual.Value.IsSet()&&
+                                Actual.Value->Revision==Expected.Revision&&Actual.Value->SchemaVersion==Expected.SchemaVersion&&
+                                Actual.Value->Payload==Expected.Payload;
+                        }
+                        ImportVerified&=DB.Store->ImportLegacy(Import).Get().Code==EAetherStoreCode::Replayed;
+                        DB.Store->Close();
+                    }
+                    if(!ImportVerified)ImportDetail=TEXT("Imported database failed reopen verification; retain backup and do not activate");
+                }
+            }
+            else ImportDetail=DB.Detail;
+            Root->SetStringField(TEXT("databasePath"),DatabasePath);
+        }
     }
+    Root->SetBoolField(TEXT("finalSchemaConverted"),SnapshotConverted);
+    Root->SetBoolField(TEXT("worldConverted"),SnapshotConverted);
+    Root->SetBoolField(TEXT("databaseWritten"),DatabaseWritten);
+    Root->SetBoolField(TEXT("importVerified"),ImportVerified);
+    Root->SetBoolField(TEXT("activated"),false);
+    Root->SetStringField(TEXT("snapshotConversionDetail"),SnapshotDetail);
+    Root->SetStringField(TEXT("importDetail"),ImportDetail);
     Root->SetBoolField(TEXT("legacyValid"), Valid);
     Root->SetBoolField(TEXT("profilesConverted"), ProfilesConverted);
     Root->SetStringField(TEXT("profileConversionDetail"), ConversionDetail);
@@ -113,5 +171,5 @@ int32 UAetherLegacyAuditCommandlet::Main(const FString& Params)
     IFileManager::Get().MakeDirectory(*FPaths::GetPath(Report), true);
     if (!FFileHelper::SaveStringToFile(Json, *Report, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM,
         &IFileManager::Get(), FILEWRITE_NoReplaceExisting)) return 2;
-    return Valid && ProfilesConverted ? 0 : 1;
+    return Valid && SnapshotConverted && (!ImportRequested || ImportVerified) ? 0 : 1;
 }

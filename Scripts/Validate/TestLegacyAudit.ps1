@@ -25,25 +25,32 @@ $taskCrc=Join-Path $taskCase 'Profiles.crc'
 $taskHash=(Get-FileHash -LiteralPath $taskSource -Algorithm SHA256).Hash
 $taskAudit=Join-Path $taskRoot 'Scripts/Migration/AuditLegacy.ps1'
 & $taskAudit -SourcePath $taskSource -EngineRoot $EngineRoot *> (Join-Path $taskCase 'valid.log')
-# 同一数据文件换成未提交的校验侧车，必须拒绝；不使用 Fixture 豁免。
+& $taskAudit -SourcePath $taskSource -EngineRoot $EngineRoot -Import *> (Join-Path $taskCase 'import.log')
+# 同一数据文件换成未提交的校验侧车，必须在创建数据库之前拒绝；不使用 Fixture 豁免。
 [IO.File]::WriteAllText($taskCrc,'9:0',[Text.UTF8Encoding]::new($false))
 $taskRejected=$false
-try { & $taskAudit -SourcePath $taskSource -EngineRoot $EngineRoot *> (Join-Path $taskCase 'invalid.log') }
+try { & $taskAudit -SourcePath $taskSource -EngineRoot $EngineRoot -Import *> (Join-Path $taskCase 'invalid.log') }
 catch { $taskRejected=$true }
 if(!$taskRejected){throw 'Uncommitted legacy generation was accepted'}
 if((Get-FileHash -LiteralPath $taskSource -Algorithm SHA256).Hash -ne $taskHash){throw 'Audit changed source bytes'}
 $taskRuns=Get-ChildItem (Join-Path $taskRoot 'Saved/V10Migration') -Filter manifest.json -Recurse |
  ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw | ConvertFrom-Json } |
  Where-Object source -eq $taskSource
-if(@($taskRuns).Count -ne 2){throw 'Missing isolated audit manifests'}
+if(@($taskRuns).Count -ne 3){throw 'Missing isolated audit manifests'}
+$taskImports=0
 foreach($taskRun in $taskRuns) {
  if(!$taskRun.sourceUnchanged -or (Get-FileHash -LiteralPath $taskRun.backup -Algorithm SHA256).Hash.ToLowerInvariant() -ne $taskRun.sourceSha256){
   throw 'Backup is not byte-identical to the audited source'
  }
  $taskReport=Get-Content -LiteralPath (Join-Path (Split-Path $taskRun.backup) 'reader.json') -Raw | ConvertFrom-Json
- if($taskReport.databaseWritten -or $taskReport.finalSchemaConverted){throw 'Audit claimed an unperformed conversion'}
+ if($taskReport.activated){throw 'Offline migration cannot activate gameplay'}
+ if($taskReport.databaseWritten) {
+  if(!$taskReport.importRequested -or !$taskReport.importVerified -or !(Test-Path -LiteralPath $taskReport.databasePath)){throw 'Import was not verified after reopen'}
+  $taskImports++
+ }
+ if(!$taskReport.databaseWritten -and (Test-Path -LiteralPath (Join-Path (Split-Path $taskRun.backup) 'state.sqlite'))){throw 'Dry run or invalid input created a database'}
  if($taskRun.engineExit -eq 0) {
-  if(!$taskReport.legacyValid -or !$taskReport.profilesConverted -or @($taskReport.profiles).Count -ne 19){throw 'Valid profile-conversion report is incomplete'}
+  if(!$taskReport.legacyValid -or !$taskReport.profilesConverted -or !$taskReport.worldConverted -or !$taskReport.finalSchemaConverted -or $taskReport.convertedAggregates -ne 20 -or $taskReport.worldDtoBytes -le 0 -or $taskReport.newWorldRevision -ne $taskReport.generation -or @($taskReport.profiles).Count -ne 19){throw 'Valid profile-conversion report is incomplete'}
   foreach($taskProfile in $taskReport.profiles) {
    if(!$taskProfile.converted -or $taskProfile.dtoBytes -le 0 -or $taskProfile.newProfileRevision -ne $taskProfile.revision){throw 'Profile conversion lost version or payload'}
   }
@@ -52,6 +59,7 @@ foreach($taskRun in $taskRuns) {
   throw 'Negative case failed for an unexpected reason'
  }
 }
-[ordered]@{passed=$true;sourcePreserved=$true;independentBackups=2;validCommittedGeneration=$true;all19ProfilesConverted=$true;invalidChecksumRejected=$true} |
+if($taskImports -ne 1){throw 'Expected exactly one verified offline import'}
+[ordered]@{passed=$true;sourcePreserved=$true;independentBackups=3;validCommittedGeneration=$true;all19ProfilesAndWorldConverted=$true;completeImportReopened=$true;invalidChecksumRejectedBeforeDatabaseOpen=$true} |
  ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskCase 'result.json') -Encoding utf8
 Write-Output "Legacy audit PASS: $taskCase"
