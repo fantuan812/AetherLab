@@ -1,0 +1,510 @@
+{
+  "SchemaVersion": 1,
+  "Targets": [
+    {
+      "Id": "Background",
+      "Actions": [],
+      "Dialogue": []
+    },
+    {
+      "Id": "Citizen",
+      "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 10,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "镇民",
+          "Text": "雨后的路不好走。需要帮助时，可以去登记台或旅舍问问。",
+          "Options": [
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Register",
+      "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 10,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Register",
+          "Kind": "Register",
+          "Verb": "登记身份",
+          "IconId": "Register",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "Register",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_01"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "Register"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "TrackObjective",
+          "Kind": "TrackObjective",
+          "Verb": "追踪当前目标",
+          "IconId": "TrackObjective",
+          "Priority": 20,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "登记员",
+          "Text": "这里登记来访者。办妥后去旅舍安顿，有事也可以再来找我。",
+          "Options": [
+            {
+              "Label": "登记身份",
+              "ActionId": "Register",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "追踪当前目标",
+              "ActionId": "TrackObjective",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Inn",
+      "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 10,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "BindInn",
+          "Kind": "BindInn",
+          "Verb": "绑定据点",
+          "IconId": "BindInn",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "Inn",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_01"
+          ],
+          "RequiredEvidence": [
+            "Register"
+          ],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "Inn"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Rest",
+          "Kind": "Rest",
+          "Verb": "休息恢复",
+          "IconId": "Rest",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        },
+        {
+          "Id": "TrackObjective",
+          "Kind": "TrackObjective",
+          "Verb": "追踪当前目标",
+          "IconId": "TrackObjective",
+          "Priority": 20,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "旅舍老板",
+          "Text": "赶路辛苦了。办妥登记后可以在这里落脚；安全时也欢迎回来休息。",
+          "Options": [
+            {
+              "Label": "绑定据点",
+              "ActionId": "BindInn",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "休息恢复",
+              "ActionId": "Rest",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "追踪当前目标",
+              "ActionId": "TrackObjective",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Teacher",
+      "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 10,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "LearnStorySkills",
+          "Kind": "LearnStorySkills",
+          "Verb": "学习故事能力",
+          "IconId": "LearnStorySkills",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Train",
+          "Kind": "Train",
+          "Verb": "准备个人训练",
+          "IconId": "Train",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [
+            "Q_Main_03"
+          ],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "ResetSkills",
+          "Kind": "ResetSkills",
+          "Verb": "查看技能重置",
+          "IconId": "ResetSkills",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        },
+        {
+          "Id": "TrackObjective",
+          "Kind": "TrackObjective",
+          "Verb": "追踪当前目标",
+          "IconId": "TrackObjective",
+          "Priority": 20,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "导师",
+          "Text": "先把眼前该做的事理清。准备好后，我可以传授能力、安排训练，也能帮你重新规划已学技能。",
+          "Options": [
+            {
+              "Label": "学习故事能力",
+              "ActionId": "LearnStorySkills",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "准备个人训练",
+              "ActionId": "Train",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "查看技能重置",
+              "ActionId": "ResetSkills",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "追踪当前目标",
+              "ActionId": "TrackObjective",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Shop",
+      "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 10,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Trade",
+          "Kind": "Trade",
+          "Verb": "交易补给",
+          "IconId": "Trade",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Shop",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "补给商人",
+          "Text": "药水和口粮都备着。旅途中有用得上的东西，随时来看看。",
+          "Options": [
+            {
+              "Label": "交易补给",
+              "ActionId": "Trade",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Armorer",
+      "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 10,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Trade",
+          "Kind": "Trade",
+          "Verb": "挑选装备",
+          "IconId": "Trade",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Armorer",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        },
+        {
+          "Id": "Repair",
+          "Kind": "Repair",
+          "Verb": "查看装备修理",
+          "IconId": "Repair",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Armorer",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "军械匠",
+          "Text": "护具和饰品在这里挑。装备有了磨损，也可以带来看看修理费用。",
+          "Options": [
+            {
+              "Label": "挑选装备",
+              "ActionId": "Trade",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "查看装备修理",
+              "ActionId": "Repair",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

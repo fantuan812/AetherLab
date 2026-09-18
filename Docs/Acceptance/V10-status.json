@@ -59,8 +59,8 @@
     },
     {
       "id": "V10-12",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "finite_dialogue_definitions_and_immutable_offer_dialogue_queries_for_seven_initial_target_types; personal_objective_guidance_and_exact_target_action_profile_world_interaction_version_revalidation; 55_rule_tests_pass; protocol_upgrade_live_registry_handlers_CommonUI_and_remaining_services_pending"
     },
     {
       "id": "V10-13",
