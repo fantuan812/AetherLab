@@ -12,4 +12,6 @@ class AETHERLAB_API AAetherPlayerController : public APlayerController
 public:
     virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
     virtual void SpawnDefaultHUD() override;
+    virtual void FlushPressedKeys() override;
+    virtual bool ShouldFlushKeysWhenViewportFocusChanges() const override {return true;}
 };

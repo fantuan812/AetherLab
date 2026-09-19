@@ -34,7 +34,7 @@ void AAetherFrontierCharacter::ClientTradeOpened_Implementation(FGuid Token,AAet
 {
     if(!Token.IsValid()||!IsValid(Target)||!ProfileState())return;
     TradeSession={Token,Target,Shop,ProfileState()->Profile.CharacterId,ProfileState()};SaleConfirmation={};
-    bPanel=true;Panel=1;ServerSprint(false);ServerBlock(false);
+    bPanel=true;Panel=1;ReleaseHeldInput();
 }
 void AAetherFrontierCharacter::ClientTradeClosed_Implementation(FGuid Token)
 {

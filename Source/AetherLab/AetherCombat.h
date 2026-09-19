@@ -59,7 +59,7 @@ class AETHERLAB_API AAetherCharacter : public ACharacter, public IAbilitySystemI
 {
     GENERATED_BODY()
 public:
-    AAetherCharacter();
+    AAetherCharacter(const FObjectInitializer& ObjectInitializer=FObjectInitializer::Get());
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAbilitySystemComponent> AbilitySystem;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherAttributes> Attributes;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UReactiveBodyComponent> Reactive;

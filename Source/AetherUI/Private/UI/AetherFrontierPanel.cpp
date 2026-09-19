@@ -42,7 +42,7 @@ void UAetherFrontierViewModel::Refresh(AAetherFrontierCharacter* C)
   Text+=TEXT("\n4 人上限（真人 + AI）；旅舍可招募砾石、沐禾各一名。\nY 邀请 / U 接受 / O 离队 / H 跟随或等待 / Delete 解散自己的 AI。\n修道院阀门旁 H：指挥同行者执行相同的引导操作。");break;
  case 6:
   Title=TEXT("菜单 / Menu");First=TEXT("保存世界");Second=TEXT("倒地回据点");
-  Text=TEXT("菜单打开时在线世界继续运行。\n个人背包、金币、任务事务自动保存；F5 保存世界。\n倒地后可由队友 E 救援，或等待 3 秒按 F8 回据点。\n\nWASD 移动 / Shift 冲刺 / Ctrl 跳跃 / Space 闪避\n左键攻击、按住重击 / 右键格挡\nG 搬运、放下 / C 投掷 / V 推物 / R、T 更换装备\nQ 生命药 / Z 法力药 / E 交互 / F 锁定\n\n当前使用本地开发档案；正式账号服务尚未接入。");break;
+  Text=TEXT("菜单打开时在线世界继续运行。\n个人背包、金币、任务事务自动保存；F5 保存世界。\n倒地后可由队友 E 救援，或等待 3 秒按 F8 回据点。\n\nWASD 移动 / Shift 冲刺 / Space 跳跃 / Ctrl 下蹲 / Alt 闪避\n左键攻击、按住重击 / 右键格挡\nG 搬运、放下 / C 投掷 / V 推物 / R、T 更换装备\nQ 生命药 / Z 法力药 / E 交互 / F 锁定\n\n当前使用本地开发档案；正式账号服务尚未接入。");break;
  default:Title=TEXT("AetherLab");break;
  }
  Heading=FText::FromString(Title);Body=FText::FromString(Text);PrimaryLabel=FText::FromString(First);SecondaryLabel=FText::FromString(Second);
@@ -106,7 +106,7 @@ void UAetherFrontierPanel::NativeTick(const FGeometry& G,float Dt)
  if(Open&&C->Panel==6&&BindingAction->GetOptionCount()==0)
  {TArray<FName> Names;C->InputActions.GetKeys(Names);Names.Sort(FNameLexicalLess());for(auto Name:Names)if(Name!="LookX"&&Name!="LookY"&&Name!="Escape")BindingAction->AddOption(Name.ToString());BindingAction->SetSelectedOption(TEXT("Cast"));}
  if(Open){Model->Refresh(C);Heading->SetText(Model->Heading);Body->SetText(Model->Body);PrimaryText->SetText(Model->PrimaryLabel);SecondaryText->SetText(Model->SecondaryLabel);SecondaryText->GetParent()->SetVisibility(Model->SecondaryLabel.ToString()==TEXT("Close")?ESlateVisibility::Collapsed:ESlateVisibility::Visible);int32 W,H;PC->GetViewportSize(W,H);SetPositionInViewport(FVector2D(W*.17,H*.16));SetDesiredSizeInViewport(FVector2D(W*.66,H*.65)/FMath::Max(.1f,UWidgetLayoutLibrary::GetViewportScale(this)));}
- if(Open!=WasOpen){WasOpen=Open;PC->bShowMouseCursor=Open;if(Open){FInputModeGameAndUI Mode;Mode.SetHideCursorDuringCapture(false);PC->SetInputMode(Mode);}else PC->SetInputMode(FInputModeGameOnly());}
+ if(Open!=WasOpen){WasOpen=Open;PC->bShowMouseCursor=Open;if(Open){C->ReleaseHeldInput();FInputModeGameAndUI Mode;Mode.SetHideCursorDuringCapture(false);PC->SetInputMode(Mode);}else PC->SetInputMode(FInputModeGameOnly());}
 }
 void UAetherFrontierPanel::Primary()
 {if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->SubmitInventory("Equip");else if(C->Panel==2)C->ServerAction("Claim");else if(C->Panel==5)C->ServerAction("Invite");else if(C->Panel==6)C->ServerAction("Save");else ClosePanel();}}

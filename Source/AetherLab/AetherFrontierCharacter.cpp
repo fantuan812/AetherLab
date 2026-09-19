@@ -7,6 +7,8 @@
 #include "AetherInventoryRules.h"
 #include "AetherActions.h"
 #include "AetherInputProfile.h"
+#include "Movement/AetherCharacterMovement.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
@@ -25,8 +27,9 @@
 #include "HAL/PlatformMisc.h"
 #include "ReactiveWorldSubsystem.h"
 
-AAetherFrontierCharacter::AAetherFrontierCharacter()
-{ bUseBasicAssets=true; CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle")); }
+AAetherFrontierCharacter::AAetherFrontierCharacter(const FObjectInitializer& ObjectInitializer)
+    :Super(ObjectInitializer.SetDefaultSubobjectClass<UAetherCharacterMovement>(ACharacter::CharacterMovementComponentName))
+{ bUseBasicAssets=true;JumpMaxCount=1;JumpMaxHoldTime=.18f;CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle")); }
 AAetherPlayerState* AAetherFrontierCharacter::ProfileState() const {return GetPlayerState<AAetherPlayerState>();}
 void AAetherFrontierCharacter::BindPersistentAbilities()
 {
@@ -58,7 +61,7 @@ void AAetherFrontierCharacter::PossessedBy(AController* C)
     { Equipment->bProfileManaged=true;GrantSpells();if(HasActorBegunPlay())ApplyProfileEquipment(); }
 }
 void AAetherFrontierCharacter::UnPossessed()
-{CloseTrade();Super::UnPossessed();}
+{ReleaseHeldInput();CloseTrade();Super::UnPossessed();}
 void AAetherFrontierCharacter::OnRep_PlayerState()
 { Super::OnRep_PlayerState(); BindPersistentAbilities(); }
 bool AAetherFrontierCharacter::SpellUnlocked(int32 Spell) const
@@ -80,8 +83,8 @@ void AAetherFrontierCharacter::Forward(float V){if(Alive()&&!bPanel)AddMovementI
 void AAetherFrontierCharacter::Right(float V){if(Alive()&&!bPanel)AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::Y),V);}
 void AAetherFrontierCharacter::Yaw(float V){if(!bPanel)AddControllerYawInput(V);}
 void AAetherFrontierCharacter::Pitch(float V){if(!bPanel)AddControllerPitchInput(-V);}
-void AAetherFrontierCharacter::PressAttack(){PressedAt=GetWorld()->GetTimeSeconds();}
-void AAetherFrontierCharacter::ReleaseAttack(){if(!bPanel)ServerAttack(GetWorld()->GetTimeSeconds()-PressedAt>=.35f);}
+void AAetherFrontierCharacter::PressAttack(){bAttackHeld=!bPanel;if(bAttackHeld)PressedAt=GetWorld()->GetTimeSeconds();}
+void AAetherFrontierCharacter::ReleaseAttack(){const bool Attack=bAttackHeld;bAttackHeld=false;if(Attack&&!bPanel)ServerAttack(GetWorld()->GetTimeSeconds()-PressedAt>=.35f);}
 void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I)
 {
     auto* Enhanced=Cast<UEnhancedInputComponent>(I);auto* PC=Cast<APlayerController>(Controller);
@@ -111,9 +114,11 @@ void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I)
     Bind("Guard",EKeys::RightMouseButton,ETriggerEvent::Completed,&AAetherFrontierCharacter::GuardOff);
     Bind("Sprint",EKeys::LeftShift,ETriggerEvent::Started,&AAetherFrontierCharacter::SprintOn);
     Bind("Sprint",EKeys::LeftShift,ETriggerEvent::Completed,&AAetherFrontierCharacter::SprintOff);
-    Bind("Dodge",EKeys::SpaceBar,ETriggerEvent::Started,&AAetherFrontierCharacter::Dodge);
-    Bind("Jump",EKeys::LeftControl,ETriggerEvent::Started,&AAetherFrontierCharacter::JumpV4);
-    Bind("Jump",EKeys::LeftControl,ETriggerEvent::Completed,&AAetherFrontierCharacter::StopJumping);
+    Bind("Dodge",EKeys::LeftAlt,ETriggerEvent::Started,&AAetherFrontierCharacter::Dodge);
+    Bind("Jump",EKeys::SpaceBar,ETriggerEvent::Started,&AAetherFrontierCharacter::JumpV4);
+    Bind("Jump",EKeys::SpaceBar,ETriggerEvent::Completed,&AAetherFrontierCharacter::StopJumping);
+    Bind("Crouch",EKeys::LeftControl,ETriggerEvent::Started,&AAetherFrontierCharacter::CrouchOn);
+    Bind("Crouch",EKeys::LeftControl,ETriggerEvent::Completed,&AAetherFrontierCharacter::CrouchOff);
     Bind("One",EKeys::One,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell0);
     Bind("Two",EKeys::Two,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell1);
     Bind("Three",EKeys::Three,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell2);
@@ -159,6 +164,7 @@ void AAetherFrontierCharacter::AetherBind(FName Name,FKey Key)
 {
  if(!IsLocallyControlled()||!GameplayContext||!Key.IsValid()||Key.IsAxis1D()||Key.IsAxis2D()||Name=="LookX"||Name=="LookY"||Name=="Escape"||Key==EKeys::Escape)return;
  auto* A=InputActions.Find(Name);if(!A)return;const FKey Old=BindingFor(Name);if(Old==Key)return;
+ ReleaseHeldInput();
  auto* Profile=GetMutableDefault<UAetherInputProfile>();
  // A single mapping per action: swap conflicts so no command is silently orphaned.
  TArray<FName> Conflicts;for(const auto& Pair:InputActions)if(Pair.Key!=Name&&BindingFor(Pair.Key)==Key)Conflicts.Add(Pair.Key);
@@ -174,7 +180,49 @@ void AAetherFrontierCharacter::ToggleLock()
     for(TActorIterator<AAetherCharacter> It(GetWorld());It;++It)if(It->Fighter!=EAetherFighter::Player&&It->Alive())
     {double D=FVector::DistSquared(It->GetActorLocation(),GetActorLocation());if(D<Best){FCollisionQueryParams Q(SCENE_QUERY_STAT(Lock),false,this);Q.AddIgnoredActor(*It);if(!GetWorld()->LineTraceTestByChannel(GetActorLocation(),It->GetActorLocation(),ECC_Visibility,Q)){Best=D;LockedTarget=*It;}}}
 }
-void AAetherFrontierCharacter::ServerSprint_Implementation(bool Enabled){bSprinting=Enabled&&Alive()&&Stamina()>5;}
+bool AAetherFrontierCharacter::CanStartLocomotion() const
+{return Ready()&&!Carried&&!ReviveTarget&&!bTravelPending&&Stamina()>0;}
+bool AAetherFrontierCharacter::CanJumpInternal_Implementation() const
+{return CanStartLocomotion()&&Super::CanJumpInternal_Implementation();}
+void AAetherFrontierCharacter::StartJumpInput()
+{
+    if(bPanel||!CanStartLocomotion())return;
+    auto* Move=CastChecked<UAetherCharacterMovement>(GetCharacterMovement());
+    if(Move->TryStand()&&Move->IsMovingOnGround())Jump();
+}
+void AAetherFrontierCharacter::SetCrouchInput(bool Pressed)
+{
+    if(Pressed)
+    {
+        if(bPanel||!CanStartLocomotion()||!GetCharacterMovement()->IsMovingOnGround())return;
+        SetSprintInput(false);StopJumping();Crouch();
+    }
+    else UnCrouch();
+}
+void AAetherFrontierCharacter::SetSprintInput(bool Pressed)
+{
+    auto* Move=CastChecked<UAetherCharacterMovement>(GetCharacterMovement());
+    Move->bWantsSprint=Pressed&&!bPanel&&CanStartLocomotion();
+    if(Move->bWantsSprint)Move->TryStand();
+    bSprinting=Move->bWantsSprint&&Move->CanSprint();
+}
+void AAetherFrontierCharacter::ServerSprint_Implementation(bool Enabled)
+{
+    // 兼容既有服务的停止入口；正式保持输入通过 SavedMove 压缩标记传输。
+    SetSprintInput(Enabled);
+}
+void AAetherFrontierCharacter::ReleaseHeldInput()
+{
+    StopJumping();SetSprintInput(false);SetCrouchInput(false);bAttackHeld=false;ServerBlock(false);
+}
+void AAetherFrontierCharacter::OnStartCrouch(float H,float Scaled)
+{
+    Super::OnStartCrouch(H,Scaled);if(IsLocallyControlled())CrouchCameraOffset+=Scaled;
+}
+void AAetherFrontierCharacter::OnEndCrouch(float H,float Scaled)
+{
+    Super::OnEndCrouch(H,Scaled);if(IsLocallyControlled())CrouchCameraOffset-=Scaled;
+}
 void AAetherFrontierCharacter::Notify_Implementation(const FString& Message){Feedback=Message;}
 void AAetherFrontierCharacter::ReleaseCarry()
 {
@@ -253,11 +301,14 @@ void AAetherFrontierCharacter::Tick(float Dt)
         if(!IsValid(LockedTarget)||!LockedTarget->Alive()||FVector::DistSquared(GetActorLocation(),LockedTarget->GetActorLocation())>FMath::Square(1800.))LockedTarget=nullptr;
         else if(!bPanel&&Controller)Controller->SetControlRotation(FMath::RInterpTo(GetControlRotation(),(LockedTarget->GetActorLocation()-GetActorLocation()).Rotation(),Dt,7));
     }
-    if(bSprinting && Alive()&&!bBlocking&&CombatTime()>=StunUntil&&Stamina()>0)
+    if(IsLocallyControlled())
     {
-        GetCharacterMovement()->MaxWalkSpeed=625;
-        if(HasAuthority()&&!GetVelocity().IsNearlyZero()){AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,-32*Dt);if(Stamina()<1)bSprinting=false;}
+        CrouchCameraOffset=FMath::FInterpTo(CrouchCameraOffset,0.f,Dt,12.f);
+        Arm->TargetOffset.Z=CrouchCameraOffset;
     }
+    const auto* Movement=CastChecked<UAetherCharacterMovement>(GetCharacterMovement());
+    if(HasAuthority()&&bSprinting&&Movement->CanSprint()&&GetVelocity().SizeSquared2D()>1)
+        AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,-32*Dt);
     if(!HasAuthority() && IsLocallyControlled() && FParse::Param(FCommandLine::Get(),TEXT("AetherV4NetClient")))
     {
         static float TestTime=0;static float RequestTime=0;TestTime+=Dt;

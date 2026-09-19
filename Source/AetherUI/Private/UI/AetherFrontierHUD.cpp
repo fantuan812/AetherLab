@@ -22,7 +22,7 @@ void AAetherFrontierHUD::DrawHUD()
     DrawRect(FLinearColor(.018,.026,.04,.92),20,H-105,W-40,85);
     const TCHAR* Names[]={TEXT("HEAT"),TEXT("WATER"),TEXT("FROST"),TEXT("LIGHTNING")};
     DrawText(FString::Printf(TEXT("[%d %s] %s   Water %.1f kg   Gold %d   Level %d"),C->SelectedSpell+1,Names[C->SelectedSpell],C->SpellUnlocked(C->SelectedSpell)?TEXT("READY"):TEXT("LOCKED"),C->WaterReserveKg,P.Gold,FMath::Clamp(1+P.Experience/200,1,5)),FLinearColor(.9,.74,.4),34,H-94);
-    DrawText(TEXT("WASD Move | Shift Sprint | Ctrl Jump | Space Dodge | LMB/Hold Attack | RMB Guard | 1-4/MMB Magic | F Lock | E Interact"),FLinearColor::White,34,H-70);
+    DrawText(TEXT("WASD Move | Shift Sprint | Space Jump | Ctrl Crouch | Alt Dodge | LMB/Hold Attack | RMB Guard | 1-4/MMB Magic | F Lock | E Interact"),FLinearColor::White,34,H-70);
     DrawText(TEXT("I Bag  J Quests  K Skills  M Map  P Party  Q Potion  G Carry  V Push  R/T Equip  F5 Save  Esc Menu"),FLinearColor(.65,.73,.8),34,H-48);
     DrawText(C->Feedback,FLinearColor(1,.84,.48),30,140);
     if(GetWorld()->GetTimeSeconds()>=NextGuidanceUpdate)

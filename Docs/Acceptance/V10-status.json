@@ -59,18 +59,18 @@
     },
     {
       "id": "V10-12",
+      "status": "pending",
+      "acceptance": "native_skill_rules_and_GAS_rank_effects_tracked_in_V10-11; full_graphical_skill_tree_shortcut_assignment_and_point_source_UI_pending"
+    },
+    {
+      "id": "V10-13",
       "status": "in_progress",
       "acceptance": "finite_dialogue_offer_queries_and_request_v2_target_revision; five_native_progression_services_on_SQLite; production_E_uses_weak_spatial_registry_hysteresis_and_pinned_Actor_action_profile_snapshot_revalidation; 63_rule_tests_pass_without_warnings; streamed_map_guidance_and_two_client_target_RPC_pass; v10_Offer_SQLite_ASC_CommonUI_cutover_and_remaining_services_pending"
     },
     {
-      "id": "V10-13",
-      "status": "pending",
-      "acceptance": "not_run"
-    },
-    {
       "id": "V10-14",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "production_Space_jump_Ctrl_capsule_crouch_Alt_legacy_dodge_Shift_predicted_sprint; real_stand_headroom_and_server_jump_revalidation; SavedMove_sprint_flags_and_replay; menu_focus_loss_and_rebind_release_held_inputs; 65_rule_tests_pass_without_warnings; dedicated_two_remote_clients_stance_sprint_cost_jump_observation_and_flush_pass; assetized_input_gamepad_ground_dodge_animation_and_release_acceptance_pending"
     },
     {
       "id": "V10-15",
@@ -103,5 +103,5 @@
       "acceptance": "not_run"
     }
   ],
-  "note": "状态仅随实际实现与验证更新。阶段完成不等于完整发布验收。"
+  "note": "状态仅随实际实现与验证更新。阶段完成不等于完整发布验收。按方案工作包表校正：V10-12 是图形技能树，NPC/交互进度归 V10-13。"
 }

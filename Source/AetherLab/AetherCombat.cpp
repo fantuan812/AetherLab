@@ -110,7 +110,7 @@ void UAetherSpellAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
     EndAbility(H,Info,A,true,!Executed);
 }
 
-AAetherCharacter::AAetherCharacter()
+AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):Super(ObjectInitializer)
 {
     PrimaryActorTick.bCanEverTick = true; bReplicates = true; SetReplicateMovement(true);
     AIControllerClass = AAIController::StaticClass();

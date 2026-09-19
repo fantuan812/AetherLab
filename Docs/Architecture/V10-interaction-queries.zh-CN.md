@@ -22,6 +22,6 @@ Selection 通过已新增的请求 v2 ExpectedInteractionRevision 映射到 Chec
 
 Editor Win64 Development 非 Unity 构建通过。Rules-7edcb89154d946d7bf26cb5dde6e0608：55 项通过、0 失败。新增验证包括规范 ID 大小写、坏引用/脚本 Kind、对话死节点、背景无提示、可聊不可训练、登记/旅舍引导、两名玩家不同进度、隐藏动作的对话过滤、目标替换/卸载/遮挡、处理器缺失与任务完成后的合理对话。
 
-本单元尚未切换旧 SelectInteraction/Interact 游戏路径，未实现附近对象注册与焦点迟滞、真实 CommonUI 对话框、网络执行入口或全部服务处理器。招募、日常、物理设施、采集、掉落、救援与活动等覆盖仍待迁移；不能据此将 V10-12 或交互验收标记完成。
+本单元尚未切换旧 SelectInteraction/Interact 游戏路径，未实现附近对象注册与焦点迟滞、真实 CommonUI 对话框、网络执行入口或全部服务处理器。招募、日常、物理设施、采集、掉落、救援与活动等覆盖仍待迁移；不能据此将 V10-13 或交互验收标记完成。
 
 首批持久处理器现已进入异步协调器，详见 [交互事务与任务成长](V10-interaction-transactions.zh-CN.md)。旧游戏调用路径及其余服务尚未切换。

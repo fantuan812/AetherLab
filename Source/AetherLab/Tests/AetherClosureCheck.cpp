@@ -1,6 +1,8 @@
 #include "../AetherFrontier.h"
 #include "AetherGuide.h"
 #include "AetherTradeNetworkProbe.h"
+#include "Movement/AetherCharacterMovement.h"
+#include "Components/CapsuleComponent.h"
 #include "Skills/AetherSkillAbilityBinding.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Presentation/AetherPresentation.h"
@@ -21,6 +23,10 @@ bool ClosureServer(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV807Se
 bool ClosureClient(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV807Client"));}
 bool TradeNetwork(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV10TradeNetwork"));}
 // 探针只在显式开发测试开关下记录客户端收到的回执，不替代服务器授权或持久账本。
+bool MovementNetwork(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV10MovementNetwork"));}
+struct FMovementNetworkProbe{int32 RequestedPhase=0;float JumpAt=0;bool SawOwnAir=false,SawOtherAir=false;};
+FMovementNetworkProbe MovementProbe;
+bool ServerSawJumpA=false,ServerSawJumpB=false;
 struct FTradeNetworkProbe
 {
     FGuid Token;FAetherInventoryCommand Purchase;FGuid InFlight;
@@ -44,6 +50,24 @@ void AAetherFrontierCharacter::ClientClosureAction_Implementation(FName Action,F
     if(Action=="Disconnect"){UE_LOG(LogTemp,Display,TEXT("V807_VOLUNTARY_DISCONNECT"));FPlatformMisc::RequestExit(false);return;}
     if(Controller)Controller->SetControlRotation(Look);
     UE_LOG(LogTemp,Display,TEXT("V807_CLIENT_ACTION id=%s action=%s"),ProfileState()?*ProfileState()->Profile.CharacterId:TEXT("pending"),*Action.ToString());
+    if(MovementNetwork()&&Action.ToString().StartsWith(TEXT("Move")))
+    {
+        if(Action=="MoveStand"){ReleaseHeldInput();MovementProbe={};MovementProbe.RequestedPhase=1;}
+        else if(Action=="MoveCrouch"){SetCrouchInput(true);MovementProbe.RequestedPhase=2;}
+        else if(Action=="MoveSprint"){SetCrouchInput(false);SetSprintInput(true);MovementProbe.RequestedPhase=3;}
+        else if(Action=="MoveJump")
+        {
+            SetSprintInput(false);StartJumpInput();MovementProbe.RequestedPhase=4;
+            MovementProbe.JumpAt=GetWorld()->GetTimeSeconds();
+        }
+        else if(Action=="MoveFlush")
+        {
+            bAttackHeld=true;Jump();SetSprintInput(true);
+            if(auto* PC=Cast<APlayerController>(Controller))PC->FlushPressedKeys();
+            MovementProbe.RequestedPhase=5;
+        }
+        return;
+    }
     if(TradeNetwork()&&Action.ToString().StartsWith(TEXT("Trade")))
     {
         for(auto It=TradeProbes.CreateIterator();It;++It)if(!It.Key().IsValid())It.RemoveCurrent();
@@ -102,8 +126,44 @@ void AAetherFrontierCharacter::CheckClosureClient(float Dt)
 #if !UE_BUILD_SHIPPING
     if(HasAuthority()||!IsLocallyControlled()||!ClosureClient())return;
     ClosureClientTime+=Dt;auto* S=GetWorld()->GetGameState<AAetherFrontierState>();auto* PS=ProfileState();
+    if(MovementNetwork()&&S&&PS)
+    {
+        // 运动输入逐帧驱动；短暂腾空必须逐帧采样，不能在两秒后的静态快照中推断。
+        if(MovementProbe.RequestedPhase==3)AddMovementInput(FVector(1,0,0));
+        if(MovementProbe.RequestedPhase==4)
+        {
+            if(GetWorld()->GetTimeSeconds()-MovementProbe.JumpAt>.12f)StopJumping();
+            MovementProbe.SawOwnAir|=GetCharacterMovement()->IsFalling()&&GetActorLocation().Z>1170;
+            for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)
+                if(*It!=this&&It->GetPlayerState()&&It->Fighter==EAetherFighter::Player)
+                    MovementProbe.SawOtherAir|=It->GetCharacterMovement()->IsFalling()&&It->GetActorLocation().Z>1170;
+        }
+    }
     if(!S||!PS||S->ClosurePhase==0||S->ClosurePhase==ClosureSeenPhase||ClosureClientTime<2)return;
     bool Private=true;for(TActorIterator<AAetherPlayerState> It(GetWorld());It;++It)if(*It!=PS)Private&=It->Profile.CharacterId.IsEmpty()&&It->Profile.Inventory.IsEmpty();
+    if(MovementNetwork())
+    {
+        auto* M=CastChecked<UAetherCharacterMovement>(GetCharacterMovement());const int32 Phase=S->ClosurePhase;
+        bool Pass=Private&&MovementProbe.RequestedPhase==Phase&&M->IsMovingOnGround();
+        if(Phase==1)Pass&=!IsCrouched()&&GetActorLocation().Z>1100;
+        else if(Phase==2)
+        {
+            Pass&=IsCrouched()&&GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight()==48&&!bSprinting;
+            bool OtherCrouched=false;
+            for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)
+                if(*It!=this&&It->GetPlayerState()&&It->Fighter==EAetherFighter::Player)OtherCrouched|=It->IsCrouched();
+            Pass&=OtherCrouched;
+        }
+        else if(Phase==3)Pass&=bSprinting&&!IsCrouched()&&GetVelocity().Size2D()>500&&GetActorLocation().X>8800;
+        else if(Phase==4)Pass&=MovementProbe.SawOwnAir&&MovementProbe.SawOtherAir&&!bPressedJump;
+        else if(Phase==5)Pass&=!M->bWantsSprint&&!bSprinting&&!bPressedJump&&!bAttackHeld;
+        else Pass=false;
+        if(!Pass&&ClosureClientTime<12)return;
+        ClosureSeenPhase=Phase;ClosureClientTime=0;
+        UE_LOG(LogTemp,Display,TEXT("V10_MOVEMENT_CLIENT_%s id=%s phase=%d crouch=%d sprint=%d x=%.1f z=%.1f own_air=%d remote_air=%d"),
+            Pass?TEXT("PASS"):TEXT("FAIL"),*PS->Profile.CharacterId,Phase,IsCrouched(),bSprinting,GetActorLocation().X,GetActorLocation().Z,MovementProbe.SawOwnAir,MovementProbe.SawOtherAir);
+        ServerClosureAck(Phase,Pass);return;
+    }
     if(TradeNetwork())
     {
         auto* Probe=TradeProbes.Find(this);const int32 Phase=S->ClosurePhase;
@@ -176,6 +236,49 @@ void AAetherFrontierMode::CheckClosure()
     auto Act=[](AAetherFrontierCharacter* C,FName Action,FVector Target){const auto Look=(Target-C->GetActorLocation()-FVector(0,0,25)).Rotation();C->Controller->SetControlRotation(Look);C->NextServerAction=0;C->ClientClosureAction(Action,Look);};
     auto Next=[&](int Stage){ClosureStage=Stage;ClosureAt=Elapsed;};
     auto Acked=[&](int Phase){return ClosureAcks.FindRef("Alpha")==Phase&&ClosureAcks.FindRef("Beta")==Phase;};
+    if(MovementNetwork())
+    {
+        if(ClosureStage==7){if(Elapsed-ClosureAt>.5)FPlatformMisc::RequestExitWithStatus(false,bClosureFailed?1:0);return;}
+        if(!A||!B||A->bTravelPending||B->bTravelPending)return;
+        if(ClosureStage==0)
+        {
+            // 使用正式可复制的基础几何体搭建短测试地面；不进入个人存档。
+            Make("V10MoveFloor",NAME_None,FVector(10000,10000,1000),FVector(60,40,1),EAetherObjectKind::Stone,TEXT(""));
+            for(auto* C:{A,B}){C->ResetCombat();C->SetVitals(100,100,100);}
+            Move(A,FVector(8500,9800,1140));Move(B,FVector(8500,10200,1140));
+            ServerSawJumpA=ServerSawJumpB=false;Next(1);return;
+        }
+        auto Send=[&](int32 Phase,FName Action)
+        {
+            S->ClosurePhase=Phase;S->ForceNetUpdate();
+            Act(A,Action,A->GetActorLocation()+FVector(100,0,25));Act(B,Action,B->GetActorLocation()+FVector(100,0,25));
+        };
+        if(ClosureStage==1&&Elapsed-ClosureAt>1){Send(1,"MoveStand");Next(2);return;}
+        if(ClosureStage==2&&Acked(1)){Send(2,"MoveCrouch");Next(3);return;}
+        if(ClosureStage==3&&Acked(2))
+        {
+            Check(A->IsCrouched()&&B->IsCrouched(),TEXT("remote saved moves crouch authoritative capsules"));
+            Send(3,"MoveSprint");Next(4);return;
+        }
+        if(ClosureStage==4&&Acked(3))
+        {
+            for(auto* C:{A,B})Check(C->bSprinting&&!C->IsCrouched()&&C->GetActorLocation().X>8800&&C->Stamina()<99,TEXT("remote sprint movement and authoritative stamina cost"));
+            Send(4,"MoveJump");Next(5);return;
+        }
+        if(ClosureStage==5)
+        {
+            ServerSawJumpA|=A->GetCharacterMovement()->IsFalling()&&A->GetActorLocation().Z>1170;
+            ServerSawJumpB|=B->GetCharacterMovement()->IsFalling()&&B->GetActorLocation().Z>1170;
+            if(Acked(4)){Check(ServerSawJumpA&&ServerSawJumpB,TEXT("server observed both real jumps"));Send(5,"MoveFlush");Next(6);}return;
+        }
+        if(ClosureStage==6&&Acked(5))
+        {
+            Check(!A->bSprinting&&!B->bSprinting,TEXT("remote flush stops authoritative sprint"));
+            UE_LOG(LogTemp,Display,TEXT("V10_MOVEMENT_NETWORK_%s"),bClosureFailed?TEXT("FAIL"):TEXT("PASS"));
+            A->ClientClosureAction("Disconnect",FRotator::ZeroRotator);B->ClientClosureAction("Disconnect",FRotator::ZeroRotator);Next(7);return;
+        }
+        return;
+    }
     if(TradeNetwork())
     {
         // 客户端退出后角色可能已销毁；收尾不能依赖两名角色仍然存在。

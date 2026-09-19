@@ -23,7 +23,17 @@ class AETHERLAB_API AAetherFrontierCharacter : public AAetherCharacter
 {
     GENERATED_BODY()
 public:
-    AAetherFrontierCharacter();
+    AAetherFrontierCharacter(const FObjectInitializer& ObjectInitializer=FObjectInitializer::Get());
+    bool CanStartLocomotion() const;
+    virtual bool CanJumpInternal_Implementation() const override;
+    virtual void OnStartCrouch(float HalfHeightAdjust,float ScaledHalfHeightAdjust) override;
+    virtual void OnEndCrouch(float HalfHeightAdjust,float ScaledHalfHeightAdjust) override;
+    void StartJumpInput();
+    void SetCrouchInput(bool Pressed);
+    void SetSprintInput(bool Pressed);
+    void ReleaseHeldInput();
+    float CrouchCameraOffset=0;
+    bool bAttackHeld=false;
     virtual void BeginPlay() override;
     virtual void PossessedBy(AController* C) override;
     virtual void UnPossessed() override;
@@ -130,7 +140,8 @@ public:
     int32 ClosureSeenPhase=0;
 private:
     void PressAttack(); void ReleaseAttack();
-    void SprintOn(){ServerSprint(true);} void SprintOff(){ServerSprint(false);}
+    void SprintOn(){SetSprintInput(true);} void SprintOff(){SetSprintInput(false);}
+    void CrouchOn(){SetCrouchInput(true);} void CrouchOff(){SetCrouchInput(false);}
     void UsePotion(){if(!bPanel)SubmitInventory("Use","Potion");} void InteractV4();
     FAetherWorldServiceCommand PendingService;
     int32 MinimumServiceRevision=0;
@@ -144,10 +155,10 @@ private:
     void ToggleInventory(){SelectPanel(1);} void ToggleQuests(){SelectPanel(2);}
     void ToggleSkills(){SelectPanel(3);} void ToggleMap(){SelectPanel(4);}
     void ToggleParty(){SelectPanel(5);} void ToggleMenu(){SelectPanel(6);}
-    void SelectPanel(int32 NewPanel){const bool Open=!bPanel||Panel!=NewPanel;if(!Open||NewPanel!=1)CloseTrade();Panel=NewPanel;bPanel=Open;if(Open){ServerSprint(false);ServerBlock(false);}}
+    void SelectPanel(int32 NewPanel){const bool Open=!bPanel||Panel!=NewPanel;if(!Open||NewPanel!=1)CloseTrade();Panel=NewPanel;bPanel=Open;if(Open)ReleaseHeldInput();}
     void CastSelectedV4(){if(!bPanel)TrySpell(SelectedSpell);}
     void Spell0(){SelectedSpell=0;} void Spell1(){SelectedSpell=1;} void Spell2(){SelectedSpell=2;} void Spell3(){SelectedSpell=3;}
     void Forward(float V); void Right(float V); void Yaw(float V); void Pitch(float V);
     void GuardOn(){if(!bPanel)ServerBlock(true);} void GuardOff(){ServerBlock(false);}
-    void Dodge(){if(!bPanel)ServerDodge();} void JumpV4(){if(!bPanel && Alive())Jump();}
+    void Dodge(){if(!bPanel)ServerDodge();} void JumpV4(){StartJumpInput();}
 };
