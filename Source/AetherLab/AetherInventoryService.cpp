@@ -1,5 +1,8 @@
 #include "AetherFrontier.h"
 #include "AetherGuide.h"
+#if !UE_BUILD_SHIPPING
+#include "Tests/AetherTradeNetworkProbe.h"
+#endif
 #include "Components/StaticMeshComponent.h"
 
 void AAetherFrontierCharacter::SubmitInventory(FName Action,FName Definition)
@@ -31,6 +34,9 @@ void AAetherFrontierCharacter::SubmitInventory(FName Action,FName Definition)
 void AAetherFrontierCharacter::InventoryResult_Implementation(FGuid Id,EAetherInventoryResult Result,int32 Revision,int32 Transferred)
 {
  if(PendingInventory.CommandId!=Id)return;
+#if !UE_BUILD_SHIPPING
+ AetherTradeNetwork::ObserveResult(this,Id,Result);
+#endif
  MinimumInventoryRevision=FMath::Max(MinimumInventoryRevision,Revision);
  // A failed write may be retried with the same command. Rejections clear selection ambiguity.
  if(Result!=EAetherInventoryResult::StorageUnavailable&&Result!=EAetherInventoryResult::NotReady){PendingInventory=FAetherInventoryCommand();PendingTradeAuthorization.Invalidate();}

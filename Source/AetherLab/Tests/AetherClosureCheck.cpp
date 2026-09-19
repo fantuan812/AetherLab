@@ -1,4 +1,6 @@
 #include "../AetherFrontier.h"
+#include "AetherGuide.h"
+#include "AetherTradeNetworkProbe.h"
 #include "Skills/AetherSkillAbilityBinding.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Presentation/AetherPresentation.h"
@@ -17,8 +19,23 @@
 namespace {
 bool ClosureServer(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV807Server"));}
 bool ClosureClient(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV807Client"));}
+bool TradeNetwork(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV10TradeNetwork"));}
+// 探针只在显式开发测试开关下记录客户端收到的回执，不替代服务器授权或持久账本。
+struct FTradeNetworkProbe
+{
+    FGuid Token;FAetherInventoryCommand Purchase;FGuid InFlight;
+    int32 RequestedPhase=0;bool bResultReceived=false;EAetherInventoryResult Result=EAetherInventoryResult::InvalidCommand;
+};
+TMap<TWeakObjectPtr<AAetherFrontierCharacter>,FTradeNetworkProbe> TradeProbes;
 const FGuid LootReceipt(0xA375E807,0,0,20);
 const FName LootName=*FString("Loot_"+LootReceipt.ToString(EGuidFormats::Digits));
+}
+void AetherTradeNetwork::ObserveResult(AAetherFrontierCharacter* C,FGuid Command,EAetherInventoryResult Result)
+{
+#if !UE_BUILD_SHIPPING
+    if(!TradeNetwork()||!ClosureClient())return;
+    if(auto* Probe=TradeProbes.Find(C);Probe&&Probe->InFlight==Command){Probe->Result=Result;Probe->bResultReceived=true;}
+#endif
 }
 void AAetherFrontierCharacter::ClientClosureAction_Implementation(FName Action,FRotator Look)
 {
@@ -27,6 +44,33 @@ void AAetherFrontierCharacter::ClientClosureAction_Implementation(FName Action,F
     if(Action=="Disconnect"){UE_LOG(LogTemp,Display,TEXT("V807_VOLUNTARY_DISCONNECT"));FPlatformMisc::RequestExit(false);return;}
     if(Controller)Controller->SetControlRotation(Look);
     UE_LOG(LogTemp,Display,TEXT("V807_CLIENT_ACTION id=%s action=%s"),ProfileState()?*ProfileState()->Profile.CharacterId:TEXT("pending"),*Action.ToString());
+    if(TradeNetwork()&&Action.ToString().StartsWith(TEXT("Trade")))
+    {
+        for(auto It=TradeProbes.CreateIterator();It;++It)if(!It.Key().IsValid())It.RemoveCurrent();
+        if(TradeProbes.Num()>=16&&!TradeProbes.Contains(this))return;
+        auto& Probe=TradeProbes.FindOrAdd(this);auto* PS=ProfileState();if(!PS)return;
+        if(Action=="TradeOpen"){RefreshInteractionFocus();InteractV4();return;}
+        if(Action=="TradeClose"){CloseTrade();Probe.RequestedPhase=3;return;}
+        if(Action=="TradeBuy")
+        {
+            Probe.Token=TradeSession.Token;Probe.Purchase={};auto& C=Probe.Purchase;
+            C.CommandId=FGuid::NewGuid();C.Action="Buy";C.ShopId=ActiveShop();C.DefinitionId="Potion";C.Quantity=2;C.ExpectedInventoryRevision=PS->Profile.Revision;
+            Probe.RequestedPhase=2;PendingInventory=C;
+        }
+        // 关闭会话后仍重放原始字节；只有新请求才更换命令 ID 和版本。
+        else if(Action=="TradeReplay"){Probe.RequestedPhase=4;PendingInventory=Probe.Purchase;}
+        else if(Action=="TradeExpired")
+        {
+            Probe.RequestedPhase=5;PendingInventory=Probe.Purchase;
+            PendingInventory.CommandId=FGuid::NewGuid();PendingInventory.ExpectedInventoryRevision=PS->Profile.Revision;
+        }
+        else return;
+        PendingTradeAuthorization=Probe.Token;Probe.InFlight=PendingInventory.CommandId;Probe.bResultReceived=false;
+        const auto Request=PendingInventory;
+        ServerTradeInventory(Request,Probe.Token);
+        if(Action=="TradeBuy")ServerTradeInventory(Request,Probe.Token); // 真实重复网络投递。
+        return;
+    }
     if(Action=="InventoryProbe")
     {
         const auto* PS=ProfileState();if(!PS)return;
@@ -60,6 +104,25 @@ void AAetherFrontierCharacter::CheckClosureClient(float Dt)
     ClosureClientTime+=Dt;auto* S=GetWorld()->GetGameState<AAetherFrontierState>();auto* PS=ProfileState();
     if(!S||!PS||S->ClosurePhase==0||S->ClosurePhase==ClosureSeenPhase||ClosureClientTime<2)return;
     bool Private=true;for(TActorIterator<AAetherPlayerState> It(GetWorld());It;++It)if(*It!=PS)Private&=It->Profile.CharacterId.IsEmpty()&&It->Profile.Inventory.IsEmpty();
+    if(TradeNetwork())
+    {
+        auto* Probe=TradeProbes.Find(this);const int32 Phase=S->ClosurePhase;
+        bool Pass=Private;const auto* PC=Cast<APlayerController>(Controller);
+        Pass&=PC&&PC->GetHUD()&&AbilitySystem==PS->AbilitySystem&&AbilitySystem->GetAvatarActor()==this;
+        if(Phase==1)Pass&=!ActiveShop().IsNone()&&TradeSession.Token.IsValid()&&bPanel&&Panel==1&&PS->Profile.Gold==100&&PS->Profile.Count("Potion")==0;
+        else if(Phase==3)Pass&=Probe&&Probe->RequestedPhase==3&&!TradeSession.Token.IsValid();
+        else if(Phase==2||Phase==4||Phase==5)
+        {
+            const auto Expected=Phase==5?EAetherInventoryResult::OutOfReach:EAetherInventoryResult::Applied;
+            Pass&=Probe&&Probe->RequestedPhase==Phase&&Probe->bResultReceived&&Probe->Result==Expected&&!PendingInventory.CommandId.IsValid();
+        }
+        else Pass=false;
+        if(Phase>=2)Pass&=PS->Profile.Gold==60&&PS->Profile.Count("Potion")==2&&PS->Profile.InventoryReceipts.Num()==1;
+        if(!Pass&&ClosureClientTime<12)return;
+        ClosureSeenPhase=Phase;ClosureClientTime=0;
+        UE_LOG(LogTemp,Display,TEXT("V10_TRADE_CLIENT_%s id=%s phase=%d gold=%d potion=%d"),Pass?TEXT("PASS"):TEXT("FAIL"),*PS->Profile.CharacterId,Phase,PS->Profile.Gold,PS->Profile.Count("Potion"));
+        ServerClosureAck(Phase,Pass);return;
+    }
     auto Find=[&](FName Id)->AAetherFrontierProp*{for(TActorIterator<AAetherFrontierProp> It(GetWorld());It;++It)if(It->Spec.Id==Id)return *It;return nullptr;};
     auto* Source=Find("LabSource");auto* Bridge=Find("LabBridge");auto* Ice=Find("LabWater0");auto* Fire=Find("LabFire");auto* Crate=Find("LabCrate");
     if(!Source||!Bridge||!Ice||!Fire||!Crate)return;
@@ -109,10 +172,51 @@ void AAetherFrontierMode::CheckClosure()
     for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(auto* PS=It->ProfileState())
     {if(PS->Profile.CharacterId=="Alpha")A=*It;if(PS->Profile.CharacterId=="Beta")B=*It;}
     auto* S=GetGameState<AAetherFrontierState>();auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();
-    auto Move=[](AAetherFrontierCharacter* C,FVector P){C->SetBase(static_cast<UPrimitiveComponent*>(nullptr));C->SetActorLocation(P,false,nullptr,ETeleportType::TeleportPhysics);C->GetCharacterMovement()->StopMovementImmediately();if(auto* PC=Cast<APlayerController>(C->Controller))PC->ClientSetLocation(P,PC->GetControlRotation());C->ForceNetUpdate();};
+    auto Move=[](AAetherFrontierCharacter* C,FVector P){C->SetBase(static_cast<FMovementBaseInterfaceData*>(nullptr));C->SetActorLocation(P,false,nullptr,ETeleportType::TeleportPhysics);C->GetCharacterMovement()->StopMovementImmediately();if(auto* PC=Cast<APlayerController>(C->Controller))PC->ClientSetLocation(P,PC->GetControlRotation());C->ForceNetUpdate();};
     auto Act=[](AAetherFrontierCharacter* C,FName Action,FVector Target){const auto Look=(Target-C->GetActorLocation()-FVector(0,0,25)).Rotation();C->Controller->SetControlRotation(Look);C->NextServerAction=0;C->ClientClosureAction(Action,Look);};
     auto Next=[&](int Stage){ClosureStage=Stage;ClosureAt=Elapsed;};
     auto Acked=[&](int Phase){return ClosureAcks.FindRef("Alpha")==Phase&&ClosureAcks.FindRef("Beta")==Phase;};
+    if(TradeNetwork())
+    {
+        // 客户端退出后角色可能已销毁；收尾不能依赖两名角色仍然存在。
+        if(ClosureStage==7){if(Elapsed-ClosureAt>.5)FPlatformMisc::RequestExitWithStatus(false,bClosureFailed?1:0);return;}
+        if(!A||!B||A->bTravelPending||B->bTravelPending)return;
+        auto* Merchant=Prop("Shop");if(!Merchant)return;
+        if(ClosureStage==0)
+        {
+            for(auto* C:{A,B})
+            {
+                auto P=C->ProfileState()->Profile;P.Gold=100;P.Inventory.Reset();P.Equipped.Reset();
+                Check(Commit(C->ProfileState(),P),TEXT("trade network isolated fixture"));C->ResetCombat();C->ApplyProfileEquipment();
+            }
+            Move(A,Merchant->GetActorLocation()+FVector(-140,-90,40));Move(B,Merchant->GetActorLocation()+FVector(140,-90,40));
+            S->ClosurePhase=1;S->ForceNetUpdate();Next(1);return;
+        }
+        if(ClosureStage==1&&Elapsed-ClosureAt>.7)
+        {Act(A,"TradeOpen",Merchant->GetActorLocation());Act(B,"TradeOpen",Merchant->GetActorLocation());Next(2);return;}
+        if(ClosureStage==2&&Acked(1))
+        {
+            Check(A->TradeSession.Token.IsValid()&&B->TradeSession.Token.IsValid()&&A->TradeSession.Token!=B->TradeSession.Token,TEXT("distinct remote merchant leases"));
+            S->ClosurePhase=2;S->ForceNetUpdate();Act(A,"TradeBuy",Merchant->GetActorLocation());Act(B,"TradeBuy",Merchant->GetActorLocation());Next(3);return;
+        }
+        if(ClosureStage==3&&Acked(2))
+        {S->ClosurePhase=3;S->ForceNetUpdate();Act(A,"TradeClose",Merchant->GetActorLocation());Act(B,"TradeClose",Merchant->GetActorLocation());Next(4);return;}
+        if(ClosureStage==4&&Acked(3))
+        {
+            Check(!A->TradeSession.Token.IsValid()&&!B->TradeSession.Token.IsValid(),TEXT("remote close revokes server authorization"));
+            S->ClosurePhase=4;S->ForceNetUpdate();Act(A,"TradeReplay",Merchant->GetActorLocation());Act(B,"TradeReplay",Merchant->GetActorLocation());Next(5);return;
+        }
+        if(ClosureStage==5&&Acked(4))
+        {S->ClosurePhase=5;S->ForceNetUpdate();Act(A,"TradeExpired",Merchant->GetActorLocation());Act(B,"TradeExpired",Merchant->GetActorLocation());Next(6);return;}
+        if(ClosureStage==6&&Acked(5))
+        {
+            for(auto* C:{A,B})Check(C->ProfileState()->Profile.Gold==60&&C->ProfileState()->Profile.Count("Potion")==2&&C->ProfileState()->Profile.InventoryReceipts.Num()==1,TEXT("remote retries debit once and expired new request rejected"));
+            Check(!FModuleManager::Get().IsModuleLoaded("AetherUI"),TEXT("dedicated trade process excludes client UI"));
+            UE_LOG(LogTemp,Display,TEXT("V10_TRADE_NETWORK_%s"),bClosureFailed?TEXT("FAIL"):TEXT("PASS"));
+            A->ClientClosureAction("Disconnect",FRotator::ZeroRotator);B->ClientClosureAction("Disconnect",FRotator::ZeroRotator);Next(7);return;
+        }
+        return;
+    }
     const bool Reload=FParse::Param(FCommandLine::Get(),TEXT("AetherV807Reload"));
     if(Reload)
     {

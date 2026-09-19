@@ -30,4 +30,12 @@
 - CaptureV806.ps1 -TradeSessions 使用新的独立存档前缀渲染 Open、Sale、Closed、Retry 四个界面，并检查实际失败重试路径最终未扣钱、未改变物品。AetherV806_508169361a81.log 包含 AETHER_TRADE_CAPTURE_PASS。
 - 四个截图在 Saved/Automation/V10Trade-*.png，已查看界面布局、数量/合价、确认和恢复入口。
 
-本单元未做远程双客户端商店会话、丢包或发布版本验收；上一交互单元的双客户端测试只覆盖指定目标 E 与补给拾取，不能替代商店会话专项测试。
+## 专项远程验证
+
+TestV10TradeNetwork.ps1 使用独立存档启动一个 Editor Development 专用服务器进程和 Alpha/Beta 两个真实客户端。每个客户端依次验证：独立商人令牌和交易面板、重复购买两瓶药仅扣款一次、关闭会话、关闭后原请求返回 Applied、新命令复用失效令牌返回 OutOfReach。客户端还检查另一玩家的档案未泄露，并要求最终金币 60、药水 2、回执 1。
+
+最终增量编译 V10-trade-network-build2.log 通过；双客户端日志前缀 AetherV10Trade_87d9b2ba6119，两个客户端共十个阶段全部 PASS。
+
+服务器同时核对令牌隔离、关闭撤销、最终持久状态和未加载客户端 UI 模块。脚本逐个核对两个客户端的五个阶段，不以服务器汇总日志代替远端证据。测试探针只在非 Shipping 且显式命令行开关启用时运行。结果和独立日志保存在 Saved/Automation/V10-TradeNetwork-Result.json 与 Saved/Logs。
+
+本单元未做丢包、四人、Listen、商店流送卸载、重启恢复或发布版本验收；这些不由本次短双客户端测试推断通过。
