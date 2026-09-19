@@ -122,4 +122,74 @@ bool FAetherPinnedInteractionTest::RunTest(const FString&)
     TestTrue(TEXT("New instance needs a new selection"),AetherGuide::ValidateSelection(C,AetherGuide::QueryTarget(C,Replacement)));
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherLiveTradeTest,"Aether.V10.Interaction.LiveMerchantLeaseAndTransactionalRetry",
+    EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FAetherLiveTradeTest::RunTest(const FString&)
+{
+    using E=EAetherInventoryResult;auto* W=UWorld::CreateWorld(EWorldType::Game,false);
+    if(!TestNotNull(TEXT("Isolated trading world"),W))return false;
+    GEngine->CreateNewWorldContext(EWorldType::Game).SetCurrentWorld(W);
+    ON_SCOPE_EXIT { W->EndPlay(EEndPlayReason::Quit);GEngine->DestroyWorldContext(W);W->DestroyWorld(false); };
+    auto* C=MakeViewer(W);auto* PS=C->ProfileState();PS->Profile.Gold=100;
+    auto* A=MakeTarget(W,"Merchant.A","Shop",FVector(180,0,0));
+    auto* B=MakeTarget(W,"Merchant.B","Shop",FVector(150,40,0));
+    auto* Mode=W->SpawnActor<AAetherFrontierMode>();
+    Mode->Database=NewObject<UAetherFrontierSave>(Mode);Mode->Storage=AetherLocalSnapshotStore();
+    Mode->SavePrefix=TEXT("V10Trade_")+FGuid::NewGuid().ToString(EGuidFormats::Digits);
+    TestFalse(TEXT("Proximity alone is not authorization"),C->AuthorizeTrade(FGuid::NewGuid(),"Shop"));
+    TestTrue(TEXT("Explicit interaction opens merchant session"),C->OpenTrade(A));
+    const auto Token=C->TradeSession.Token;
+    TestTrue(TEXT("Token binds actual merchant and owner"),C->AuthorizeTrade(Token,"Shop")&&C->TradeSession.Target==A);
+    TestFalse(TEXT("Wrong token cannot use active merchant"),C->AuthorizeTrade(FGuid::NewGuid(),"Shop"));
+    TestFalse(TEXT("Other catalog cannot reuse session"),C->AuthorizeTrade(Token,"Armorer"));
+    PS->Profile.CharacterId=TEXT("ChangedOwner");
+    TestFalse(TEXT("Character identity change invalidates lease"),C->AuthorizeTrade(Token,"Shop"));PS->Profile.CharacterId=TEXT("TargetViewer");
+    FAetherInventoryCommand Buy;Buy.CommandId=FGuid::NewGuid();Buy.Action="Buy";Buy.DefinitionId="Potion";
+    Buy.ShopId="Shop";Buy.Quantity=2;Buy.ExpectedInventoryRevision=0;
+    const auto Execute=[&](const FAetherInventoryCommand& Request,FGuid Authorization)
+    {int32 Rev=0,Moved=0;C->NextServerAction=0;return Mode->ExecuteInventory(C,Request,Rev,Moved,Authorization);};
+    TestTrue(TEXT("Unscoped inventory route cannot buy"),Execute(Buy,{})==E::OutOfReach);
+    Mode->bFailWrites=true;
+    TestTrue(TEXT("Storage failure rolls back price and quantity"),Execute(Buy,Token)==E::StorageUnavailable&&PS->Profile.Gold==100&&PS->Profile.Count("Potion")==0&&PS->Profile.Revision==0);
+    Mode->bFailWrites=false;
+    TestTrue(TEXT("Same command retries to committed purchase"),Execute(Buy,Token)==E::Applied&&PS->Profile.Gold==60&&PS->Profile.Count("Potion")==2&&PS->Profile.Revision==1);
+    TestTrue(TEXT("Actual slot and checksum published"),Mode->Storage->IsCommitted(Mode->SavePrefix+TEXT("1"),1));
+    C->CloseTrade();
+    TestTrue(TEXT("Committed receipt remains replayable after session closes"),Execute(Buy,Token)==E::Applied&&PS->Profile.Gold==60&&PS->Profile.Count("Potion")==2);
+    auto NewBuy=Buy;NewBuy.CommandId=FGuid::NewGuid();NewBuy.ExpectedInventoryRevision=1;
+    TestTrue(TEXT("Closed token cannot create new transaction"),Execute(NewBuy,Token)==E::OutOfReach);
+    C->OpenTrade(A);const auto NewToken=C->TradeSession.Token;
+    C->ClientTradeClosed_Implementation(Token);
+    TestTrue(TEXT("Delayed close cannot revoke newer session"),C->AuthorizeTrade(NewToken,"Shop"));
+    A->SetActorLocation(FVector(300,0,0));C->MaintainTrade();
+    TestFalse(TEXT("Nearby same-shop merchant cannot replace departed original"),C->AuthorizeTrade(NewToken,"Shop"));
+    TestFalse(TEXT("Return does not reactivate revoked token"),C->TradeSession.Token.IsValid());
+    A->SetActorLocation(FVector(180,0,0));C->OpenTrade(A);
+    const auto BeforeCombat=C->TradeSession.Token;C->CastLockUntil=1;C->MaintainTrade();
+    TestFalse(TEXT("Casting revokes active trade"),C->AuthorizeTrade(BeforeCombat,"Shop"));C->CastLockUntil=0;
+    C->OpenTrade(A);const auto BeforeReplacement=C->TradeSession.Token;C->OpenTrade(B);
+    TestFalse(TEXT("Opening another merchant revokes old token"),C->AuthorizeTrade(BeforeReplacement,"Shop"));
+    TestTrue(TEXT("New session is explicitly bound to B"),C->TradeSession.Target==B);
+
+    C->bPanel=true;C->Panel=1;C->SelectedInstance=PS->Profile.Inventory[0].InstanceId;C->InventoryQuantity=1;
+    C->RequestSale();
+    TestTrue(TEXT("First sale click previews without spending"),!C->SaleConfirmationText().IsEmpty()&&PS->Profile.Count("Potion")==2&&PS->Profile.Gold==60);
+    C->InventoryQuantity=2;C->MaintainTrade();
+    TestTrue(TEXT("Changing quantity cancels confirmation"),C->SaleConfirmationText().IsEmpty());
+    C->RequestSale();++PS->Profile.Revision;C->MaintainTrade();--PS->Profile.Revision;
+    TestTrue(TEXT("Changed profile invalidates even when old selection returns"),C->SaleConfirmationText().IsEmpty());
+    C->InventoryQuantity=1;C->RequestSale();C->SaleConfirmation.ExpiresAt=-1;C->MaintainTrade();
+    TestTrue(TEXT("Expired confirmation cannot submit"),C->SaleConfirmationText().IsEmpty());
+
+    // UI 确认表达用户意图；真实交易仍在服务器按规则重算价格，并先保存后发布。
+    auto Sale=NewBuy;Sale.CommandId=FGuid::NewGuid();Sale.Action="Sell";Sale.DefinitionId=NAME_None;
+    Sale.ItemInstanceId=C->SelectedInstance;Sale.Quantity=1;
+    TestTrue(TEXT("Authorized sale commits quantity and gold together"),Execute(Sale,C->TradeSession.Token)==E::Applied&&PS->Profile.Gold==65&&PS->Profile.Count("Potion")==1);
+    TestTrue(TEXT("Sale retry does not pay twice"),Execute(Sale,C->TradeSession.Token)==E::Applied&&PS->Profile.Gold==65);
+    W->SetBegunPlay(true);B->Destroy();C->MaintainTrade();
+    TestFalse(TEXT("Unloaded merchant revokes lease"),C->TradeSession.Token.IsValid());
+    TestTrue(TEXT("Persisted sale receipt survives merchant destruction"),Execute(Sale,BeforeReplacement)==E::Applied);
+    return true;
+}
 #endif

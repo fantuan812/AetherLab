@@ -57,6 +57,8 @@ void AAetherFrontierCharacter::PossessedBy(AController* C)
     if(HasAuthority() && ProfileState())
     { Equipment->bProfileManaged=true;GrantSpells();if(HasActorBegunPlay())ApplyProfileEquipment(); }
 }
+void AAetherFrontierCharacter::UnPossessed()
+{CloseTrade();Super::UnPossessed();}
 void AAetherFrontierCharacter::OnRep_PlayerState()
 { Super::OnRep_PlayerState(); BindPersistentAbilities(); }
 bool AAetherFrontierCharacter::SpellUnlocked(int32 Spell) const
@@ -182,6 +184,7 @@ void AAetherFrontierCharacter::ReleaseCarry()
 }
 void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
+    TradeSession={};SaleConfirmation={};PendingTradeAuthorization.Invalidate();
     InteractionFocus={};bHasInteractionFocus=false;
     if(auto* Registry=GetWorld()->GetSubsystem<UAetherNearbyRegistry>())Registry->Unregister(this);
     ReleaseCarry();Super::EndPlay(Reason);
@@ -242,6 +245,7 @@ void AAetherFrontierCharacter::ReceiveEquipmentHit_Implementation(const FAetherE
 void AAetherFrontierCharacter::Tick(float Dt)
 {
     Super::Tick(Dt);
+    MaintainTrade();
     UpdateSafeTravel();
     CheckClosureClient(Dt);
     if(IsLocallyControlled()&&LockedTarget)

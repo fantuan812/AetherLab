@@ -1,20 +1,21 @@
 #include "AetherFrontier.h"
-#include "EngineUtils.h"
+#include "AetherGuide.h"
 #include "Components/StaticMeshComponent.h"
 
 void AAetherFrontierCharacter::SubmitInventory(FName Action,FName Definition)
 {
  auto* PS=ProfileState();if(!PS)return;
- if(PendingInventory.CommandId.IsValid()){ServerInventory(PendingInventory);return;}
+ if(PendingInventory.CommandId.IsValid()){if(PendingInventory.Action=="Buy"||PendingInventory.Action=="Sell")ServerTradeInventory(PendingInventory,PendingTradeAuthorization);else ServerInventory(PendingInventory);return;}
  if(PS->Profile.Revision<MinimumInventoryRevision){Notify(TEXT("等待背包同步后再操作。"));return;}
  const auto& P=PS->Profile;
  FAetherInventoryCommand C;C.CommandId=FGuid::NewGuid();C.ExpectedInventoryRevision=P.Revision;C.Action=Action;C.DefinitionId=Definition;
  if(Action=="Buy"||Action=="Sell")
  {
-  double Best=FMath::Square(260.);for(TActorIterator<AAetherFrontierProp> It(GetWorld());It;++It)
-   if(FAetherRules::Get().Shops.Contains(It->Service)){double D=FVector::DistSquared(GetActorLocation(),It->GetActorLocation());if(D<Best){Best=D;C.ShopId=It->Service;}}
+  C.ShopId=ActiveShop();
+  if(C.ShopId.IsNone()){Feedback=TEXT("请先与指定商人交谈，开启交易。");return;}
+  PendingTradeAuthorization=TradeSession.Token;
  }
- C.ItemInstanceId=SelectedInstance;C.Quantity=(Action=="Split"||Action=="Merge"||Action=="Sell")?InventoryQuantity:1;C.DestinationInstanceId=MergeDestination;
+ C.ItemInstanceId=SelectedInstance;C.Quantity=(Action=="Split"||Action=="Merge"||Action=="Sell"||Action=="Buy")?InventoryQuantity:1;C.DestinationInstanceId=MergeDestination;
  if(!Definition.IsNone()&&Action=="Use")for(const auto& Item:P.Inventory)if(Item.DefinitionId==Definition){C.ItemInstanceId=Item.InstanceId;break;}
  if(Action=="CycleMain"||Action=="CycleOff")
  {
@@ -24,14 +25,15 @@ void AAetherFrontierCharacter::SubmitInventory(FName Action,FName Definition)
   const FGuid Current=P.Equipped.FindRef(Slot);C.ItemInstanceId=Choices[(Choices.Find(Current)+1)%Choices.Num()];C.Action="Equip";
   if(Action=="CycleOff"&&Current.IsValid()){C.Action="Unequip";C.ItemInstanceId=Current;}
  }
- PendingInventory=C;ServerInventory(C);
+ PendingInventory=C;
+ if(Action=="Buy"||Action=="Sell")ServerTradeInventory(C,PendingTradeAuthorization);else ServerInventory(C);
 }
 void AAetherFrontierCharacter::InventoryResult_Implementation(FGuid Id,EAetherInventoryResult Result,int32 Revision,int32 Transferred)
 {
  if(PendingInventory.CommandId!=Id)return;
  MinimumInventoryRevision=FMath::Max(MinimumInventoryRevision,Revision);
  // A failed write may be retried with the same command. Rejections clear selection ambiguity.
- if(Result!=EAetherInventoryResult::StorageUnavailable&&Result!=EAetherInventoryResult::NotReady)PendingInventory=FAetherInventoryCommand();
+ if(Result!=EAetherInventoryResult::StorageUnavailable&&Result!=EAetherInventoryResult::NotReady){PendingInventory=FAetherInventoryCommand();PendingTradeAuthorization.Invalidate();}
  switch(Result)
  {
  case EAetherInventoryResult::Applied:Feedback=FString::Printf(TEXT("操作完成，数量 %d。"),Transferred);break;
@@ -44,6 +46,14 @@ void AAetherFrontierCharacter::InventoryResult_Implementation(FGuid Id,EAetherIn
  default:Feedback=TEXT("无法执行，请检查选中物品、数量和目标。");break;
  }
 }
+void AAetherFrontierCharacter::ServerTradeInventory_Implementation(FAetherInventoryCommand C,FGuid Authorization)
+{
+ auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();auto* PS=ProfileState();if(!Mode||!PS)return;
+ if(C.Action!="Buy"&&C.Action!="Sell"){InventoryResult(C.CommandId,EAetherInventoryResult::InvalidCommand,PS->Profile.Revision,0);return;}
+ int32 Revision=PS->Profile.Revision,Moved=0;
+ const auto Result=Mode->ExecuteInventory(this,C,Revision,Moved,Authorization);
+ InventoryResult(C.CommandId,Result,Revision,Moved);
+}
 void AAetherFrontierCharacter::ServerInventory_Implementation(FAetherInventoryCommand C)
 {
  auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();auto* PS=ProfileState();if(!Mode||!PS)return;
@@ -51,9 +61,9 @@ void AAetherFrontierCharacter::ServerInventory_Implementation(FAetherInventoryCo
  const auto Result=Mode->ExecuteInventory(this,C,Revision,Moved);
  InventoryResult(C.CommandId,Result,Revision,Moved);
 }
-EAetherInventoryResult AAetherFrontierMode::ExecuteInventory(AAetherFrontierCharacter* C,const FAetherInventoryCommand& Command,int32& Revision,int32& Moved)
+EAetherInventoryResult AAetherFrontierMode::ExecuteInventory(AAetherFrontierCharacter* C,const FAetherInventoryCommand& Command,int32& Revision,int32& Moved,FGuid TradeAuthorization)
 {
- using E=EAetherInventoryResult;Moved=0;auto* PS=C?C->ProfileState():nullptr;if(!PS)return E::NotAllowed;Revision=PS->Profile.Revision;
+ using E=EAetherInventoryResult;Moved=0;auto* PS=IsValid(C)?C->ProfileState():nullptr;if(!HasAuthority()||!PS||C->GetWorld()!=GetWorld())return E::NotAllowed;Revision=PS->Profile.Revision;
  if(const auto* Receipt=PS->Profile.InventoryReceipts.FindByPredicate([&](const auto& R){return R.Command.CommandId==Command.CommandId;}))
  {if(!Receipt->Command.SameRequest(Command))return E::CommandConflict;Revision=Receipt->FinalRevision;Moved=Receipt->Transferred;return E::Applied;}
  if(C->bTravelPending||!C->Alive()||C->CombatTime()<C->NextServerAction)return E::NotReady;
@@ -68,10 +78,9 @@ EAetherInventoryResult AAetherFrontierMode::ExecuteInventory(AAetherFrontierChar
  }
  if(Command.Action=="Buy"||Command.Action=="Sell")
  {
-  bool Reach=false;
-  for(const auto& P:Props)if(IsValid(P)&&P->Service==Command.ShopId&&Rules.Shops.Contains(P->Service)&&FVector::DistSquared(C->GetActorLocation(),P->GetActorLocation())<=FMath::Square(260.))
-  {FCollisionQueryParams Q(SCENE_QUERY_STAT(InventoryShop),false,C);Q.AddIgnoredActor(P);if(!GetWorld()->LineTraceTestByChannel(C->GetActorLocation(),P->GetActorLocation(),ECC_Visibility,Q)){Reach=true;break;}}
-  if(!Reach)return E::OutOfReach;
+  // 回执已在上方确认；只有新交易需要当前 Pawn 与指定商人的有效会话。
+  // 不能用同 ShopId 的邻近商人替换已卸载、被遮挡或离开的原目标。
+  if(!C->AuthorizeTrade(TradeAuthorization,Command.ShopId))return E::OutOfReach;
  }
  auto Next=PS->Profile;auto Result=AetherItems::Prepare(Next,Command,Rules,Moved);if(Result!=E::Applied)return Result;
  if(Next.Revision==MAX_int32)return E::NotAllowed;

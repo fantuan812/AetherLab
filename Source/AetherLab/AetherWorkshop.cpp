@@ -1,5 +1,8 @@
 #include "AetherFrontier.h"
 #include "AetherTraversal.h"
+#include "AetherGuide.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -47,6 +50,46 @@ void AAetherFrontierMode::CaptureWorkshop()
 #if !UE_BUILD_SHIPPING
     auto* PC=GetWorld()->GetFirstPlayerController();auto* C=PC?Cast<AAetherFrontierCharacter>(PC->GetPawn()):nullptr;
     if(!C)return;
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherV10TradeCapture")))
+    {
+        // 独立开发夹具使用脚本生成的新存档前缀；覆盖实际 UMG、授权和确认显示。
+        if(SmokeStage==0&&Elapsed>3&&C->ProfileState())
+        {
+            C->SetActorLocation(FVector(-400,150,130));PC->SetControlRotation(FRotator(0,90,0));
+            UpdateRegions({C->GetActorLocation()});if(!Prop("Shop"))return;
+            C->ResetCombat();auto P=C->ProfileState()->Profile;P.Gold=100;P.Inventory.Reset();P.Equipped.Reset();P.Add("Potion",3);
+            if(!Commit(C->ProfileState(),P)){FPlatformMisc::RequestExitWithStatus(false,1);return;}
+            C->SelectedInstance=C->ProfileState()->Profile.Inventory[0].InstanceId;C->InventoryQuantity=2;SmokeStage=1;
+        }
+        if(SmokeStage==1&&Elapsed>6)
+        {
+            auto* Shop=Prop("Shop");if(!Shop)return;
+            const auto Selection=AetherGuide::QueryTarget(C,Shop);InteractTarget(C,Selection);
+            if(C->ActiveShop().IsNone()){UE_LOG(LogTemp,Error,TEXT("AETHER_TRADE_CAPTURE_FAIL open"));FPlatformMisc::RequestExitWithStatus(false,1);return;}
+            SmokeStage=2;
+        }
+        if(SmokeStage==2&&Elapsed>8){FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir()/TEXT("Automation/V10Trade-Open.png"),true,false);SmokeStage=3;}
+        if(SmokeStage==3&&Elapsed>10){C->RequestSale();if(C->SaleConfirmationText().IsEmpty()){FPlatformMisc::RequestExitWithStatus(false,1);return;}SmokeStage=4;}
+        if(SmokeStage==4&&Elapsed>11){FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir()/TEXT("Automation/V10Trade-Sale.png"),true,false);SmokeStage=5;}
+        if(SmokeStage==5&&Elapsed>12){C->SetActorLocation(FVector(-400,900,130));C->MaintainTrade();SmokeStage=6;}
+        if(SmokeStage==6&&Elapsed>14){FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir()/TEXT("Automation/V10Trade-Closed.png"),true,false);SmokeStage=7;}
+        if(SmokeStage==7&&Elapsed>16)
+        {
+            C->SetActorLocation(FVector(-400,150,130));C->ResetCombat();if(!C->OpenTrade(Prop("Shop"))){FPlatformMisc::RequestExitWithStatus(false,1);return;}
+            bFailWrites=true;C->SubmitInventory("Buy","Potion");bFailWrites=false;
+            if(!C->PendingInventory.CommandId.IsValid()){FPlatformMisc::RequestExitWithStatus(false,1);return;}
+            C->SetActorLocation(FVector(-400,900,130));C->MaintainTrade();SmokeStage=8;
+        }
+        if(SmokeStage==8&&Elapsed>18){FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir()/TEXT("Automation/V10Trade-Retry.png"),true,false);SmokeStage=9;}
+        if(SmokeStage==9&&Elapsed>20)
+        {
+            // 与 UI 的“重试上次操作”使用同一入口；无提交的失效会话请求会明确拒绝并释放挂起状态。
+            C->SubmitInventory(NAME_None);
+            const bool Passed=C->ActiveShop().IsNone()&&!C->PendingInventory.CommandId.IsValid()&&C->ProfileState()->Profile.Count("Potion")==3&&C->ProfileState()->Profile.Gold==100;
+            UE_LOG(LogTemp,Display,TEXT("AETHER_TRADE_CAPTURE_%s"),Passed?TEXT("PASS"):TEXT("FAIL"));SmokeStage=10;FPlatformMisc::RequestExitWithStatus(false,Passed?0:1);
+        }
+        return;
+    }
     if(SmokeStage==0&&Elapsed>3)
     {C->SetActorLocation(FVector(5220,5550,110));PC->SetControlRotation(FRotator(-8,-40,0));SmokeStage=1;}
     if(SmokeStage==1&&Elapsed>6){FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir()/TEXT("Automation/V806-Interaction.png"),true,false);SmokeStage=2;}

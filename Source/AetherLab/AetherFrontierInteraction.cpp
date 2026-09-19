@@ -71,7 +71,7 @@ FString AAetherFrontierMode::InteractTarget(AAetherFrontierCharacter* C,const FA
         C->SetVitals(C->MaxHealth,100,100);C->WaterReserveKg=3;return TEXT("Checkpoint bound. Weapons issued once; R equips. Rested.");
     }
     else if(FAetherRules::Get().Shops.Contains(Service))
-    {return TEXT("打开背包选择商品购买或选中物品出售。");}
+    {return C->OpenTrade(Nearest)?TEXT("交易已开启，只显示这位商人的商品。"):TEXT("当前无法交易，请保持安全并靠近商人。");}
     else if(FAetherRules::Get().Dailies.ContainsByPredicate([&](const auto& D){return D.Service==Service;}))
     {
         const int32 Template=FAetherRules::Get().Dailies.IndexOfByPredicate([&](const auto& D){return D.Service==Service;});

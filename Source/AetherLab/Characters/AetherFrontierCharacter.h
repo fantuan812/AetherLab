@@ -4,6 +4,7 @@
 #include "AetherProgression.h"
 #include "AetherServices.h"
 #include "AetherGuide.h"
+#include "Interaction/AetherLiveTradeSession.h"
 #include "AetherFrontierCharacter.generated.h"
 
 class AAetherFrontierProp;
@@ -25,6 +26,7 @@ public:
     AAetherFrontierCharacter();
     virtual void BeginPlay() override;
     virtual void PossessedBy(AController* C) override;
+    virtual void UnPossessed() override;
     virtual void OnRep_PlayerState() override;
     virtual void SetupPlayerInputComponent(UInputComponent* I) override;
     virtual void Tick(float Dt) override;
@@ -63,6 +65,21 @@ public:
     FAetherInventoryCommand PendingInventory;
     void SubmitInventory(FName Action,FName Definition=NAME_None);
     UFUNCTION(Server,Reliable) void ServerInventory(FAetherInventoryCommand Command);
+    UFUNCTION(Server,Reliable) void ServerTradeInventory(FAetherInventoryCommand Command,FGuid Authorization);
+    UFUNCTION(Client,Reliable) void ClientTradeOpened(FGuid Token,AAetherFrontierProp* Target,FName ShopId);
+    UFUNCTION(Client,Reliable) void ClientTradeClosed(FGuid Token);
+    UFUNCTION(Server,Reliable) void ServerCloseTrade(FGuid Token);
+    bool OpenTrade(AAetherFrontierProp* Target);
+    bool CanTradeWith(AAetherFrontierProp* Target) const;
+    FName ActiveShop() const;
+    bool AuthorizeTrade(FGuid Token,FName ShopId) const;
+    void CloseTrade();
+    void MaintainTrade();
+    void RequestSale();
+    FString SaleConfirmationText() const;
+    FAetherLiveTradeSession TradeSession;
+    FGuid PendingTradeAuthorization;
+    FAetherSaleConfirmation SaleConfirmation;
     UFUNCTION(Client,Reliable) void InventoryResult(FGuid Id,EAetherInventoryResult Result,int32 Revision,int32 Transferred);
     FName TrackedQuest;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> GameplayContext;
@@ -81,7 +98,7 @@ public:
     UPROPERTY(Replicated) float BossPressure = 0;
     virtual float TakeDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer) override;
     void CycleItem();
-    void SellItem(){if(bPanel&&Panel==1)SubmitInventory("Sell");}
+    void SellItem(){if(bPanel&&Panel==1)RequestSale();}
     void BuyMana(){if(bPanel&&Panel==1)SubmitInventory("Buy","ManaPotion");}
     void BuyRation(){if(bPanel&&Panel==1)SubmitInventory("Buy","Ration");}
     void UseMana(){if(!bPanel)SubmitInventory("Use","ManaPotion");}
@@ -127,7 +144,7 @@ private:
     void ToggleInventory(){SelectPanel(1);} void ToggleQuests(){SelectPanel(2);}
     void ToggleSkills(){SelectPanel(3);} void ToggleMap(){SelectPanel(4);}
     void ToggleParty(){SelectPanel(5);} void ToggleMenu(){SelectPanel(6);}
-    void SelectPanel(int32 NewPanel){const bool Open=!bPanel||Panel!=NewPanel;Panel=NewPanel;bPanel=Open;if(Open){ServerSprint(false);ServerBlock(false);}}
+    void SelectPanel(int32 NewPanel){const bool Open=!bPanel||Panel!=NewPanel;if(!Open||NewPanel!=1)CloseTrade();Panel=NewPanel;bPanel=Open;if(Open){ServerSprint(false);ServerBlock(false);}}
     void CastSelectedV4(){if(!bPanel)TrySpell(SelectedSpell);}
     void Spell0(){SelectedSpell=0;} void Spell1(){SelectedSpell=1;} void Spell2(){SelectedSpell=2;} void Spell3(){SelectedSpell=3;}
     void Forward(float V); void Right(float V); void Yaw(float V); void Pitch(float V);

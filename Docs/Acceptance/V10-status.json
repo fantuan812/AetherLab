@@ -50,7 +50,7 @@
     {
       "id": "V10-10",
       "status": "in_progress",
-      "acceptance": "shop_reward_and_container_handlers_on_real_async_SQLite_coordinator; consistent_read_transactions_and_bounded_indexes; drop_reuse_concurrent_pickup_partial_capacity_live_context_revalidation_and_personal_owner_checks; 50_rule_tests_pass; scene_adapters_network_NPC_sessions_and_UI_pending"
+      "acceptance": "native_SQLite_shop_reward_container_candidates; production_legacy_trade_uses_pinned_merchant_Pawn_PlayerState_character_lease_with_live_revalidation_and_receipt_first_retry; current_merchant_products_quantity_price_sale_confirmation_and_visible_retry_UI; 64_rule_tests_pass_without_warnings_and_four_real_UMG_captures_pass; v10_SQLite_instance_cutover_repair_NPC_CommonUI_and_remote_trade_session_acceptance_pending"
     },
     {
       "id": "V10-11",

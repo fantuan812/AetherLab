@@ -75,6 +75,12 @@ public:
     UPROPERTY(Replicated) bool bPacified = false;
     UPROPERTY(Replicated) float MaxHealth = 100;
     float TimeSinceDamage() const {return CombatTime()-LastDamageAt;}
+    // 交易等安全动作不能在刚完成攻击/施法后立即开放；初始零期限表示尚无战斗动作。
+    bool HasRecentCombat(float Seconds) const
+    {
+        const float End=FMath::Max3(ActionUntil,CastLockUntil,StunUntil);
+        return TimeSinceDamage()<Seconds||(End>0&&CombatTime()<End+Seconds);
+    }
     UPROPERTY(Replicated) float WaterReserveKg = 3;
     UPROPERTY(Replicated) float CastLockUntil = 0;
     UPROPERTY(Replicated) float StunUntil = 0;

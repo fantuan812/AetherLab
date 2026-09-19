@@ -89,12 +89,13 @@ FAetherInteractionTarget QueryTarget(AAetherFrontierCharacter* C,AActor* Actor)
  const FString Key=TEXT("[")+C->BindingFor("Interact").GetDisplayName().ToString()+TEXT("] ");
  if(Rescue){R.Rescue=Downed;R.ActionId="Revive";R.bExecutable=true;R.Prompt=Key+TEXT("救援队友：保持靠近 3 秒");return R;}
  R.Prop=Target;R.StableId=Target->Spec.Id;R.ActionId=Target->Service;const FName S=Target->Service;
- static const TMap<FName,FString> Labels={{"SupplyA",TEXT("拾取补给")},{"SupplyB",TEXT("拾取补给")},{"Gate",TEXT("进入城镇")},{"Register",TEXT("与登记员交谈")},{"Inn",TEXT("绑定据点 / 休息")},{"Teacher",TEXT("学习能力 / 开始个人训练")},{"Shop",TEXT("购买生命药水")},{"Recruit",TEXT("招募同行者")},{"SealDelivered",TEXT("交付古印")},{"Daily",TEXT("结算补给委托")},{"DailyPatrol",TEXT("查看 / 结算巡逻委托")},{"DailyFire",TEXT("领取 / 结算灭火委托")},{"Well",TEXT("从水井补充有限储水")},{"Bucket",TEXT("倾倒水桶 / 检查已清理现场")},{"HingedGate",TEXT("切换门机关")},{"Source",TEXT("切换固定电源")},{"SupplyRestored",TEXT("操作机械水泵")},{"Receiver",TEXT("检查电动水泵")},{"Rescue",TEXT("救援工匠")},{"Abbey",TEXT("进入修道院挑战")},{"AbbeyValve",TEXT("引导阀门")},{"GuardianDefeated",TEXT("领取遭遇凭据")},{"Activity",TEXT("开始 / 引导中继防守")},{"Gather",TEXT("采集补给")},{"Loot",TEXT("拾取共享掉落")}};
+ static const TMap<FName,FString> Labels={{"SupplyA",TEXT("拾取补给")},{"SupplyB",TEXT("拾取补给")},{"Gate",TEXT("进入城镇")},{"Register",TEXT("与登记员交谈")},{"Inn",TEXT("绑定据点 / 休息")},{"Teacher",TEXT("学习能力 / 开始个人训练")},{"Shop",TEXT("与补给商人交易")},{"Recruit",TEXT("招募同行者")},{"SealDelivered",TEXT("交付古印")},{"Daily",TEXT("结算补给委托")},{"DailyPatrol",TEXT("查看 / 结算巡逻委托")},{"DailyFire",TEXT("领取 / 结算灭火委托")},{"Well",TEXT("从水井补充有限储水")},{"Bucket",TEXT("倾倒水桶 / 检查已清理现场")},{"HingedGate",TEXT("切换门机关")},{"Source",TEXT("切换固定电源")},{"SupplyRestored",TEXT("操作机械水泵")},{"Receiver",TEXT("检查电动水泵")},{"Rescue",TEXT("救援工匠")},{"Abbey",TEXT("进入修道院挑战")},{"AbbeyValve",TEXT("引导阀门")},{"GuardianDefeated",TEXT("领取遭遇凭据")},{"Activity",TEXT("开始 / 引导中继防守")},{"Gather",TEXT("采集补给")},{"Loot",TEXT("拾取共享掉落")}};
  if(IsPersonalFire(S))R.Prompt=TEXT("瞄准个人火盆使用引泉，实际灭火才会完成目标");
  else if(Target->bInspectableFire){R.bExecutable=!Target->Reactive->State.bBurning;R.Prompt=R.bExecutable?Key+TEXT("检查清理后的火点"):TEXT("使用引泉或旁边水桶灭火");}
  else if(S=="Dummy")R.Prompt=TEXT("装备训练剑，轻击训练木桩");
  else if(Target->bCarryable)R.Prompt=TEXT("[")+C->BindingFor("Carry").GetDisplayName().ToString()+TEXT("] 瞄准物件搬运；可推移或投掷");
  else if(const auto* Label=Labels.Find(S)){R.Prompt=Key+*Label;R.bExecutable=true;}
+ else if(FAetherRules::Get().Shops.Contains(S)){R.Prompt=Key+TEXT("与商人交易");R.bExecutable=true;}
  else if(S.ToString().StartsWith("Patrol")){R.Prompt=Key+TEXT("记录巡逻位置");R.bExecutable=true;}
  else if(S=="Support")R.Prompt=TEXT("用训练剑切断，或用引焰烧毁支撑绳索");
  else if(S=="Water")R.Prompt=TEXT("对浅水释放霜凝，可形成承重冰面");

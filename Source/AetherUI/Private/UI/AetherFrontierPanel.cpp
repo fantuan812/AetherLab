@@ -25,7 +25,7 @@ void UAetherFrontierViewModel::Refresh(AAetherFrontierCharacter* C)
   if(!C->SelectedInstance.IsValid()&&!P.Inventory.IsEmpty())C->SelectedInstance=P.Inventory[0].InstanceId;
   C->SelectedItem=P.Inventory.IndexOfByPredicate([&](const auto& Item){return Item.InstanceId==C->SelectedInstance;});
   for(int I=0;I<P.Inventory.Num();++I){const auto& Item=P.Inventory[I];Text+=FString::Printf(TEXT("%s %02d  %s × %d  %s\n"),I==C->SelectedItem?TEXT("> "):TEXT("  "),I+1,*Item.DefinitionId.ToString(),Item.Count,P.Equipped.FindKey(Item.InstanceId)?TEXT("[装备中]"):TEXT(""));}
-  Text+=TEXT("\nTab / 下一项：选择    B：拆分    N：合并\n商人旁：Delete 出售；7 购买法力药；8 购买口粮。\n任务物品与训练装备不可出售。满包奖励保留待领。");break;
+  Text+=TEXT("\nTab / 下一项：选择    B：拆分    N：合并\n与商人交谈后开启交易：Delete 出售需再次确认；7 / 8 购买药水和口粮。\n任务物品与训练装备不可出售。满包奖励保留待领。");break;
  case 2:
   Title=TEXT("个人任务 / Journal");First=TEXT("领取待领奖励");Text+=FString::Printf(TEXT("待领取：%d 金币 / %d 材料\n\n"),P.PendingGold,P.PendingMaterial);
   {const auto G=AetherGuide::Resolve(C);Text+=TEXT("当前追踪：")+G.Title+TEXT("\n")+G.Label+TEXT("\n")+G.Hint+TEXT("\nTab / 下一项：切换可进行任务\n\n");}
@@ -61,14 +61,19 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
  auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(Row);
  auto Add=[&](const TCHAR* Label,UTextBlock*& Text){auto* Button=WidgetTree->ConstructWidget<UButton>();Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetText(FText::FromString(Label));Button->SetContent(Text);Row->AddChildToHorizontalBox(Button);return Button;};
  InventoryRow=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(InventoryRow);
- Quantity=WidgetTree->ConstructWidget<USpinBox>();Quantity->SetMinValue(1);Quantity->SetMaxValue(1000);Quantity->SetDelta(1);Quantity->SetValue(1);Quantity->OnValueChanged.AddDynamic(this,&UAetherFrontierPanel::SetQuantity);InventoryRow->AddChildToHorizontalBox(Quantity);
+ Quantity=WidgetTree->ConstructWidget<USpinBox>();Quantity->SetMinValue(1);Quantity->SetMaxValue(1000);Quantity->SetDelta(1);Quantity->SetMinDesiredWidth(80);Quantity->SetMinFractionalDigits(0);Quantity->SetMaxFractionalDigits(0);Quantity->SetValue(1);Quantity->OnValueChanged.AddDynamic(this,&UAetherFrontierPanel::SetQuantity);InventoryRow->AddChildToHorizontalBox(Quantity);
  MergeTarget=WidgetTree->ConstructWidget<UComboBoxString>();InventoryRow->AddChildToHorizontalBox(MergeTarget);MergeTarget->OnSelectionChanged.AddDynamic(this,&UAetherFrontierPanel::SetMergeTarget);
- Product=WidgetTree->ConstructWidget<UComboBoxString>();InventoryRow->AddChildToHorizontalBox(Product);
+ TradeRow=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(TradeRow);
+ Product=WidgetTree->ConstructWidget<UComboBoxString>();TradeRow->AddChildToHorizontalBox(Product);
  auto InventoryButton=[&](const TCHAR* Label){auto* B=WidgetTree->ConstructWidget<UButton>();auto* T=WidgetTree->ConstructWidget<UTextBlock>();T->SetText(FText::FromString(Label));B->SetContent(T);InventoryRow->AddChildToHorizontalBox(B);return B;};
  InventoryButton(TEXT("拆分"))->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Split);
  InventoryButton(TEXT("合并至"))->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Merge);
- InventoryButton(TEXT("购买"))->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Buy);
- InventoryButton(TEXT("出售"))->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Sell);
+ RetryButton=InventoryButton(TEXT("重试上次操作"));RetryButton->OnClicked.AddDynamic(this,&UAetherFrontierPanel::RetryPending);
+ auto TradeButton=[&](const TCHAR* Label,UTextBlock*& Text){auto* B=WidgetTree->ConstructWidget<UButton>();Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetText(FText::FromString(Label));B->SetContent(Text);TradeRow->AddChildToHorizontalBox(B);return B;};
+ UTextBlock* BuyText=nullptr;UTextBlock* SellLabel=nullptr;
+ BuyButton=TradeButton(TEXT("购买"),BuyText);BuyButton->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Buy);
+ SellButton=TradeButton(TEXT("出售"),SellLabel);SellText=SellLabel;SellButton->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Sell);
+ TradeInfo=WidgetTree->ConstructWidget<UTextBlock>();TradeInfo->SetAutoWrapText(true);Box->AddChildToVerticalBox(TradeInfo);
  SettingsRow=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(SettingsRow);
  BindingAction=WidgetTree->ConstructWidget<UComboBoxString>();SettingsRow->AddChildToHorizontalBox(BindingAction);
  BindingKey=WidgetTree->ConstructWidget<UInputKeySelector>();BindingKey->SetAllowModifierKeys(false);BindingKey->SetKeySelectionText(FText::FromString(TEXT("请按新键")));SettingsRow->AddChildToHorizontalBox(BindingKey);
@@ -86,14 +91,17 @@ void UAetherFrontierPanel::NativeTick(const FGeometry& G,float Dt)
  // Keep the widget visible to tick while its content is transparent; no hidden-widget polling dependency.
  const bool Open=C->bPanel&&C->Panel!=4;SetRenderOpacity(Open?1:0);SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::HitTestInvisible);
  InventoryRow->SetVisibility(Open&&C->Panel==1?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+ if(Open&&C->Panel==1&&FMath::RoundToInt(Quantity->GetValue())!=C->InventoryQuantity)Quantity->SetValue(C->InventoryQuantity);
  if(Open&&C->Panel==1&&C->ProfileState()&&ShownRevision!=C->ProfileState()->Profile.Revision)
  {
   ShownRevision=C->ProfileState()->Profile.Revision;const auto Selected=C->MergeDestination;MergeTarget->ClearOptions();MergeInstances.Reset();
   for(const auto& I:C->ProfileState()->Profile.Inventory){MergeInstances.Add(I.InstanceId);MergeTarget->AddOption(FString::Printf(TEXT("%02d %s × %d"),MergeInstances.Num(),*I.DefinitionId.ToString(),I.Count));}
   if(MergeInstances.Contains(Selected))MergeTarget->SetSelectedIndex(MergeInstances.Find(Selected));
-  Product->ClearOptions();TSet<FName> Products;for(const auto& Shop:FAetherRules::Get().Shops)for(auto Id:Shop.Value)Products.Add(Id);
-  for(auto Id:Products)Product->AddOption(Id.ToString());if(Product->GetOptionCount())Product->SetSelectedIndex(0);
+
  }
+ // 失败/丢回执保留原命令；即使交易会话关闭，也要有明确入口查询或重试它。
+ RetryButton->SetVisibility(C->PendingInventory.CommandId.IsValid()?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+ RefreshTrade(C,Open&&C->Panel==1);
  SettingsRow->SetVisibility(Open&&C->Panel==6?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(Open&&C->Panel==6&&BindingAction->GetOptionCount()==0)
  {TArray<FName> Names;C->InputActions.GetKeys(Names);Names.Sort(FNameLexicalLess());for(auto Name:Names)if(Name!="LookX"&&Name!="LookY"&&Name!="Escape")BindingAction->AddOption(Name.ToString());BindingAction->SetSelectedOption(TEXT("Cast"));}
@@ -105,7 +113,7 @@ void UAetherFrontierPanel::Primary()
 void UAetherFrontierPanel::Secondary()
 {if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->SubmitInventory("Use");else if(C->Panel==5)C->ServerAction("AcceptInvite");else if(C->Panel==6)C->ServerAction("Recover");else ClosePanel();}}
 void UAetherFrontierPanel::NextItem(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->CycleItem();}
-void UAetherFrontierPanel::ClosePanel(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->bPanel=false;}
+void UAetherFrontierPanel::ClosePanel(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){C->CloseTrade();C->bPanel=false;}}
 
 void UAetherFrontierPanel::ActionSelected(FString Action,ESelectInfo::Type)
 {
@@ -121,5 +129,45 @@ void UAetherFrontierPanel::SetQuantity(float V){if(auto* C=Cast<AAetherFrontierC
 void UAetherFrontierPanel::SetMergeTarget(FString V,ESelectInfo::Type){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){const int32 Index=MergeTarget->FindOptionIndex(V);C->MergeDestination=MergeInstances.IsValidIndex(Index)?MergeInstances[Index]:FGuid();}}
 void UAetherFrontierPanel::Split(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Split");}
 void UAetherFrontierPanel::Merge(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Merge");}
+void UAetherFrontierPanel::RetryPending(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());C&&C->PendingInventory.CommandId.IsValid())C->SubmitInventory(NAME_None);}
 void UAetherFrontierPanel::Buy(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Buy",*Product->GetSelectedOption());}
-void UAetherFrontierPanel::Sell(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Sell");}
+void UAetherFrontierPanel::Sell(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->RequestSale();}
+
+void UAetherFrontierPanel::RefreshTrade(AAetherFrontierCharacter* C,bool Open)
+{
+ const auto Shop=Open?C->ActiveShop():NAME_None;
+ const bool Active=!Shop.IsNone();const auto Token=Active?C->TradeSession.Token:FGuid();
+ TradeRow->SetVisibility(Open&&Active?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+ TradeInfo->SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+ // 会话变化也刷新商品，不依赖背包版本变化；绝不拼接多个商人的清单。
+ if(ShownShop!=Shop||ShownTradeToken!=Token)
+ {
+  ShownShop=Shop;ShownTradeToken=Token;Product->ClearOptions();
+  if(const auto* Products=FAetherRules::Get().Shops.Find(Shop))for(const auto Id:*Products)Product->AddOption(Id.ToString());
+  if(Product->GetOptionCount())Product->SetSelectedIndex(0);
+ }
+ if(!Open)return;
+ if(!Active){TradeInfo->SetText(FText::FromString(TEXT("与商人交谈后可查看商品。离开范围、被遮挡或进入战斗时交易关闭。")));return;}
+ const auto* PS=C->ProfileState();if(!PS)return;
+ const auto& Rules=FAetherRules::Get();const FName ProductId=*Product->GetSelectedOption();const auto* Rule=Rules.Items.Find(ProductId);
+ const int32 QuantityValue=C->InventoryQuantity;
+ const int64 Cost=Rule?int64(Rule->Buy)*QuantityValue:0;
+ const bool Pending=C->PendingInventory.CommandId.IsValid();
+ BuyButton->SetIsEnabled(Rule&&Rule->Buy>0&&QuantityValue>=1&&QuantityValue<=1000&&Cost<=PS->Profile.Gold&&!Pending);
+ FString Details=Rule?FString::Printf(TEXT("当前商人商品：%s | 单价 %d | 数量 %d | 合价 %lld | 拥有 %d | 按需供应%s"),
+  *ProductId.ToString(),Rule->Buy,QuantityValue,Cost,PS->Profile.Count(ProductId),Cost>PS->Profile.Gold?TEXT(" · 金币不足"):TEXT("")):TEXT("这位商人没有可购买的商品。");
+ const auto* Item=PS->Profile.Inventory.FindByPredicate([&](const auto& I){return I.InstanceId==C->SelectedInstance;});
+ const auto* ItemRule=Item?Rules.Items.Find(Item->DefinitionId):nullptr;
+ FString SellReason;
+ if(!Item||!ItemRule)SellReason=TEXT("请选择要出售的物品");
+ else if(PS->Profile.Equipped.FindKey(Item->InstanceId))SellReason=TEXT("已装备，需先卸下");
+ else if(!ItemRule->bRemovable||!ItemRule->bSellable||ItemRule->Sell<=0)SellReason=TEXT("该物品不可出售");
+ else if(QuantityValue<1||QuantityValue>Item->Count)SellReason=TEXT("出售数量超过拥有数量");
+ SellButton->SetIsEnabled(SellReason.IsEmpty()&&!Pending);
+ if(SellReason.IsEmpty())Details+=FString::Printf(TEXT("\n选中物品卖价 %d，出售 %d 件可获得 %lld 金币。"),ItemRule->Sell,QuantityValue,int64(ItemRule->Sell)*QuantityValue);
+ else Details+=TEXT("\n")+SellReason;
+ const auto Confirmation=C->SaleConfirmationText();SellText->SetText(FText::FromString(Confirmation.IsEmpty()?TEXT("出售"):TEXT("确认出售")));
+ if(!Confirmation.IsEmpty())Details+=TEXT("\n")+Confirmation+TEXT("。10 秒内再次确认；更换物品、数量或会话会取消。");
+ if(Pending)Details+=TEXT("\n上次操作等待确认。");
+ TradeInfo->SetText(FText::FromString(Details));
+}

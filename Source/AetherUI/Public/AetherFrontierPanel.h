@@ -10,6 +10,7 @@ class UComboBoxString;
 class UInputKeySelector;
 class UHorizontalBox;
 class USpinBox;
+class UButton;
 UCLASS()
 class UAetherFrontierViewModel : public UObject
 {
@@ -42,6 +43,15 @@ private:
  UPROPERTY() TObjectPtr<USpinBox> Quantity;
  UPROPERTY() TObjectPtr<UComboBoxString> MergeTarget;
  UPROPERTY() TObjectPtr<UComboBoxString> Product;
+ UPROPERTY() TObjectPtr<UHorizontalBox> TradeRow;
+ UPROPERTY() TObjectPtr<UTextBlock> TradeInfo;
+ UPROPERTY() TObjectPtr<UButton> BuyButton;
+ UPROPERTY() TObjectPtr<UButton> RetryButton;
+ UPROPERTY() TObjectPtr<UButton> SellButton;
+ UPROPERTY() TObjectPtr<UTextBlock> SellText;
+ FName ShownShop;
+ FGuid ShownTradeToken;
+ void RefreshTrade(AAetherFrontierCharacter* Character,bool Open);
  TArray<FGuid> MergeInstances;
  int32 ShownRevision=-1;
  UFUNCTION() void SetQuantity(float Value);
@@ -49,6 +59,7 @@ private:
  UFUNCTION() void Split();
  UFUNCTION() void Merge();
  UFUNCTION() void Buy();
+ UFUNCTION() void RetryPending();
  UFUNCTION() void Sell();
  bool UpdatingKey=false;
  UFUNCTION() void ActionSelected(FString Action,ESelectInfo::Type Selection);

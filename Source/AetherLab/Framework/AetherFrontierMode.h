@@ -49,7 +49,7 @@ public:
     TMap<FString,int32> ClosureAcks;
     bool bClosureFailed=false;
     bool bFailAfterDataWrite = false;
-    EAetherInventoryResult ExecuteInventory(AAetherFrontierCharacter* C,const FAetherInventoryCommand& Command,int32& Revision,int32& Moved);
+    EAetherInventoryResult ExecuteInventory(AAetherFrontierCharacter* C,const FAetherInventoryCommand& Command,int32& Revision,int32& Moved,FGuid TradeAuthorization=FGuid());
     bool Commit(AAetherPlayerState* PS, FAetherProfile Next,FName WorldFact=NAME_None,FName FactSource=NAME_None);
     bool CommitOffline(FAetherProfile Next);
     bool SaveWorld();
