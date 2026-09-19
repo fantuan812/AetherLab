@@ -4,6 +4,7 @@
 #include "AetherAdventure.h"
 #include "AetherFrontier.h"
 #include "AetherActions.h"
+#include "Movement/AetherDodgeAbility.h"
 #include "AetherTraversal.h"
 #include "AetherAnimation.h"
 #include "AetherContent.h"
@@ -268,6 +269,7 @@ void AAetherCharacter::GrantSpells()
 {
     if(HasAuthority())
     {
+        if(!AbilitySystem->FindAbilitySpecFromClass(UAetherDodgeAbility::StaticClass()))AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherDodgeAbility::StaticClass(),1,9,this));
         if(!AbilitySystem->FindAbilitySpecFromClass(UAetherReviveAbility::StaticClass()))AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherReviveAbility::StaticClass(),1,8,this));
         for(int32 Level=1;Level<=2;++Level)
         {bool Found=false;for(const auto& Spec:AbilitySystem->GetActivatableAbilities())if(Spec.Ability&&Spec.Ability->IsA<UAetherMeleeAbility>()&&Spec.Level==Level)Found=true;
@@ -306,7 +308,7 @@ bool AAetherCharacter::TrySpell(int32 Spell)
 }
 
 bool AAetherCharacter::Ready() const
-{ const float T = CombatTime(); return AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy(); }
+{ const float T = CombatTime(); return AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy() && !AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag()); }
 float AAetherCharacter::CombatTime() const
 { const auto* GS = GetWorld()->GetGameState(); return GS ? GS->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds(); }
 void AAetherCharacter::SetVitals(float HP, float MP, float SP)
@@ -419,17 +421,20 @@ void AAetherCharacter::ServerBlock_Implementation(bool Value)
     const float T = CombatTime(); BlockStarted = T >= NextParryAllowed ? T : -100;
     if (BlockStarted > 0) NextParryAllowed = T + .7f;
 }
-void AAetherCharacter::ServerDodge_Implementation()
+bool AAetherCharacter::TryDodge()
 {
-    if (!Ready() || Stamina() < 18) return;
-    AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(), EGameplayModOp::Additive, -18);
-    const float T = CombatTime(); ActionUntil = T + .55f; InvulnerableUntil = T + .22f;
-    const FVector Direction = GetLastMovementInputVector().IsNearlyZero() ? GetActorForwardVector() : GetLastMovementInputVector().GetSafeNormal();
-    LaunchCharacter(Direction * 700 + FVector(0,0,80), true, false);
+    return AbilitySystem&&AbilitySystem->GetAvatarActor()==this&&
+        AbilitySystem->TryActivateAbilityByClass(UAetherDodgeAbility::StaticClass());
 }
+void AAetherCharacter::RecordDodgeCommit()
+{
+    // 继续保留安全服务使用的最近战斗时间；实际成本与无敌窗口由能力效果负责。
+    if(HasAuthority())ActionUntil=CombatTime()+.55f;
+}
+void AAetherCharacter::ServerDodge_Implementation(){TryDodge();}
 void AAetherCharacter::ReceiveHit(float Damage, float PostureDamage, AAetherCharacter* Source, bool CanBlock)
 {
-    if (!HasAuthority() || !Alive() || CombatTime() < InvulnerableUntil) return;
+    if (!HasAuthority() || !Alive() || CombatTime() < InvulnerableUntil || AbilitySystem->HasMatchingGameplayTag(AetherDodge::InvulnerableTag())) return;
     const float T = CombatTime();
     const bool Front = Source && FVector::DotProduct(GetActorForwardVector(), (Source->GetActorLocation() - GetActorLocation()).GetSafeNormal()) > .25;
     const auto* Guard=Equipment->GuardDefinition();

@@ -104,6 +104,8 @@ public:
     float Stamina() const { return Attributes->Stamina.GetCurrentValue(); }
     bool Alive() const { return Health() > 0 && !bPacified; }
     bool Ready() const;
+    bool TryDodge();
+    void RecordDodgeCommit();
     float CombatTime() const;
     bool FindSpellTarget(int32 Spell, FHitResult& Hit, FVector& Origin, FVector& Direction) const;
     bool ExecuteSpell(int32 Spell);

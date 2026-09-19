@@ -2,6 +2,7 @@
 #include "AetherGuide.h"
 #include "AetherTradeNetworkProbe.h"
 #include "Movement/AetherCharacterMovement.h"
+#include "Movement/AetherDodgeAbility.h"
 #include "Components/CapsuleComponent.h"
 #include "Skills/AetherSkillAbilityBinding.h"
 #include "Skills/AetherSkillDefinitions.h"
@@ -24,9 +25,15 @@ bool ClosureClient(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV807Cl
 bool TradeNetwork(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV10TradeNetwork"));}
 // 探针只在显式开发测试开关下记录客户端收到的回执，不替代服务器授权或持久账本。
 bool MovementNetwork(){return FParse::Param(FCommandLine::Get(),TEXT("AetherV10MovementNetwork"));}
-struct FMovementNetworkProbe{int32 RequestedPhase=0;float JumpAt=0;bool SawOwnAir=false,SawOtherAir=false;};
+struct FMovementNetworkProbe
+{
+    int32 RequestedPhase=0;float JumpAt=0,DodgeAt=0,MinimumStamina=100;
+    bool SawOwnAir=false,SawOtherAir=false,PredictedDodge=false,DuplicateRejected=false;
+    bool DodgeFell=false,RollbackObserved=false;FVector DodgeStart=FVector::ZeroVector;
+};
 FMovementNetworkProbe MovementProbe;
 bool ServerSawJumpA=false,ServerSawJumpB=false;
+bool ServerDodgeFell=false;float ServerMinimumStaminaA=100,ServerMinimumStaminaB=100;
 struct FTradeNetworkProbe
 {
     FGuid Token;FAetherInventoryCommand Purchase;FGuid InFlight;
@@ -59,6 +66,17 @@ void AAetherFrontierCharacter::ClientClosureAction_Implementation(FName Action,F
         {
             SetSprintInput(false);StartJumpInput();MovementProbe.RequestedPhase=4;
             MovementProbe.JumpAt=GetWorld()->GetTimeSeconds();
+        }
+        else if(Action=="MoveDodge"||Action=="MoveDodgeDenied")
+        {
+            ReleaseHeldInput();MovementProbe.RequestedPhase=Action=="MoveDodge"?6:7;
+            MovementProbe.DodgeStart=GetActorLocation();MovementProbe.DodgeAt=GetWorld()->GetTimeSeconds();
+            MovementProbe.MinimumStamina=100;MovementProbe.DodgeFell=false;MovementProbe.RollbackObserved=false;
+            // 故意模拟尚未收到眩晕复制的客户端；服务器状态不改，必须拒绝这次预测。
+            if(Action=="MoveDodgeDenied")StunUntil=0;
+            MovementProbe.PredictedDodge=TryDodge()&&GetCharacterMovement()->GetRootMotionSource(TEXT("Aether.Dodge")).IsValid();
+            MovementProbe.DuplicateRejected=!TryDodge();
+            MovementProbe.MinimumStamina=Stamina();
         }
         else if(Action=="MoveFlush")
         {
@@ -130,6 +148,13 @@ void AAetherFrontierCharacter::CheckClosureClient(float Dt)
     {
         // 运动输入逐帧驱动；短暂腾空必须逐帧采样，不能在两秒后的静态快照中推断。
         if(MovementProbe.RequestedPhase==3)AddMovementInput(FVector(1,0,0));
+        if(MovementProbe.RequestedPhase==6||MovementProbe.RequestedPhase==7)
+        {
+            MovementProbe.MinimumStamina=FMath::Min(MovementProbe.MinimumStamina,Stamina());
+            MovementProbe.DodgeFell|=GetCharacterMovement()->IsFalling();
+            if(MovementProbe.RequestedPhase==7&&GetWorld()->GetTimeSeconds()-MovementProbe.DodgeAt<.5f)
+                MovementProbe.RollbackObserved|=!AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag())&&Stamina()>=99;
+        }
         if(MovementProbe.RequestedPhase==4)
         {
             if(GetWorld()->GetTimeSeconds()-MovementProbe.JumpAt>.12f)StopJumping();
@@ -157,11 +182,13 @@ void AAetherFrontierCharacter::CheckClosureClient(float Dt)
         else if(Phase==3)Pass&=bSprinting&&!IsCrouched()&&GetVelocity().Size2D()>500&&GetActorLocation().X>8800;
         else if(Phase==4)Pass&=MovementProbe.SawOwnAir&&MovementProbe.SawOtherAir&&!bPressedJump;
         else if(Phase==5)Pass&=!M->bWantsSprint&&!bSprinting&&!bPressedJump&&!bAttackHeld;
+        else if(Phase==6)Pass&=MovementProbe.PredictedDodge&&MovementProbe.DuplicateRejected&&!MovementProbe.DodgeFell&&MovementProbe.MinimumStamina<=83&&GetActorLocation().X-MovementProbe.DodgeStart.X>190&&GetActorLocation().X-MovementProbe.DodgeStart.X<280;
+        else if(Phase==7)Pass&=MovementProbe.PredictedDodge&&MovementProbe.RollbackObserved&&Stamina()>=99&&FVector::Dist2D(GetActorLocation(),MovementProbe.DodgeStart)<30;
         else Pass=false;
         if(!Pass&&ClosureClientTime<12)return;
         ClosureSeenPhase=Phase;ClosureClientTime=0;
-        UE_LOG(LogTemp,Display,TEXT("V10_MOVEMENT_CLIENT_%s id=%s phase=%d crouch=%d sprint=%d x=%.1f z=%.1f own_air=%d remote_air=%d"),
-            Pass?TEXT("PASS"):TEXT("FAIL"),*PS->Profile.CharacterId,Phase,IsCrouched(),bSprinting,GetActorLocation().X,GetActorLocation().Z,MovementProbe.SawOwnAir,MovementProbe.SawOtherAir);
+        UE_LOG(LogTemp,Display,TEXT("V10_MOVEMENT_CLIENT_%s id=%s phase=%d crouch=%d sprint=%d x=%.1f z=%.1f own_air=%d remote_air=%d predicted=%d rollback=%d minimum_stamina=%.1f dodge_dx=%.1f"),
+            Pass?TEXT("PASS"):TEXT("FAIL"),*PS->Profile.CharacterId,Phase,IsCrouched(),bSprinting,GetActorLocation().X,GetActorLocation().Z,MovementProbe.SawOwnAir,MovementProbe.SawOtherAir,MovementProbe.PredictedDodge,MovementProbe.RollbackObserved,MovementProbe.MinimumStamina,GetActorLocation().X-MovementProbe.DodgeStart.X);
         ServerClosureAck(Phase,Pass);return;
     }
     if(TradeNetwork())
@@ -238,7 +265,7 @@ void AAetherFrontierMode::CheckClosure()
     auto Acked=[&](int Phase){return ClosureAcks.FindRef("Alpha")==Phase&&ClosureAcks.FindRef("Beta")==Phase;};
     if(MovementNetwork())
     {
-        if(ClosureStage==7){if(Elapsed-ClosureAt>.5)FPlatformMisc::RequestExitWithStatus(false,bClosureFailed?1:0);return;}
+        if(ClosureStage==10){if(Elapsed-ClosureAt>.5)FPlatformMisc::RequestExitWithStatus(false,bClosureFailed?1:0);return;}
         if(!A||!B||A->bTravelPending||B->bTravelPending)return;
         if(ClosureStage==0)
         {
@@ -274,8 +301,28 @@ void AAetherFrontierMode::CheckClosure()
         if(ClosureStage==6&&Acked(5))
         {
             Check(!A->bSprinting&&!B->bSprinting,TEXT("remote flush stops authoritative sprint"));
+            for(auto* C:{A,B})C->SetVitals(100,100,100);
+            ServerMinimumStaminaA=ServerMinimumStaminaB=100;ServerDodgeFell=false;
+            Send(6,"MoveDodge");Next(7);return;
+        }
+        if(ClosureStage==7)
+        {
+            ServerMinimumStaminaA=FMath::Min(ServerMinimumStaminaA,A->Stamina());
+            ServerMinimumStaminaB=FMath::Min(ServerMinimumStaminaB,B->Stamina());
+            ServerDodgeFell|=A->GetCharacterMovement()->IsFalling()||B->GetCharacterMovement()->IsFalling();
+            if(Acked(6))
+            {
+                Check(!ServerDodgeFell&&ServerMinimumStaminaA<=86&&ServerMinimumStaminaB<=86,TEXT("predicted dodge stays grounded and charges on server"));
+                for(auto* C:{A,B}){C->SetVitals(100,100,100);C->StunUntil=C->CombatTime()+5;}
+                Send(7,"MoveDodgeDenied");Next(8);
+            }
+            return;
+        }
+        if(ClosureStage==8&&Acked(7))
+        {
+            Check(A->Stamina()>=99&&B->Stamina()>=99,TEXT("server denied prediction charges no stamina"));
             UE_LOG(LogTemp,Display,TEXT("V10_MOVEMENT_NETWORK_%s"),bClosureFailed?TEXT("FAIL"):TEXT("PASS"));
-            A->ClientClosureAction("Disconnect",FRotator::ZeroRotator);B->ClientClosureAction("Disconnect",FRotator::ZeroRotator);Next(7);return;
+            A->ClientClosureAction("Disconnect",FRotator::ZeroRotator);B->ClientClosureAction("Disconnect",FRotator::ZeroRotator);Next(10);return;
         }
         return;
     }

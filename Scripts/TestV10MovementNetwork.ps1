@@ -39,9 +39,9 @@ try {
  foreach($taskLog in $taskLogs){
   if(Select-String -LiteralPath $taskLog -Pattern 'V807_CASE FAIL|V807_CLIENT_ACK FAIL|V10_MOVEMENT_CLIENT_FAIL|V10_MOVEMENT_NETWORK_FAIL|V807_FAIL|Fatal error:' -Quiet){throw "Failure: $taskLog"}
  }
- # 逐一要求每个客户端的五个阶段通过，不能只相信服务器汇总日志。
+ # 逐一要求每个客户端的七个阶段通过，不能只相信服务器汇总日志。
  foreach($taskClient in @($taskAlpha,$taskBeta)){
-  foreach($taskPhase in 1..5){
+  foreach($taskPhase in 1..7){
    if(!(Select-String -LiteralPath $taskClient.Log -Pattern "V10_MOVEMENT_CLIENT_PASS id=\w+ phase=$taskPhase " -Quiet)){throw "Missing phase $taskPhase in $($taskClient.Log)"}
   }
  }
@@ -50,8 +50,8 @@ try {
   SourceFingerprint=(& (Join-Path $PSScriptRoot 'GetV9SourceFingerprint.ps1'))
   Engine='UE 5.8';Target='Editor Development dedicated process + 2 remote clients'
   Started=$taskStarted.ToString('o');Finished=(Get-Date).ToString('o');SavePrefix=$taskPrefix
-  Passed=@('Real crouch capsules and remote stance replication','SavedMove sprint input and authoritative stamina cost','Local server and remote observed jumps','Input flush stops held actions','Owner-only profile state')
-  NotRun=@('Listen mode','Loss/latency injection','Four players','Streaming unload','Restart recovery','Dodge prediction','Animation quality','Shipping package');Logs=@($taskLogs)
+  Passed=@('Real crouch capsules and remote stance replication','SavedMove sprint input and authoritative stamina cost','Local server and remote observed jumps','Input flush stops held actions','Predicted grounded dodge and single stamina charge','Server rejection rolls back predicted stamina and movement','Owner-only profile state')
+  NotRun=@('Listen mode','Loss/latency injection','Four players','Streaming unload','Restart recovery','Animation quality','Shipping package');Logs=@($taskLogs)
  }
  $taskResult | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $taskRoot 'Saved/Automation/V10-MovementNetwork-Result.json') -Encoding utf8
  Write-Output "V10 movement dedicated two-client check PASS; logs $taskPrefix"

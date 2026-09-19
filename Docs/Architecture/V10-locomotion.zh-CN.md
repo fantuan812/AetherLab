@@ -4,7 +4,7 @@
 
 ## 输入与姿态
 
-默认 Space 跳跃、Ctrl 保持下蹲、Alt 调用当前闪避、Shift 保持冲刺。已有用户重映射按动作名保留。跳跃 Started 只有一个入口，Completed/Canceled 调用 StopJumping；单跳允许最多 0.18 秒保持。检查动作就绪、旅行、搬运、救援和体力；空中不能重新排队起跳。
+默认 Space 跳跃、Ctrl 保持下蹲、Alt 调用 GAS 地面闪避、Shift 保持冲刺。已有用户重映射按动作名保留。跳跃 Started 只有一个入口，Completed/Canceled 调用 StopJumping；单跳允许最多 0.18 秒保持。检查动作就绪、旅行、搬运、救援和体力；空中不能重新排队起跳。
 
 下蹲使用 Crouch/UnCrouch 与 CharacterMovement 胶囊，半高从 88 cm 改为 48 cm，移动速度 190 cm/s。跳跃或冲刺先尝试起身；低顶阻挡时保持真实蹲姿，不能跳跃或以站姿冲刺。服务端在解码跳跃移动标记后、CheckJumpInput 前复用净空检查，避免客户端已起身而服务端仍蹲着产生错误纠正。镜头用短插值缓和胶囊高度变化；完整蹲姿动画仍未接入。
 
@@ -26,4 +26,4 @@
 - 菜单/商店释放输入后的专项交易回归通过：AetherV10Trade_97eb5437147b，两名客户端各五个阶段通过。
 - 测试驱动正式角色输入方法和 CharacterMovement 网络路径；没有用直接改坐标完成被测冲刺或跳跃，初始移位仅用于布置隔离夹具。
 
-Alt 目前仍调用旧 LaunchCharacter 闪避，尚未完成专门的地面闪避、预测取消及动作资源，不能宣告 V10-14 完成。Enhanced Input 当前仍是运行时生成的旧动作对象，资产化上下文、完整手柄映射、动画质量、丢包/延迟、四人、Listen 和 Shipping 验收也仍待完成。
+后续 [地面闪避单元](V10-ground-dodge.zh-CN.md) 已替换旧 LaunchCharacter 并验证 GAS 预测与拒绝恢复；独立动作资源和完整取消矩阵仍未完成，不能宣告 V10-14 完成。Enhanced Input 当前仍是运行时生成的旧动作对象，资产化上下文、完整手柄映射、动画质量、丢包/延迟、四人、Listen 和 Shipping 验收也仍待完成。

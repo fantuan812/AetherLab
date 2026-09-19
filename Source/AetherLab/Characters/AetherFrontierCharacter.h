@@ -160,5 +160,5 @@ private:
     void Spell0(){SelectedSpell=0;} void Spell1(){SelectedSpell=1;} void Spell2(){SelectedSpell=2;} void Spell3(){SelectedSpell=3;}
     void Forward(float V); void Right(float V); void Yaw(float V); void Pitch(float V);
     void GuardOn(){if(!bPanel)ServerBlock(true);} void GuardOff(){ServerBlock(false);}
-    void Dodge(){if(!bPanel)ServerDodge();} void JumpV4(){StartJumpInput();}
+    void Dodge(){if(!bPanel)TryDodge();} void JumpV4(){StartJumpInput();}
 };

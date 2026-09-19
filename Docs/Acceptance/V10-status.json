@@ -70,7 +70,7 @@
     {
       "id": "V10-14",
       "status": "in_progress",
-      "acceptance": "production_Space_jump_Ctrl_capsule_crouch_Alt_legacy_dodge_Shift_predicted_sprint; real_stand_headroom_and_server_jump_revalidation; SavedMove_sprint_flags_and_replay; menu_focus_loss_and_rebind_release_held_inputs; 65_rule_tests_pass_without_warnings; dedicated_two_remote_clients_stance_sprint_cost_jump_observation_and_flush_pass; assetized_input_gamepad_ground_dodge_animation_and_release_acceptance_pending"
+      "acceptance": "production_Space_jump_Ctrl_capsule_crouch_Alt_GAS_predicted_ground_dodge_Shift_SavedMove_sprint; real_stand_headroom_server_jump_revalidation_and_held_input_cleanup; dodge_GE_cost_cooldown_invulnerability_and_cancellable_RootMotionSource_with_wall_sweeps_and_natural_edge_fall; 66_rule_tests_pass_without_warnings; dedicated_two_remote_clients_stance_sprint_jump_dodge_and_rejected_prediction_cost_position_rollback_pass; assetized_input_gamepad_dodge_distance_latency_budget_animation_full_cancel_matrix_and_release_acceptance_pending"
     },
     {
       "id": "V10-15",
