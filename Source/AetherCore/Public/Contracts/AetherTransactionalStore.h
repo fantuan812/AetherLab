@@ -77,6 +77,9 @@ public:
     // 默认失败使尚未实现该能力的替换后端明确拒绝启动，而不是降级为普通 Commit。
     virtual TFuture<FAetherStoreResult> InitializeWorld(FAetherStoredAggregate World);
     virtual TFuture<FAetherStoreReadResult> CreateProfile(FAetherStoredAggregate Profile);
+    // 服务器世界检查点专用。仅更新 Main 已有行，期望版本必须匹配；不伪造玩家命令或推进任意角色。
+    // 返回确认后的世界行；同一目标版本及逐字节相同负载允许安全重试。玩家奖励仍走跨聚合 Commit。
+    virtual TFuture<FAetherStoreReadResult> CompareExchangeWorld(FAetherAggregateWrite Write);
     virtual TFuture<FAetherStoreReadResult> Read(FAetherAggregateKey Key) = 0;
     virtual TFuture<FAetherStoreRevisionIndex> ReadRevisions(EAetherAggregateKind Kind) = 0;
     // 多聚合及相关索引共享同一个 SQLite 读事务，不能拼接不同提交时刻的数据。

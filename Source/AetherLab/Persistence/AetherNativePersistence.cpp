@@ -1,5 +1,6 @@
 #include "Persistence/AetherNativePersistence.h"
 #include "Persistence/AetherNativeMigrationSource.h"
+#include "Persistence/AetherNativeWorldPhysics.h"
 #include "Persistence/AetherSqliteStore.h"
 #include "Profile/AetherProfileCodec.h"
 #include "Engine/World.h"
@@ -20,9 +21,15 @@ bool UAetherNativePersistence::Prepare(const FString& InPrefix,bool NewWorld,FSt
     FAetherStoreSnapshotQuery Q;Q.Keys={{EAetherAggregateKind::World,TEXT("Main")}};Q.bIncludeProfileRevisions=true;Q.bIncludeContainerCount=true;
     Probe=Store->ReadSnapshot(MoveTemp(Q));Reason.Reset();return true;
 }
-void UAetherNativePersistence::Tick(float)
+void UAetherNativePersistence::Tick(float DeltaSeconds)
 {
+    PollCheckpoint();
     PollLogins();
+    if(State==EAetherNativePersistencePhase::Active)
+    {
+        CheckpointElapsed+=FMath::Max(0.f,DeltaSeconds);
+        if(CheckpointElapsed>=10&&!Checkpoint){CheckpointElapsed=0;SaveLoadedPhysics();}
+    }
     if(State==EAetherNativePersistencePhase::Inspecting)
     {
         if(!Probe.IsValid()||!Probe.IsReady())return;
@@ -77,6 +84,10 @@ TFuture<FAetherStoreReadResult> UAetherNativePersistence::LoadOrCreateProfile(co
 }
 void UAetherNativePersistence::PollLogins()
 {
+    if(bPollingLogins)return;TGuardValue<bool> Guard(bPollingLogins,true);
+    // Promise 可同步触发退出或再次登录，先完成整批队列变更，再在独立数组中通知消费者。
+    struct FCompleted {TUniquePtr<FLogin> Job;FAetherStoreReadResult Result;};
+    TArray<FCompleted> Completed;
     for(int32 Index=Logins.Num()-1;Index>=0;--Index)
     {
         auto& Job=*Logins[Index];if(!Job.Read.IsValid()||!Job.Read.IsReady())continue;
@@ -97,9 +108,34 @@ void UAetherNativePersistence::PollLogins()
             {R.Code=EAetherStoreCode::Corrupt;R.Value.Reset();R.Detail=Reason.IsEmpty()?TEXT("Profile identity/revision mismatch"):Reason;}
         }
         auto Done=MoveTemp(Logins[Index]);Logins.RemoveAtSwap(Index);
-        // 先移出队列再完成 Promise，消费者不能通过同步回调重入正在处理的元素。
-        Done->Result.SetValue(MoveTemp(R));
+        Completed.Add({MoveTemp(Done),MoveTemp(R)});
     }
+    for(auto& Done:Completed)Done.Job->Result.SetValue(MoveTemp(Done.Result));
+}
+TFuture<FAetherWorldCheckpointResult> UAetherNativePersistence::SaveLoadedPhysics()
+{
+    check(IsInGameThread());auto Promise=MakeUnique<TPromise<FAetherWorldCheckpointResult>>();auto Future=Promise->GetFuture();
+    if(State!=EAetherNativePersistencePhase::Active||Checkpoint||!Store||!GetWorld())
+    {FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Busy;Promise->SetValue(MoveTemp(R));return Future;}
+    Checkpoint=MakeUnique<FAetherWorldCheckpoint>(Store.ToSharedRef());FString Why;
+    const TWeakObjectPtr<UWorld> Scene=GetWorld();
+    if(!Checkpoint->Start([Scene](const auto& Previous,auto& Candidate,FString& Reason){
+        if(!Scene.IsValid()){Reason=TEXT("World destroyed during checkpoint");return false;}
+        return AetherNativeWorldPhysics::CaptureLoaded(*Scene.Get(),Previous,Candidate,Reason);
+    },Why))
+    {Checkpoint.Reset();FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Invalid;R.Detail=Why;Promise->SetValue(MoveTemp(R));return Future;}
+    CheckpointPromise=MoveTemp(Promise);return Future;
+}
+void UAetherNativePersistence::PollCheckpoint()
+{
+    if(!Checkpoint)return;Checkpoint->Poll();
+    const auto Phase=Checkpoint->Phase();
+    if(Phase!=EAetherWorldCheckpointPhase::Complete&&Phase!=EAetherWorldCheckpointPhase::Failed)return;
+    auto Result=Checkpoint->Result();auto Promise=MoveTemp(CheckpointPromise);Checkpoint.Reset();
+    // 先撤下运行中标志，再发布持久确认，回调可以安全安排下一次检查点。
+    if(Result.Code!=EAetherStoreCode::Committed&&Result.Code!=EAetherStoreCode::Replayed)
+        UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_CHECKPOINT_DEFERRED code=%d reason=%s"),int32(Result.Code),*Result.Detail);
+    if(Promise)Promise->SetValue(MoveTemp(Result));
 }
 void UAetherNativePersistence::Fail(FString Reason)
 {
@@ -108,14 +144,18 @@ void UAetherNativePersistence::Fail(FString Reason)
     // 失败只冻结入口并保留磁盘，不清库、不覆盖来源、不转回 v9。
 }
 bool UAetherNativePersistence::IsTickable() const
-{return !IsTemplate()&&(State==EAetherNativePersistencePhase::Inspecting||State==EAetherNativePersistencePhase::Auditing||!Logins.IsEmpty());}
+{return !IsTemplate()&&(State==EAetherNativePersistencePhase::Inspecting||State==EAetherNativePersistencePhase::Auditing||State==EAetherNativePersistencePhase::Active||!Logins.IsEmpty()||Checkpoint.IsValid());}
 TStatId UAetherNativePersistence::GetStatId() const{RETURN_QUICK_DECLARE_CYCLE_STAT(UAetherNativePersistence,STATGROUP_Tickables);}
 UWorld* UAetherNativePersistence::GetTickableGameObjectWorld() const{return GetWorld();}
 void UAetherNativePersistence::Deinitialize()
 {
     State=EAetherNativePersistencePhase::Stopped;
     auto Pending=MoveTemp(Logins);for(auto& Job:Pending){FAetherStoreReadResult R;R.Code=EAetherStoreCode::Unavailable;Job->Result.SetValue(MoveTemp(R));}
+    if(Checkpoint)Checkpoint->Stop();Checkpoint.Reset();
+    auto PendingCheckpoint=MoveTemp(CheckpointPromise);
     Probe={};if(Bootstrap)Bootstrap->Stop();Bootstrap.Reset();
     // Runtime 同样持有 Store；关闭幂等，等待排队提交结束。不会在后台线程销毁 UObject。
-    if(Store)Store->Close();Store.Reset();State=EAetherNativePersistencePhase::Stopped;Super::Deinitialize();
+    if(Store)Store->Close();Store.Reset();
+    if(PendingCheckpoint){FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Unavailable;R.Detail=TEXT("Shutdown drained writes; reload persisted world before retry");PendingCheckpoint->SetValue(MoveTemp(R));}
+    State=EAetherNativePersistencePhase::Stopped;Super::Deinitialize();
 }

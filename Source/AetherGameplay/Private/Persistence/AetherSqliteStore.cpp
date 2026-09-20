@@ -190,6 +190,13 @@ public:
         FAetherStoreReadResult Rejected;Rejected.Code=EAetherStoreCode::Busy;
         return Enqueue<FAetherStoreReadResult>([Profile=MoveTemp(Profile)](sqlite3* DB){return AetherSQLite::Private::CreateProfile(DB,Profile);},MoveTemp(Rejected));
     }
+    virtual TFuture<FAetherStoreReadResult> CompareExchangeWorld(FAetherAggregateWrite Write) override
+    {
+        if(!ValidWorldCheckpoint(Write))
+        {FAetherStoreReadResult R;R.Code=EAetherStoreCode::Invalid;return Completed(MoveTemp(R));}
+        FAetherStoreReadResult Rejected;Rejected.Code=EAetherStoreCode::Busy;
+        return Enqueue<FAetherStoreReadResult>([Write=MoveTemp(Write)](sqlite3* DB){return AetherSQLite::Private::CompareExchangeWorld(DB,Write);},MoveTemp(Rejected));
+    }
     virtual TFuture<FAetherStoreReadResult> Read(FAetherAggregateKey Key) override
     { return Enqueue<FAetherStoreReadResult>([Key=MoveTemp(Key)](sqlite3* DB){ return ReadAggregate(DB,Key); }, FAetherStoreReadResult()); }
     virtual TFuture<FAetherStoreRevisionIndex> ReadRevisions(EAetherAggregateKind Kind) override
