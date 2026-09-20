@@ -32,6 +32,8 @@ public:
     bool FreezeForPersistence(const TArray<FName>& Ids);
     bool ResumeFrozen(const TArray<FName>& Ids);
     void DiscardFrozen(const TArray<FName>& Ids);
+    // 只合并已确认事务的开关意图，冻结时的能量、位置和质量不变。
+    void ApplyCommittedPower(FName Id,bool bEnabled);
     bool IsFrozen(FName Id) const{return FrozenRecords.Contains(Id);}
     // Greybox tolerances: enter at 2 cm for two fixed steps, leave beyond 6 cm immediately.
     double ContactEnterCm=2,ContactExitCm=6;

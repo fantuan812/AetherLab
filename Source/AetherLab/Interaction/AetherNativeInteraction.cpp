@@ -15,7 +15,7 @@ bool AetherNativeInteraction::IsPersistent(EAetherInteractionActionKind K)
     switch(K)
     {
     case E::Register:case E::BindInn:case E::LearnStorySkills:case E::ClaimQuest:case E::ClaimSkillPoints:
-    case E::CollectSupply:case E::CollectGather:case E::ClaimDaily:case E::ObserveObjective:case E::RecordDaily:return true;
+    case E::CollectSupply:case E::CollectGather:case E::ClaimDaily:case E::ObserveObjective:case E::RecordDaily:case E::RestoreWaterService:case E::SetPower:return true;
     default:return false;
     }
 }
@@ -36,6 +36,7 @@ TOptional<FAetherInteractionProvider> AetherNativeInteraction::Provider(AAetherF
     FCollisionQueryParams Q(SCENE_QUERY_STAT(NativeOffer),false,&C);Q.AddIgnoredActor(&Target);
     S.bLineOfSight=!C.GetWorld()->LineTraceTestByChannel(C.GetActorLocation(),Target.GetActorLocation(),ECC_Visibility,Q);
     S.bBusy=C.Carried||C.ReviveTarget;S.bDowned=!C.Alive();S.bInCombat=C.HasRecentCombat(8);
+    S.bPowerEnabled=Target.Mechanism&&Target.Mechanism->bPowerEnabled;S.bServiceComplete=Target.bWorkshopService?State->bWorkshopRestored:State->bSupplyRestored;
     if(Target.Reactive->bOwnerOnlyStimuli)
     {
         // 私人目标即使网络上暂时可见，也不能查询另一个角色的任务原因。

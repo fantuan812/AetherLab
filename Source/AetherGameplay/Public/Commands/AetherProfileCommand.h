@@ -5,6 +5,7 @@
 #include "Inventory/AetherEconomyDefinitions.h"
 #include "Inventory/AetherConsumableEffect.h"
 #include "Interaction/AetherInteractionDefinitions.h"
+#include "World/AetherWorldState.h"
 
 struct FAetherContainerAccessContext
 {
@@ -30,6 +31,9 @@ struct FAetherProfileCommandContext
     // 目标注册表提供现场事实；角色进度/版本/可领取点数由交互处理器从数据库重建。
     FAetherInteractionSnapshot Interaction;
     bool bServiceRequirementsMet=false,bObjectiveFactReady=false;
+    bool bWorkshopService=false,bGlobalPowerService=false;
+    double ReceivedPower=0;
+    TOptional<FAetherReactiveRecordV10> MechanismRecord;
     FAetherContainerAccessContext Container;
     FAetherSkillRuleContext Skill;
     TArray<FAetherExternalSkillGrant> ExternalSkillGrants;

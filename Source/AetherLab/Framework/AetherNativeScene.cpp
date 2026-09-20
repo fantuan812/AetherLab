@@ -36,6 +36,15 @@ void AAetherFrontierMode::FailNativeScene(const FString& Reason)
 void AAetherFrontierMode::PublishNativeWorld(const FAetherWorldStateV10& W)
 {
     if(NativeWorld.IsSet()&&W.Revision<NativeWorld->Revision)return;
+    if(NativeWorld.IsSet())for(const auto& Record:W.Bodies)
+    {
+        const auto* Before=NativeWorld->Bodies.FindByPredicate([&](const auto& B){return B.StableId.Equals(Record.StableId,ESearchCase::CaseSensitive);});
+        if(!Record.bHasMechanism||!Before||Before->bSourceEnabled==Record.bSourceEnabled)continue;
+        const FName Id(*Record.StableId);
+        if(auto* A=Prop(Id);A&&A->Spec.Id.ToString().Equals(Record.StableId,ESearchCase::CaseSensitive)&&A->Mechanism)
+        {A->Mechanism->bPowerEnabled=Record.bSourceEnabled;A->ForceNetUpdate();}
+        if(auto* Reactive=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>())Reactive->ApplyCommittedPower(Id,Record.bSourceEnabled);
+    }
     NativeWorld=W;
     auto* S=GetGameState<AAetherFrontierState>();
     if(S){S->NativeWorldRevision=W.Revision;S->bSupplyRestored=W.bSupplyRestored;S->bWorkshopRestored=W.bWorkshopRestored;

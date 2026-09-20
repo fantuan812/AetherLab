@@ -36,5 +36,10 @@ bool UReactiveWorldSubsystem::ResumeFrozen(const TArray<FName>& Ids)
     if(!Restore(Records,true)){Rollback();return false;}
     DiscardFrozen(Ids);return true;
 }
+void UReactiveWorldSubsystem::ApplyCommittedPower(FName Id,bool bEnabled)
+{
+    check(IsInGameThread());if(!IsAuthority())return;
+    if(auto* Record=FrozenRecords.Find(Id);Record&&Record->bHasMechanism)Record->bSourceEnabled=bEnabled;
+}
 void UReactiveWorldSubsystem::DiscardFrozen(const TArray<FName>& Ids)
 {check(IsInGameThread());for(FName Id:Ids){FrozenRecords.Remove(Id);FrozenBodies.Remove(Id);}}

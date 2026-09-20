@@ -25,7 +25,7 @@ bool Kind(const FString& S,EAetherInteractionActionKind& Out)
 {
     static const TCHAR* Names[]={TEXT("Talk"),TEXT("TrackObjective"),TEXT("Register"),TEXT("BindInn"),TEXT("Rest"),
         TEXT("LearnStorySkills"),TEXT("Train"),TEXT("ResetSkills"),TEXT("Trade"),TEXT("Repair"),TEXT("ClaimQuest"),TEXT("ClaimSkillPoints"),
-        TEXT("CollectSupply"),TEXT("CollectGather"),TEXT("ClaimDaily"),TEXT("ObserveObjective"),TEXT("RecordDaily")};
+        TEXT("CollectSupply"),TEXT("CollectGather"),TEXT("ClaimDaily"),TEXT("ObserveObjective"),TEXT("RecordDaily"),TEXT("RestoreWaterService"),TEXT("SetPower")};
     for(int32 I=0;I<UE_ARRAY_COUNT(Names);++I)if(S.Equals(Names[I],ESearchCase::CaseSensitive)){Out=EAetherInteractionActionKind(I);return true;}return false;
 }
 }
@@ -51,7 +51,7 @@ bool FAetherInteractionDefinitions::Validate(const FAetherRules& Rules,const FAe
         TSet<FString> Actions;
         for(const auto& A:D.Actions)
         {
-            if(!Id(A.Id)||Actions.Contains(A.Id)||uint8(A.Kind)>uint8(EAetherInteractionActionKind::RecordDaily)||
+            if(!Id(A.Id)||Actions.Contains(A.Id)||uint8(A.Kind)>uint8(EAetherInteractionActionKind::SetPower)||
                 !Text(A.Verb,64)||!Id(A.IconId)||A.Priority<0||A.Priority>1000)return Fail(TEXT("Invalid action identity/presentation"));
             Actions.Add(A.Id);
             if(!References(A.RequiredClaims)||!References(A.HideAfterClaims))return Fail(TEXT("Unknown/duplicate quest condition"));
@@ -145,6 +145,7 @@ FAetherInteractionDefinitions FAetherInteractionDefinitions::Parse(const FString
                 !J->TryGetBoolField(TEXT("SafeOnly"),A.bSafeOnly)||!J->TryGetBoolField(TEXT("HideLocked"),A.bHideLocked)||
                 !Names(J,TEXT("RequiredClaims"),A.RequiredClaims)||!Names(J,TEXT("RequiredEvidence"),A.RequiredEvidence)||
                 !Names(J,TEXT("HideAfterClaims"),A.HideAfterClaims)||!Names(J,TEXT("HideAfterEvidence"),A.HideAfterEvidence))return Fail(TEXT("Invalid finite action definition"));
+            if(J->HasField(TEXT("DesiredState"))&&(!J->TryGetBoolField(TEXT("DesiredState"),A.bDesiredState)||A.Kind!=EAetherInteractionActionKind::SetPower))return Fail(TEXT("Unexpected desired mechanism state"));
             A.Priority=int32(Priority);D.Actions.Add(MoveTemp(A));
         }
         for(const auto& NV:*Nodes)

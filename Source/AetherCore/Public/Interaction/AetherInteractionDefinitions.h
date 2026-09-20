@@ -6,7 +6,7 @@
 enum class EAetherInteractionActionKind:uint8
 {
     Talk,TrackObjective,Register,BindInn,Rest,LearnStorySkills,Train,ResetSkills,Trade,Repair,ClaimQuest,ClaimSkillPoints,
-    CollectSupply,CollectGather,ClaimDaily,ObserveObjective,RecordDaily
+    CollectSupply,CollectGather,ClaimDaily,ObserveObjective,RecordDaily,RestoreWaterService,SetPower
 };
 struct FAetherInteractionActionDefinition
 {
@@ -14,7 +14,7 @@ struct FAetherInteractionActionDefinition
     EAetherInteractionActionKind Kind=EAetherInteractionActionKind::Talk;
     int32 Priority=0;
     TArray<FString> RequiredClaims,RequiredEvidence,HideAfterClaims,HideAfterEvidence;
-    bool bSafeOnly=false,bHideLocked=false;
+    bool bSafeOnly=false,bHideLocked=false,bDesiredState=false;
 };
 struct FAetherDialogueOption
 {
@@ -59,6 +59,7 @@ struct FAetherInteractionSnapshot
     TSet<FString> Claims,Evidence;
     bool bLoaded=false,bInRange=false,bLineOfSight=false,bActorCanAct=false;
     bool bBusy=false,bThreatened=false,bDowned=false,bInCombat=false;
+    bool bPowerEnabled=false,bServiceComplete=false;
     bool bHasClaimableSkillPoints=false;
     bool bHasStoryGrantAvailable=false; // 从本角色永久授予账本与故事进度计算，不是客户端许可。
     TSet<EAetherInteractionActionKind> RegisteredHandlers;

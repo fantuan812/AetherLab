@@ -54,7 +54,7 @@ bool AetherInteractionCommands::Prepare(const FAetherPlayerCommand& C,const FStr
     Target.bHasClaimableSkillPoints=AetherQuestProgression::HasClaimableSkillPoints(P,Progression);
     // 不采信上下文宣称的处理器集合；可执行范围只能来自本编译单元真实实现的有限分支。
     Target.RegisteredHandlers={K::Register,K::BindInn,K::LearnStorySkills,K::ClaimQuest,K::ClaimSkillPoints,
-        K::CollectSupply,K::CollectGather,K::ClaimDaily,K::ObserveObjective,K::RecordDaily};
+        K::CollectSupply,K::CollectGather,K::ClaimDaily,K::ObserveObjective,K::RecordDaily,K::RestoreWaterService,K::SetPower};
     FAetherInteractionProvider Provider(*D,Target,Rules);
     const auto Checked=Provider.CheckCommand(Actor,C);if(Checked!=R::Applied)return Fail(Checked);
     const auto* Action=D->Actions.FindByPredicate([&](const auto& A){return A.Id.Equals(C.ActionId,ESearchCase::CaseSensitive);});
@@ -93,6 +93,36 @@ bool AetherInteractionCommands::Prepare(const FAetherPlayerCommand& C,const FStr
         if(Applied!=R::Applied)return Fail(Applied);
         Result.AffectedDefinitionIds.Add(Action->ObjectiveId.IsEmpty()?Action->ServiceId:Action->ObjectiveId);
         QuestResult=AetherQuestProgression::Settle(Next,W.WorldFactSources,{},Items,Skills,Rules,Progression);break;
+    }
+    case K::RestoreWaterService:
+    {
+        if(!Context.bServiceRequirementsMet)return Fail(R::NotReady);
+        const bool Done=Context.bWorkshopService?W.bWorkshopRestored:W.bSupplyRestored;
+        if(Done)return Fail(R::NotAllowed);
+        if(Target.DefinitionId==TEXT("Receiver")&&(!FMath::IsFinite(Context.ReceivedPower)||Context.ReceivedPower<1))return Fail(R::NotReady);
+        if(Context.bWorkshopService)W.bWorkshopRestored=true;
+        else
+        {
+            const auto* Fact=Rules.Objectives.Find("SupplyRestored");bool Source=false;
+            if(Fact)for(FName Id:Fact->FactSources)Source|=Id.ToString().Equals(Target.TargetStableId,ESearchCase::CaseSensitive);
+            if(!Source)return Fail(R::Unauthorized);
+            W.bSupplyRestored=true;if(!W.WorldFactSources.Contains(TEXT("SupplyRestored")))W.WorldFactSources.Add(TEXT("SupplyRestored"),Target.TargetStableId);
+            if(!Next.Evidence.Contains(TEXT("SupplyRestored")))AetherQuestProgression::Observe(Next,TEXT("SupplyRestored"),Rules);
+        }
+        Result.AffectedDefinitionIds.Add(Context.bWorkshopService?TEXT("WorkshopRestored"):TEXT("SupplyRestored"));
+        QuestResult=AetherQuestProgression::Settle(Next,W.WorldFactSources,{},Items,Skills,Rules,Progression);break;
+    }
+    case K::SetPower:
+    {
+        if(!Context.bServiceRequirementsMet||Target.DefinitionId!=TEXT("Source")||!Context.MechanismRecord.IsSet())return Fail(R::NotReady);
+        auto Record=Context.MechanismRecord.GetValue();
+        if(!Record.StableId.Equals(Target.TargetStableId,ESearchCase::CaseSensitive)||!Record.bHasMechanism||
+            Record.bSourceEnabled==Action->bDesiredState)return Fail(R::NotAllowed);
+        auto* Existing=W.Bodies.FindByPredicate([&](const auto& V){return V.StableId.Equals(Target.TargetStableId,ESearchCase::CaseSensitive);});
+        if(!Existing)return Fail(R::NotReady);
+        Record.bSourceEnabled=Action->bDesiredState;*Existing=MoveTemp(Record);
+        if(Context.bGlobalPowerService)W.bPowerOn=Action->bDesiredState;
+        Result.AffectedDefinitionIds.Add(Target.TargetStableId);break;
     }
     default:return Fail(R::UnsupportedAction);
     }

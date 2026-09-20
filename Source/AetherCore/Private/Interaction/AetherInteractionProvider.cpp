@@ -58,6 +58,8 @@ TArray<FAetherInteractionOffer> FAetherInteractionProvider::Query(const FAetherI
         // 隐藏条件完全省略动作，不能把秘密任务 ID 或原因参数泄露给客户端。
         if(A.bHideLocked&&(!Quest.IsEmpty()||!Fact.IsEmpty()))continue;
         if(A.Kind==EAetherInteractionActionKind::TrackObjective&&!Guide.bHasTarget)continue;
+        if(A.Kind==EAetherInteractionActionKind::SetPower&&A.bDesiredState==Snapshot.bPowerEnabled)continue;
+        if(A.Kind==EAetherInteractionActionKind::RestoreWaterService&&Snapshot.bServiceComplete)continue;
         if(A.Kind==EAetherInteractionActionKind::LearnStorySkills&&!Snapshot.bHasStoryGrantAvailable)continue;
         if(A.Kind==EAetherInteractionActionKind::ClaimSkillPoints&&!Snapshot.bHasClaimableSkillPoints)continue;
         FAetherInteractionOffer O;O.TargetStableId=Snapshot.TargetStableId;O.TargetRevision=Snapshot.InteractionRevision;

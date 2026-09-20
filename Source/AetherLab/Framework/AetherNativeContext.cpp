@@ -6,6 +6,8 @@
 #include "Definitions/AetherV10Definitions.h"
 #include "EngineUtils.h"
 #include "AetherGuide.h"
+#include "Persistence/AetherNativeWorldPhysics.h"
+#include "ReactiveWorldSubsystem.h"
 
 namespace
 {
@@ -48,6 +50,16 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
     {
         I.TargetStableId=Target->Spec.Id.ToString();I.DefinitionId=Target->Service.ToString();I.InteractionRevision=Target->InteractionRevision;
         I.bLoaded=Target->bEnabled&&!Target->IsActorBeingDestroyed();
+        X.bWorkshopService=Target->bWorkshopService;X.bGlobalPowerService=Target->bGlobalPowerService;X.ReceivedPower=Target->ReceivedPower;
+        I.bPowerEnabled=Target->Mechanism&&Target->Mechanism->bPowerEnabled;
+        I.bServiceComplete=NativeWorld.IsSet()&&(Target->bWorkshopService?NativeWorld->bWorkshopRestored:NativeWorld->bSupplyRestored);
+        if(Target->Service=="Source"&&Command.Type==EAetherCommandType::ExecuteInteraction)
+        {
+            TArray<FReactiveSaveRecord> Records;
+            if(GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->Capture(Records))
+                if(const auto* Record=Records.FindByPredicate([&](const auto& V){return V.StableId==Target->Spec.Id;}))
+                    X.MechanismRecord=AetherNativeWorldPhysics::ToNativeRecord(*Record);
+        }
         X.bServiceRequirementsMet=I.bLoaded;
         if(const auto* Required=D.Rules.InteractionRequirements.Find(Target->Service))
             for(FName Id:*Required)X.bServiceRequirementsMet&=AetherGuide::CanInspectFire(Prop(Id));
