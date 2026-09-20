@@ -3,6 +3,7 @@
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Interaction/AetherNearbyRegistry.h"
 #include "AetherFrontier.h"
+#include "Inventory/AetherNativeInventory.h"
 #include "Inventory/AetherResourceGate.h"
 #include "AetherContent.h"
 #include "Definitions/AetherV10Definitions.h"
@@ -435,9 +436,16 @@ float AAetherFrontierCharacter::TakeDamage(float Amount,const FDamageEvent& Even
     return Applied;
 }
 
+void AAetherFrontierCharacter::ClaimRewards()
+{
+ if(!bPanel||Panel!=2)return;
+ if(UsesNativeSkills()){FString Why;AetherNativeInventory::Shortcut(*this,"Claim",NAME_None,Why);Feedback=Why;OnPresentationChanged.Broadcast();}
+ else ServerAction("Claim");
+}
 void AAetherFrontierCharacter::CycleItem()
 {
  if(!bPanel||!ProfileState())return;
+ if(Panel==1&&UsesNativeSkills()){FString Why;AetherNativeInventory::Shortcut(*this,"Next",NAME_None,Why);OnPresentationChanged.Broadcast();return;}
  if(Panel==1&&!ProfileState()->Profile.Inventory.IsEmpty()){SelectedItem=(SelectedItem+1)%ProfileState()->Profile.Inventory.Num();SelectedInstance=ProfileState()->Profile.Inventory[SelectedItem].InstanceId;}
  if(Panel==2)TrackedQuest=AetherGuide::SelectQuest(ProfileState()->Profile,TrackedQuest,true);
  OnPresentationChanged.Broadcast();

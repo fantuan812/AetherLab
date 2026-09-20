@@ -27,6 +27,9 @@ class AETHERLAB_API UAetherMenuSubsystem : public ULocalPlayerSubsystem
 public:
     UFUNCTION(BlueprintCallable) void TogglePage(EAetherMenuPage Page);
     UFUNCTION(BlueprintCallable) void OpenPage(EAetherMenuPage Page);
+    void InspectItem(FGuid Instance);
+    FGuid RequestedItem() const{return RequestedInspection;}
+    void ConsumeInspection(FGuid Instance){if(RequestedInspection==Instance)RequestedInspection.Invalidate();}
     UFUNCTION(BlueprintCallable) void Back();
     UFUNCTION(BlueprintCallable) void Close();
     // 异步弹窗只能关闭自己的顶层令牌，旧回调不能误关后来打开的弹窗。
@@ -47,6 +50,7 @@ private:
     void SetPage(EAetherMenuPage Page);
     void Publish(bool WasOpen);
     static bool ValidPage(EAetherMenuPage Page);
+    FGuid RequestedInspection;
     EAetherMenuPage CurrentPage=EAetherMenuPage::None;
     struct FLayer {FGuid Token; FName Name;};
     TArray<FLayer> Layers;

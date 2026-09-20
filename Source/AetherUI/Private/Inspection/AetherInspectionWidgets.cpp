@@ -158,6 +158,7 @@ TSharedRef<SWidget> UAetherInspectionConfirmation::RebuildWidget()
         CancelText->SetText(FText::FromString(TEXT("取消")));CancelButton->SetContent(CancelText);Actions->AddChildToHorizontalBox(CancelButton);
         CancelButton->OnClicked.AddDynamic(this,&UAetherInspectionConfirmation::Cancel);
     }
+    if(Quantity)Quantity->OnValueChanged.AddUniqueDynamic(this,&UAetherInspectionConfirmation::QuantityChanged);
     RefreshDraft();return Super::RebuildWidget();
 }
 void UAetherInspectionConfirmation::SetDraft(const FAetherInspectionDraft& InDraft)
@@ -173,6 +174,15 @@ void UAetherInspectionConfirmation::RefreshDraft()
     ConfirmButton->SetIsEnabled(Valid);Quantity->SetIsEnabled(Valid);
     Quantity->SetMinValue(1);Quantity->SetMinSliderValue(1);Quantity->SetMaxValue(Valid?Draft->Action.MaxQuantity:1);Quantity->SetMaxSliderValue(Valid?Draft->Action.MaxQuantity:1);
     Quantity->SetVisibility(Valid&&Draft->Action.MaxQuantity>1?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+    if(Valid)QuantityChanged(Quantity->GetValue());
+}
+void UAetherInspectionConfirmation::QuantityChanged(float Value)
+{
+    if(!Draft.IsSet()||!Prompt||!FMath::IsFinite(Value))return;
+    const int32 Count=FMath::Clamp(FMath::RoundToInt(Value),1,Draft->Action.MaxQuantity);
+    FString Text=TEXT("确认")+Draft->Action.Label+TEXT("？");
+    if(Draft->Action.UnitPrice>0)Text+=LINE_TERMINATOR+FString::Printf(TEXT("%d 件 · 合计 %lld 金币"),Count,Draft->Action.UnitPrice*Count);
+    Prompt->SetText(FText::FromString(Text));
 }
 void UAetherInspectionConfirmation::Confirm()
 {

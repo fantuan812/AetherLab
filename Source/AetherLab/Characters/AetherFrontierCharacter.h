@@ -162,7 +162,7 @@ private:
     FAetherWorldServiceCommand PendingService;
     int32 MinimumServiceRevision=0;
     void Throw(){if(!bPanel)ServerAction("Throw");}
-    void ClaimRewards(){if(bPanel&&Panel==2)ServerAction("Claim");}
+    void ClaimRewards();
     void Carry(){if(!bPanel)ServerAction("Carry");} void Push(){if(!bPanel)ServerAction("Push");}
     void EquipNext(){if(!bPanel)SubmitInventory("CycleMain");} void Shield(){if(!bPanel)SubmitInventory("CycleOff");}
     void SaveV4(){ServerAction("Save");} void Recruit(){ServerAction("Recruit");}

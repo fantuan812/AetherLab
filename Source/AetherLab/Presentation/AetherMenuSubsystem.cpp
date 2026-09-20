@@ -15,6 +15,8 @@ void UAetherMenuSubsystem::SetPage(EAetherMenuPage Page)
     const bool WasOpen=IsOpen();CurrentPage=Page;Layers.Reset();
     Publish(WasOpen);
 }
+void UAetherMenuSubsystem::InspectItem(FGuid Id)
+{if(!Id.IsValid())return;OpenPage(EAetherMenuPage::Inventory);RequestedInspection=Id;OnChanged.Broadcast();}
 void UAetherMenuSubsystem::Back()
 {
     if(!Layers.IsEmpty()){Layers.Pop();OnChanged.Broadcast();return;}
@@ -72,7 +74,7 @@ void UAetherMenuSubsystem::AttachPawn(AAetherFrontierCharacter* Pawn)
     if((Pawn&&BoundPawn.Get()==Pawn)||(!Pawn&&BoundPawn.IsExplicitlyNull()&&!IsOpen()&&PageMemory.IsEmpty()))return;
     const bool WasOpen=IsOpen();
     if(auto* Old=BoundPawn.Get()){Old->ReleaseHeldInput();Old->CloseTrade();Old->bPanel=false;Old->Panel=0;}
-    BoundPawn=Pawn;CurrentPage=EAetherMenuPage::None;Layers.Reset();PageMemory.Reset();
+    BoundPawn=Pawn;RequestedInspection.Invalidate();CurrentPage=EAetherMenuPage::None;Layers.Reset();PageMemory.Reset();
     // 角色换代使弹窗、搜索与实例选择同时失效，防止对旧角色发送按钮命令。
     Publish(WasOpen);
 }

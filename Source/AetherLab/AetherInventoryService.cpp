@@ -1,4 +1,5 @@
 #include "AetherFrontier.h"
+#include "Inventory/AetherNativeInventory.h"
 #include "Inventory/AetherResourceGate.h"
 #include "AetherGuide.h"
 #if !UE_BUILD_SHIPPING
@@ -8,6 +9,7 @@
 
 void AAetherFrontierCharacter::SubmitInventory(FName Action,FName Definition)
 {
+ if(UsesNativeSkills()){FString Why;AetherNativeInventory::Shortcut(*this,Action,Definition,Why);Feedback=Why;OnPresentationChanged.Broadcast();return;}
  auto* PS=ProfileState();if(!PS)return;
  if(PendingInventory.CommandId.IsValid()){if(PendingInventory.Action=="Buy"||PendingInventory.Action=="Sell")ServerTradeInventory(PendingInventory,PendingTradeAuthorization);else ServerInventory(PendingInventory);return;}
  if(PS->Profile.Revision<MinimumInventoryRevision){Notify(TEXT("等待背包同步后再操作。"));return;}

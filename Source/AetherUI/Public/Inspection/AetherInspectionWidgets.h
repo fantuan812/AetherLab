@@ -76,6 +76,7 @@ public:
     virtual void NativeDestruct() override;
 private:
     void RefreshDraft();
+    UFUNCTION() void QuantityChanged(float Value);
     UFUNCTION() void Confirm();
     UFUNCTION() void Cancel();
     TOptional<FAetherInspectionDraft> Draft;

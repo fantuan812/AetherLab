@@ -1,6 +1,7 @@
 #include "AetherFrontierPanel.h"
 #include "Preview/AetherCharacterPreviewWidget.h"
 #include "Skills/AetherSkillTreePage.h"
+#include "Inventory/AetherInventoryPage.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "AetherGuide.h"
 #include "AetherFrontier.h"
@@ -68,6 +69,7 @@ void UAetherFrontierPanel::NativeDestruct()
  SavePageMemory();
  if(CharacterPreview)CharacterPreview->SetSource(nullptr);
  if(SkillTree)SkillTree->ClosePresentation();
+ if(InventoryPage)InventoryPage->ClosePresentation();
  if(Menu.IsValid())Menu->OnChanged.RemoveAll(this);
  if(BoundCharacter.IsValid())BoundCharacter->OnPresentationChanged.RemoveAll(this);
  if(BoundProfile.IsValid())BoundProfile->OnProfilePublished.RemoveAll(this);
@@ -106,7 +108,7 @@ void UAetherFrontierPanel::HandleMenuChanged()
  auto* C=BoundCharacter.Get();ShownPage=C&&C->bPanel?EAetherMenuPage(C->Panel):EAetherMenuPage::None;
  RefreshSnapshot();
  // 只在进入技能页时交给图控件焦点，快照/模态刷新不能抢走确认按钮或详情焦点。
- if(ShownPage==EAetherMenuPage::Skills&&ShownPage!=PreviousPage)
+ if((ShownPage==EAetherMenuPage::Skills||ShownPage==EAetherMenuPage::Inventory)&&ShownPage!=PreviousPage)
   if(auto* Focus=GetPrimaryFocusTarget())Focus->SetUserFocus(GetOwningPlayer());
  if(Menu.IsValid()&&BodyScroll&&ShownPage!=EAetherMenuPage::None)
  {
@@ -118,7 +120,7 @@ void UAetherFrontierPanel::HandleMenuChanged()
 void UAetherFrontierPanel::RefreshLiveDetails()
 {
  auto* C=BoundCharacter.Get();if(!C||!C->bPanel)return;
- RefreshTrade(C,C->Panel==1);
+ RefreshTrade(C,C->Panel==1&&!C->UsesNativeSkills());
  // 队友生命和交易距离不是档案版本；只在相关页面打开时更新实时展示。
  if(C->Panel==5&&Model){Model->Refresh(C);Body->SetText(Model->Body);}
 }
@@ -139,7 +141,8 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
  Body=WidgetTree->ConstructWidget<UTextBlock>();Body->SetAutoWrapText(true);Scroll->AddChild(Body);
  SkillTree=CreateWidget<UAetherSkillTreePage>(this,UAetherSkillTreePage::StaticClass());
  if(SkillTree)Content->AddChildToHorizontalBox(SkillTree)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
- auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(Row);
+ InventoryPage=CreateWidget<UAetherInventoryPage>(this);if(InventoryPage)Content->AddChildToHorizontalBox(InventoryPage)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+ auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();LegacyActions=Row;Box->AddChildToVerticalBox(Row);
  auto Add=[&](const TCHAR* Label,UTextBlock*& Text){auto* Button=WidgetTree->ConstructWidget<UButton>();Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetText(FText::FromString(Label));Button->SetContent(Text);Row->AddChildToHorizontalBox(Button);return Button;};
  InventoryRow=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(InventoryRow);
  Quantity=WidgetTree->ConstructWidget<USpinBox>();Quantity->SetMinValue(1);Quantity->SetMaxValue(1000);Quantity->SetDelta(1);Quantity->SetMinDesiredWidth(80);Quantity->SetMinFractionalDigits(0);Quantity->SetMaxFractionalDigits(0);Quantity->SetValue(1);Quantity->OnValueChanged.AddDynamic(this,&UAetherFrontierPanel::SetQuantity);InventoryRow->AddChildToHorizontalBox(Quantity);
@@ -169,16 +172,20 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
 void UAetherFrontierPanel::RefreshSnapshot()
 {
  BindProfile();auto* C=BoundCharacter.Get();
- const bool PreviewOpen=C&&C->bPanel&&C->Panel==1;
+ const bool NativeInventory=C&&C->bPanel&&C->Panel==1&&C->UsesNativeSkills();
+ if(InventoryPage)InventoryPage->SetVisibility(NativeInventory?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+ if(LegacyActions)LegacyActions->SetVisibility(NativeInventory?ESlateVisibility::Collapsed:ESlateVisibility::Visible);
+ const bool PreviewOpen=C&&C->bPanel&&C->Panel==1&&!NativeInventory;
  if(CharacterPreview){CharacterPreview->SetVisibility(PreviewOpen?ESlateVisibility::Visible:ESlateVisibility::Collapsed);CharacterPreview->SetSource(PreviewOpen?C:nullptr);}
  const bool SkillOpen=C&&C->bPanel&&C->Panel==3;
  if(SkillTree){SkillTree->SetVisibility(SkillOpen?ESlateVisibility::Visible:ESlateVisibility::Collapsed);SkillTree->SetLegacySource(SkillOpen?C:nullptr);}
- if(BodyScroll)BodyScroll->SetVisibility(SkillOpen?ESlateVisibility::Collapsed:ESlateVisibility::Visible);
+ if(BodyScroll)BodyScroll->SetVisibility(SkillOpen||NativeInventory?ESlateVisibility::Collapsed:ESlateVisibility::Visible);
  if(NextButton)NextButton->SetVisibility(SkillOpen?ESlateVisibility::Collapsed:ESlateVisibility::Visible);
  if(!C){SetVisibility(ESlateVisibility::Collapsed);return;}
  // 关闭后真正折叠。后续由菜单/复制事件唤醒，不保留透明的逐帧轮询控件。
  const bool Open=C->bPanel&&C->Panel!=4&&C->Panel!=int32(EAetherMenuPage::Dialogue);SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(!Open)return;
+ if(NativeInventory){Heading->SetText(FText::FromString(TEXT("背包与装备")));InventoryRow->SetVisibility(ESlateVisibility::Collapsed);TradeRow->SetVisibility(ESlateVisibility::Collapsed);TradeInfo->SetVisibility(ESlateVisibility::Collapsed);SettingsRow->SetVisibility(ESlateVisibility::Collapsed);return;}
  InventoryRow->SetVisibility(Open&&C->Panel==1?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(Open&&C->Panel==1&&FMath::RoundToInt(Quantity->GetValue())!=C->InventoryQuantity)Quantity->SetValue(C->InventoryQuantity);
  if(Open&&C->Panel==1&&C->ProfileState()&&ShownRevision!=C->ProfileState()->Profile.Revision)
@@ -197,7 +204,7 @@ void UAetherFrontierPanel::RefreshSnapshot()
  if(Open){Model->Refresh(C);Heading->SetText(Model->Heading);Body->SetText(Model->Body);PrimaryText->SetText(Model->PrimaryLabel);SecondaryText->SetText(Model->SecondaryLabel);SecondaryText->GetParent()->SetVisibility(Model->SecondaryLabel.ToString()==TEXT("Close")?ESlateVisibility::Collapsed:ESlateVisibility::Visible);}
 }
 void UAetherFrontierPanel::Primary()
-{if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->SubmitInventory("Equip");else if(C->Panel==2)C->ServerAction("Claim");else if(C->Panel==5)C->ServerAction("Invite");else if(C->Panel==6)C->ServerAction("Save");else ClosePanel();}}
+{if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->SubmitInventory("Equip");else if(C->Panel==2)C->ClaimRewards();else if(C->Panel==5)C->ServerAction("Invite");else if(C->Panel==6)C->ServerAction("Save");else ClosePanel();}}
 void UAetherFrontierPanel::Secondary()
 {if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->SubmitInventory("Use");else if(C->Panel==5)C->ServerAction("AcceptInvite");else if(C->Panel==6)C->ServerAction("Recover");else ClosePanel();}}
 void UAetherFrontierPanel::NextItem(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->CycleItem();}
@@ -265,6 +272,7 @@ FReply UAetherFrontierPanel::NativeOnPreviewKeyDown(const FGeometry& Geometry,co
  auto* C=BoundCharacter.Get();
  // 改键控件正在录入时由控件消费按键（含 Escape 取消），不能把 I/K 等当作切页。
  if(!C||!C->bPanel||(BindingKey&&BindingKey->GetIsSelectingKey()))return Super::NativeOnPreviewKeyDown(Geometry,Event);
+ if(C->Panel==1&&C->UsesNativeSkills())return Super::NativeOnPreviewKeyDown(Geometry,Event);
  if(Event.GetKey()==EKeys::Escape){if(!Event.IsRepeat())C->MenuBack();return FReply::Handled();}
  const TPair<FName,int32> Pages[]={{"I",1},{"J",2},{"K",3},{"M",4},{"P",5}};
  for(const auto& Page:Pages)
@@ -273,4 +281,4 @@ FReply UAetherFrontierPanel::NativeOnPreviewKeyDown(const FGeometry& Geometry,co
 }
 
 UWidget* UAetherFrontierPanel::GetPrimaryFocusTarget() const
-{if(BoundCharacter.IsValid()&&BoundCharacter->Panel==3&&SkillTree)return SkillTree->GetNavigationFocusTarget();return PrimaryText?PrimaryText->GetParent():nullptr;}
+{if(BoundCharacter.IsValid()&&BoundCharacter->Panel==1&&BoundCharacter->UsesNativeSkills()&&InventoryPage)return InventoryPage->GetNavigationFocusTarget();if(BoundCharacter.IsValid()&&BoundCharacter->Panel==3&&SkillTree)return SkillTree->GetNavigationFocusTarget();return PrimaryText?PrimaryText->GetParent():nullptr;}

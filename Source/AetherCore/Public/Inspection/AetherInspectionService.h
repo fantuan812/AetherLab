@@ -1,5 +1,6 @@
 #pragma once
 #include "Inventory/AetherInventoryState.h"
+#include "Inventory/AetherEconomyDefinitions.h"
 #include "Skills/AetherSkillState.h"
 
 // 只读展示身份由已授权拥有者快照提供；它不是客户端自报身份的认证凭证。
@@ -38,6 +39,10 @@ struct FAetherInspectionSnapshot
     // 展示版本不是数据库版本，命令必须使用独立的聚合版本。
     int64 ProfileRevision=-1,WorldRevision=-1;
     FAetherInventoryStateV10 Inventory;
+    int32 Gold=0;
+    bool bCanAct=false;
+    FString TradeTargetStableId;
+    TOptional<FAetherShopDefinitionV10> Shop;
     FAetherSkillStateV10 Skills;
     FAetherSkillRuleContext SkillContext;
     TArray<FAetherExternalSkillGrant> ExternalGrants;
@@ -45,13 +50,14 @@ struct FAetherInspectionSnapshot
     double ServerTimeSeconds=0;
 };
 enum class EAetherInspectionState:uint8 {Ready,Changed,Missing,Invalid};
-enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill};
+enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill,Use,Split,Sell,Buy,Repair};
 struct FAetherInspectionAction
 {
     EAetherInspectAction Kind=EAetherInspectAction::Equip;
     FString Argument,Label,DisabledReason;
     int32 MaxQuantity=1;
     bool bEnabled=false,bNeedsConfirmation=false;
+    int64 UnitPrice=0; // 仅展示；执行价格由服务器当前定义重新解析。
 };
 struct FAetherInspectionStatDifference
 {

@@ -85,6 +85,26 @@ void Item(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FAe
         S.WorldRevision<0?TEXT("当前暂不可丢弃"):AetherInspection::InventoryReason(Drop),I->Quantity,true);
     Action(M,I->bLocked?EAetherInspectAction::Unlock:EAetherInspectAction::Lock,{},I->bLocked?TEXT("解锁"):TEXT("锁定"),true);
     Action(M,I->bFavorite?EAetherInspectAction::Unfavorite:EAetherInspectAction::Favorite,{},I->bFavorite?TEXT("取消收藏"):TEXT("收藏"),true);
+    if(!Def.UseId.IsEmpty())Action(M,EAetherInspectAction::Use,{},TEXT("使用"),S.bCanAct&&!I->bLocked&&!S.Inventory.IsEquipped(I->InstanceId),TEXT("需满足资源、动作和服务器冷却条件"));
+    if(I->Quantity>1)Action(M,EAetherInspectAction::Split,{},TEXT("拆分"),S.Inventory.FirstEmpty()!=INDEX_NONE&&!I->bLocked&&!S.Inventory.IsEquipped(I->InstanceId),
+        TEXT("需要空格且物品未锁定、未装备"),I->Quantity-1,true);
+    if(S.Shop.IsSet()&&!S.TradeTargetStableId.IsEmpty())
+    {
+        const auto& Shop=S.Shop.GetValue();
+        Field(M,TEXT("sellPrice"),TEXT("单件售价"),FString::FromInt(Def.SellPrice));
+        Action(M,EAetherInspectAction::Sell,S.TradeTargetStableId,TEXT("出售"),
+            S.bCanAct&&Sell==EAetherInventoryMutationCode::Applied&&Shop.AcceptedCategories.Contains(Def.Category),AetherInspection::InventoryReason(Sell),I->Quantity,true);
+        M.Actions.Last().UnitPrice=Def.SellPrice;
+        if(Shop.bRepair&&Def.MaxDurability>0)
+        {
+            const int64 Price=int64(Def.MaxDurability-I->Durability)*Shop.RepairGoldPerPoint;
+            Field(M,TEXT("repairPrice"),TEXT("完整修理价格"),LexToString(Price));
+            auto Candidate=S.Inventory;const auto Repair=Candidate.Repair(I->InstanceId,D);
+            Action(M,EAetherInspectAction::Repair,S.TradeTargetStableId,TEXT("修理"),S.bCanAct&&Price>0&&Price<=S.Gold&&Repair.Code==EAetherInventoryMutationCode::Applied,
+                Price>S.Gold?TEXT("金币不足"):AetherInspection::InventoryReason(Repair.Code),1,true);
+            M.Actions.Last().UnitPrice=Price;
+        }
+    }
     Compare(M,S,D);
 }
 void Skill(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FAetherSkillDefinitionsV10& D)
@@ -184,7 +204,17 @@ FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,co
     case EAetherInspectTarget::ItemDefinition:
     {
         FString Reason;if(!Items.Validate(Reason)){Invalid(M,TEXT("物品定义无效。"));break;}
-        if(const auto* D=Items.Items.Find(R.Target.DefinitionId);D&&D->Id.Equals(R.Target.DefinitionId,ESearchCase::CaseSensitive))DefinitionFields(M,*D);
+        if(const auto* D=Items.Items.Find(R.Target.DefinitionId);D&&D->Id.Equals(R.Target.DefinitionId,ESearchCase::CaseSensitive))
+        {
+            DefinitionFields(M,*D);
+            if(S.Shop.IsSet()&&S.Shop->Products.Contains(D->Id)&&!S.TradeTargetStableId.IsEmpty()&&D->BuyPrice>0)
+            {
+                Field(M,TEXT("buyPrice"),TEXT("单件价格"),FString::FromInt(D->BuyPrice));
+                Action(M,EAetherInspectAction::Buy,S.TradeTargetStableId,TEXT("购买"),S.bCanAct&&S.Gold>=D->BuyPrice,
+                    S.Gold<D->BuyPrice?TEXT("金币不足"):TEXT("当前无法操作"),FMath::Max(1,FMath::Min(1000,S.Gold/D->BuyPrice)),true);
+                M.Actions.Last().UnitPrice=D->BuyPrice;
+            }
+        }
         else {M.State=EAetherInspectionState::Missing;M.Message=TEXT("物品定义不存在。");}
         break;
     }

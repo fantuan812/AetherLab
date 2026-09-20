@@ -3,6 +3,7 @@
 #include "World/AetherFrontierProp.h"
 #include "AetherRules.h"
 #include "AetherGuide.h"
+#include "Presentation/AetherMenuSubsystem.h"
 
 bool AAetherFrontierCharacter::CanTradeWith(AAetherFrontierProp* Target) const
 {
@@ -74,6 +75,7 @@ FString AAetherFrontierCharacter::SaleConfirmationText() const
 }
 void AAetherFrontierCharacter::RequestSale()
 {
+    if(UsesNativeSkills()){if(auto* Menu=MenuSubsystem())Menu->InspectItem(SelectedInstance);Feedback=TEXT("在详情中选择出售，并确认数量和总价。");OnPresentationChanged.Broadcast();return;}
     if(ActiveShop().IsNone()){Feedback=TEXT("请先与商人交谈，开启交易。");return;}
     if(!SaleConfirmationText().IsEmpty()){SaleConfirmation={};SubmitInventory("Sell");return;}
     const auto* PS=ProfileState();if(!PS)return;

@@ -16,6 +16,7 @@ class UScrollBox;
 class AAetherPlayerState;
 class UAetherCharacterPreviewWidget;
 class UAetherSkillTreePage;
+class UAetherInventoryPage;
 UCLASS()
 class UAetherFrontierViewModel : public UObject
 {
@@ -55,6 +56,8 @@ private:
  UPROPERTY() TObjectPtr<UScrollBox> BodyScroll;
  UPROPERTY() TObjectPtr<UAetherCharacterPreviewWidget> CharacterPreview;
  UPROPERTY() TObjectPtr<UAetherSkillTreePage> SkillTree;
+ UPROPERTY() TObjectPtr<UAetherInventoryPage> InventoryPage;
+ UPROPERTY() TObjectPtr<UHorizontalBox> LegacyActions;
  UPROPERTY() TObjectPtr<UButton> NextButton;
 public:
  UPROPERTY() TObjectPtr<UAetherFrontierViewModel> Model;

@@ -72,6 +72,11 @@ bool FAetherInspectionSession::Confirm(FGuid Token,int32 Quantity,const FAetherI
         const auto& Target=Draft->Request.Target;
         switch(A->Kind)
         {
+        case E::Use:C.Type=EAetherCommandType::UseItem;C.ItemInstanceId=Target.InstanceId;break;
+        case E::Split:C.Type=EAetherCommandType::SplitStack;C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.DestinationIndex=S.Inventory.FirstEmpty();break;
+        case E::Sell:C.Type=EAetherCommandType::SellItem;C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.TargetStableId=A->Argument;break;
+        case E::Buy:C.Type=EAetherCommandType::BuyItem;C.DefinitionId=Target.DefinitionId;C.Quantity=Quantity;C.TargetStableId=A->Argument;break;
+        case E::Repair:C.Type=EAetherCommandType::RepairItem;C.ItemInstanceId=Target.InstanceId;C.TargetStableId=A->Argument;break;
         case E::Equip:C.Type=EAetherCommandType::EquipItem;C.ItemInstanceId=Target.InstanceId;C.SlotId=A->Argument;break;
         case E::Unequip:C.Type=EAetherCommandType::UnequipItem;C.ItemInstanceId=Target.InstanceId;break;
         case E::Drop:C.Type=EAetherCommandType::DropItem;C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.ExpectedWorldRevision=S.WorldRevision;break;
