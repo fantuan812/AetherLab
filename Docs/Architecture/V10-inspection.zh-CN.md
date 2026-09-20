@@ -20,7 +20,7 @@ AetherCore/Inspection 定义 ItemInstance、ItemDefinition、EquipmentSlot、Ski
 
 ## 三层展示与命令
 
-FAetherInspectionSession 分开管理悬停、持续详情、数量/危险确认。悬停模型去掉动作；Back 先退确认再退详情。确认令牌是一次性命令 ID，回调必须匹配当前令牌和快照，数量限制取重新构建后的模型。
+FAetherInspectionSession 分开管理悬停、持续详情、数量/危险确认。悬停模型去掉动作；Back 先退确认再退详情。确认令牌只用于匹配一次性 UI 回调；真实命令 ID 由 AetherTransactions::NewCommandId 按当前档案版本创建。回调必须匹配当前令牌和快照，数量限制取重新构建后的模型。
 
 装备、卸下、丢弃、锁定、收藏、学习/升级、快捷位生成已有 FAetherPlayerCommand，并经同一协议编码器验证。快捷位使用 Hotbar.1..4。没有新的直接修改库存或调用角色行为的旁路。丢弃必须具有世界版本；出售/维修依赖商人报价，用药依赖资源屏障，未具备快照时没有伪造可执行按钮。
 

@@ -1,4 +1,5 @@
 #include "Inspection/AetherInspectionSession.h"
+#include "Contracts/AetherTransaction.h"
 
 void FAetherInspectionSession::ShowHover(FAetherInspectTarget T,const FAetherInspectionSnapshot& S,const FAetherV10ItemDefinitions& I,const FAetherSkillDefinitionsV10& K)
 {
@@ -65,8 +66,9 @@ bool FAetherInspectionSession::Confirm(FGuid Token,int32 Quantity,const FAetherI
     else
     {
         FAetherPlayerCommand C;C.ProtocolVersion=AetherCommands::LatestProtocolVersion;
-        C.CommandId=Token;C.ExpectedProfileRevision=S.ProfileRevision;
-        // 确认令牌直接作为幂等命令身份。同一弹窗不能产生第二份扣点/扣物命令。
+        C.CommandId=AetherTransactions::NewCommandId(S.ProfileRevision);C.ExpectedProfileRevision=S.ProfileRevision;
+        // UI 令牌与协议命令身份分开：协议的 GUID 高位绑定档案版本，不能使用随机弹窗 GUID。
+        // 确认成功后消费 UI 令牌；在 Pending 中保存本次命令和字节，所有重试复用它。
         const auto& Target=Draft->Request.Target;
         switch(A->Kind)
         {
