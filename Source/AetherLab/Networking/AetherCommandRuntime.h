@@ -33,6 +33,8 @@ public:
     bool BindVerifiedPlayer(AAetherPlayerController* Controller,const FString& CanonicalCharacterId);
     void UnbindPlayer(AAetherPlayerController* Controller);
     void NotifyPawnChanged(AAetherPlayerController* Controller);
+    // 现场机制输入使用通道内单调序号，不进入持久命令重试队列。
+    bool AuthorizeSceneInput(AAetherPlayerController* Controller,const FAetherV10CommandPacket& Packet,uint64 Sequence,FAetherPlayerCommand& Command);
     void Receive(AAetherPlayerController* Controller,const FAetherV10CommandPacket& Packet);
     void RequestSnapshot(AAetherPlayerController* Controller,FGuid Channel);
     void AcknowledgeSnapshot(AAetherPlayerController* Controller,FGuid Channel,FGuid Transfer,uint32 NextOffset);

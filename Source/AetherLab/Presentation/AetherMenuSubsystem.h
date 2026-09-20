@@ -7,7 +7,7 @@ class AAetherFrontierCharacter;
 
 // 数值保持旧快捷键页码兼容；状态属于 LocalPlayer，不再由某一个 Widget 决定。
 UENUM(BlueprintType)
-enum class EAetherMenuPage : uint8 { None, Inventory, Journal, Skills, Map, Party, System };
+enum class EAetherMenuPage : uint8 { None, Inventory, Journal, Skills, Map, Party, System, Dialogue };
 
 USTRUCT(BlueprintType)
 struct FAetherMenuPageMemory

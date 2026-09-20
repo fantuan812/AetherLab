@@ -248,7 +248,7 @@ void AAetherFrontierCharacter::OnEndCrouch(float H,float Scaled)
 {
     Super::OnEndCrouch(H,Scaled);if(IsLocallyControlled())CrouchCameraOffset-=Scaled;
 }
-void AAetherFrontierCharacter::Notify_Implementation(const FString& Message){Feedback=Message;}
+void AAetherFrontierCharacter::Notify_Implementation(const FString& Message){Feedback=Message;OnPresentationChanged.Broadcast();}
 void AAetherFrontierCharacter::ReleaseCarry()
 {
     if(!HasAuthority())return; CarryHandle->ReleaseComponent();
@@ -260,6 +260,7 @@ void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
     TradeSession={};SaleConfirmation={};PendingTradeAuthorization.Invalidate();
     InteractionFocus={};bHasInteractionFocus=false;
     if(auto* Registry=GetWorld()->GetSubsystem<UAetherNearbyRegistry>())Registry->Unregister(this);
+    if(HasAuthority())if(auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>())Mode->ReleaseNativePawn(this);
     ReleaseCarry();Super::EndPlay(Reason);
 }
 void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 Index)

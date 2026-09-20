@@ -14,7 +14,7 @@
           "Kind": "Talk",
           "Verb": "交谈",
           "IconId": "Talk",
-          "Priority": 10,
+          "Priority": 1000,
           "DialogueId": "Greeting",
           "QuestId": "",
           "ObjectiveId": "",
@@ -50,7 +50,7 @@
           "Kind": "Talk",
           "Verb": "交谈",
           "IconId": "Talk",
-          "Priority": 10,
+          "Priority": 1000,
           "DialogueId": "Greeting",
           "QuestId": "",
           "ObjectiveId": "",
@@ -158,7 +158,7 @@
           "Kind": "Talk",
           "Verb": "交谈",
           "IconId": "Talk",
-          "Priority": 10,
+          "Priority": 1000,
           "DialogueId": "Greeting",
           "QuestId": "",
           "ObjectiveId": "",
@@ -268,7 +268,7 @@
           "Kind": "Talk",
           "Verb": "交谈",
           "IconId": "Talk",
-          "Priority": 10,
+          "Priority": 1000,
           "DialogueId": "Greeting",
           "QuestId": "",
           "ObjectiveId": "",
@@ -317,7 +317,7 @@
             "Q_Main_03"
           ],
           "HideAfterEvidence": [],
-          "SafeOnly": false,
+          "SafeOnly": true,
           "HideLocked": false
         },
         {
@@ -448,7 +448,7 @@
           "Kind": "Talk",
           "Verb": "交谈",
           "IconId": "Talk",
-          "Priority": 10,
+          "Priority": 1000,
           "DialogueId": "Greeting",
           "QuestId": "",
           "ObjectiveId": "",
@@ -506,7 +506,7 @@
           "Kind": "Talk",
           "Verb": "交谈",
           "IconId": "Talk",
-          "Priority": 10,
+          "Priority": 1000,
           "DialogueId": "Greeting",
           "QuestId": "",
           "ObjectiveId": "",
@@ -655,6 +655,23 @@
       "Id": "Daily",
       "Actions": [
         {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 1000,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
           "Id": "ClaimDaily",
           "Kind": "ClaimDaily",
           "Verb": "结算今日委托",
@@ -672,13 +689,72 @@
           "HideAfterEvidence": [],
           "SafeOnly": true,
           "HideLocked": false
+        },
+        {
+          "Id": "Begin",
+          "Kind": "BeginDaily",
+          "Verb": "了解并开始今日委托",
+          "IconId": "BeginDaily",
+          "Priority": 110,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         }
       ],
-      "Dialogue": []
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "补给委托",
+          "Text": "带齐补给后回来交付，每日只结算一次。",
+          "Options": [
+            {
+              "Label": "结算今日委托",
+              "ActionId": "ClaimDaily",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "了解并开始今日委托",
+              "ActionId": "Begin",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
     },
     {
       "Id": "DailyPatrol",
       "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 1000,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
         {
           "Id": "ClaimDaily",
           "Kind": "ClaimDaily",
@@ -697,13 +773,72 @@
           "HideAfterEvidence": [],
           "SafeOnly": true,
           "HideLocked": false
+        },
+        {
+          "Id": "Begin",
+          "Kind": "BeginDaily",
+          "Verb": "了解并开始今日委托",
+          "IconId": "BeginDaily",
+          "Priority": 110,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         }
       ],
-      "Dialogue": []
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "巡逻委托",
+          "Text": "巡视三处标记，记录完成后回来领取报酬。",
+          "Options": [
+            {
+              "Label": "结算今日委托",
+              "ActionId": "ClaimDaily",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "了解并开始今日委托",
+              "ActionId": "Begin",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
     },
     {
       "Id": "DailyFire",
       "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 1000,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
         {
           "Id": "ClaimDaily",
           "Kind": "ClaimDaily",
@@ -722,9 +857,51 @@
           "HideAfterEvidence": [],
           "SafeOnly": true,
           "HideLocked": false
+        },
+        {
+          "Id": "Begin",
+          "Kind": "BeginDaily",
+          "Verb": "了解并开始今日委托",
+          "IconId": "BeginDaily",
+          "Priority": 110,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         }
       ],
-      "Dialogue": []
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "灭火委托",
+          "Text": "先开始今日委托，再前往灰木区处理属于你的火点。",
+          "Options": [
+            {
+              "Label": "结算今日委托",
+              "ActionId": "ClaimDaily",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "了解并开始今日委托",
+              "ActionId": "Begin",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
     },
     {
       "Id": "Rescue",
@@ -1063,6 +1240,370 @@
         }
       ],
       "Dialogue": []
+    },
+    {
+      "Id": "Well",
+      "Actions": [
+        {
+          "Id": "Draw",
+          "Kind": "DrawWater",
+          "Verb": "取水",
+          "IconId": "DrawWater",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Bucket",
+      "Actions": [
+        {
+          "Id": "Pour",
+          "Kind": "PourWater",
+          "Verb": "倒水",
+          "IconId": "PourWater",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "HingedGate",
+      "Actions": [
+        {
+          "Id": "Open",
+          "Kind": "OpenGate",
+          "Verb": "开门",
+          "IconId": "OpenGate",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Close",
+          "Kind": "CloseGate",
+          "Verb": "关门",
+          "IconId": "CloseGate",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Abbey",
+      "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 1000,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Start",
+          "Kind": "StartEncounter",
+          "Verb": "进入修道院遭遇",
+          "IconId": "StartEncounter",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_06"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "修道院哨兵",
+          "Text": "挑战需要至少两名附近的队员或同伴；准备妥当后再出发。",
+          "Options": [
+            {
+              "Label": "进入修道院遭遇",
+              "ActionId": "Start",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "AbbeyValve",
+      "Actions": [
+        {
+          "Id": "Channel",
+          "Kind": "ChannelEncounter",
+          "Verb": "引导阀门",
+          "IconId": "ChannelEncounter",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_06"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Activity",
+      "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 1000,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Start",
+          "Kind": "StartEncounter",
+          "Verb": "开始中继防守",
+          "IconId": "StartEncounter",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Channel",
+          "Kind": "ChannelEncounter",
+          "Verb": "引导中继",
+          "IconId": "ChannelEncounter",
+          "Priority": 110,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "中继守卫",
+          "Text": "清理三波敌人，随后在中继旁保持引导。",
+          "Options": [
+            {
+              "Label": "开始中继防守",
+              "ActionId": "Start",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "引导中继",
+              "ActionId": "Channel",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Loot",
+      "Actions": [
+        {
+          "Id": "Collect",
+          "Kind": "CollectLegacyLoot",
+          "Verb": "拾取战利品",
+          "IconId": "CollectLegacyLoot",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Recruit",
+      "Actions": [
+        {
+          "Id": "Talk",
+          "Kind": "Talk",
+          "Verb": "交谈",
+          "IconId": "Talk",
+          "Priority": 1000,
+          "DialogueId": "Greeting",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        },
+        {
+          "Id": "Guard",
+          "Kind": "RecruitGuard",
+          "Verb": "招募砾石",
+          "IconId": "RecruitGuard",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_04",
+            "Q_Main_05"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        },
+        {
+          "Id": "Healer",
+          "Kind": "RecruitHealer",
+          "Verb": "招募沐禾",
+          "IconId": "RecruitHealer",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_04",
+            "Q_Main_05"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": [
+        {
+          "Id": "Greeting",
+          "Speaker": "旅舍领队",
+          "Text": "砾石擅长近战，沐禾能够治疗。队伍最多容纳四名真人和同伴。",
+          "Options": [
+            {
+              "Label": "招募砾石",
+              "ActionId": "Guard",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "招募沐禾",
+              "ActionId": "Healer",
+              "NextNodeId": ""
+            },
+            {
+              "Label": "稍后再聊",
+              "ActionId": "",
+              "NextNodeId": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -12,6 +12,7 @@ class UPhysicsHandleComponent;
 class UInputMappingContext;
 class UInputAction;
 class UAetherFrontierPanel;
+class UAetherDialoguePage;
 struct FAetherWorldPlacement;
 
 // 本地 HUD 入口；与权威角色/存档头文件分离，后续由独立 UI 模块拥有。
@@ -23,6 +24,7 @@ public:
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     UPROPERTY() TObjectPtr<UAetherFrontierPanel> PanelWidget;
+    UPROPERTY() TObjectPtr<UAetherDialoguePage> DialogueWidget;
     virtual void DrawHUD() override;
     FAetherGuidance Guidance;
     FAetherInteractionTarget Interaction;

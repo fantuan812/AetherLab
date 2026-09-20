@@ -153,7 +153,10 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                     if(J.Event.Kind==EAetherServerFactKind::EncounterReward||J.Event.Kind==EAetherServerFactKind::LegacyLoot)
                         Allowed=AetherServerRewards::Apply(J.Event,Next,World,D,Why);
                     else if(J.Event.Kind==EAetherServerFactKind::Personal)
+                    {
                         Allowed=Next.Evidence.Contains(J.Event.FactId)||AetherQuestProgression::Observe(Next,J.Event.FactId,D.Rules);
+                        if(Allowed&&J.Event.FactId==TEXT("Companion"))Next.bCompanion=true;
+                    }
                     else if(J.Event.Kind==EAetherServerFactKind::World)
                     {
                         if(!World.WorldFactSources.Contains(J.Event.FactId))World.WorldFactSources.Add(J.Event.FactId,J.Event.SourceId);

@@ -177,7 +177,7 @@ void UAetherFrontierPanel::RefreshSnapshot()
  if(NextButton)NextButton->SetVisibility(SkillOpen?ESlateVisibility::Collapsed:ESlateVisibility::Visible);
  if(!C){SetVisibility(ESlateVisibility::Collapsed);return;}
  // 关闭后真正折叠。后续由菜单/复制事件唤醒，不保留透明的逐帧轮询控件。
- const bool Open=C->bPanel&&C->Panel!=4;SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+ const bool Open=C->bPanel&&C->Panel!=4&&C->Panel!=int32(EAetherMenuPage::Dialogue);SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(!Open)return;
  InventoryRow->SetVisibility(Open&&C->Panel==1?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(Open&&C->Panel==1&&FMath::RoundToInt(Quantity->GetValue())!=C->InventoryQuantity)Quantity->SetValue(C->InventoryQuantity);

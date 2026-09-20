@@ -52,6 +52,8 @@ public:
     bool bWorldRestoreFailed=false;
     bool IsNativeMode() const{return bNativeMode;}
     bool NativeSceneReady() const{return bNativeSceneReady&&bNativeBaselineReady;}
+    void ReleaseNativePawn(AAetherFrontierCharacter* Pawn);
+    FString ExecuteNativeSceneService(AAetherPlayerController& Controller,const FAetherPlayerCommand& Command);
     bool OpenNativeContainer(AAetherPlayerController* Controller,const FString& Id);
     const FAetherWorldStateV10* NativeWorldView() const{return NativeWorld.IsSet()?&NativeWorld.GetValue():nullptr;}
     bool bFailWrites = false;

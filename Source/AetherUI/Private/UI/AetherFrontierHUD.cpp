@@ -1,6 +1,7 @@
 #include "UI/AetherFrontierHUD.h"
 #include "AetherFrontier.h"
 #include "AetherFrontierPanel.h"
+#include "Dialogue/AetherDialoguePage.h"
 #include "Tests/AetherMenuInteractionProbe.h"
 #include "Engine/Canvas.h"
 #include "EngineUtils.h"
@@ -11,7 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 
 void AAetherFrontierHUD::BeginPlay()
-{Super::BeginPlay();if(PlayerOwner&&PlayerOwner->IsLocalController()){PanelWidget=CreateWidget<UAetherFrontierPanel>(PlayerOwner,UAetherFrontierPanel::StaticClass());if(PanelWidget)PanelWidget->AddToViewport();}}
+{Super::BeginPlay();if(PlayerOwner&&PlayerOwner->IsLocalController()){PanelWidget=CreateWidget<UAetherFrontierPanel>(PlayerOwner,UAetherFrontierPanel::StaticClass());if(PanelWidget)PanelWidget->AddToViewport();DialogueWidget=CreateWidget<UAetherDialoguePage>(PlayerOwner);if(DialogueWidget)DialogueWidget->AddToViewport(20);}}
 void AAetherFrontierHUD::DrawHUD()
 {
     Super::DrawHUD();AetherMenuInteraction::Tick(this,PanelWidget);auto* C=Cast<AAetherFrontierCharacter>(GetOwningPawn());auto* PS=C?C->ProfileState():nullptr;if(!Canvas||!C||!PS)return;
@@ -97,5 +98,6 @@ void AAetherFrontierHUD::EndPlay(const EEndPlayReason::Type Reason)
     // 本地连接切图或断线时，主动释放视口 Widget，避免留下旧角色引用。
     if (PanelWidget) PanelWidget->RemoveFromParent();
     PanelWidget = nullptr;
+    if(DialogueWidget)DialogueWidget->RemoveFromParent();DialogueWidget=nullptr;
     Super::EndPlay(Reason);
 }

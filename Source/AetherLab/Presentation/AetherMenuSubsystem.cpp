@@ -4,7 +4,7 @@
 #include "GameFramework/PlayerController.h"
 
 bool UAetherMenuSubsystem::ValidPage(EAetherMenuPage Page)
-{return Page>=EAetherMenuPage::Inventory&&Page<=EAetherMenuPage::System;}
+{return Page>=EAetherMenuPage::Inventory&&Page<=EAetherMenuPage::Dialogue;}
 void UAetherMenuSubsystem::TogglePage(EAetherMenuPage Page)
 {if(ValidPage(Page))SetPage(CurrentPage==Page?EAetherMenuPage::None:Page);}
 void UAetherMenuSubsystem::OpenPage(EAetherMenuPage Page)

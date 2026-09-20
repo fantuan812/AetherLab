@@ -58,6 +58,7 @@ TArray<FAetherInteractionOffer> FAetherInteractionProvider::Query(const FAetherI
         // 隐藏条件完全省略动作，不能把秘密任务 ID 或原因参数泄露给客户端。
         if(A.bHideLocked&&(!Quest.IsEmpty()||!Fact.IsEmpty()))continue;
         if(A.Kind==EAetherInteractionActionKind::TrackObjective&&!Guide.bHasTarget)continue;
+        if((A.Kind==EAetherInteractionActionKind::OpenGate&&Snapshot.bGateOpen)||(A.Kind==EAetherInteractionActionKind::CloseGate&&!Snapshot.bGateOpen))continue;
         if(A.Kind==EAetherInteractionActionKind::SetPower&&A.bDesiredState==Snapshot.bPowerEnabled)continue;
         if(A.Kind==EAetherInteractionActionKind::RestoreWaterService&&Snapshot.bServiceComplete)continue;
         if(A.Kind==EAetherInteractionActionKind::LearnStorySkills&&!Snapshot.bHasStoryGrantAvailable)continue;
@@ -70,7 +71,7 @@ TArray<FAetherInteractionOffer> FAetherInteractionProvider::Query(const FAetherI
         if(!Snapshot.bActorCanAct)Disable(TEXT("ActorNotReady"));
         else if(!Snapshot.bInRange||!Snapshot.bLineOfSight)Disable(TEXT("OutOfReach"));
         else if(Snapshot.bDowned)Disable(TEXT("TargetDowned"));
-        else if(Snapshot.bThreatened)Disable(TEXT("TargetThreatened"));
+        else if(A.bSafeOnly&&Snapshot.bThreatened)Disable(TEXT("TargetThreatened"));
         else if(Snapshot.bBusy)Disable(TEXT("TargetBusy"));
         else if(!Quest.IsEmpty()){Disable(TEXT("QuestRequired"));O.ReasonParameters.Add(TEXT("QuestId"),Quest);}
         else if(!Fact.IsEmpty()){Disable(TEXT("ObjectiveRequired"));O.ReasonParameters.Add(TEXT("ObjectiveId"),Fact);}

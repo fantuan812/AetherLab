@@ -19,6 +19,7 @@ struct FAetherCommandRuntimeImpl
         TWeakObjectPtr<APawn> Pawn;
         FAetherProfileSession Session;
         FGuid Channel;
+        uint64 SceneSequence=0;
         FAetherV10RequestBudget Requests,Syncs;
         TFuture<FAetherStoreReadResult> Read;
         TArray<uint8> Outgoing;
@@ -226,13 +227,24 @@ void UAetherCommandRuntime::NotifyPawnChanged(AAetherPlayerController* C)
     if(B.Pawn.Get()==C->GetPawn()&&B.PlayerState.Get()==C->GetPlayerState<AAetherPlayerState>())return;
     if(B.PlayerState.Get()!=C->GetPlayerState<AAetherPlayerState>()){UnbindPlayer(C);return;}
     B.Session=Impl->Coordinator->ReplacePawn(B.Session);
-    B.Pawn=C->GetPawn();B.Channel=FGuid::NewGuid();B.bReady=false;B.Outgoing.Reset();B.Read={};B.Revision=-1;B.InFlightTransfer.Invalidate();
+    B.Pawn=C->GetPawn();B.Channel=FGuid::NewGuid();B.SceneSequence=0;B.bReady=false;B.Outgoing.Reset();B.Read={};B.Revision=-1;B.InFlightTransfer.Invalidate();
     B.bNeedsRecovery=true;B.bNeedFullRecovery=true;B.bDeliveryRequested=false;B.Delivery.Reset();
     B.ResourceCommand.Reset();B.Proof={};B.ProofRead={};B.NextDelivery=0;
     if(!B.Session.SessionId.IsValid()){UnbindPlayer(C);return;}
     C->ClientV10Channel(B.Channel,B.Session.CharacterId);
     if(B.Pawn.IsValid()){if(auto* Resources=Impl->Gate(B))Resources->BlockForInitialLoad();B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});}
     // 不重置连接令牌桶，频繁重生不能绕过限流。
+}
+bool UAetherCommandRuntime::AuthorizeSceneInput(AAetherPlayerController* C,const FAetherV10CommandPacket& Packet,uint64 Sequence,FAetherPlayerCommand& Command)
+{
+    if(!IsInstalled()||Impl->bPolling||!C)return false;
+    auto* Found=Impl->Bindings.Find(C);if(!Found)return false;auto& B=**Found;
+    if(!B.bReady||Packet.Channel!=B.Channel||!Impl->Current(B)||Sequence<=B.SceneSequence||
+        !B.Requests.Consume(FPlatformTime::Seconds(),Packet.Bytes.Num()))return false;
+    FString Why;if(!AetherCommands::Decode(Packet.Bytes,Command,Why)||Command.Type!=EAetherCommandType::ExecuteInteraction||
+        Command.ProtocolVersion!=AetherCommands::LatestProtocolVersion)return false;
+    // 消耗序号后即使条件失败也不自动重做；下一次操作必须来自新的明确输入。
+    B.SceneSequence=Sequence;return true;
 }
 void UAetherCommandRuntime::Receive(AAetherPlayerController* C,const FAetherV10CommandPacket& Packet)
 {

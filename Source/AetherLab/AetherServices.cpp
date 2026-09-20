@@ -90,7 +90,7 @@ void AAetherFrontierCharacter::RefreshInteractionFocus()
         if(auto Provider=AetherNativeInteraction::Provider(*this,*Target);Provider.IsSet())
         {
             const auto Offers=Provider->Query({ProfileState()->Profile.CharacterId,Target->Spec.Id.ToString()});
-            for(const auto& Offer:Offers)if(Offer.bPreferred&&Offer.Availability==EAetherOfferAvailability::Available)
+            for(const auto& Offer:Offers)if(Offer.bPreferred&&(Offer.Availability==EAetherOfferAvailability::Available||Offer.Availability==EAetherOfferAvailability::TalkOnly))
             {
                 NativeInteractionFocus=FAetherInteractionSelection{Offer.TargetStableId,Offer.ActionId,Offer.ProfileRevision,Offer.WorldRevision,Offer.TargetRevision};
                 InteractionFocus.Prompt=TEXT("[")+BindingFor("Interact").GetDisplayName().ToString()+TEXT("] ")+Offer.DisplayVerb;
@@ -111,9 +111,10 @@ void AAetherFrontierCharacter::InteractV4()
         if(!Shown||Shown->Spec.Id.ToString()!=NativeInteractionFocus->TargetStableId||Shown->InteractionRevision!=NativeInteractionFocus->InteractionRevision)
         {NativeInteractionFocus.Reset();RefreshInteractionFocus();return;}
         FString Why;
-        Feedback=AetherNativeInteraction::Submit(*this,NativeInteractionFocus.GetValue(),Why)?TEXT("请求已提交，正在等待持久确认。"):Why;
+        AetherNativeInteraction::Submit(*this,NativeInteractionFocus.GetValue(),Why);Feedback=Why;
         OnPresentationChanged.Broadcast();return;
     }
+    if(UsesNativeSkills()&&Selection.Prop.IsValid()){Feedback=TEXT("没有可执行的当前动作，请查看目标提示。");RefreshInteractionFocus();OnPresentationChanged.Broadcast();return;}
     if(!AetherGuide::ValidateSelection(this,Selection)){RefreshInteractionFocus();return;}
     auto* Target=Selection.Prop.Get();
     if(!Target||!AetherServices::IsService(Selection.ActionId))

@@ -51,6 +51,7 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
         I.TargetStableId=Target->Spec.Id.ToString();I.DefinitionId=Target->Service.ToString();I.InteractionRevision=Target->InteractionRevision;
         I.bLoaded=Target->bEnabled&&!Target->IsActorBeingDestroyed();
         X.bWorkshopService=Target->bWorkshopService;X.bGlobalPowerService=Target->bGlobalPowerService;X.ReceivedPower=Target->ReceivedPower;
+        I.bGateOpen=Target->Mechanism&&Target->Mechanism->bGateOpen;
         I.bPowerEnabled=Target->Mechanism&&Target->Mechanism->bPowerEnabled;
         I.bServiceComplete=NativeWorld.IsSet()&&(Target->bWorkshopService?NativeWorld->bWorkshopRestored:NativeWorld->bSupplyRestored);
         if(Target->Service=="Source"&&Command.Type==EAetherCommandType::ExecuteInteraction)
