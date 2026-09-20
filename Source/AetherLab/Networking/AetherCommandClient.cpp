@@ -14,7 +14,7 @@ bool UAetherCommandClient::Matches(AAetherPlayerController* C,FGuid Id) const
 
 void UAetherCommandClient::ReceiveChannel(AAetherPlayerController* C,FGuid Id,const FString& Identity)
 {
-    if(!C||C->IsActorBeingDestroyed()||!C->IsLocalController()||C->GetLocalPlayer()!=GetLocalPlayer()||GetLocalPlayer()->GetPlayerController()!=C)return;
+    if(!C||C->IsActorBeingDestroyed()||!C->IsLocalController()||C->GetLocalPlayer()!=GetLocalPlayer()||GetLocalPlayer()->GetPlayerController(C->GetWorld())!=C)return;
     // 延迟到达的旧 Controller 不能清除后来建立的拥有者通道。
     if(!Id.IsValid()){DetachController(C);return;}
     if(Identity.IsEmpty()||Identity.Len()>32)return;
