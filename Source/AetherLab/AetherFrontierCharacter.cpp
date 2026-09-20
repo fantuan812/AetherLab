@@ -5,6 +5,7 @@
 #include "AetherFrontier.h"
 #include "Inventory/AetherResourceGate.h"
 #include "AetherContent.h"
+#include "Definitions/AetherV10Definitions.h"
 #include "AetherRules.h"
 #include "AetherInventoryRules.h"
 #include "AetherActions.h"
@@ -52,13 +53,25 @@ void AAetherFrontierCharacter::BeginPlay()
     GetWorld()->GetSubsystem<UAetherNearbyRegistry>()->Register(this);
     Equipment->bProfileManaged=ProfileState()!=nullptr;
     if(HasAuthority())AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),100);
-    Equipment->OwnsItem.BindLambda([this](FName Id){auto* PS=ProfileState();return !PS || AetherInventory::OwnsEquipment(PS->Profile,Id,FAetherRules::Get());});
+    Equipment->OwnsItem.BindLambda([this](FName Id)
+    {
+        auto* PS=ProfileState();if(!PS)return true;
+        if(const auto* P=PS->GetNativeProfile())
+        {
+            const auto& Definitions=FAetherV10Definitions::Get().Items;
+            for(const auto& Item:P->Inventory.Items)if(const auto* D=Definitions.Items.Find(Item.DefinitionId))
+                if(FName(*(D->EquipmentId.IsEmpty()?D->Id:D->EquipmentId))==Id)return true;
+            return false;
+        }
+        return AetherInventory::OwnsEquipment(PS->Profile,Id,FAetherRules::Get());
+    });
     Equipment->CanAct.BindLambda([this](){return Ready()&&!Carried&&!ReviveTarget&&!bPanel;});
     if (HasAuthority() && ProfileState()) ApplyProfileEquipment();
 }
 void AAetherFrontierCharacter::PossessedBy(AController* C)
 {
     Super::PossessedBy(C); BindPersistentAbilities();
+    if(HasAuthority()&&ProfileState()&&ProfileState()->bNativeSkillsEnabled)ResourceGate->BlockForInitialLoad();
     if(HasAuthority() && ProfileState())
     { Equipment->bProfileManaged=true;GrantSpells();if(HasActorBegunPlay())ApplyProfileEquipment(); }
     // 本地权威服不会收到 OnRep_PlayerState；PossessedBy 完成后同样发布上下文就绪事件。

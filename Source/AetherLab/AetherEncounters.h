@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "World/AetherWorldState.h"
 #include "AetherEncounters.generated.h"
 class AAetherFrontierCharacter;
 UENUM()
@@ -52,6 +53,8 @@ public:
     UPROPERTY() TArray<FAetherCamp> Camps;
     float CampTimer=0;
     void UpdateCamps();
+    // 恢复当前波次为全血敌人；不恢复已断开的引导者，成功回执保持原实例。
+    bool RestoreNative(const FAetherEncounterStateV10& AbbeyState,const FAetherEncounterStateV10& RelayState,FString& Reason);
     virtual void Tick(float Dt) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:

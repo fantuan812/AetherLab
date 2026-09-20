@@ -35,6 +35,8 @@
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Crc.h"
+#include "Misc/SecureHash.h"
+#include "Inventory/AetherResourceGate.h"
 #include "HAL/FileManager.h"
 
 AAetherFrontierProp::AAetherFrontierProp()
@@ -48,6 +50,7 @@ AAetherFrontierProp::AAetherFrontierProp()
 void AAetherFrontierProp::BeginPlay()
 {
     Super::BeginPlay();
+    if(HasAuthority()){const auto G=FGuid::NewGuid();InteractionRevision=int64(((uint64(G.A)<<32)|G.B)&uint64(MAX_int64));if(InteractionRevision==0)InteractionRevision=1;}
     GetWorld()->GetSubsystem<UAetherNearbyRegistry>()->Register(this);
     Reactive->OnReaction.AddDynamic(this,&AAetherFrontierProp::OnMaterialReaction);
     Reactive->OnElectricalWindow.AddDynamic(this,&AAetherFrontierProp::OnElectricalWindow);
@@ -78,7 +81,7 @@ void AAetherFrontierProp::Tick(float Dt)
 }
 void AAetherFrontierProp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierProp,bGlobalPowerService);DOREPLIFETIME(AAetherFrontierProp,bWorkshopService);DOREPLIFETIME(AAetherFrontierProp,bExtinguished);DOREPLIFETIME(AAetherFrontierProp,Service);DOREPLIFETIME(AAetherFrontierProp,Capabilities);DOREPLIFETIME(AAetherFrontierProp,bCarryable);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierProp,InteractionRevision);DOREPLIFETIME(AAetherFrontierProp,bGlobalPowerService);DOREPLIFETIME(AAetherFrontierProp,bWorkshopService);DOREPLIFETIME(AAetherFrontierProp,bExtinguished);DOREPLIFETIME(AAetherFrontierProp,Service);DOREPLIFETIME(AAetherFrontierProp,Capabilities);DOREPLIFETIME(AAetherFrontierProp,bCarryable);
     DOREPLIFETIME(AAetherFrontierProp,Carrier);DOREPLIFETIME(AAetherFrontierProp,ReceivedPower);DOREPLIFETIME(AAetherFrontierProp,bAcceptsWater);DOREPLIFETIME(AAetherFrontierProp,bInspectableFire);
 }
 void AAetherFrontierProp::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
@@ -117,7 +120,7 @@ void AAetherFrontierProp::OnMaterialReaction(EReactiveReaction K,double Magnitud
 }
 void AAetherFrontierState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierState,bSupplyRestored);DOREPLIFETIME(AAetherFrontierState,bWorkshopRestored);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierState,NativeWorldRevision);DOREPLIFETIME(AAetherFrontierState,bSupplyRestored);DOREPLIFETIME(AAetherFrontierState,bWorkshopRestored);
     DOREPLIFETIME(AAetherFrontierState,bBridgeReleased);DOREPLIFETIME(AAetherFrontierState,bPowerOn);DOREPLIFETIME(AAetherFrontierState,ActivityKills);DOREPLIFETIME(AAetherFrontierState,ClosurePhase);
 }
 AAetherFrontierMode::AAetherFrontierMode()
@@ -133,6 +136,16 @@ void AAetherFrontierMode::InitGame(const FString& Map,const FString& Options,FSt
     FString Override; if(FParse::Value(FCommandLine::Get(),TEXT("AetherSavePrefix="),Override) && Override.Len()<64 && !Override.Contains("/")&&!Override.Contains("\\"))SavePrefix=Override;
     if(!FAetherWorldDefinitions::Get().bValid){Error=FAetherWorldDefinitions::Get().Error;return;}
     if(!FAetherRules::Get().bValid){Error=FAetherRules::Get().Error;return;}
+    // 正常存档由 v10 单一 writer 管理；冻结 v9 路径只供显式历史回归模式使用。
+#if !UE_BUILD_SHIPPING
+    bNativeMode=!bSmoke&&!FParse::Param(FCommandLine::Get(),TEXT("AetherLegacyRuntime"));
+#endif
+    if(bNativeMode)
+    {
+        Database=NewObject<UAetherFrontierSave>(this);
+        if(!GetGameInstance()->GetSubsystem<UAetherNativePersistence>()->Prepare(SavePrefix,true,Error))return;
+        return;
+    }
     // Definition assets load asynchronously; validate catalog before admitting a pawn.
     if(!Storage)Storage=AetherLocalSnapshotStore();
     Database=NewObject<UAetherFrontierSave>(this);
@@ -161,6 +174,29 @@ FString AAetherFrontierMode::InitNewPlayer(APlayerController* PC,const FUniqueNe
     if(GetNumPlayers()>4)return TEXT("Prototype has four player slots.");
     Companions.RemoveAll([](const auto& B){return !IsValid(B);});
     if(Companions.Num()+GetNumPlayers()>4)return TEXT("Four occupied human/AI seats; dismiss a companion safely at town before joining.");
+    if(bNativeMode)
+    {
+        auto* NativePC=Cast<AAetherPlayerController>(PC);auto* PS=PC?PC->GetPlayerState<AAetherPlayerState>():nullptr;
+        if(!NativePC||!PS||bWorldRestoreFailed)return TEXT("Native profile service unavailable.");
+        FString Key;
+        if(GetNetMode()==NM_Standalone||(PC->IsLocalController()&&GetNetMode()==NM_ListenServer))Key=TEXT("LocalPlayer");
+        else if(Id.IsValid())Key=FMD5::HashAnsiString(*((Id.IsV1()?Id.GetType().ToString():TEXT("OnlineServicesV2"))+TEXT(":")+Id.ToString()));
+#if !UE_BUILD_SHIPPING
+        // LAN 回归只能由服务器显式开启开发身份；普通远端不能仅凭 URL 任意选择他人存档。
+        if(FParse::Param(FCommandLine::Get(),TEXT("AetherDevelopmentIdentities")))
+        {
+            const FString Dev=UGameplayStatics::ParseOption(Options,TEXT("DevProfile"));
+            if(!Dev.IsEmpty())Key=Dev;
+        }
+#endif
+        if(Key.IsEmpty()||Key.Len()>32)return TEXT("An authenticated online identity is required. LAN development servers must explicitly enable development identities.");
+        for(TCHAR Ch:Key)if(!((Ch>='A'&&Ch<='Z')||(Ch>='a'&&Ch<='z')||(Ch>='0'&&Ch<='9')||Ch=='_'))return TEXT("Invalid character identity.");
+        for(TActorIterator<AAetherPlayerState> It(GetWorld());It;++It)
+            if(*It!=PS&&It->Profile.CharacterId.Equals(Key,ESearchCase::IgnoreCase))return TEXT("Profile already connected.");
+        PS->Profile.CharacterId=Key;PS->bNativeSkillsEnabled=true;PS->DisplayName=Key;PS->PartyLeader=Key;
+        // 不在网络 Login 回调阻塞磁盘，RestartPlayer 等待异步原生读档完成。
+        return FString();
+    }
     FString Key=UGameplayStatics::ParseOption(Options,TEXT("DevProfile"));
     if(Key.IsEmpty())Key=GetNetMode()==NM_Standalone?TEXT("LocalPlayer"):FGuid::NewGuid().ToString(EGuidFormats::Digits);
     if(Key.Len()>32)return TEXT("Invalid development profile.");
@@ -224,6 +260,8 @@ bool AAetherFrontierMode::CaptureWorldCandidate(UAetherFrontierSave* Candidate) 
 }
 bool AAetherFrontierMode::SaveWorld()
 {
+    // 异步原生保存不能假装同步成功；原生流送使用专门的确认屏障。
+    if(bNativeMode)return false;
     auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);
     return CaptureWorldCandidate(Candidate)&&WriteDatabase(Candidate);
 }
@@ -259,6 +297,12 @@ void AAetherFrontierMode::Observe(AAetherCharacter* C,FName Fact,FName Source)
 }
 void AAetherFrontierMode::RestartPlayer(AController* C)
 {
+    if(bNativeMode)
+    {
+        auto* PC=Cast<AAetherPlayerController>(C);
+        if(!PC||bWorldRestoreFailed)return;
+        if(!bNativeSceneReady||!NativePlayersReady.Contains(PC)){BeginNativeLogin(PC);return;}
+    }
     auto* Assets=GetWorld()->GetSubsystem<UAetherAssetPreload>();
     if(!C||!Assets)return;
     if(!Assets->Ready()){FTimerHandle Timer;TWeakObjectPtr<AController> Pending=C;GetWorldTimerManager().SetTimer(Timer,FTimerDelegate::CreateWeakLambda(this,[this,Pending](){if(Pending.IsValid())RestartPlayer(Pending.Get());}),.1f,false);return;}
@@ -268,7 +312,17 @@ void AAetherFrontierMode::RestartPlayer(AController* C)
     const bool Closure=FParse::Param(FCommandLine::Get(),TEXT("AetherV807Server"));
     const bool Capture=FParse::Param(FCommandLine::Get(),TEXT("AetherV4Capture"));
     RestartPlayerAtTransform(C,FTransform(FRotator(0,90,0),Closure?FVector(4900,5100,110):Capture?FVector(1100,-1700,120):P));if(C)C->SetControlRotation(FRotator(-8,Capture?120:90,0));
-    if(auto* Pawn=C?Cast<AAetherFrontierCharacter>(C->GetPawn()):nullptr)Pawn->BeginSafeTravel(Pawn->GetActorLocation());
+    if(auto* Pawn=C?Cast<AAetherFrontierCharacter>(C->GetPawn()):nullptr)
+    {
+        if(bNativeMode)
+        {
+            Pawn->ResourceGate->BlockForInitialLoad();
+            auto* PC=Cast<AAetherPlayerController>(C);
+            if(!PC||!GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->BindVerifiedPlayer(PC,PS->Profile.CharacterId))
+            {Pawn->ResourceGate->Fault(TEXT("Cannot bind verified native player"));return;}
+        }
+        Pawn->BeginSafeTravel(Pawn->GetActorLocation());
+    }
 }
 AAetherFrontierProp* AAetherFrontierMode::Make(FName Id,FName Service,FVector P,FVector Scale,EAetherObjectKind Kind,const FString& Label)
 {
@@ -307,6 +361,7 @@ AAetherFrontierCharacter* AAetherFrontierMode::SpawnFighter(FVector P,EAetherFig
 void AAetherFrontierMode::BeginPlay()
 {
     Super::BeginPlay();BuildWorld();BuildWorkshop();
+    if(bNativeMode){Encounters=GetWorld()->SpawnActor<AAetherEncounterDirector>();if(Encounters)Encounters->SetActorTickEnabled(false);TickNativeStartup();return;}
     for(const auto& Loot:Database->Loot)if(Loot.ClaimedBy.IsEmpty())SpawnLoot(Loot);
     Encounters=GetWorld()->SpawnActor<AAetherEncounterDirector>();
     if(Database->Abbey.Phase==EAetherEncounterPhase::Succeeded)Encounters->Abbey=Database->Abbey;
@@ -321,6 +376,7 @@ void AAetherFrontierMode::BeginPlay()
 }
 void AAetherFrontierMode::Logout(AController* C)
 {
+    if(auto* PC=Cast<AAetherPlayerController>(C)){NativeLogins.Remove(PC);NativePlayersReady.Remove(PC);NativeLoginRejected.Remove(PC);NativeContainerSessions.Remove(PC);GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->UnbindPlayer(PC);}
     auto* Pawn=C?Cast<AAetherFrontierCharacter>(C->GetPawn()):nullptr;
     if(Pawn)Pawn->ReleaseCarry();
     if(C)LeaveParty(C->GetPlayerState<AAetherPlayerState>());
@@ -336,8 +392,13 @@ void AAetherFrontierMode::CreditHit(AAetherCharacter* Target,AAetherCharacter* S
 }
 void AAetherFrontierMode::Tick(float Dt)
 {
-    Super::Tick(Dt);if(bWorldRestoreFailed)return;Elapsed+=Dt;SaveTimer+=Dt;PowerTimer+=Dt;WeatherTimer+=Dt;AreaTimer+=Dt;
+    Super::Tick(Dt);if(bNativeMode){TickNativeStartup();if(!bNativeSceneReady)return;}if(bWorldRestoreFailed)return;Elapsed+=Dt;SaveTimer+=Dt;PowerTimer+=Dt;WeatherTimer+=Dt;AreaTimer+=Dt;
     auto* S=GetGameState<AAetherFrontierState>();
+    if(bNativeRegionBarrier)
+    {
+        TArray<FVector> Positions;for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->ProfileState())Positions.Add(It->GetActorLocation());
+        UpdateRegions(Positions);
+    }
     if(WeatherTimer>=1)
     {
         auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();const auto& E=W->GetSimulation()->GetEnvironment();
@@ -347,7 +408,7 @@ void AAetherFrontierMode::Tick(float Dt)
     if(AreaTimer>=2)
     {
         for(auto It=KillCredit.CreateIterator();It;++It)if(!It.Key().IsValid())It.RemoveCurrent();
-        RefreshWorldProgress();
+        if(!bNativeMode)RefreshWorldProgress();
         AreaTimer=0;TArray<FVector> Players;for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->ProfileState())Players.Add(It->GetActorLocation());
         if(!FParse::Param(FCommandLine::Get(),TEXT("AetherV9Check"))&&!FParse::Param(FCommandLine::Get(),TEXT("AetherKeepRegionsLoaded")))UpdateRegions(Players);
         for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Fighter!=EAetherFighter::Player)
@@ -359,7 +420,7 @@ void AAetherFrontierMode::Tick(float Dt)
     if(!S->bBridgeReleased&&Prop("WorksRope")&&Prop("WorksBridge")&&Prop("WorksRope")->Reactive->State.bBroken)
     {S->bBridgeReleased=true;Prop("WorksBridge")->Mesh->SetSimulatePhysics(true);Prop("WorksBridge")->ForceNetUpdate();}
     if(auto* Source=Prop("PowerSource"))Source->Mechanism->bPowerEnabled=S->bPowerOn;
-    if(SaveTimer>10){if(SaveWorld())SaveTimer=0;}
+    if(!bNativeMode&&SaveTimer>10){if(SaveWorld())SaveTimer=0;}
     for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)
     {
         if(It->Fighter!=EAetherFighter::Player&&!It->Alive())

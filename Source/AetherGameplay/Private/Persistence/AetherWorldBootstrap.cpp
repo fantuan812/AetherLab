@@ -133,7 +133,7 @@ void FAetherWorldBootstrap::Poll()
         {B.Fail(Reason.IsEmpty()?TEXT("Container revision/identity/instance ownership invalid"):Reason);return;}
         if(C.Kind==EAetherContainerKind::PersonalStorage&&!B.Profiles.ContainsByPredicate([&](const auto& P){return P.Equals(C.OwnerCharacterId,ESearchCase::CaseSensitive);}))
         {B.Fail(TEXT("Personal storage refers to a missing owner"));return;}
-        B.Containers.Add({C.ContainerId,C.OwnerCharacterId,C.RegionId,C.Kind,C.Location,C.bActive});
+        B.Containers.Add({C.ContainerId,C.OwnerCharacterId,C.RegionId,C.Kind,C.Location,C.bActive,C.Revision});
     }
     ++B.Cursor;B.NextRow();
 }

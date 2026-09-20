@@ -28,6 +28,11 @@ public:
     double WithdrawWater(UReactiveBodyComponent* From, double MaxKg);
     bool Capture(TArray<FReactiveSaveRecord>& Records) const;
     bool Restore(const TArray<FReactiveSaveRecord>& Records,bool bPartial=false);
+    // 游戏线程上的区域屏障：脱离求解与跨区交换，但 Capture 继续返回冻结记录。
+    bool FreezeForPersistence(const TArray<FName>& Ids);
+    bool ResumeFrozen(const TArray<FName>& Ids);
+    void DiscardFrozen(const TArray<FName>& Ids);
+    bool IsFrozen(FName Id) const{return FrozenRecords.Contains(Id);}
     // Greybox tolerances: enter at 2 cm for two fixed steps, leave beyond 6 cm immediately.
     double ContactEnterCm=2,ContactExitCm=6;
     uint32 ContactConfirmSteps=2;
@@ -40,6 +45,8 @@ public:
 protected:
     virtual bool DoesSupportWorldType(EWorldType::Type WorldType) const override;
 private:
+    TMap<FName,FReactiveSaveRecord> FrozenRecords;
+    TMap<FName,TWeakObjectPtr<UReactiveBodyComponent>> FrozenBodies;
     bool IsAuthority() const;
     bool CanBodiesExchange(Reactive::FBodyId A, Reactive::FBodyId B) const;
     bool CanBodiesTransferLiquid(Reactive::FBodyId A,Reactive::FBodyId B) const;

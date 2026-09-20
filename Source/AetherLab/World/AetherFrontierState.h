@@ -19,6 +19,7 @@ class AETHERLAB_API AAetherFrontierState : public AAetherAdventureState
 {
     GENERATED_BODY()
 public:
+    UPROPERTY(Replicated) int64 NativeWorldRevision=-1;
     UPROPERTY(Replicated) bool bSupplyRestored = false;
     UPROPERTY(Replicated) bool bWorkshopRestored = false;
     UPROPERTY(Replicated) bool bBridgeReleased = false;

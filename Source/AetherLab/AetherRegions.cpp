@@ -8,7 +8,7 @@
 
 void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
 {
- if(Players.IsEmpty())return;
+ if(Players.IsEmpty()&&!bNativeRegionBarrier)return;
  auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();if(W->GetSimulation()->HasPendingInputs())return;
  const auto& Definitions=FAetherWorldDefinitions::Get();
  TSet<FName> Wanted;
@@ -27,6 +27,7 @@ void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
  TArray<FName> Unload;TArray<const FAetherWorldPlacement*> Load;
  for(const auto& E:Definitions.Objects)if(E.bStream)
  {if(Prop(E.Id)&&!Wanted.Contains(E.Id))Unload.Add(E.Id);else if(!Prop(E.Id)&&Wanted.Contains(E.Id))Load.Add(&E);}
+ if(bNativeMode){AdvanceNativeRegions(Unload,Load);return;}
  if(Unload.IsEmpty()&&Load.IsEmpty())return;
  // Freeze commits all dirty loaded state first. Failed writes keep every actor alive.
  if(!SaveWorld())return;

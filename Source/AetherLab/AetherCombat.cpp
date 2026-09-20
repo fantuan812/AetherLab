@@ -199,7 +199,7 @@ void AAetherCharacter::BeginPlay()
     Reactive->OnElectricalWindow.AddDynamic(this,&AAetherCharacter::ElectricalWindow);
     if (HasAuthority())
     {
-        GrantSpells(); SetVitals(MaxHealth, 100, 100);
+        GrantSpells(); if(!ResourceGate->IsRecovering())SetVitals(MaxHealth, 100, 100);
         if (Fighter != EAetherFighter::Player && !Controller) SpawnDefaultController();
     }
     if (IsLocallyControlled() && Fighter == EAetherFighter::Player)

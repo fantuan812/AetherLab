@@ -41,11 +41,11 @@ struct FAetherCommandRuntimeImpl
     TMap<TWeakObjectPtr<AAetherPlayerController>,TUniquePtr<FBinding>> Bindings;
     int32 NextSender=0;
     float SendElapsed=0;
-    bool bPolling=false;
+    bool bPolling=false,bTicking=false,bShutdownRequested=false;
     bool Current(const FBinding& B) const
     {
         const auto* C=B.Controller.Get();const auto* PS=B.PlayerState.Get();
-        return C&&PS&&!C->IsActorBeingDestroyed()&&!PS->IsActorBeingDestroyed()&&C->HasAuthority()&&C->GetPlayerState<AAetherPlayerState>()==PS&&C->GetPawn()==B.Pawn.Get()&&B.Pawn.IsValid()&&!B.Pawn->IsActorBeingDestroyed()&&
+        return !bShutdownRequested&&C&&PS&&!C->IsActorBeingDestroyed()&&!PS->IsActorBeingDestroyed()&&C->HasAuthority()&&C->GetPlayerState<AAetherPlayerState>()==PS&&C->GetPawn()==B.Pawn.Get()&&B.Pawn.IsValid()&&!B.Pawn->IsActorBeingDestroyed()&&
             PS->Profile.CharacterId.Equals(B.Session.CharacterId,ESearchCase::CaseSensitive)&&Coordinator&&Coordinator->IsCurrent(B.Session);
     }
     UAetherResourceGate* Gate(const FBinding& B) const
@@ -166,7 +166,7 @@ UAetherCommandRuntime::~UAetherCommandRuntime()=default;
 bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason)
 {
     check(IsInGameThread());
-    if(IsInstalled()||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!Resolve||!Publish)
+    if((Impl&&(Impl->bPolling||Impl->bTicking))||IsInstalled()||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!Resolve||!Publish)
     {Reason=TEXT("Native backend already installed or server context unavailable");return false;}
     const auto& D=FAetherV10Definitions::Get();if(!D.bValid){Reason=D.Error;return false;}
     Impl=MakeUnique<FAetherCommandRuntimeImpl>();Impl->Store=Store;Impl->Resolve=MoveTemp(Resolve);Impl->Publish=MoveTemp(Publish);
@@ -174,7 +174,7 @@ bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,
     Impl->Facts=MakeUnique<FAetherServerFactCoordinator>(Store);
     Reason.Reset();return true;
 }
-bool UAetherCommandRuntime::IsInstalled() const{return Impl&&Impl->Coordinator;}
+bool UAetherCommandRuntime::IsInstalled() const{return Impl&&Impl->Coordinator&&!Impl->bShutdownRequested;}
 bool UAetherCommandRuntime::HasPendingServerFact(const FString& Character,FName Fact) const
 {return IsInstalled()&&Impl->Facts&&Impl->Facts->HasPendingFact(Character,Fact.ToString());}
 bool UAetherCommandRuntime::ObserveServerFact(FAetherServerFact Event,FString& Reason)
@@ -258,7 +258,9 @@ void UAetherCommandRuntime::AcknowledgeSnapshot(AAetherPlayerController* C,FGuid
 }
 void UAetherCommandRuntime::Tick(float Dt)
 {
-    if(!IsInstalled())return;
+    if(Impl&&Impl->bShutdownRequested){UninstallBackend();return;}
+    if(!IsInstalled()||Impl->bTicking)return;
+    TGuardValue<bool> TickGuard(Impl->bTicking,true);
     TArray<TWeakObjectPtr<AAetherPlayerController>> Keys;Impl->Bindings.GenerateKeyArray(Keys);
     for(const auto& Key:Keys)
     {
@@ -276,6 +278,7 @@ void UAetherCommandRuntime::Tick(float Dt)
             Impl->Queue(B,Profile);
         // Missing/Corrupt 不创建空档、不从旧内存覆盖磁盘；保留未就绪并允许显式重同步。
     }
+    if(Impl->bShutdownRequested)return;
     TArray<FAetherProfileCompletion> Done;
     {
         TGuardValue<bool> Guard(Impl->bPolling,true);
@@ -354,15 +357,19 @@ void UAetherCommandRuntime::Tick(float Dt)
         B.Controller->ClientV10Snapshot(Chunk);++Sent;
     }
 }
-bool UAetherCommandRuntime::IsTickable() const{return !IsTemplate()&&IsInstalled();}
+bool UAetherCommandRuntime::IsTickable() const{return !IsTemplate()&&Impl&&(IsInstalled()||Impl->bShutdownRequested);}
 TStatId UAetherCommandRuntime::GetStatId() const{RETURN_QUICK_DECLARE_CYCLE_STAT(UAetherCommandRuntime,STATGROUP_Tickables);}
 UWorld* UAetherCommandRuntime::GetTickableGameObjectWorld() const{return GetWorld();}
-void UAetherCommandRuntime::Deinitialize()
+void UAetherCommandRuntime::UninstallBackend()
 {
-    if(Impl)
+    check(IsInGameThread());
+    if(Impl&&(Impl->bPolling||Impl->bTicking)){Impl->bShutdownRequested=true;return;}
+    // 先摘除根指针，Client 通知或 UObject 委托重入退出时不会重复遍历正在释放的绑定。
+    auto Previous=MoveTemp(Impl);
+    if(Previous)
     {
-        for(auto& Pair:Impl->Bindings)if(auto* C=Pair.Key.Get())C->ClientV10Channel({},{});
-        Impl->Bindings.Reset();Impl->Coordinator.Reset();Impl->Facts.Reset();if(Impl->Store)Impl->Store->Close();Impl.Reset();
+        for(auto& Pair:Previous->Bindings)if(auto* C=Pair.Key.Get())C->ClientV10Channel({},{});
+        Previous->Bindings.Reset();Previous->Coordinator.Reset();Previous->Facts.Reset();if(Previous->Store)Previous->Store->Close();
     }
-    Super::Deinitialize();
 }
+void UAetherCommandRuntime::Deinitialize(){UninstallBackend();Super::Deinitialize();}

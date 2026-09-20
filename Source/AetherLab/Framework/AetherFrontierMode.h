@@ -5,8 +5,13 @@
 #include "World/AetherFrontierState.h"
 #include "AetherWorldState.h"
 #include "AetherPersistence.h"
+#include "Persistence/AetherWorldBootstrap.h"
+#include "Persistence/AetherWorldCheckpoint.h"
+#include "Commands/AetherProfileCommand.h"
 #include "AetherFrontierMode.generated.h"
 
+class AAetherPlayerController;
+class AAetherNativeContainer;
 class AAetherFrontierProp;
 class AAetherPlayerState;
 enum class EAetherFighter : uint8;
@@ -30,6 +35,7 @@ public:
     virtual void InitGame(const FString& Map,const FString& Options,FString& Error) override;
     virtual FString InitNewPlayer(APlayerController* PC,const FUniqueNetIdRepl& Id,const FString& Options,const FString& Portal) override;
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     virtual void RestartPlayer(AController* C) override;
     virtual void Tick(float Dt) override;
     virtual void Logout(AController* C) override;
@@ -44,6 +50,10 @@ public:
     FString SavePrefix = TEXT("AetherFrontier_v4");
     bool bSmoke = false;
     bool bWorldRestoreFailed=false;
+    bool IsNativeMode() const{return bNativeMode;}
+    bool NativeSceneReady() const{return bNativeSceneReady;}
+    bool OpenNativeContainer(AAetherPlayerController* Controller,const FString& Id);
+    const FAetherWorldStateV10* NativeWorldView() const{return NativeWorld.IsSet()?&NativeWorld.GetValue():nullptr;}
     bool bFailWrites = false;
     TSharedPtr<IAetherSnapshotStore> Storage;
     TMap<FString,int32> ClosureAcks;
@@ -69,9 +79,37 @@ public:
     void CreditHit(AAetherCharacter* Target,AAetherCharacter* Source);
     AAetherFrontierProp* Make(FName Id,FName Service,FVector Location,FVector Scale,EAetherObjectKind Kind,const FString& Label);
 private:
+    // 只有服务器启动装配持有这些值；旧 Database 是导航/流送的只读投影，不能提交它。
+    bool bNativeMode=true,bNativeSceneReady=false,bNativeFailureReported=false;
+    TOptional<FAetherWorldStateV10> NativeWorld;
+    TMap<TWeakObjectPtr<AAetherPlayerController>,TFuture<FAetherStoreReadResult>> NativeLogins;
+    TSet<TWeakObjectPtr<AAetherPlayerController>> NativePlayersReady,NativeLoginRejected;
+    TMap<TWeakObjectPtr<AAetherPlayerController>,TWeakObjectPtr<AAetherNativeContainer>> NativeContainerSessions;
+    UPROPERTY() TMap<FString,TObjectPtr<AAetherNativeContainer>> NativeContainers;
+    void TickNativeStartup();
+    void BeginNativeLogin(AAetherPlayerController* PC);
+    bool RestoreNativeScene(const FAetherWorldStateV10& World,const TMap<FString,int64>& Profiles,const TArray<FAetherContainerRestoreDescriptor>& Containers,FString& Reason);
+    void PublishNativeWorld(const FAetherWorldStateV10& World);
+    bool PublishNativeState(AAetherPlayerController& PC,const FAetherProfileStateV10& Profile,const FAetherWorldStateV10* World,const FAetherContainerStateV10* Container);
+    bool ResolveNativeContext(AAetherPlayerController& PC,const FAetherPlayerCommand& Command,const FAetherProfileStateV10& Profile,FAetherProfileCommandContext& Context);
+    void FailNativeScene(const FString& Reason);
     FAetherEntityRegistry Registry;
     int32 RegionLoads=0,RegionUnloads=0;
     void UpdateRegions(const TArray<FVector>& Players);
+    struct FFrozenRegionActor
+    {
+        TWeakObjectPtr<AAetherFrontierProp> Actor;
+        bool Enabled=false,Ticking=false,Simulating=false;
+        FVector Linear=FVector::ZeroVector,Angular=FVector::ZeroVector;
+        TArray<TWeakObjectPtr<UActorComponent>> TickingComponents;
+    };
+    bool bNativeRegionBarrier=false;
+    TArray<FFrozenRegionActor> FrozenRegionActors;
+    TArray<FName> FrozenRegionBodies;
+    TFuture<FAetherWorldCheckpointResult> NativeRegionSave;
+    TOptional<FAetherWorldCheckpointResult> NativeRegionOutcome;
+    void AdvanceNativeRegions(const TArray<FName>& Unload,const TArray<const FAetherWorldPlacement*>& Load);
+    bool CaptureNativeWorld(const FAetherWorldStateV10& Previous,FAetherWorldStateV10& Candidate,FString& Reason) const;
     void ApplyObjectDefinition(AAetherFrontierProp* A,FName Definition);
     AAetherFrontierProp* SpawnPlacement(const FAetherWorldPlacement& Placement);
     void RebuildWorldLinks();

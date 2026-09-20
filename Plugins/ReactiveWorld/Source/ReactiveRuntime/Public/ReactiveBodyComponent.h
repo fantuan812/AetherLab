@@ -59,6 +59,7 @@ protected:
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 private:
+    friend class UReactiveWorldSubsystem;
     UFUNCTION() void OnRep_State();
     TWeakObjectPtr<AActor> LastSourceActor;
     Reactive::FBodyId BodyId = Reactive::InvalidBody;

@@ -11,6 +11,7 @@ struct FAetherContainerRestoreDescriptor
     EAetherContainerKind Kind=EAetherContainerKind::SharedChest;
     FVector Location=FVector::ZeroVector;
     bool bActive=false;
+    int64 Revision=-1;
 };
 
 // 后台仅传值；Poll 在游戏线程取已就绪 Future，不等待磁盘、不持有 Actor。

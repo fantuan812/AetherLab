@@ -24,6 +24,8 @@ public:
     // 由完成迁移/恢复的服务器启动流程注入。不会自行打开、创建、导入或覆盖玩家存档。
     bool InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason);
     bool IsInstalled() const;
+    // 地图切换撤销旧连接与回调，排空已接受的写入后才允许重新安装。
+    void UninstallBackend();
     // 可信场景/战斗事件入口；没有对应客户端 RPC。
     bool ObserveServerFact(FAetherServerFact Event,FString& Reason);
     bool HasPendingServerFact(const FString& CharacterId,FName Fact) const;

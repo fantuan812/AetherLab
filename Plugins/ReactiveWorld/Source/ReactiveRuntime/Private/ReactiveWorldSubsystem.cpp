@@ -237,6 +237,8 @@ bool UReactiveWorldSubsystem::Capture(TArray<FReactiveSaveRecord>& Records) cons
         {R.bGateOpen=M->bGateOpen;R.bHasMechanism=true;R.bSupportReleased=M->bReleased;R.bSourceEnabled=M->bPowerEnabled;R.RemainingEnergyJ=M->RemainingEnergyJ;R.SourceAge=M->SourceAge;}
         Records.Add(R);
     }
+    for(const auto& Pair:FrozenRecords)
+    {if(Names.Contains(Pair.Key)){Records.Reset();return false;}Names.Add(Pair.Key);Records.Add(Pair.Value);}
     Records.Sort([](const FReactiveSaveRecord& A, const FReactiveSaveRecord& B) { return A.StableId.LexicalLess(B.StableId); });
     return true;
 }

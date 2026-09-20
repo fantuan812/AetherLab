@@ -36,6 +36,7 @@ bool IdentityMap(const TArray<FReactiveSaveRecord>& Rows,TMap<FName,const FReact
     return true;
 }
 }
+FReactiveSaveRecord AetherNativeWorldPhysics::ToRuntimeRecord(const FAetherReactiveRecordV10& Record){return ToRuntime(Record);}
 bool AetherNativeWorldPhysics::RestoreLoaded(UWorld& World,const FAetherWorldStateV10& S,FString& Reason,bool Partial)
 {
     check(IsInGameThread());auto* Reactive=World.GetSubsystem<UReactiveWorldSubsystem>();

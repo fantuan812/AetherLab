@@ -24,7 +24,10 @@ public:
     // 正常周期物理保存；完成前不能据此卸载实体。一次仅允许一个检查点，避免累积过时快照。
     TFuture<FAetherWorldCheckpointResult> SaveLoadedPhysics();
     bool IsSavingWorld() const{return Checkpoint.IsValid();}
+    void ConfigureCheckpoints(FAetherCaptureWorldCheckpoint Capture,TFunction<void(const FAetherWorldStateV10&)> Published)
+    {DomainCapture=MoveTemp(Capture);CheckpointPublished=MoveTemp(Published);}
     EAetherNativePersistencePhase Phase() const{return State;}
+    void ReleaseScene(UWorld* Scene);
     bool OwnsWriteAuthority() const{return State!=EAetherNativePersistencePhase::Dormant&&State!=EAetherNativePersistencePhase::Stopped;}
     const FString& Failure() const{return Detail;}
     virtual void Tick(float DeltaSeconds) override;
@@ -36,11 +39,15 @@ private:
     void Fail(FString Reason);
     EAetherNativePersistencePhase State=EAetherNativePersistencePhase::Dormant;
     FString Prefix,Detail;
+    TWeakObjectPtr<UWorld> BoundScene;
+    void StopScene();
     bool AllowFresh=false,bActivating=false,bPollingLogins=false;
     TUniquePtr<FAetherWorldCheckpoint> Checkpoint;
     TUniquePtr<TPromise<FAetherWorldCheckpointResult>> CheckpointPromise;
     void PollCheckpoint();
     float CheckpointElapsed=0;
+    FAetherCaptureWorldCheckpoint DomainCapture;
+    TFunction<void(const FAetherWorldStateV10&)> CheckpointPublished;
     TSharedPtr<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
     TUniquePtr<FAetherWorldBootstrap> Bootstrap;
     TFuture<FAetherStoreSnapshotResult> Probe;

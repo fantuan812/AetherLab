@@ -10,10 +10,11 @@
 bool UAetherNativePersistence::Prepare(const FString& InPrefix,bool NewWorld,FString& Reason)
 {
     check(IsInGameThread());
+    if(BoundScene.IsValid()&&BoundScene.Get()!=GetWorld()){StopScene();State=EAetherNativePersistencePhase::Dormant;}
     if(State!=EAetherNativePersistencePhase::Dormant||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!AetherNativeMigration::ValidPrefix(InPrefix))
     {Reason=TEXT("Invalid native startup state, server world or save prefix");return false;}
     // 自此锁住旧总写入口；打开失败也保持失败状态，绝不能回退旧档继续写出分叉进度。
-    Prefix=InPrefix;AllowFresh=NewWorld;State=EAetherNativePersistencePhase::Inspecting;
+    BoundScene=GetWorld();Prefix=InPrefix;AllowFresh=NewWorld;State=EAetherNativePersistencePhase::Inspecting;
     FAetherSqliteOptions O;O.DatabasePath=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("V10State")/Prefix/TEXT("state.sqlite"));
     auto Open=AetherSQLite::Open(MoveTemp(O));
     if(!Open.Store){Fail(Open.Detail);Reason=Detail;return false;}
@@ -119,9 +120,10 @@ TFuture<FAetherWorldCheckpointResult> UAetherNativePersistence::SaveLoadedPhysic
     {FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Busy;Promise->SetValue(MoveTemp(R));return Future;}
     Checkpoint=MakeUnique<FAetherWorldCheckpoint>(Store.ToSharedRef());FString Why;
     const TWeakObjectPtr<UWorld> Scene=GetWorld();
-    if(!Checkpoint->Start([Scene](const auto& Previous,auto& Candidate,FString& Reason){
+    const auto Capture=DomainCapture;
+    if(!Checkpoint->Start([Scene,Capture](const auto& Previous,auto& Candidate,FString& Reason){
         if(!Scene.IsValid()){Reason=TEXT("World destroyed during checkpoint");return false;}
-        return AetherNativeWorldPhysics::CaptureLoaded(*Scene.Get(),Previous,Candidate,Reason);
+        return Capture?Capture(Previous,Candidate,Reason):AetherNativeWorldPhysics::CaptureLoaded(*Scene.Get(),Previous,Candidate,Reason);
     },Why))
     {Checkpoint.Reset();FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Invalid;R.Detail=Why;Promise->SetValue(MoveTemp(R));return Future;}
     CheckpointPromise=MoveTemp(Promise);return Future;
@@ -135,6 +137,7 @@ void UAetherNativePersistence::PollCheckpoint()
     // 先撤下运行中标志，再发布持久确认，回调可以安全安排下一次检查点。
     if(Result.Code!=EAetherStoreCode::Committed&&Result.Code!=EAetherStoreCode::Replayed)
         UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_CHECKPOINT_DEFERRED code=%d reason=%s"),int32(Result.Code),*Result.Detail);
+    if(Result.World.IsSet()&&(Result.Code==EAetherStoreCode::Committed||Result.Code==EAetherStoreCode::Replayed)&&CheckpointPublished)CheckpointPublished(Result.World.GetValue());
     if(Promise)Promise->SetValue(MoveTemp(Result));
 }
 void UAetherNativePersistence::Fail(FString Reason)
@@ -147,9 +150,10 @@ bool UAetherNativePersistence::IsTickable() const
 {return !IsTemplate()&&(State==EAetherNativePersistencePhase::Inspecting||State==EAetherNativePersistencePhase::Auditing||State==EAetherNativePersistencePhase::Active||!Logins.IsEmpty()||Checkpoint.IsValid());}
 TStatId UAetherNativePersistence::GetStatId() const{RETURN_QUICK_DECLARE_CYCLE_STAT(UAetherNativePersistence,STATGROUP_Tickables);}
 UWorld* UAetherNativePersistence::GetTickableGameObjectWorld() const{return GetWorld();}
-void UAetherNativePersistence::Deinitialize()
+void UAetherNativePersistence::StopScene()
 {
-    State=EAetherNativePersistencePhase::Stopped;
+    State=EAetherNativePersistencePhase::Stopped;DomainCapture={};CheckpointPublished={};
+    if(auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>())Runtime->UninstallBackend();
     auto Pending=MoveTemp(Logins);for(auto& Job:Pending){FAetherStoreReadResult R;R.Code=EAetherStoreCode::Unavailable;Job->Result.SetValue(MoveTemp(R));}
     if(Checkpoint)Checkpoint->Stop();Checkpoint.Reset();
     auto PendingCheckpoint=MoveTemp(CheckpointPromise);
@@ -157,5 +161,11 @@ void UAetherNativePersistence::Deinitialize()
     // Runtime 同样持有 Store；关闭幂等，等待排队提交结束。不会在后台线程销毁 UObject。
     if(Store)Store->Close();Store.Reset();
     if(PendingCheckpoint){FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Unavailable;R.Detail=TEXT("Shutdown drained writes; reload persisted world before retry");PendingCheckpoint->SetValue(MoveTemp(R));}
-    State=EAetherNativePersistencePhase::Stopped;Super::Deinitialize();
+    State=EAetherNativePersistencePhase::Stopped;BoundScene.Reset();CheckpointElapsed=0;Prefix.Reset();Detail.Reset();
 }
+
+void UAetherNativePersistence::ReleaseScene(UWorld* Scene)
+{
+    check(IsInGameThread());if(BoundScene.Get()!=Scene)return;StopScene();State=EAetherNativePersistencePhase::Dormant;
+}
+void UAetherNativePersistence::Deinitialize(){StopScene();Super::Deinitialize();}

@@ -29,6 +29,9 @@ public:
     bool PublishNativeSkills(const FAetherProfileStateV10& Committed,const TArray<FAetherExternalSkillGrant>& Grants,FString& Reason);
     bool RebindNativeSkills(FString& Reason);
     bool PublishNativeEquipment(const FAetherProfileStateV10& Committed,FString& Reason);
+    // 完整 DTO 是服务器读取入口；旧 Profile 仅保留导航需要的只读兼容投影。
+    bool PublishNativeProfile(const FAetherProfileStateV10& Committed,FString& Reason);
+    const FAetherProfileStateV10* GetNativeProfile() const{return NativeProfile.IsSet()?&NativeProfile.GetValue():nullptr;}
     const FAetherSkillStateV10* GetNativeSkills() const{return bNativeSkillReady&&NativeSkills.IsSet()?&NativeSkills.GetValue():nullptr;}
     const TArray<FAetherExternalSkillGrant>& GetNativeSkillGrants() const{return NativeSkillGrants;}
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) bool bNativeSkillsEnabled=false;
@@ -36,6 +39,7 @@ public:
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystem; }
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:
+    TOptional<FAetherProfileStateV10> NativeProfile;
     FActiveGameplayEffectHandle NativeEquipmentSource;
     int64 NativeEquipmentRevision=-1;
     bool bPublishingNativeEquipment=false;

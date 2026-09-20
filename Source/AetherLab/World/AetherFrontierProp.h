@@ -27,6 +27,8 @@ public:
     UPROPERTY(VisibleAnywhere) TObjectPtr<UReactiveMechanismComponent> Mechanism;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherPhysicsDamageComponent> PhysicsDamage;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherTraversalComponent> Traversal;
+    // 每个场景实例独立版本，卸载后同一稳定 ID 重建也会使旧选择失效。
+    UPROPERTY(Replicated) int64 InteractionRevision=0;
     UPROPERTY(Replicated) FName Service;
     UPROPERTY(Replicated) TArray<FName> Capabilities;
     UPROPERTY(Replicated) bool bCarryable = false;

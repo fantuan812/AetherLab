@@ -2,6 +2,7 @@
 #include "AetherProgression.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "Definitions/AetherV10Definitions.h"
+#include "Inventory/AetherResourceGate.h"
 
 bool AAetherPlayerState::PublishNativeEquipment(const FAetherProfileStateV10& P,FString& Reason)
 {
@@ -30,7 +31,8 @@ bool AAetherPlayerState::PublishNativeEquipment(const FAetherProfileStateV10& P,
     if(GetPawn()!=Pawn||AbilitySystem->GetAvatarActor()!=Pawn){Reason=TEXT("Avatar changed while equipment effects were publishing");return false;}
     // 上限下降夹取；上限上升也不补血，换装不能绕过药剂或复活规则。
     Pawn->MaxHealth=FMath::Clamp(100.f+Attributes->GearMaxHealth.GetCurrentValue(),1.f,100000.f);
-    if(Pawn->Health()>Pawn->MaxHealth||Pawn->Mana()>Pawn->MaximumMana()||Pawn->Stamina()>Pawn->MaximumStamina())
+    if(!(Pawn->ResourceGate->IsRecovering()&&!Pawn->ResourceGate->IsEnabled())&&
+        (Pawn->Health()>Pawn->MaxHealth||Pawn->Mana()>Pawn->MaximumMana()||Pawn->Stamina()>Pawn->MaximumStamina()))
         Pawn->SetVitals(FMath::Min(HP,Pawn->Health()),FMath::Min(MP,Pawn->Mana()),FMath::Min(SP,Pawn->Stamina()));
     Pawn->Equipment->bProfileManaged=true;
     if(!Pawn->Equipment->RestoreLoadout(Loadout)){Reason=TEXT("Native loadout publication failed");return false;}
