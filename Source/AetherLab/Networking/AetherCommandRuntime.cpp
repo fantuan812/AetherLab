@@ -50,6 +50,7 @@ struct FAetherCommandRuntimeImpl
             if(!Publish(*B.Controller.Get(),P,World,Container)||!Current(B))return;
             // 完整场景/装备适配通过后，把已提交永久技能写入本连接的持续 ASC。
             // 外部来源由服务器适配器先行重建；这里保留它们，不用空数组抹掉装备/临时授权。
+            if(!B.PlayerState->PublishNativeEquipment(P,Reason)||!Current(B))return;
             const auto Grants=B.PlayerState->GetNativeSkillGrants();
             if(!B.PlayerState->PublishNativeSkills(P,Grants,Reason)||!Current(B))return;
         }

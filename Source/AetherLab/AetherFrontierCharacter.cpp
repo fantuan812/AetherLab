@@ -78,7 +78,7 @@ bool AAetherFrontierCharacter::SpellUnlocked(int32 Spell) const
 }
 void AAetherFrontierCharacter::ApplyProfileEquipment()
 {
-    auto* PS=ProfileState(); if (!HasAuthority()||!PS) return;
+    auto* PS=ProfileState(); if (!HasAuthority()||!PS||UsesNativeSkills()) return;
     TArray<FAetherEquippedSlot> Slots;
     if(!AetherInventory::BuildLoadout(PS->Profile,FAetherRules::Get(),Slots))return;
     Equipment->RestoreLoadout(Slots);

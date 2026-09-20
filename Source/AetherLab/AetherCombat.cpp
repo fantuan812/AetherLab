@@ -1,5 +1,7 @@
 #include "AetherCombat.h"
 #include "Skills/AetherSkillAbilityBinding.h"
+#include "Combat/AetherEquipmentMath.h"
+#include "Equipment/AetherElementDamage.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "AetherAdventure.h"
 #include "AetherFrontier.h"
@@ -52,6 +54,16 @@ UAetherAttributes::UAetherAttributes()
 void UAetherAttributes::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearDamage, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearPosture, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearArmor, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearFireResist, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearWaterResist, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearFrostResist, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearStormResist, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearMaxHealth, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearMaxMana, COND_None, REPNOTIFY_Always);
+    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearMaxStamina, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, Health, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, Mana, COND_None, REPNOTIFY_Always);
     DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, Stamina, COND_None, REPNOTIFY_Always);
@@ -61,6 +73,17 @@ void UAetherAttributes::OnRep_Health(const FGameplayAttributeData& Old) { GAMEPL
 void UAetherAttributes::OnRep_Mana(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, Mana, Old); }
 void UAetherAttributes::OnRep_Stamina(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, Stamina, Old); }
 void UAetherAttributes::OnRep_Posture(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, Posture, Old); }
+
+void UAetherAttributes::OnRep_GearDamage(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearDamage, Old); }
+void UAetherAttributes::OnRep_GearPosture(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearPosture, Old); }
+void UAetherAttributes::OnRep_GearArmor(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearArmor, Old); }
+void UAetherAttributes::OnRep_GearFireResist(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearFireResist, Old); }
+void UAetherAttributes::OnRep_GearWaterResist(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearWaterResist, Old); }
+void UAetherAttributes::OnRep_GearFrostResist(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearFrostResist, Old); }
+void UAetherAttributes::OnRep_GearStormResist(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearStormResist, Old); }
+void UAetherAttributes::OnRep_GearMaxHealth(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearMaxHealth, Old); }
+void UAetherAttributes::OnRep_GearMaxMana(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearMaxMana, Old); }
+void UAetherAttributes::OnRep_GearMaxStamina(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearMaxStamina, Old); }
 
 UAetherSpellAbility::UAetherSpellAbility()
 { InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor; NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly; }
@@ -128,6 +151,11 @@ AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):
     BodyVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surcoat")); BodyVisual->SetupAttachment(RootComponent);
     BodyVisual->SetStaticMesh(Cube.Object); BodyVisual->SetRelativeScale3D(FVector(.5,.6,1.45)); BodyVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Equipment = CreateDefaultSubobject<UAetherEquipmentComponent>(TEXT("Equipment"));
+    Equipment->ModifyHit.BindWeakLambda(this,[this](FAetherEquipmentHit& Hit){
+        if(!Attributes)return;
+        Hit.Damage=AetherEquipmentMath::Attack(Hit.Damage,Attributes->GearDamage.GetCurrentValue());
+        Hit.PostureDamage=AetherEquipmentMath::Attack(Hit.PostureDamage,Attributes->GearPosture.GetCurrentValue());
+    });
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Nameplate = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Nameplate")); Nameplate->SetupAttachment(RootComponent);
     Nameplate->SetRelativeLocation(FVector(0,0,120)); Nameplate->SetHorizontalAlignment(EHTA_Center); Nameplate->SetWorldSize(22); Nameplate->SetTextRenderColor(FColor::White);
@@ -316,8 +344,8 @@ void AAetherCharacter::SetVitals(float HP, float MP, float SP)
 {
     if (!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this) return;
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(), FMath::Clamp(HP,0.f,MaxHealth));
-    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(), FMath::Clamp(MP,0.f,100.f));
-    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(), FMath::Clamp(SP,0.f,100.f));
+    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(), FMath::Clamp(MP,0.f,MaximumMana()));
+    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(), FMath::Clamp(SP,0.f,MaximumStamina()));
     if(!Alive())CancelActions();
 }
 void AAetherCharacter::ResetCombat()
@@ -460,7 +488,18 @@ void AAetherCharacter::ApplyPostureDamage(float Amount)
 float AAetherCharacter::TakeDamage(float Amount, const FDamageEvent& Event, AController* EventInstigator, AActor* Causer)
 {
     if (!HasAuthority() || !AbilitySystem || AbilitySystem->GetAvatarActor()!=this || !Alive() || !FMath::IsFinite(Amount) || Amount <= 0) return 0;
-    const float Applied = FMath::Min(Health(), Amount);
+    float Mitigated=0;
+    const auto DamageClass=Event.DamageTypeClass;
+    if(DamageClass&&DamageClass->IsChildOf(UAetherFireDamage::StaticClass()))
+        Mitigated=Amount*AetherEquipmentMath::ElementMultiplier(Attributes->GearFireResist.GetCurrentValue());
+    else if(DamageClass&&DamageClass->IsChildOf(UAetherWaterDamage::StaticClass()))
+        Mitigated=Amount*AetherEquipmentMath::ElementMultiplier(Attributes->GearWaterResist.GetCurrentValue());
+    else if(DamageClass&&DamageClass->IsChildOf(UAetherFrostDamage::StaticClass()))
+        Mitigated=Amount*AetherEquipmentMath::ElementMultiplier(Attributes->GearFrostResist.GetCurrentValue());
+    else if(DamageClass&&DamageClass->IsChildOf(UAetherStormDamage::StaticClass()))
+        Mitigated=Amount*AetherEquipmentMath::ElementMultiplier(Attributes->GearStormResist.GetCurrentValue());
+    else Mitigated=AetherEquipmentMath::PhysicalDamage(Amount,Attributes->GearArmor.GetCurrentValue());
+    const float Applied = FMath::Min(Health(), Mitigated);
     AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetHealthAttribute(), EGameplayModOp::Additive, -Applied);
     LastDamager = Causer; ++DamageReceivedCount; LastDamageAt = CombatTime();
     if (!Alive()) { CancelActions(); bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); }
@@ -476,7 +515,7 @@ void AAetherCharacter::ElectricalWindow(const FReactiveElectricalWindow& Window)
     for(const auto& Exposure:Window.Contributions)
     {
         if(!Alive())break;
-        FDamageEvent Event;AActor* Source=Exposure.Source;
+        FDamageEvent Event(UAetherStormDamage::StaticClass());AActor* Source=Exposure.Source;
         auto* Pawn=Cast<APawn>(Source);auto* SourceController=Pawn?Pawn->GetController():Source?Source->GetInstigatorController():nullptr;
         TakeDamage(float(Exposure.DeliveredJ/140*(1+Reactive->State.ElectricalWetness01*.25)),Event,SourceController,Source);
     }
@@ -552,10 +591,10 @@ void AAetherCharacter::Tick(float Dt)
         SetVitals(Health(), Mana() + Dt * 5, Stamina() + Dt * Regen);
         if (T - LastDamageAt > 2) AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), bUseBasicAssets ? FMath::Min(100.f, Attributes->Posture.GetCurrentValue() + Dt * 12) : FMath::Max(0.f, Attributes->Posture.GetCurrentValue() - Dt * 12));
         const double Temp = Reactive->State.TemperatureC;
-        if (Temp > 55) { FDamageEvent E; TakeDamage(float(FMath::Min(25.0,(Temp - 55) * .12) * Dt), E, nullptr, Reactive->GetLastSourceActor()); }
+        if (Temp > 55) { FDamageEvent E(UAetherFireDamage::StaticClass()); TakeDamage(float(FMath::Min(25.0,(Temp - 55) * .12) * Dt), E, nullptr, Reactive->GetLastSourceActor()); }
         Think(Dt);
     }
-    GetCharacterMovement()->MaxWalkSpeed = !Alive() || T < StunUntil ? 0.f : (bBlocking ? 220.f : Fighter == EAetherFighter::Player ? 450.f : Fighter==EAetherFighter::Wolf?380.f:230.f) * (Reactive->State.IceFraction > .5 ? .5f : 1.f);
+    GetCharacterMovement()->MaxWalkSpeed = !Alive() || T < StunUntil ? 0.f : (bBlocking ? 220.f : Fighter == EAetherFighter::Player ? 450.f : Fighter==EAetherFighter::Wolf?380.f:230.f) * (Reactive->State.IceFraction > .5 ? 1.f-.5f*AetherEquipmentMath::ElementMultiplier(Attributes->GearFrostResist.GetCurrentValue()) : 1.f);
     Tint(BodyVisual, !Alive() ? FLinearColor(.15f,.15f,.17f) : bWindingUp ? FLinearColor(1,.09f,.01f) : T < StunUntil ? FLinearColor(.1f,.8f,1) : Fighter == EAetherFighter::Player ? FLinearColor(.12f,.34f,.5f) : Fighter == EAetherFighter::FireCaster ? FLinearColor(.55f,.09f,.025f) : FLinearColor(.45f,.3f,.09f));
     UpdateAnimation();
     const TCHAR* N = Fighter == EAetherFighter::BellKnight ? TEXT("OLEN / BELL KNIGHT") : Fighter == EAetherFighter::ShieldGuard ? TEXT("SHIELD GUARD") : Fighter == EAetherFighter::FireCaster ? TEXT("EMBER CASTER") : TEXT("OATHFARER");

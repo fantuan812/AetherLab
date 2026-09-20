@@ -1,6 +1,7 @@
 #include "AetherProgression.h"
 #include "Net/UnrealNetwork.h"
 #include "Skills/AetherSkillAbilityBinding.h"
+#include "Equipment/AetherEquipmentEffect.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "GameFramework/Pawn.h"
 AAetherPlayerState::AAetherPlayerState()

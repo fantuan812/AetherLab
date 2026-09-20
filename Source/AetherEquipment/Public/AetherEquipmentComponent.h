@@ -39,9 +39,16 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName ItemId;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FText DisplayName;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName Slot = TEXT("MainHand");
+    // 旧资产留空时回退 Slot；新资产声明可选槽，实际占用保存在 FAetherEquippedSlot。
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FName> AllowedSlots;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName Socket = TEXT("hand_r");
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftObjectPtr<UStaticMesh> Mesh;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FTransform GripTransform;
+    // 手套/靴子等成对防具用第二个骨骼附着点，共用同一库存实例与统计。
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FName SecondarySocket;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FTransform SecondaryGripTransform;
+    // 细小饰品可无世界网格，仍保留真实槽位、实例和属性。
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bInvisibleAccessory = false;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bOccupiesBothHands = false;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bAllowsGuard = false;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) float GuardStaminaMultiplier = .8f;
@@ -68,6 +75,8 @@ struct AETHEREQUIPMENT_API FAetherEquippedSlot
     GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite) FName Slot;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) FName ItemId;
+    UPROPERTY(BlueprintReadOnly) FGuid InstanceId;
+    bool operator==(const FAetherEquippedSlot& Other) const {return Slot==Other.Slot&&ItemId==Other.ItemId&&InstanceId==Other.InstanceId;}
 };
 USTRUCT(BlueprintType)
 struct AETHEREQUIPMENT_API FAetherEquipmentHit
@@ -104,6 +113,7 @@ struct FAetherReplicatedAttack
     UPROPERTY() bool bCancelled = false;
     UPROPERTY() EAetherAttackPhase Phase = EAetherAttackPhase::Idle;
 };
+DECLARE_DELEGATE_OneParam(FAetherModifyEquipmentHit, FAetherEquipmentHit&);
 DECLARE_DELEGATE_RetVal(bool, FAetherEquipmentCanAct);
 DECLARE_DELEGATE_RetVal_OneParam(bool, FAetherEquipmentOwnsItem, FName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAetherLoadoutChanged);
@@ -122,6 +132,8 @@ public:
     UPROPERTY(ReplicatedUsing=OnRep_Loadout, BlueprintReadOnly) TArray<FAetherEquippedSlot> Slots;
     UPROPERTY(ReplicatedUsing=OnRep_Loadout, BlueprintReadOnly) int32 LoadoutRevision = 0;
     UPROPERTY(BlueprintAssignable) FAetherLoadoutChanged OnLoadoutChanged;
+    // 战斗属性由角色适配器提供；装备模块不直接读取 ASC 或自行叠加统计。
+    FAetherModifyEquipmentHit ModifyHit;
     FAetherEquipmentCanAct CanAct;
     FAetherEquipmentOwnsItem OwnsItem;
     FAetherEquipmentCanAct CanContinueAttack;

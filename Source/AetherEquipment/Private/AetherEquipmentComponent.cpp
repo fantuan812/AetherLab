@@ -19,9 +19,15 @@ const FAetherAttackDefinition* UAetherEquipmentDefinition::FindAttack(FName Id) 
 { return Attacks.FindByPredicate([Id](const auto& A){return A.Id==Id;}); }
 bool UAetherEquipmentDefinition::IsValidDefinition() const
 {
-    if (ItemId.IsNone() || Slot.IsNone() || Socket.IsNone() || Mesh.IsNull() || GripTransform.ContainsNaN()
+    if (ItemId.IsNone() || Slot.IsNone() || (!bInvisibleAccessory&&(Socket.IsNone()||Mesh.IsNull())) || GripTransform.ContainsNaN()
         || !FMath::IsFinite(GuardStaminaMultiplier) || GuardStaminaMultiplier<0
         || !FMath::IsFinite(ParryWindowSeconds) || ParryWindowSeconds<0 || ParryWindowSeconds>1) return false;
+    if(bInvisibleAccessory&&(bOccupiesBothHands||bAllowsGuard||!Attacks.IsEmpty()||!SecondarySocket.IsNone()))return false;
+    if(!SecondarySocket.IsNone()&&(SecondarySocket==Socket||SecondaryGripTransform.ContainsNaN()))return false;
+    TSet<FName> SlotSet;
+    for(FName Allowed:AllowedSlots){if(Allowed.IsNone()||SlotSet.Contains(Allowed))return false;SlotSet.Add(Allowed);}
+    if(!AllowedSlots.IsEmpty()&&!AllowedSlots.Contains(Slot))return false;
+    if(bOccupiesBothHands&&!AllowedSlots.IsEmpty()&&(AllowedSlots.Num()!=1||AllowedSlots[0]!=TEXT("MainHand")))return false;
     TSet<FName> Seen;
     for (const auto& A:Attacks) { if (!A.IsValid() || Seen.Contains(A.Id)) return false; Seen.Add(A.Id); }
     return !bOccupiesBothHands || Slot==TEXT("MainHand");
@@ -50,12 +56,12 @@ UAetherEquipmentDefinition* UAetherEquipmentComponent::GuardDefinition() const
 { if (Catalog) for (const auto& S:Slots) if (auto* D=Catalog->Find(S.ItemId); D && D->bAllowsGuard) return D; return nullptr; }
 bool UAetherEquipmentComponent::ValidateLoadout(const TArray<FAetherEquippedSlot>& Loadout) const
 {
-    if (!Catalog || !Catalog->IsValidCatalog() || Loadout.Num()>8) return false;
+    if (!Catalog || !Catalog->IsValidCatalog() || Loadout.Num()>10) return false;
     TSet<FName> Seen; bool TwoHands=false,OffHand=false;
     for (const auto& S:Loadout)
     {
         const auto* D=Catalog->Find(S.ItemId);
-        if (!D || D->Slot!=S.Slot || Seen.Contains(S.Slot)) return false;
+        if (!D || (D->AllowedSlots.IsEmpty()?D->Slot!=S.Slot:!D->AllowedSlots.Contains(S.Slot)) || Seen.Contains(S.Slot)) return false;
         Seen.Add(S.Slot); TwoHands|=D->bOccupiesBothHands; OffHand|=S.Slot==TEXT("OffHand");
     }
     return !(TwoHands&&OffHand);
@@ -63,6 +69,8 @@ bool UAetherEquipmentComponent::ValidateLoadout(const TArray<FAetherEquippedSlot
 bool UAetherEquipmentComponent::RestoreLoadout(const TArray<FAetherEquippedSlot>& Loadout)
 {
     if (!GetOwner()->HasAuthority() || !ValidateLoadout(Loadout)) return false;
+    if(Slots==Loadout)return true; // 同一持久快照重发不取消战斗，也不重载全部外观。
+    if(LoadoutRevision==MAX_int32)return false;
     CancelAttack(); Slots=Loadout; ++LoadoutRevision; RebuildVisuals(); OnLoadoutChanged.Broadcast(); GetOwner()->ForceNetUpdate(); return true;
 }
 bool UAetherEquipmentComponent::Equip(FName ItemId)
@@ -144,6 +152,7 @@ void UAetherEquipmentComponent::ResolveHits(const FAetherAttackDefinition& D)
         if (GetWorld()->LineTraceSingleByChannel(Block,Start,Point,ECC_Visibility,Q) && Block.GetActor()!=Target) continue;
         HitActors.Add(Target); FAetherEquipmentHit Hit; Hit.Source=GetOwner(); Hit.ItemId=Attack.ItemId; Hit.AttackId=Attack.AttackId;
         Hit.Damage=D.Damage; Hit.PostureDamage=D.PostureDamage; Hit.ImpulseNs=Forward*D.ImpulseNs; Hit.CuttingWorkJ=D.CuttingWorkJ;
+        ModifyHit.ExecuteIfBound(Hit);
         IAetherHitReceiver::Execute_ReceiveEquipmentHit(Target,Hit); ++AppliedHitCount;
     }
 }
@@ -203,4 +212,4 @@ void UAetherEquipmentComponent::RebuildVisuals()
     }
 }
 void UAetherEquipmentComponent::EndPlay(const EEndPlayReason::Type Reason)
-{ if(VisualLoad){VisualLoad->CancelHandle();VisualLoad->ReleaseHandle();VisualLoad.Reset();}CancelAttack(); RequestAttack.Unbind(); CanContinueAttack.Unbind(); for (auto& Pair:Visuals) if (Pair.Value) Pair.Value->DestroyComponent(); Visuals.Reset(); Super::EndPlay(Reason); }
+{ if(VisualLoad){VisualLoad->CancelHandle();VisualLoad->ReleaseHandle();VisualLoad.Reset();}CancelAttack(); ModifyHit.Unbind(); RequestAttack.Unbind(); CanContinueAttack.Unbind(); for (auto& Pair:Visuals) if (Pair.Value) Pair.Value->DestroyComponent(); Visuals.Reset(); Super::EndPlay(Reason); }

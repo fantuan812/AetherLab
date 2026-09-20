@@ -11,8 +11,10 @@ TArray<FAetherEquipmentVisualSpec> AetherEquipmentVisuals::Resolve(
     for(const auto& Slot:Slots)
     {
         const auto* D=Catalog->Find(Slot.ItemId);
-        if(!D||Seen.Contains(Slot.Slot)||Slot.Slot.IsNone()||D->Socket.IsNone()||D->GripTransform.ContainsNaN())continue;
+        if(!D||D->bInvisibleAccessory||Seen.Contains(Slot.Slot)||Slot.Slot.IsNone()||D->Socket.IsNone()||D->GripTransform.ContainsNaN())continue;
         Seen.Add(Slot.Slot);Result.Add({Slot.Slot,D->ItemId,D->Socket,D->Mesh,D->GripTransform});
+        if(!D->SecondarySocket.IsNone())
+            Result.Add({FName(*(Slot.Slot.ToString()+TEXT(".Pair"))),D->ItemId,D->SecondarySocket,D->Mesh,D->SecondaryGripTransform});
     }
     Result.Sort([](const auto& A,const auto& B){return A.Slot.LexicalLess(B.Slot);});
     return Result;

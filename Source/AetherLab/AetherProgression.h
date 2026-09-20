@@ -28,6 +28,7 @@ public:
     // 原生技能账本只保存在服务器；拥有者通过有界快照通道接收，避免在 Profile 反射旧格式追加字段。
     bool PublishNativeSkills(const FAetherProfileStateV10& Committed,const TArray<FAetherExternalSkillGrant>& Grants,FString& Reason);
     bool RebindNativeSkills(FString& Reason);
+    bool PublishNativeEquipment(const FAetherProfileStateV10& Committed,FString& Reason);
     const FAetherSkillStateV10* GetNativeSkills() const{return bNativeSkillReady&&NativeSkills.IsSet()?&NativeSkills.GetValue():nullptr;}
     const TArray<FAetherExternalSkillGrant>& GetNativeSkillGrants() const{return NativeSkillGrants;}
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) bool bNativeSkillsEnabled=false;
@@ -35,6 +36,9 @@ public:
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystem; }
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:
+    FActiveGameplayEffectHandle NativeEquipmentSource;
+    int64 NativeEquipmentRevision=-1;
+    bool bPublishingNativeEquipment=false;
     TOptional<FAetherSkillStateV10> NativeSkills;
     TArray<FAetherExternalSkillGrant> NativeSkillGrants;
     int64 NativeSkillRevision=-1;
