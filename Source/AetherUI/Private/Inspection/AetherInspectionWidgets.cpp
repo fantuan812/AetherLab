@@ -11,6 +11,7 @@
 #include "Components/TextBlock.h"
 #include "Components/SpinBox.h"
 #include "Engine/Texture2D.h"
+#include "InputCoreTypes.h"
 
 void UAetherInspectionActionButton::InitializeAction(const FAetherInspectRequest& InRequest,const FAetherInspectionAction& InAction,bool Comparison)
 {
@@ -28,7 +29,7 @@ TSharedRef<SWidget> UAetherInspectionCard::RebuildWidget()
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this,TEXT("WidgetTree"));
     if(!WidgetTree->RootWidget)
     {
-        auto* Size=WidgetTree->ConstructWidget<USizeBox>();Size->SetWidthOverride(420);Size->SetMaxDesiredHeight(620);
+        auto* Size=WidgetTree->ConstructWidget<USizeBox>();Size->SetMinDesiredWidth(200);Size->SetMaxDesiredWidth(420);Size->SetMaxDesiredHeight(620);
         WidgetTree->RootWidget=Size;
         auto* Border=WidgetTree->ConstructWidget<UBorder>();Border->SetPadding(FMargin(16));Border->SetBrushColor(FLinearColor(.025f,.035f,.05f,.98f));Size->SetContent(Border);
         auto* Root=WidgetTree->ConstructWidget<UVerticalBox>();Border->SetContent(Root);
@@ -188,6 +189,8 @@ FReply UAetherInspectionConfirmation::NativeOnMouseButtonDown(const FGeometry&,c
 {return FReply::Handled();}
 FReply UAetherInspectionConfirmation::NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event)
 {
+    if(Event.GetKey()==EKeys::Enter||Event.GetKey()==EKeys::Gamepad_FaceButton_Bottom)
+    {if(!Event.IsRepeat())Confirm();return FReply::Handled();}
     if(Event.GetKey()==EKeys::Escape||Event.GetKey()==EKeys::Gamepad_FaceButton_Right)
     {if(!Event.IsRepeat())Cancel();return FReply::Handled();}
     return Super::NativeOnKeyDown(Geometry,Event);

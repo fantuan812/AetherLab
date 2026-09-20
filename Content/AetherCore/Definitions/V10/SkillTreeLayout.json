@@ -1,0 +1,77 @@
+{
+  "Version": 1,
+  "Nodes": [
+    {
+      "SkillId": "Fire.Ignite",
+      "Rank": 1,
+      "X": 0,
+      "Y": 0
+    },
+    {
+      "SkillId": "Fire.Ignite",
+      "Rank": 2,
+      "X": 220,
+      "Y": 0
+    },
+    {
+      "SkillId": "Fire.Ignite",
+      "Rank": 3,
+      "X": 440,
+      "Y": 0
+    },
+    {
+      "SkillId": "Water.Draw",
+      "Rank": 1,
+      "X": 0,
+      "Y": 150
+    },
+    {
+      "SkillId": "Water.Draw",
+      "Rank": 2,
+      "X": 220,
+      "Y": 150
+    },
+    {
+      "SkillId": "Water.Draw",
+      "Rank": 3,
+      "X": 440,
+      "Y": 150
+    },
+    {
+      "SkillId": "Frost.Freeze",
+      "Rank": 1,
+      "X": 0,
+      "Y": 300
+    },
+    {
+      "SkillId": "Frost.Freeze",
+      "Rank": 2,
+      "X": 220,
+      "Y": 300
+    },
+    {
+      "SkillId": "Frost.Freeze",
+      "Rank": 3,
+      "X": 440,
+      "Y": 300
+    },
+    {
+      "SkillId": "Storm.Strike",
+      "Rank": 1,
+      "X": 0,
+      "Y": 450
+    },
+    {
+      "SkillId": "Storm.Strike",
+      "Rank": 2,
+      "X": 220,
+      "Y": 450
+    },
+    {
+      "SkillId": "Storm.Strike",
+      "Rank": 3,
+      "X": 440,
+      "Y": 450
+    }
+  ]
+}

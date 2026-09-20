@@ -26,6 +26,8 @@ FGuid UAetherMenuSubsystem::PushLayer(FName Layer)
     if(!IsOpen()||Layer.IsNone()||Layers.Num()>=8)return {};
     const FGuid Token=FGuid::NewGuid();Layers.Add({Token,Layer});OnChanged.Broadcast();return Token;
 }
+bool UAetherMenuSubsystem::HasLayer(FGuid Token) const
+{return Token.IsValid()&&Layers.ContainsByPredicate([&](const FLayer& L){return L.Token==Token;});}
 bool UAetherMenuSubsystem::DismissLayer(FGuid Token)
 {
     if(!Token.IsValid()||Layers.IsEmpty()||Layers.Last().Token!=Token)return false;

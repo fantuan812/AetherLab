@@ -1,5 +1,6 @@
 #include "AetherFrontierPanel.h"
 #include "Preview/AetherCharacterPreviewWidget.h"
+#include "Skills/AetherSkillTreePage.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "AetherGuide.h"
 #include "AetherFrontier.h"
@@ -35,9 +36,8 @@ void UAetherFrontierViewModel::Refresh(AAetherFrontierCharacter* C)
   for(const auto& Rule:FAetherRules::Get().Quests){const FName Q=Rule.Id;Text+=FString::Printf(TEXT("%s %s%s\n"),P.Claims.Contains(Q)?TEXT("[完成]"):P.Complete(Q)?TEXT("[待领奖]"):P.Available(Q)?TEXT("[进行中]"):TEXT("[未开放]"),Q==C->TrackedQuest?TEXT("> "):TEXT(""),*FAetherProfile::QuestTitle(Q));if(P.Available(Q))for(auto O:FAetherProfile::Objectives(Q))Text+=FString::Printf(TEXT("     %s %s\n"),P.Evidence.Contains(O)?TEXT("✓"):TEXT("·"),*AetherGuide::ObjectiveLabel(O));}
   Text+=FString::Printf(TEXT("\n日常委托日期：%s / 当日完成 %d\n补给：2 份补给；巡逻：3 标记；灭火：3 处委托火。\n三类委托均在城镇公告板开始或结算。"),*P.DailyDate,P.DailyClaims.Num());break;
  case 3:
-  Title=TEXT("能力 / Abilities");
-  for(int I=0;I<4;++I){const TCHAR* Names[]={TEXT("引焰"),TEXT("引泉"),TEXT("霜凝"),TEXT("雷击")};Text+=FString::Printf(TEXT("%d  %s  %s  法力 %.0f\n"),I+1,Names[I],C->SpellUnlocked(I)?TEXT("已学习"):TEXT("未学习"),UAetherSpellAbility::Cost(I));}
-  Text+=TEXT("\n1–4 选择，鼠标中键释放；F 锁定目标。\n回城与导师交互学习满足主线条件的能力。\n控制台：AetherBind Cast F 可重映射施法键并保存。\n菜单底部可选操作并设置按键；冲突按键自动交换。");break;
+  // 技能内容由独立图形页消费只读快照；旧正文不再拼接四行技能名称。
+  Title=TEXT("技能成长");First=TEXT("关闭");break;
  case 5:
   Title=TEXT("队伍 / Party");First=TEXT("邀请附近玩家");Second=TEXT("接受邀请");
   Text+=FString::Printf(TEXT("队长：%s\n待接受邀请：%s\n\n"),*C->ProfileState()->PartyLeader,*C->ProfileState()->InvitedBy);
@@ -67,6 +67,7 @@ void UAetherFrontierPanel::NativeDestruct()
 {
  SavePageMemory();
  if(CharacterPreview)CharacterPreview->SetSource(nullptr);
+ if(SkillTree)SkillTree->ClosePresentation();
  if(Menu.IsValid())Menu->OnChanged.RemoveAll(this);
  if(BoundCharacter.IsValid())BoundCharacter->OnPresentationChanged.RemoveAll(this);
  if(BoundProfile.IsValid())BoundProfile->OnProfilePublished.RemoveAll(this);
@@ -101,8 +102,12 @@ void UAetherFrontierPanel::BindProfile()
 void UAetherFrontierPanel::HandleMenuChanged()
 {
  SavePageMemory();BindCharacter();
+ const auto PreviousPage=ShownPage;
  auto* C=BoundCharacter.Get();ShownPage=C&&C->bPanel?EAetherMenuPage(C->Panel):EAetherMenuPage::None;
  RefreshSnapshot();
+ // 只在进入技能页时交给图控件焦点，快照/模态刷新不能抢走确认按钮或详情焦点。
+ if(ShownPage==EAetherMenuPage::Skills&&ShownPage!=PreviousPage)
+  if(auto* Focus=GetPrimaryFocusTarget())Focus->SetUserFocus(GetOwningPlayer());
  if(Menu.IsValid()&&BodyScroll&&ShownPage!=EAetherMenuPage::None)
  {
   const auto Memory=Menu->GetPageMemory(ShownPage);BodyScroll->SetScrollOffset(Memory.ScrollOffset);
@@ -132,6 +137,8 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
  auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();BodyScroll=Scroll;
  auto* BodySlot=Content->AddChildToHorizontalBox(Scroll);FSlateChildSize BodySize(ESlateSizeRule::Fill);BodySize.Value=.6f;BodySlot->SetSize(BodySize);
  Body=WidgetTree->ConstructWidget<UTextBlock>();Body->SetAutoWrapText(true);Scroll->AddChild(Body);
+ SkillTree=CreateWidget<UAetherSkillTreePage>(this,UAetherSkillTreePage::StaticClass());
+ if(SkillTree)Content->AddChildToHorizontalBox(SkillTree)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
  auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(Row);
  auto Add=[&](const TCHAR* Label,UTextBlock*& Text){auto* Button=WidgetTree->ConstructWidget<UButton>();Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetText(FText::FromString(Label));Button->SetContent(Text);Row->AddChildToHorizontalBox(Button);return Button;};
  InventoryRow=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(InventoryRow);
@@ -155,7 +162,7 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
  UTextBlock* P=nullptr;UTextBlock* S=nullptr;UTextBlock* N=nullptr;UTextBlock* X=nullptr;
  Add(TEXT("操作"),P)->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Primary);PrimaryText=P;
  Add(TEXT("操作"),S)->OnClicked.AddDynamic(this,&UAetherFrontierPanel::Secondary);SecondaryText=S;
- Add(TEXT("  下一项  "),N)->OnClicked.AddDynamic(this,&UAetherFrontierPanel::NextItem);
+ NextButton=Add(TEXT("  下一项  "),N);NextButton->OnClicked.AddDynamic(this,&UAetherFrontierPanel::NextItem);
  Add(TEXT("  关闭  "),X)->OnClicked.AddDynamic(this,&UAetherFrontierPanel::ClosePanel);
  return Super::RebuildWidget();
 }
@@ -164,6 +171,10 @@ void UAetherFrontierPanel::RefreshSnapshot()
  BindProfile();auto* C=BoundCharacter.Get();
  const bool PreviewOpen=C&&C->bPanel&&C->Panel==1;
  if(CharacterPreview){CharacterPreview->SetVisibility(PreviewOpen?ESlateVisibility::Visible:ESlateVisibility::Collapsed);CharacterPreview->SetSource(PreviewOpen?C:nullptr);}
+ const bool SkillOpen=C&&C->bPanel&&C->Panel==3;
+ if(SkillTree){SkillTree->SetVisibility(SkillOpen?ESlateVisibility::Visible:ESlateVisibility::Collapsed);SkillTree->SetLegacySource(SkillOpen?C:nullptr);}
+ if(BodyScroll)BodyScroll->SetVisibility(SkillOpen?ESlateVisibility::Collapsed:ESlateVisibility::Visible);
+ if(NextButton)NextButton->SetVisibility(SkillOpen?ESlateVisibility::Collapsed:ESlateVisibility::Visible);
  if(!C){SetVisibility(ESlateVisibility::Collapsed);return;}
  // 关闭后真正折叠。后续由菜单/复制事件唤醒，不保留透明的逐帧轮询控件。
  const bool Open=C->bPanel&&C->Panel!=4;SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
@@ -262,4 +273,4 @@ FReply UAetherFrontierPanel::NativeOnPreviewKeyDown(const FGeometry& Geometry,co
 }
 
 UWidget* UAetherFrontierPanel::GetPrimaryFocusTarget() const
-{return PrimaryText?PrimaryText->GetParent():nullptr;}
+{if(BoundCharacter.IsValid()&&BoundCharacter->Panel==3&&SkillTree)return SkillTree->GetNavigationFocusTarget();return PrimaryText?PrimaryText->GetParent():nullptr;}

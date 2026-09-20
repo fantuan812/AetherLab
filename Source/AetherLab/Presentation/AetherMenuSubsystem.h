@@ -35,6 +35,8 @@ public:
     UFUNCTION(BlueprintPure) EAetherMenuPage GetPage() const {return CurrentPage;}
     UFUNCTION(BlueprintPure) bool IsOpen() const {return CurrentPage!=EAetherMenuPage::None;}
     UFUNCTION(BlueprintPure) int32 GetLayerCount() const {return Layers.Num();}
+    // 弹层宿主用精确令牌响应 Esc，不能只凭层数猜测自己的确认框是否还存在。
+    bool HasLayer(FGuid Token) const;
     UFUNCTION(BlueprintCallable) void SavePageMemory(EAetherMenuPage Page,const FAetherMenuPageMemory& Memory);
     UFUNCTION(BlueprintPure) FAetherMenuPageMemory GetPageMemory(EAetherMenuPage Page) const;
     void AttachPawn(AAetherFrontierCharacter* Pawn);
