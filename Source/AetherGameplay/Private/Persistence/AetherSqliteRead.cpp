@@ -28,7 +28,7 @@ FAetherStoreSnapshotResult ReadSnapshot(sqlite3* DB,const FAetherStoreSnapshotQu
 {
     FAetherStoreSnapshotResult R;FTransactionGuard Tx(DB,true);
     const auto Fail=[&](EAetherStoreCode Code,const FString& Detail)
-    {R.Code=Code;R.Detail=Detail;R.Values.Reset();R.ProfileRevisions.Reset();R.ContainerCount=-1;return R;};
+    {R.Code=Code;R.Detail=Detail;R.Values.Reset();R.ProfileRevisions.Reset();R.ContainerRevisions.Reset();R.WorldRevisions.Reset();R.ContainerCount=-1;return R;};
     if(!Tx.Active)return Fail(EAetherStoreCode::Unavailable,Error(DB));
     int64 Bytes=0;
     for(const auto& K:Query.Keys)
@@ -45,6 +45,18 @@ FAetherStoreSnapshotResult ReadSnapshot(sqlite3* DB,const FAetherStoreSnapshotQu
         auto Index=ReadRevisions(DB,EAetherAggregateKind::Profile);
         if(Index.Code!=EAetherStoreCode::Found)return Fail(Index.Code,Index.Detail);
         R.ProfileRevisions=MoveTemp(Index.Revisions);
+    }
+    if(Query.bIncludeWorldRevisions)
+    {
+        auto Index=ReadRevisions(DB,EAetherAggregateKind::World);
+        if(Index.Code!=EAetherStoreCode::Found)return Fail(Index.Code,Index.Detail);
+        R.WorldRevisions=MoveTemp(Index.Revisions);
+    }
+    if(Query.bIncludeContainerRevisions)
+    {
+        auto Index=ReadRevisions(DB,EAetherAggregateKind::Container);
+        if(Index.Code!=EAetherStoreCode::Found)return Fail(Index.Code,Index.Detail);
+        R.ContainerRevisions=MoveTemp(Index.Revisions);
     }
     if(Query.bIncludeContainerCount)
     {

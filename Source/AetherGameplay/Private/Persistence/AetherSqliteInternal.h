@@ -74,4 +74,7 @@ namespace AetherSQLite::Private
     FAetherStoreResult ImportLegacy(sqlite3* DB,const FAetherLegacyImport& Import,const FAetherSqliteOptions& Options);
     FAetherStoreEffectsResult ReadEffects(sqlite3* DB, const FString& Actor);
     bool MakeBackup(sqlite3* DB, const FString& Path);
+    bool ValidInitialAggregate(const FAetherStoredAggregate& Value,EAetherAggregateKind Kind);
+    FAetherStoreResult InitializeWorld(sqlite3* DB,const FAetherStoredAggregate& World);
+    FAetherStoreReadResult CreateProfile(sqlite3* DB,const FAetherStoredAggregate& Profile);
 }

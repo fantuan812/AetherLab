@@ -28,6 +28,8 @@ struct FAetherStoreSnapshotQuery
     TArray<FAetherAggregateKey> Keys;
     bool bIncludeProfileRevisions=false;
     bool bIncludeContainerCount=false;
+    bool bIncludeContainerRevisions=false;
+    bool bIncludeWorldRevisions=false;
 };
 struct FAetherStoreSnapshotResult
 {
@@ -36,6 +38,8 @@ struct FAetherStoreSnapshotResult
     TMap<FAetherAggregateKey,FAetherStoredAggregate> Values;
     TMap<FString,int64> ProfileRevisions;
     int32 ContainerCount=-1;
+    TMap<FString,int64> ContainerRevisions;
+    TMap<FString,int64> WorldRevisions;
     FString Detail;
 };
 struct FAetherStoreEffectsResult
@@ -69,6 +73,10 @@ public:
     virtual TFuture<FAetherStoreResult> LookupReceipt(FAetherReceiptQuery Query) = 0;
     // 仅接受空数据库或同一已导入来源的重试；不能覆盖已有游戏数据。
     virtual TFuture<FAetherStoreResult> ImportLegacy(FAetherLegacyImport Import) = 0;
+    // 服务器启动/登录专用，不能从玩家协议调用。仅插入不存在的记录，不推进或覆盖已有版本。
+    // 默认失败使尚未实现该能力的替换后端明确拒绝启动，而不是降级为普通 Commit。
+    virtual TFuture<FAetherStoreResult> InitializeWorld(FAetherStoredAggregate World);
+    virtual TFuture<FAetherStoreReadResult> CreateProfile(FAetherStoredAggregate Profile);
     virtual TFuture<FAetherStoreReadResult> Read(FAetherAggregateKey Key) = 0;
     virtual TFuture<FAetherStoreRevisionIndex> ReadRevisions(EAetherAggregateKind Kind) = 0;
     // 多聚合及相关索引共享同一个 SQLite 读事务，不能拼接不同提交时刻的数据。

@@ -9,6 +9,8 @@ public class AetherLab : ModuleRules
         PublicIncludePaths.Add(ModuleDirectory);
         PublicDependencyModuleNames.AddRange(new[] { "AetherCore", "AetherGameplay", "Core", "CoreUObject", "Engine", "InputCore", "ReactiveCore", "ReactiveRuntime", "GameplayAbilities", "GameplayTags", "GameplayTasks", "NetCore" });
         PublicDependencyModuleNames.Add("AetherEquipment");
+        // 生产旧档迁移复用引擎固定 OpenSSL 的 SHA256；Windows GenericPlatform 实现不能用于该摘要。
+        AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
         PrivateDependencyModuleNames.AddRange(new[] { "AIModule", "AnimGraphRuntime", "Json", "NavigationSystem", "EnhancedInput" });
     }
 }

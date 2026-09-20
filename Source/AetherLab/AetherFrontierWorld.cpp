@@ -3,6 +3,7 @@
 #include "Interaction/AetherNearbyRegistry.h"
 #include "Framework/AetherPlayerController.h"
 #include "Networking/AetherCommandRuntime.h"
+#include "Persistence/AetherNativePersistence.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/HUD.h"
 #include "AetherPhysicsDamage.h"
@@ -173,7 +174,8 @@ FString AAetherFrontierMode::InitNewPlayer(APlayerController* PC,const FUniqueNe
 bool AAetherFrontierMode::WriteDatabase(UAetherFrontierSave* Next)
 {
     // 切换为原生后端后封住 v9 总写入口；失败向调用者传播，不能双写两个不同版本的事实。
-    if(auto* GI=GetGameInstance())if(GI->GetSubsystem<UAetherCommandRuntime>()->IsInstalled())return false;
+    if(auto* GI=GetGameInstance())
+        if(GI->GetSubsystem<UAetherCommandRuntime>()->IsInstalled()||GI->GetSubsystem<UAetherNativePersistence>()->OwnsWriteAuthority())return false;
     if(bWorldRestoreFailed || bFailWrites || !Next || !Next->ValidateWorldLedger() || Next->Profiles.Num()>128 || Database->Generation==MAX_int32)return false;
     for(const auto& P:Next->Profiles)if(!P.Validate())return false;
     if(Encounters){Next->Abbey=Encounters->Abbey;Next->Relay=Encounters->Relay;}

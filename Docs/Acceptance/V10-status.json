@@ -20,7 +20,7 @@
     {
       "id": "V10-04",
       "status": "in_progress",
-      "acceptance": "SQLite_single_writer; bounded_v9_reader_and_complete_profile_world_conversion; atomic_empty_database_import_preserves_versions_and_provenance; 42_rule_tests_pass; normal_commit_and_import_forced_process_recovery_pass; three_process_offline_audit_import_reopen_checksum_rejection_pass; runtime_map_material_restore_and_gameplay_cutover_pending"
+      "acceptance": "SQLite_single_writer; bounded_v9_reader_and_complete_profile_world_conversion; atomic_empty_database_import_preserves_versions_and_provenance; 42_rule_tests_pass; normal_commit_and_import_forced_process_recovery_pass; three_process_offline_audit_import_reopen_checksum_rejection_pass; runtime_map_material_restore_and_gameplay_cutover_pending; uncompiled_untested_atomic_world_profile_creation_full_DTO_ownership_startup_audit_legacy_generation_backup_native_persistence_lifecycle_and_physics_adapter; automatic_GameMode_ASC_encounter_container_and_region_transaction_cutover_pending"
     },
     {
       "id": "V10-05",

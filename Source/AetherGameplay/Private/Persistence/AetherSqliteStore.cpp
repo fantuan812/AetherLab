@@ -176,6 +176,20 @@ public:
         FAetherStoreResult Rejected;Rejected.Code=EAetherStoreCode::Busy;Rejected.Detail=TEXT("Import already queued or writer unavailable");
         return Enqueue<FAetherStoreResult>([Import=MoveTemp(Import),O=Options](sqlite3* DB){return AetherSQLite::Private::ImportLegacy(DB,Import,O);},MoveTemp(Rejected),true);
     }
+    virtual TFuture<FAetherStoreResult> InitializeWorld(FAetherStoredAggregate World) override
+    {
+        if(!ValidInitialAggregate(World,EAetherAggregateKind::World))
+        {FAetherStoreResult R;R.Code=EAetherStoreCode::Invalid;return Completed(MoveTemp(R));}
+        FAetherStoreResult Rejected;Rejected.Code=EAetherStoreCode::Busy;
+        return Enqueue<FAetherStoreResult>([World=MoveTemp(World)](sqlite3* DB){return AetherSQLite::Private::InitializeWorld(DB,World);},MoveTemp(Rejected),true);
+    }
+    virtual TFuture<FAetherStoreReadResult> CreateProfile(FAetherStoredAggregate Profile) override
+    {
+        if(!ValidInitialAggregate(Profile,EAetherAggregateKind::Profile))
+        {FAetherStoreReadResult R;R.Code=EAetherStoreCode::Invalid;return Completed(MoveTemp(R));}
+        FAetherStoreReadResult Rejected;Rejected.Code=EAetherStoreCode::Busy;
+        return Enqueue<FAetherStoreReadResult>([Profile=MoveTemp(Profile)](sqlite3* DB){return AetherSQLite::Private::CreateProfile(DB,Profile);},MoveTemp(Rejected));
+    }
     virtual TFuture<FAetherStoreReadResult> Read(FAetherAggregateKey Key) override
     { return Enqueue<FAetherStoreReadResult>([Key=MoveTemp(Key)](sqlite3* DB){ return ReadAggregate(DB,Key); }, FAetherStoreReadResult()); }
     virtual TFuture<FAetherStoreRevisionIndex> ReadRevisions(EAetherAggregateKind Kind) override
