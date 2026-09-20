@@ -22,6 +22,7 @@ EAetherCommandCode AetherContainerCommands::AuthorizeRead(const FAetherPlayerCom
 {
     using E=EAetherCommandType;using R=EAetherCommandCode;Key.Reset();const auto& A=Context.Container;
     if(!Handles(C.Type))return R::UnsupportedAction;
+    if(C.Type!=E::DropItem&&C.ProtocolVersion<3)return R::UnsupportedProtocol;
     if(!Context.bCanManageInventory)return R::NotReady;
     if(!A.bAuthorized)return R::Unauthorized;
     if(!A.bTargetReady)return R::NotReady;
@@ -79,6 +80,7 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
         ContainerRevision=Container.Revision;if(ContainerRevision>=MAX_int64-1)return Fail(R::NotReady);
     }
     else if(C.Type!=E::DropItem)return Fail(R::Missing);
+    if(C.Type!=E::DropItem&&C.ExpectedContainerRevision!=ContainerRevision)return Fail(R::StaleRevision);
     FAetherInventoryMutation Move;
     if(C.Type==E::DropItem)
     {
@@ -100,6 +102,7 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
         if(Into)
         {
             const auto* Item=P.Inventory.Find(C.ItemInstanceId);if(!Item)return Fail(R::Missing);
+            if(Item->bLocked)return Fail(R::NotAllowed);
             if(Container.Kind==EAetherContainerKind::PersonalStorage)
             {
                 if(!Item->BoundToCharacter.IsEmpty()&&!Item->BoundToCharacter.Equals(Actor,ESearchCase::CaseSensitive))return Fail(R::NotAllowed);

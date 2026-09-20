@@ -20,6 +20,7 @@ public:
     bool Prepare(const FString& SavePrefix,bool AllowNewWorld,FString& Reason);
     bool Activate(FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FAetherRestoreNativeWorld Restore,FString& Reason);
     // Active 下服务器登录先读已有档案，缺失才创建；不得直接把初始候选赋给 PlayerState。
+    TFuture<FAetherStoreReadResult> CreateEmptyContainer(FAetherContainerStateV10 Container);
     TFuture<FAetherStoreReadResult> LoadOrCreateProfile(const FString& ServerCharacterId);
     // 正常周期物理保存；完成前不能据此卸载实体。一次仅允许一个检查点，避免累积过时快照。
     TFuture<FAetherWorldCheckpointResult> SaveLoadedPhysics();

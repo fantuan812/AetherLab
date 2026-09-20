@@ -79,4 +79,5 @@ namespace AetherSQLite::Private
     bool ValidInitialAggregate(const FAetherStoredAggregate& Value,EAetherAggregateKind Kind);
     FAetherStoreResult InitializeWorld(sqlite3* DB,const FAetherStoredAggregate& World);
     FAetherStoreReadResult CreateProfile(sqlite3* DB,const FAetherStoredAggregate& Profile);
+    FAetherStoreReadResult CreateEmptyContainer(sqlite3* DB,const FAetherStoredAggregate& Container,const FString& Owner);
 }

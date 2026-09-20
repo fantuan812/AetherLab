@@ -16,6 +16,10 @@ TFuture<FAetherStoreReadResult> IAetherTransactionalStore::CreateProfile(FAether
     R.Code=EAetherStoreCode::UnsupportedSchema;R.Detail=TEXT("Backend does not support profile creation");P.SetValue(MoveTemp(R));return F;
 }
 
+TFuture<FAetherStoreReadResult> IAetherTransactionalStore::CreateEmptyContainer(FAetherContainerStateV10,FAetherV10ItemDefinitions)
+{
+    TPromise<FAetherStoreReadResult> P;auto F=P.GetFuture();FAetherStoreReadResult R;R.Code=EAetherStoreCode::Unavailable;P.SetValue(MoveTemp(R));return F;
+}
 TFuture<FAetherStoreReadResult> IAetherTransactionalStore::CompareExchangeWorld(FAetherAggregateWrite)
 {
     TPromise<FAetherStoreReadResult> P;auto F=P.GetFuture();FAetherStoreReadResult R;

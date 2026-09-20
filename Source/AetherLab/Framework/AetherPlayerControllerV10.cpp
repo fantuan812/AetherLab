@@ -35,3 +35,8 @@ void AAetherPlayerController::ServerV10SceneInput_Implementation(const FAetherV1
     const FString Result=M->ExecuteNativeSceneService(*this,C);
     if(auto* Pawn=Cast<AAetherFrontierCharacter>(GetPawn()))Pawn->Notify(Result);
 }
+
+void AAetherPlayerController::ServerV10ContainerQuery_Implementation(const FAetherV10ContainerQuery& Q)
+{if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->QueryContainer(this,Q);}
+void AAetherPlayerController::ClientV10ContainerClosed_Implementation(FGuid Channel,FGuid Context)
+{if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveContainerClosed(this,Channel,Context);}

@@ -2,6 +2,8 @@
 #include "Framework/AetherPlayerController.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "Profile/AetherProfileCodec.h"
+#include "World/AetherContainerCodec.h"
+#include "Presentation/AetherMenuSubsystem.h"
 #include "Engine/LocalPlayer.h"
 #include "HAL/PlatformTime.h"
 #include "Misc/Crc.h"
@@ -20,14 +22,14 @@ void UAetherCommandClient::ReceiveChannel(AAetherPlayerController* C,FGuid Id,co
     if(Identity.IsEmpty()||Identity.Len()>32)return;
     for(TCHAR Ch:Identity)if(!FChar::IsAlnum(Ch)&&Ch!='_')return;
     if(Controller.Get()==C&&Channel==Id&&Owner.Equals(Identity,ESearchCase::CaseSensitive))return;
-    Controller=C;Channel=Id;Owner=Identity;Profile.Reset();Assembly={};NextSync=0;
+    ResetContainer();Controller=C;Channel=Id;Owner=Identity;Profile.Reset();Assembly={};NextSync=0;
     // Pending 保留原拥有者/授权通道；新通道不会在 Tick 中自动续发旧意图。
     OnChanged.Broadcast();
 }
 void UAetherCommandClient::DetachController(AAetherPlayerController* C)
 {
     if(Controller.Get()!=C)return;
-    Controller.Reset();Channel.Invalidate();Owner.Reset();Profile.Reset();Assembly={};OnChanged.Broadcast();
+    ResetContainer();Controller.Reset();Channel.Invalidate();Owner.Reset();Profile.Reset();Assembly={};OnChanged.Broadcast();
 }
 bool UAetherCommandClient::Submit(FGuid ExpectedChannel,const FString& Identity,const TArray<uint8>& Bytes,FString& Reason)
 {
@@ -86,7 +88,7 @@ void UAetherCommandClient::ReceiveReply(AAetherPlayerController* C,const FAether
     RetirePublished();
     // 始终先更新服务状态再通知控件，避免同步回调提交时看到过期的队列。
     OnResult.Broadcast(Result);OnChanged.Broadcast();
-    if(Success||Result.Code==EAetherCommandCode::StaleRevision)RequestSnapshot();
+    if(Success||Result.Code==EAetherCommandCode::StaleRevision){RequestSnapshot();RefreshContainer();}
 }
 void UAetherCommandClient::ReceiveChunk(AAetherPlayerController* C,const FAetherV10SnapshotChunk& P)
 {
@@ -95,6 +97,8 @@ void UAetherCommandClient::ReceiveChunk(AAetherPlayerController* C,const FAether
         P.Bytes.Num()>AetherV10Network::ChunkBytes||uint32(P.Bytes.Num())>P.Total-P.Offset)return;
     // 确认已收到的有界片段；即使内容版本已过期也归还流量额度，防止服务端卡住。
     C->ServerV10SnapshotAck(Channel,P.Transfer,P.Offset+P.Bytes.Num());
+    if(P.Kind==1){ReceiveContainerChunk(P);return;}
+    if(P.Kind!=0||P.Context.IsValid()||P.WorldRevision!=-1)return;
     if(Profile.IsSet()&&P.Revision<Profile->Revision)return;
     const double Now=FPlatformTime::Seconds();
     if(P.Offset==0)
@@ -118,14 +122,70 @@ void UAetherCommandClient::ReceiveChunk(AAetherPlayerController* C,const FAether
 void UAetherCommandClient::Tick(float)
 {
     if(Assembly.Transfer.IsValid()&&FPlatformTime::Seconds()-Assembly.LastChunkAt>30){Assembly={};RequestSnapshot();}
+    if(ContainerContext.IsValid())
+    {
+        if(GetLocalPlayer()->GetSubsystem<UAetherMenuSubsystem>()->GetPage()!=EAetherMenuPage::Inventory)CloseContainer();
+        else if(FPlatformTime::Seconds()>=NextContainerSync)
+        {
+            // 空响应和丢失的打开请求同样可恢复；只读刷新不会重放转移意图。
+            if(ContainerAssembly.Transfer.IsValid()&&FPlatformTime::Seconds()-ContainerAssembly.LastChunkAt>30)ContainerAssembly={};
+            RefreshContainer();
+        }
+    }
     SendPending();
 }
 bool UAetherCommandClient::IsTickable() const
-{return !IsTemplate()&&Controller.IsValid()&&Channel.IsValid()&&(Assembly.Transfer.IsValid()||HasPending());}
+{return !IsTemplate()&&Controller.IsValid()&&Channel.IsValid()&&(Assembly.Transfer.IsValid()||ContainerContext.IsValid()||HasPending());}
 TStatId UAetherCommandClient::GetStatId() const{RETURN_QUICK_DECLARE_CYCLE_STAT(UAetherCommandClient,STATGROUP_Tickables);}
 UWorld* UAetherCommandClient::GetTickableGameObjectWorld() const{return GetWorld();}
 void UAetherCommandClient::Deinitialize()
 {
-    Controller.Reset();Channel.Invalidate();Owner.Reset();Profile.Reset();Assembly={};Pending.Reset();OnChanged.Clear();OnResult.Clear();
+    ResetContainer();Controller.Reset();Channel.Invalidate();Owner.Reset();Profile.Reset();Assembly={};Pending.Reset();OnChanged.Clear();OnResult.Clear();
     Super::Deinitialize();
+}
+
+void UAetherCommandClient::ResetContainer()
+{Container.Reset();ContainerContext.Invalidate();RequestedContainer.Reset();ContainerAssembly={};ContainerWorldRevision=-1;AssemblyWorldRevision=-1;NextContainerSync=0;}
+bool UAetherCommandClient::OpenContainer(const FString& Id)
+{
+    if(!Matches(Controller.Get(),Channel)||!Profile.IsSet()||Id.IsEmpty()||Id.Len()>96)return false;
+    CloseContainer();ContainerContext=FGuid::NewGuid();RequestedContainer=Id;
+    GetLocalPlayer()->GetSubsystem<UAetherMenuSubsystem>()->OpenPage(EAetherMenuPage::Inventory);
+    RefreshContainer();OnChanged.Broadcast();return true;
+}
+void UAetherCommandClient::CloseContainer()
+{
+    const FGuid Old=ContainerContext;ResetContainer();
+    if(Old.IsValid()&&Matches(Controller.Get(),Channel))
+    {FAetherV10ContainerQuery Q;Q.Channel=Channel;Q.Context=Old;Controller->ServerV10ContainerQuery(Q);}
+    if(Old.IsValid())OnChanged.Broadcast();
+}
+void UAetherCommandClient::RefreshContainer()
+{
+    if(!ContainerContext.IsValid()||!Matches(Controller.Get(),Channel)||FPlatformTime::Seconds()<NextContainerSync)return;
+    NextContainerSync=FPlatformTime::Seconds()+2;
+    FAetherV10ContainerQuery Q;Q.Channel=Channel;Q.Context=ContainerContext;Q.TargetId=RequestedContainer;
+    Controller->ServerV10ContainerQuery(Q);
+}
+void UAetherCommandClient::ReceiveContainerClosed(AAetherPlayerController* C,FGuid Id,FGuid Context)
+{if(Matches(C,Id)&&ContainerContext==Context){ResetContainer();OnChanged.Broadcast();}}
+void UAetherCommandClient::ReceiveContainerChunk(const FAetherV10SnapshotChunk& P)
+{
+    if(!ContainerContext.IsValid()||P.Context!=ContainerContext||P.WorldRevision<0||P.WorldRevision==MAX_int64||
+        (Container.IsSet()&&P.Revision<Container->Revision))return;
+    auto& A=ContainerAssembly;
+    if(P.Offset==0)
+    {
+        if(A.Transfer.IsValid()&&P.Revision<A.Revision)return;
+        A={};A.Transfer=P.Transfer;A.Revision=P.Revision;A.Total=P.Total;A.Checksum=P.Checksum;AssemblyWorldRevision=P.WorldRevision;A.Bytes.Reserve(P.Total);
+    }
+    if(A.Transfer!=P.Transfer||A.Revision!=P.Revision||A.Total!=P.Total||A.Checksum!=P.Checksum||
+        AssemblyWorldRevision!=P.WorldRevision||uint32(A.Bytes.Num())!=P.Offset)return;
+    A.LastChunkAt=FPlatformTime::Seconds();A.Bytes.Append(P.Bytes);if(uint32(A.Bytes.Num())!=A.Total)return;
+    const auto& D=FAetherV10Definitions::Get();FAetherContainerStateV10 Candidate;FString Why;
+    const bool Valid=D.bValid&&FCrc::MemCrc32(A.Bytes.GetData(),A.Bytes.Num())==A.Checksum&&
+        AetherContainerCodec::Decode(A.Bytes,D.Items,Candidate,Why)&&Candidate.Revision==A.Revision&&
+        Candidate.ContainerId.Equals(RequestedContainer,ESearchCase::CaseSensitive)&&Candidate.Allows(Owner)&&Candidate.bActive;
+    A={};if(!Valid){CloseContainer();return;}
+    ContainerWorldRevision=AssemblyWorldRevision;Container=MoveTemp(Candidate);OnChanged.Broadcast();
 }

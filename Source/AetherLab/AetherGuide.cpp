@@ -1,4 +1,5 @@
 #include "AetherGuide.h"
+#include "World/AetherNativeContainer.h"
 #include "Interaction/AetherNativeInteraction.h"
 #include "AetherFrontier.h"
 #include "AetherRules.h"
@@ -80,7 +81,8 @@ FAetherInteractionTarget QueryTarget(AAetherFrontierCharacter* C,AActor* Actor)
  if(!Registry||!Registry->Contains(Actor))return R;
  auto* Target=Cast<AAetherFrontierProp>(Actor);auto* Downed=Cast<AAetherFrontierCharacter>(Actor);
  const bool Rescue=Downed&&Downed->Fighter==EAetherFighter::Player&&!Downed->Alive();
- if(!Target&&!Rescue)return R;
+ auto* Container=C->UsesNativeSkills()?Cast<AAetherNativeContainer>(Actor):nullptr;
+ if(!Target&&!Rescue&&!Container)return R;
  if(Target&&(!Target->bEnabled||Target->Service.IsNone()||((IsPersonalFire(Target->Service)||Target->Reactive->bOwnerOnlyStimuli)&&Target->GetOwner()!=C)))return R;
  const double Radius=Rescue?200.:250.;
  if(FVector::DistSquared(C->GetActorLocation(),Actor->GetActorLocation())>FMath::Square(Radius))return R;
@@ -88,6 +90,12 @@ FAetherInteractionTarget QueryTarget(AAetherFrontierCharacter* C,AActor* Actor)
  if(C->GetWorld()->LineTraceTestByChannel(C->GetActorLocation(),Actor->GetActorLocation(),ECC_Visibility,Q))return R;
  R.ProfileRevision=C->ProfileState()?C->ProfileState()->Profile.Revision:-1;
  const FString Key=TEXT("[")+C->BindingFor("Interact").GetDisplayName().ToString()+TEXT("] ");
+ if(Container)
+ {
+  if(Container->StableId.IsEmpty()||Container->Revision<0)return R;
+  R.Container=Container;R.StableId=FName(*Container->StableId);R.ActionId="OpenContainer";R.bExecutable=true;
+  R.Prompt=Key+(Container->ContainerKind==uint8(EAetherContainerKind::WorldDrop)?TEXT("查看掉落"):Container->ContainerKind==uint8(EAetherContainerKind::PersonalStorage)?TEXT("打开个人仓储"):TEXT("打开共享箱子"));return R;
+ }
  if(Rescue){R.Rescue=Downed;R.ActionId="Revive";R.bExecutable=true;R.Prompt=Key+TEXT("救援队友：保持靠近 3 秒");return R;}
  R.Prop=Target;R.StableId=Target->Spec.Id;R.ActionId=Target->Service;const FName S=Target->Service;
  if(C->UsesNativeSkills())if(auto Native=AetherNativeInteraction::Provider(*C,*Target);Native.IsSet())
@@ -124,6 +132,11 @@ FAetherInteractionTarget QueryTarget(AAetherFrontierCharacter* C,AActor* Actor)
 bool ValidateSelection(AAetherFrontierCharacter* C,const FAetherInteractionTarget& S)
 {
  if(!IsValid(C)||!C->ProfileState()||S.ProfileRevision!=C->ProfileState()->Profile.Revision)return false;
+ if(S.Container.IsValid())
+ {
+  const auto Current=QueryTarget(C,S.Container.Get());
+  return Current.Container==S.Container&&Current.bExecutable&&Current.StableId.ToString().Equals(S.StableId.ToString(),ESearchCase::CaseSensitive);
+ }
  if(S.Prop.IsValid()==S.Rescue.IsValid())return false;
  auto Current=QueryTarget(C,S.Prop.IsValid()?static_cast<AActor*>(S.Prop.Get()):static_cast<AActor*>(S.Rescue.Get()));
  // 用完整拼写比较，而不是 FName 的大小写折叠比较；缓存动作变化也会使旧选择失效。

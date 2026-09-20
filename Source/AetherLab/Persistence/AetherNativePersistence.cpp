@@ -3,6 +3,7 @@
 #include "Persistence/AetherNativeWorldPhysics.h"
 #include "Persistence/AetherSqliteStore.h"
 #include "Profile/AetherProfileCodec.h"
+#include "Definitions/AetherV10Definitions.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "Misc/Paths.h"
@@ -69,6 +70,11 @@ bool UAetherNativePersistence::Activate(FAetherResolveConnectedContext Resolve,F
     if(!Runtime||!Runtime->InstallBackend(Store.ToSharedRef(),MoveTemp(Resolve),MoveTemp(Publish),Reason))
     {Fail(Reason);return false;}
     State=EAetherNativePersistencePhase::Active;Detail.Reset();return true;
+}
+TFuture<FAetherStoreReadResult> UAetherNativePersistence::CreateEmptyContainer(FAetherContainerStateV10 C)
+{
+    check(IsInGameThread());if(State==EAetherNativePersistencePhase::Active&&Store)return Store->CreateEmptyContainer(MoveTemp(C),FAetherV10Definitions::Get().Items);
+    TPromise<FAetherStoreReadResult> P;auto F=P.GetFuture();P.SetValue(FAetherStoreReadResult());return F;
 }
 TFuture<FAetherStoreReadResult> UAetherNativePersistence::LoadOrCreateProfile(const FString& Identity)
 {

@@ -28,12 +28,24 @@ USTRUCT()
 struct AETHERLAB_API FAetherV10SnapshotChunk
 {
     GENERATED_BODY()
-    FGuid Channel,Transfer;
+    FGuid Channel,Transfer,Context;
+    uint8 Kind=0; // 0 角色，1 当前已授权容器。
+    int64 WorldRevision=-1;
     int64 Revision=-1;
     uint32 Total=0,Offset=0,Checksum=0;
     TArray<uint8> Bytes;
     bool NetSerialize(FArchive& Ar,UPackageMap*,bool& Success);
 };
+USTRUCT()
+struct AETHERLAB_API FAetherV10ContainerQuery
+{
+    GENERATED_BODY()
+    FGuid Channel,Context;
+    FString TargetId; // 空表示关闭同一 Context；上限在分配之前校验。
+    bool NetSerialize(FArchive& Ar,UPackageMap*,bool& Success);
+};
+template<> struct TStructOpsTypeTraits<FAetherV10ContainerQuery>:TStructOpsTypeTraitsBase2<FAetherV10ContainerQuery>{enum{WithNetSerializer=true};};
+
 template<> struct TStructOpsTypeTraits<FAetherV10CommandPacket>:TStructOpsTypeTraitsBase2<FAetherV10CommandPacket>{enum{WithNetSerializer=true};};
 template<> struct TStructOpsTypeTraits<FAetherV10ReplyPacket>:TStructOpsTypeTraitsBase2<FAetherV10ReplyPacket>{enum{WithNetSerializer=true};};
 template<> struct TStructOpsTypeTraits<FAetherV10SnapshotChunk>:TStructOpsTypeTraitsBase2<FAetherV10SnapshotChunk>{enum{WithNetSerializer=true};};

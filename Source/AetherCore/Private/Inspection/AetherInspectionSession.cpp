@@ -72,6 +72,13 @@ bool FAetherInspectionSession::Confirm(FGuid Token,int32 Quantity,const FAetherI
         const auto& Target=Draft->Request.Target;
         switch(A->Kind)
         {
+        case E::Deposit:case E::Withdraw:
+            if(!S.Container.IsSet()||!S.Container->ContainerId.Equals(A->Argument,ESearchCase::CaseSensitive))return Fail(TEXT("容器已变化。"));
+            C.Type=S.Container->Kind==EAetherContainerKind::WorldDrop?EAetherCommandType::PickUpItem:EAetherCommandType::TransferItem;
+            C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.TargetStableId=A->Argument;
+            if(C.Type==EAetherCommandType::TransferItem)C.ContainerId=A->Argument;
+            if(C.Type==EAetherCommandType::TransferItem)C.TransferDirection=A->Kind==E::Deposit?EAetherTransferDirection::IntoContainer:EAetherTransferDirection::FromContainer;
+            C.ExpectedWorldRevision=S.ContainerWorldRevision;C.ExpectedContainerRevision=S.Container->Revision;break;
         case E::Use:C.Type=EAetherCommandType::UseItem;C.ItemInstanceId=Target.InstanceId;break;
         case E::Split:C.Type=EAetherCommandType::SplitStack;C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.DestinationIndex=S.Inventory.FirstEmpty();break;
         case E::Sell:C.Type=EAetherCommandType::SellItem;C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.TargetStableId=A->Argument;break;

@@ -19,6 +19,7 @@ bool AetherNativeInventory::Snapshot(AAetherFrontierCharacter& C,int64 Revision,
 {
     auto* Net=Client(C);if(!Net||!Net->GetProfile().IsSet()||!Net->GetChannel().IsValid())return false;
     const auto& P=Net->GetProfile().GetValue();Out={};Out.Context={P.CharacterId,Net->GetChannel(),Revision};
+    Out.Container=Net->GetContainer();Out.ContainerContext=Net->GetContainerContext();Out.ContainerWorldRevision=Net->GetContainerWorldRevision();
     Out.ProfileRevision=P.Revision;Out.Inventory=P.Inventory;Out.Skills=P.Skills;Out.Gold=P.Gold;
     Out.bCanAct=C.Ready()&&!C.Carried&&!C.ReviveTarget&&!C.bTravelPending&&!Net->HasPending();
     if(auto* W=C.GetWorld()->GetGameState<AAetherFrontierState>())Out.WorldRevision=W->NativeWorldRevision;

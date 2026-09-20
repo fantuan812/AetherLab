@@ -101,25 +101,7 @@ bool AAetherFrontierMode::PublishNativeState(AAetherPlayerController& PC,const F
     if(!bNativeSceneReady||bWorldRestoreFailed||!PS||!Pawn||Pawn->ProfileState()!=PS)return false;
     FString Why;if(!PS->PublishNativeProfile(P,Why))return false;
     if(W)PublishNativeWorld(*W);
-    if(Container)
-    {
-        auto* Existing=NativeContainers.Find(Container->ContainerId);
-        auto* A=Existing?Existing->Get():nullptr;
-        if(!IsValid(A)&&Container->bActive)
-        {
-            FAetherContainerRestoreDescriptor D{Container->ContainerId,Container->OwnerCharacterId,Container->RegionId,
-                Container->Kind,Container->Location,true,Container->Revision};
-            A=GetWorld()->SpawnActor<AAetherNativeContainer>();
-            if(!A||!A->Configure(D)){if(A)A->Destroy();return false;}
-            NativeContainers.Add(Container->ContainerId,A);
-        }
-        if(IsValid(A))
-        {
-            if(A->bOnlyRelevantToOwner&&A->OwnerCharacterId.Equals(P.CharacterId,ESearchCase::CaseSensitive))A->SetOwner(&PC);
-            if(!A->Publish(*Container))return false;
-            if(!Container->bActive)NativeContainers.Remove(Container->ContainerId);
-        }
-    }
+    if(Container)PublishNativeContainer(*Container);
     if(P.Claims.Contains(TEXT("Q_Main_03")))
         for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)
             if(It->Reactive->bOwnerOnlyStimuli&&It->GetOwner()==Pawn)It->Pacify();
@@ -151,6 +133,8 @@ void AAetherFrontierMode::TickNativeStartup()
         bNativeSceneReady=true;NativeBaselineStarted=FPlatformTime::Seconds();
         GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SetWorldPublisher(
             [Self](const auto& W){if(Self.IsValid()&&Self->bNativeSceneReady)Self->PublishNativeWorld(W);});
+        GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SetContainerAuthorizer([Self](auto& PC,const auto& Id,bool Open){return Self.IsValid()&&Self->AuthorizeNativeContainer(PC,Id,Open);});
+        GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SetContainerPublisher([Self](const auto& C){if(Self.IsValid())Self->PublishNativeContainer(C);});
         Persistence->ConfigureCheckpoints(
             [Self](const auto& Before,auto& Next,FString& R){return Self.IsValid()&&Self->CaptureNativeWorld(Before,Next,R);},
             [Self](const auto& W){if(Self.IsValid())Self->PublishNativeWorld(W);});
@@ -175,6 +159,7 @@ void AAetherFrontierMode::TickNativeStartup()
         Encounters->SetActorTickEnabled(true);
         UE_LOG(LogTemp,Display,TEXT("AETHER_V10_SCENE_READY revision=%lld"),NativeWorld->Revision);
     }
+    TickNativeContainers();
     for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)BeginNativeLogin(Cast<AAetherPlayerController>(It->Get()));
     TArray<TWeakObjectPtr<AAetherPlayerController>> Completed;
     for(auto& Pair:NativeLogins)
@@ -200,7 +185,7 @@ void AAetherFrontierMode::EndPlay(const EEndPlayReason::Type Reason)
     {
         bNativeSceneReady=false;
         if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherNativePersistence>()->ReleaseScene(GetWorld());
-        NativeLogins.Reset();NativePlayersReady.Reset();NativeContainerSessions.Reset();NativeRegionSave={};
+        NativeContainerCreates.Reset();NativeContainerRetry.Reset();NativeLogins.Reset();NativePlayersReady.Reset();NativeContainerSessions.Reset();NativeRegionSave={};
     }
     Super::EndPlay(Reason);
 }

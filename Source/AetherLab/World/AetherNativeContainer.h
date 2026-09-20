@@ -15,7 +15,10 @@ public:
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Mesh;
     UPROPERTY(Replicated) FString StableId;
     UPROPERTY(Replicated) int64 Revision=-1;
-    UPROPERTY(Replicated) uint8 ContainerKind=0;
+    UPROPERTY(ReplicatedUsing=ApplyKind) uint8 ContainerKind=0;
+    UFUNCTION() void ApplyKind();
+    virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     FString OwnerCharacterId;
     FString RegionId;
     bool Configure(const FAetherContainerRestoreDescriptor& Descriptor);

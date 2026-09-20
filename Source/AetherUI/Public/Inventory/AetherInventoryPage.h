@@ -52,7 +52,8 @@ private:
     TWeakObjectPtr<UAetherCommandClient> Client;
     TWeakObjectPtr<UAetherMenuSubsystem> Menu;
     TWeakObjectPtr<AAetherFrontierCharacter> Player;
-    int64 Generation=0,SeenProfile=-1,SeenWorld=-1;
+    int64 Generation=0,SeenProfile=-1,SeenWorld=-1,SeenContainerRevision=-1,SeenContainerWorld=-1;
+    FGuid SeenContainerContext;
     FGuid SeenChannel,SeenTrade,ModalToken;
     FString CategoryFilter,SearchFilter,SeenShop;
     FGuid SeenSelected;
@@ -61,6 +62,9 @@ private:
     UPROPERTY(Transient) TObjectPtr<UUniformGridPanel> Grid;
     UPROPERTY(Transient) TObjectPtr<UUniformGridPanel> Equipment;
     UPROPERTY(Transient) TObjectPtr<UUniformGridPanel> Products;
+    UPROPERTY(Transient) TObjectPtr<UUniformGridPanel> ContainerGrid;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> ContainerTitle;
+    UPROPERTY(Transient) TArray<TObjectPtr<UAetherInventoryCell>> ContainerCells;
     UPROPERTY(Transient) TArray<TObjectPtr<UAetherInventoryCell>> Cells;
     UPROPERTY(Transient) TArray<TObjectPtr<UAetherInventoryCell>> EquipmentCells;
     UPROPERTY(Transient) TArray<TObjectPtr<UAetherInventoryCell>> ProductCells;

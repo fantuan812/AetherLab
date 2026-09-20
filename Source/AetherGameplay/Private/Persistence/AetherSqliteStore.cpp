@@ -1,6 +1,7 @@
 #include "Persistence/AetherSqliteStore.h"
 #include "AetherSqliteInternal.h"
 #include "Contracts/AetherPlayerCommand.h"
+#include "World/AetherContainerCodec.h"
 #include "HAL/FileManager.h"
 #include "HAL/PlatformTLS.h"
 #include "Misc/Paths.h"
@@ -189,6 +190,15 @@ public:
         {FAetherStoreReadResult R;R.Code=EAetherStoreCode::Invalid;return Completed(MoveTemp(R));}
         FAetherStoreReadResult Rejected;Rejected.Code=EAetherStoreCode::Busy;
         return Enqueue<FAetherStoreReadResult>([Profile=MoveTemp(Profile)](sqlite3* DB){return AetherSQLite::Private::CreateProfile(DB,Profile);},MoveTemp(Rejected));
+    }
+    virtual TFuture<FAetherStoreReadResult> CreateEmptyContainer(FAetherContainerStateV10 Container,FAetherV10ItemDefinitions Definitions) override
+    {
+        FAetherStoredAggregate Row;Row.Key={EAetherAggregateKind::Container,Container.ContainerId};Row.Revision=0;FString Why;
+        if(Container.Revision!=0||!Container.bActive||Container.Kind==EAetherContainerKind::WorldDrop||!Container.Inventory.Items.IsEmpty()||
+            !AetherContainerCodec::Encode(Container,Definitions,Row.Payload,Why))
+        {FAetherStoreReadResult R;R.Code=EAetherStoreCode::Invalid;R.Detail=Why;return Completed(MoveTemp(R));}
+        FAetherStoreReadResult Rejected;Rejected.Code=EAetherStoreCode::Busy;
+        return Enqueue<FAetherStoreReadResult>([Row=MoveTemp(Row),Owner=Container.OwnerCharacterId](sqlite3* DB){return AetherSQLite::Private::CreateEmptyContainer(DB,Row,Owner);},MoveTemp(Rejected));
     }
     virtual TFuture<FAetherStoreReadResult> CompareExchangeWorld(FAetherAggregateWrite Write) override
     {

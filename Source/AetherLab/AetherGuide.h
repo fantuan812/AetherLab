@@ -4,6 +4,7 @@ struct FAetherProfile;
 class AActor;
 class AAetherFrontierCharacter;
 class AAetherFrontierProp;
+class AAetherNativeContainer;
 struct FAetherGuidance
 {
  FName Quest;
@@ -15,6 +16,7 @@ struct FAetherGuidance
 struct FAetherInteractionTarget
 {
  TWeakObjectPtr<AAetherFrontierProp> Prop;
+ TWeakObjectPtr<AAetherNativeContainer> Container;
  TWeakObjectPtr<AAetherFrontierCharacter> Rescue;
  FString Prompt;
  FName StableId,ActionId;

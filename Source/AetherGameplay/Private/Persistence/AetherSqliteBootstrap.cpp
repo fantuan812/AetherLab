@@ -64,4 +64,31 @@ FAetherStoreReadResult CreateProfile(sqlite3* DB,const FAetherStoredAggregate& P
     if(!Insert(DB,Profile)||!Tx.Commit()){R.Detail=Error(DB);return R;}
     R.Code=EAetherStoreCode::Found;R.Value=Profile;return R;
 }
+FAetherStoreReadResult CreateEmptyContainer(sqlite3* DB,const FAetherStoredAggregate& Container,const FString& Owner)
+{
+    FAetherStoreReadResult R;FTransactionGuard Tx(DB);
+    if(!Tx.Active){R.Code=EAetherStoreCode::Busy;return R;}
+    const auto World=ReadAggregate(DB,{EAetherAggregateKind::World,TEXT("Main")});
+    if(World.Code!=EAetherStoreCode::Found){R.Code=World.Code;return R;}
+    if(!Owner.IsEmpty())
+    {
+        const auto Profile=ReadAggregate(DB,{EAetherAggregateKind::Profile,Owner});
+        if(Profile.Code!=EAetherStoreCode::Found){R.Code=Profile.Code;return R;}
+    }
+    FStatement Ids(DB,"SELECT id FROM aggregates WHERE kind=2 LIMIT 4097");int Count=0,Step=0;
+    while((Step=Ids.Step())==SQLITE_ROW)
+    {
+        ++Count;const FString Id=Ids.ColumnText(0);
+        if(Id.Equals(Container.Key.Id,ESearchCase::IgnoreCase)&&!Id.Equals(Container.Key.Id,ESearchCase::CaseSensitive))
+        {R.Code=EAetherStoreCode::Conflict;R.Detail=TEXT("Container identity case alias");return R;}
+    }
+    if(Step!=SQLITE_DONE){R.Detail=Error(DB);return R;}
+    const auto Existing=ReadAggregate(DB,Container.Key);
+    if(Existing.Code!=EAetherStoreCode::Missing)return Existing;
+    if(Count>=4096){R.Code=EAetherStoreCode::Conflict;return R;}
+    // 空容器没有实例，不改变物品总量；唯一 ID 和数量上限仍在同一写事务内检查。
+    if(!Insert(DB,Container)||!Tx.Commit()){R.Detail=Error(DB);return R;}
+    R.Code=EAetherStoreCode::Found;R.Value=Container;return R;
+}
+
 }

@@ -18,7 +18,9 @@ bool FAetherV10ReplyPacket::NetSerialize(FArchive& Ar,UPackageMap*,bool& Success
 {Ar<<Channel;return Payload(Ar,Bytes,AetherV10Network::ReplyBytes,Success);}
 bool FAetherV10SnapshotChunk::NetSerialize(FArchive& Ar,UPackageMap*,bool& Success)
 {
-    Ar<<Channel<<Transfer<<Revision<<Total<<Offset<<Checksum;
+    Ar<<Channel<<Transfer<<Revision<<Total<<Offset<<Checksum<<Kind<<Context<<WorldRevision;
+    if(Kind>1||(Kind==0?(Context.IsValid()||WorldRevision!=-1):(!Context.IsValid()||WorldRevision<0||WorldRevision==MAX_int64)))
+    {Success=false;Ar.SetError();return false;}
     if(!Channel.IsValid()||!Transfer.IsValid()||Revision<0||Revision==MAX_int64||Total==0||Total>AetherV10Network::SnapshotBytes||Offset>=Total)
     {Success=false;Ar.SetError();return false;}
     if(!Payload(Ar,Bytes,AetherV10Network::ChunkBytes,Success))return false;
@@ -36,4 +38,20 @@ bool FAetherV10RequestBudget::Consume(double Now,int32 Size,double Rate,double B
     Bytes=FMath::Min(Burst*AetherV10Network::CommandBytes,Bytes+Dt*Rate*AetherV10Network::CommandBytes);
     if(Tokens<1||Bytes<Size)return false;
     Tokens-=1;Bytes-=Size;return true;
+}
+
+bool FAetherV10ContainerQuery::NetSerialize(FArchive& Ar,UPackageMap*,bool& Success)
+{
+    Ar<<Channel<<Context;uint32 Count=Ar.IsSaving()?TargetId.Len():0;
+    if(Count>96){Success=false;Ar.SetError();return false;}Ar.SerializeInt(Count,97);
+    if(Ar.IsError()||Count>96||!Channel.IsValid()||!Context.IsValid()){Success=false;Ar.SetError();return false;}
+    if(Ar.IsLoading())TargetId.Empty(Count);
+    for(uint32 I=0;I<Count;++I)
+    {
+        uint8 C=Ar.IsSaving()?uint8(TargetId[I]):0;Ar<<C;
+        if(!((C>='A'&&C<='Z')||(C>='a'&&C<='z')||(C>='0'&&C<='9')||C=='_'||C=='.'||C=='-'))
+        {Success=false;Ar.SetError();return false;}
+        if(Ar.IsLoading())TargetId.AppendChar(TCHAR(C));
+    }
+    Success=!Ar.IsError();return Success;
 }

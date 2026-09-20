@@ -186,7 +186,11 @@ FAetherInspectRequest AetherInspection::Pin(const FAetherInspectionSnapshot& S,F
 {
     if(T.Kind==EAetherInspectTarget::EquipmentSlot)T.InstanceId=S.Inventory.Equipment.FindRef(T.SlotId);
     if(T.Kind==EAetherInspectTarget::EquipmentSlot||T.Kind==EAetherInspectTarget::ItemInstance)
-        if(const auto* I=S.Inventory.Find(T.InstanceId))T.DefinitionId=I->DefinitionId;
+    {
+        const auto* Inventory=&S.Inventory;
+        if(!T.ContainerId.IsEmpty()&&S.Container.IsSet()&&S.Container->ContainerId.Equals(T.ContainerId,ESearchCase::CaseSensitive))Inventory=&S.Container->Inventory;
+        if(const auto* I=Inventory->Find(T.InstanceId))T.DefinitionId=I->DefinitionId;
+    }
     return {S.Context,MoveTemp(T)};
 }
 FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,const FAetherInspectionSnapshot& S,
@@ -197,6 +201,21 @@ FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,co
     if(!R.Context.Same(S.Context))
     {M.State=EAetherInspectionState::Changed;M.Message=TEXT("对象已变化，请重新查看后操作。");return M;}
     M.State=EAetherInspectionState::Ready;
+    if(!R.Target.ContainerId.IsEmpty())
+    {
+        if(R.Target.Kind!=EAetherInspectTarget::ItemInstance||!S.Container.IsSet()||!S.ContainerContext.IsValid()||
+            !S.Container->ContainerId.Equals(R.Target.ContainerId,ESearchCase::CaseSensitive)||!S.Container->bActive)
+        {M.State=EAetherInspectionState::Changed;M.Message=TEXT("容器会话已失效。");return M;}
+        // 复用物品字段，操作能力再收窄为取出，不能直接穿戴或消耗容器中的物品。
+        auto View=S;View.Inventory=S.Container->Inventory;View.Shop.Reset();View.Container.Reset();
+        auto Local=R;Local.Target.ContainerId.Reset();auto ContainerItems=Items;ContainerItems.DefaultCapacity=View.Inventory.Capacity;
+        M=Build(Local,View,ContainerItems,Skills);M.Request=R;
+        M.Actions.Reset();M.ComparisonSlots.Reset();M.Comparison.Reset();
+        if(M.CanInteract()&&M.Item.IsSet())
+            Action(M,EAetherInspectAction::Withdraw,R.Target.ContainerId,S.Container->Kind==EAetherContainerKind::WorldDrop?TEXT("拾取"):TEXT("取出"),
+                S.bCanAct&&S.ContainerWorldRevision>=0,TEXT("需要当前容器授权与可操作状态"),M.Item->Quantity,true);
+        return M;
+    }
     switch(R.Target.Kind)
     {
     case EAetherInspectTarget::ItemInstance:
@@ -243,6 +262,15 @@ FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,co
         break;
     }
     default:Invalid(M,TEXT("详情对象类型无效。"));break;
+    }
+    if(M.CanInteract()&&M.Item.IsSet()&&S.Container.IsSet()&&S.ContainerContext.IsValid()&&S.Container->Kind!=EAetherContainerKind::WorldDrop)
+    {
+        const auto& I=M.Item.GetValue();
+        bool Allowed=!I.bLocked&&!S.Inventory.IsEquipped(I.InstanceId);
+        if(S.Container->Kind==EAetherContainerKind::PersonalStorage)Allowed&=I.BoundToCharacter.IsEmpty()||I.BoundToCharacter.Equals(S.Context.OwnerIdentity,ESearchCase::CaseSensitive);
+        else Allowed&=S.Inventory.CanRemove(I.InstanceId,S.Context.OwnerIdentity,false,Items)==EAetherInventoryMutationCode::Applied;
+        Action(M,EAetherInspectAction::Deposit,S.Container->ContainerId,TEXT("存入容器"),Allowed&&S.bCanAct&&S.ContainerWorldRevision>=0,
+            TEXT("请先卸下或解锁，并满足绑定与收纳限制"),I.Quantity,true);
     }
     if(S.ProfileRevision<0||S.ProfileRevision==MAX_int64)
         for(auto& A:M.Actions)if(A.Kind!=EAetherInspectAction::FocusSkill&&A.Kind!=EAetherInspectAction::TrackQuest)

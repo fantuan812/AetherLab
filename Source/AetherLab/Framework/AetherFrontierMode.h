@@ -54,7 +54,7 @@ public:
     bool NativeSceneReady() const{return bNativeSceneReady&&bNativeBaselineReady;}
     void ReleaseNativePawn(AAetherFrontierCharacter* Pawn);
     FString ExecuteNativeSceneService(AAetherPlayerController& Controller,const FAetherPlayerCommand& Command);
-    bool OpenNativeContainer(AAetherPlayerController* Controller,const FString& Id);
+    bool AuthorizeNativeContainer(AAetherPlayerController& Controller,const FString& Id,bool bOpen);
     const FAetherWorldStateV10* NativeWorldView() const{return NativeWorld.IsSet()?&NativeWorld.GetValue():nullptr;}
     bool bFailWrites = false;
     TSharedPtr<IAetherSnapshotStore> Storage;
@@ -94,6 +94,11 @@ private:
     void BeginNativeLogin(AAetherPlayerController* PC);
     bool RestoreNativeScene(const FAetherWorldStateV10& World,const TMap<FString,int64>& Profiles,const TArray<FAetherContainerRestoreDescriptor>& Containers,FString& Reason);
     void PublishNativeWorld(const FAetherWorldStateV10& World);
+    void PublishNativeContainer(const FAetherContainerStateV10& Container);
+    void TickNativeContainers();
+    struct FContainerCreation {FAetherContainerStateV10 Expected;TFuture<FAetherStoreReadResult> Future;};
+    TMap<FString,FContainerCreation> NativeContainerCreates;
+    TMap<FString,double> NativeContainerRetry;
     bool PublishNativeState(AAetherPlayerController& PC,const FAetherProfileStateV10& Profile,const FAetherWorldStateV10* World,const FAetherContainerStateV10* Container);
     bool ResolveNativeContext(AAetherPlayerController& PC,const FAetherPlayerCommand& Command,const FAetherProfileStateV10& Profile,FAetherProfileCommandContext& Context);
     void FailNativeScene(const FString& Reason);

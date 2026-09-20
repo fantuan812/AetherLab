@@ -15,6 +15,8 @@ public:
     // 服务器只从拥有此 Controller 的连接解析身份；包内只有通道和固定协议字节。
     UFUNCTION(Server,Reliable) void ServerV10SceneInput(const FAetherV10CommandPacket& Packet,uint64 Sequence);
     bool SendV10SceneInput(FAetherPlayerCommand Command,FString& Reason);
+    UFUNCTION(Server,Reliable) void ServerV10ContainerQuery(const FAetherV10ContainerQuery& Query);
+    UFUNCTION(Client,Reliable) void ClientV10ContainerClosed(FGuid Channel,FGuid Context);
     UFUNCTION(Server,Reliable) void ServerV10Command(const FAetherV10CommandPacket& Packet);
     UFUNCTION(Server,Reliable) void ServerV10RequestSnapshot(FGuid Channel);
     UFUNCTION(Server,Reliable) void ServerV10SnapshotAck(FGuid Channel,FGuid Transfer,uint32 NextOffset);

@@ -3,6 +3,7 @@
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Net/UnrealNetwork.h"
+#include "Interaction/AetherNearbyRegistry.h"
 
 AAetherNativeContainer::AAetherNativeContainer()
 {
@@ -19,7 +20,7 @@ bool AAetherNativeContainer::Configure(const FAetherContainerRestoreDescriptor& 
     StableId=D.Id;OwnerCharacterId=D.Owner;RegionId=D.Region;ContainerKind=uint8(D.Kind);Revision=D.Revision;
     bOnlyRelevantToOwner=D.Kind==EAetherContainerKind::PersonalStorage;
     // 私人容器在登录装配时绑定 Owner；没有 Owner 时不会向其他连接复制。
-    SetActorLocation(D.Location);ForceNetUpdate();return true;
+    ApplyKind();SetActorLocation(D.Location);ForceNetUpdate();return true;
 }
 bool AAetherNativeContainer::Allows(const FString& Identity) const
 {return !IsActorBeingDestroyed()&&(!bOnlyRelevantToOwner||OwnerCharacterId.Equals(Identity,ESearchCase::CaseSensitive));}
@@ -35,4 +36,18 @@ void AAetherNativeContainer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherNativeContainer,StableId);
     DOREPLIFETIME(AAetherNativeContainer,Revision);DOREPLIFETIME(AAetherNativeContainer,ContainerKind);
+}
+
+void AAetherNativeContainer::ApplyKind()
+{
+    // 私人储物箱与其他玩家的箱子共享服务位置；不制造不可见的服务器阻挡几何。
+    Mesh->SetCollisionEnabled(ContainerKind==uint8(EAetherContainerKind::PersonalStorage)?ECollisionEnabled::NoCollision:ECollisionEnabled::QueryOnly);
+}
+void AAetherNativeContainer::BeginPlay()
+{
+    Super::BeginPlay();ApplyKind();GetWorld()->GetSubsystem<UAetherNearbyRegistry>()->Register(this);
+}
+void AAetherNativeContainer::EndPlay(const EEndPlayReason::Type R)
+{
+    if(auto* Nearby=GetWorld()->GetSubsystem<UAetherNearbyRegistry>())Nearby->Unregister(this);Super::EndPlay(R);
 }

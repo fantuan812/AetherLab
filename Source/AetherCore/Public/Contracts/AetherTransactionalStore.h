@@ -1,6 +1,7 @@
 #pragma once
 #include "Contracts/AetherTransaction.h"
 #include "Async/Future.h"
+#include "World/AetherContainerState.h"
 
 // 仅查询完整命令身份对应的持久回执；Missing 不是执行许可，提交时仍原子复验版本与回执。
 struct FAetherReceiptQuery
@@ -77,6 +78,8 @@ public:
     // 默认失败使尚未实现该能力的替换后端明确拒绝启动，而不是降级为普通 Commit。
     virtual TFuture<FAetherStoreResult> InitializeWorld(FAetherStoredAggregate World);
     virtual TFuture<FAetherStoreReadResult> CreateProfile(FAetherStoredAggregate Profile);
+    // 服务器装配专用：只创建空的静态箱子/个人仓储，不能借此生成物品或覆盖已有容器。
+    virtual TFuture<FAetherStoreReadResult> CreateEmptyContainer(FAetherContainerStateV10 Container,FAetherV10ItemDefinitions Definitions);
     // 服务器世界检查点专用。仅更新 Main 已有行，期望版本必须匹配；不伪造玩家命令或推进任意角色。
     // 返回确认后的世界行；同一目标版本及逐字节相同负载允许安全重试。玩家奖励仍走跨聚合 Commit。
     virtual TFuture<FAetherStoreReadResult> CompareExchangeWorld(FAetherAggregateWrite Write);

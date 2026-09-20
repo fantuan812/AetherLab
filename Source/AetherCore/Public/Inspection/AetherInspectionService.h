@@ -2,6 +2,7 @@
 #include "Inventory/AetherInventoryState.h"
 #include "Inventory/AetherEconomyDefinitions.h"
 #include "Skills/AetherSkillState.h"
+#include "World/AetherContainerState.h"
 
 // 只读展示身份由已授权拥有者快照提供；它不是客户端自报身份的认证凭证。
 // SessionId 隔离重连/换 Pawn 的同号版本；SnapshotRevision 包括详情依赖的资源、状态和定义变更。
@@ -19,7 +20,7 @@ struct FAetherInspectTarget
 {
     EAetherInspectTarget Kind=EAetherInspectTarget::ItemInstance;
     FGuid InstanceId; // EquipmentSlot 同时固定打开时的实例，不能只记住 Ring1 的字符串。
-    FString DefinitionId,SlotId;
+    FString DefinitionId,SlotId,ContainerId; // 容器来源是对象身份的一部分，不能按同一格索引替换。
     int32 SkillRank=0; // 0 表示整个技能；1..3 表示树中的指定等级节点。
     FString ComparisonSlot; // 空值不自动选 Ring1/Ring2；用户明确选择可替换槽。
 };
@@ -39,6 +40,9 @@ struct FAetherInspectionSnapshot
     // 展示版本不是数据库版本，命令必须使用独立的聚合版本。
     int64 ProfileRevision=-1,WorldRevision=-1;
     FAetherInventoryStateV10 Inventory;
+    TOptional<FAetherContainerStateV10> Container;
+    FGuid ContainerContext;
+    int64 ContainerWorldRevision=-1;
     int32 Gold=0;
     bool bCanAct=false;
     FString TradeTargetStableId;
@@ -50,7 +54,7 @@ struct FAetherInspectionSnapshot
     double ServerTimeSeconds=0;
 };
 enum class EAetherInspectionState:uint8 {Ready,Changed,Missing,Invalid};
-enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill,Use,Split,Sell,Buy,Repair};
+enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill,Use,Split,Sell,Buy,Repair,Deposit,Withdraw};
 struct FAetherInspectionAction
 {
     EAetherInspectAction Kind=EAetherInspectAction::Equip;

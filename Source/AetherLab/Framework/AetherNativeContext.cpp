@@ -112,11 +112,14 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
     }
     return true;
 }
-bool AAetherFrontierMode::OpenNativeContainer(AAetherPlayerController* PC,const FString& Id)
+bool AAetherFrontierMode::AuthorizeNativeContainer(AAetherPlayerController& Controller,const FString& Id,bool bOpen)
 {
-    if(!PC||!bNativeSceneReady)return false;
+    auto* PC=&Controller;
+    if(Id.IsEmpty()){NativeContainerSessions.Remove(PC);return true;}
+    if(!bNativeSceneReady)return false;
     auto* C=Cast<AAetherFrontierCharacter>(PC->GetPawn());auto* Found=NativeContainers.Find(Id);auto* A=Found?Found->Get():nullptr;
     if(!C||!C->ProfileState()||!C->Ready()||C->HasRecentCombat(8)||!IsValid(A)||
-        A->ContainerKind==uint8(EAetherContainerKind::WorldDrop)||!A->Allows(C->ProfileState()->Profile.CharacterId)||!Reachable(*C,*A,250.))return false;
-    NativeContainerSessions.Add(PC,A);return true;
+        !A->StableId.Equals(Id,ESearchCase::CaseSensitive)||!A->Allows(C->ProfileState()->Profile.CharacterId)||!Reachable(*C,*A,250.))return false;
+    if(bOpen)NativeContainerSessions.Add(PC,A);
+    return NativeContainerSessions.FindRef(PC)==A;
 }

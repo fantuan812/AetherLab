@@ -72,6 +72,8 @@ TSharedRef<SWidget> UAetherInventoryPage::RebuildWidget()
         Equipment=WidgetTree->ConstructWidget<UUniformGridPanel>();Equipment->SetSlotPadding(FMargin(3));Left->AddChildToVerticalBox(Equipment);
         Grid=WidgetTree->ConstructWidget<UUniformGridPanel>();Grid->SetSlotPadding(FMargin(3));Center->AddChildToVerticalBox(Grid);
         Products=WidgetTree->ConstructWidget<UUniformGridPanel>();Products->SetSlotPadding(FMargin(3));Center->AddChildToVerticalBox(Products)->SetPadding(FMargin(0,16));
+        ContainerTitle=WidgetTree->ConstructWidget<UTextBlock>();Center->AddChildToVerticalBox(ContainerTitle);
+        ContainerGrid=WidgetTree->ConstructWidget<UUniformGridPanel>();ContainerGrid->SetSlotPadding(FMargin(3));Center->AddChildToVerticalBox(ContainerGrid)->SetPadding(FMargin(0,12));
         Details=CreateWidget<UAetherInspectionCard>(this);Right->AddChildToVerticalBox(Details);
         Details->OnActionRequested.AddUObject(this,&UAetherInventoryPage::Action);Details->OnComparisonRequested.AddUObject(this,&UAetherInventoryPage::Compare);Details->OnDismissRequested.AddUObject(this,&UAetherInventoryPage::DismissDetails);
         Hover=CreateWidget<UAetherInspectionCard>(this);Right->AddChildToVerticalBox(Hover);Hover->SetVisibility(ESlateVisibility::Collapsed);
@@ -136,6 +138,9 @@ void UAetherInventoryPage::Refresh()
     {
         ++Generation;SeenProfile=Next.ProfileRevision;SeenWorld=Next.WorldRevision;SeenChannel=Next.Context.SessionId;SeenTrade=C->TradeSession.Token;bSeenCanAct=Next.bCanAct;SeenShop=CurrentShop;
     }
+    const int64 ContainerRevision=Next.Container.IsSet()?Next.Container->Revision:-1;
+    if(SeenContainerContext!=Next.ContainerContext||SeenContainerRevision!=ContainerRevision||SeenContainerWorld!=Next.ContainerWorldRevision)
+    {++Generation;SeenContainerContext=Next.ContainerContext;SeenContainerRevision=ContainerRevision;SeenContainerWorld=Next.ContainerWorldRevision;}
     if(BeforeGeneration==Generation&&!bDirty)return;
     bDirty=false;Next.Context.SnapshotRevision=Generation;Snapshot=MoveTemp(Next);const auto& D=FAetherV10Definitions::Get();
     Session.Refresh(Snapshot,D.Items,D.Skills);if(!Session.GetDraft().IsSet())HideConfirmation();
@@ -175,6 +180,22 @@ void UAetherInventoryPage::Refresh()
             if(const auto* Other=Snapshot.Inventory.Find(Pair.Value))if(const auto* OtherDef=D.Items.Items.Find(Other->DefinitionId);OtherDef&&OtherDef->AdditionalOccupiedSlots.Contains(Slot.Id))Occupied=TEXT("双手占用");
         EquipmentCells[N]->Present(R,INDEX_NONE,SlotName(Slot.Id)+LINE_TERMINATOR+(Def?Def->DisplayName:Occupied.IsEmpty()?TEXT("空"):Occupied),Def?Def->IconId:FString(),false,false);
     }
+    const auto* Container=Snapshot.Container.IsSet()?&Snapshot.Container.GetValue():nullptr;
+    ContainerTitle->SetText(FText::FromString(Container?FString::Printf(TEXT("%s · %d / %d"),Container->Kind==EAetherContainerKind::WorldDrop?TEXT("地面掉落"):Container->Kind==EAetherContainerKind::PersonalStorage?TEXT("个人仓储"):TEXT("共享箱子"),Container->Inventory.Items.Num(),Container->Inventory.Capacity):
+        Snapshot.ContainerContext.IsValid()?TEXT("正在读取容器…"):TEXT("")));
+    ContainerGrid->SetVisibility(Container?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+    const int32 Count=Container?Container->Inventory.Capacity:0;
+    if(ContainerCells.Num()!=Count){ContainerGrid->ClearChildren();ContainerCells.Reset();for(int32 N=0;N<Count;++N)ContainerCells.Add(MakeCell(ContainerGrid,N,Columns));}
+    for(int32 N=0;N<Count;++N)
+    {
+        const auto* Item=Container->Inventory.At(N);const auto* Def=Item?D.Items.Items.Find(Item->DefinitionId):nullptr;
+        FAetherInspectTarget T;T.ContainerId=Container->ContainerId;if(Item)T.InstanceId=Item->InstanceId;
+        ContainerCells[N]->Present(AetherInspection::Pin(Snapshot,T),N,Def?Def->DisplayName+LINE_TERMINATOR+FString::Printf(TEXT("×%d"),Item->Quantity):TEXT("空"),Def?Def->IconId:FString(),false,false);
+        ContainerCells[N]->SetNavigationRuleExplicit(EUINavigation::Left,ContainerCells[(N+Count-1)%Count]);
+        ContainerCells[N]->SetNavigationRuleExplicit(EUINavigation::Right,ContainerCells[(N+1)%Count]);
+        ContainerCells[N]->SetNavigationRuleExplicit(EUINavigation::Up,N<Columns&&!Cells.IsEmpty()?Cells[FMath::Min(N,Cells.Num()-1)].Get():ContainerCells[(N+Count-Columns)%Count].Get());
+        ContainerCells[N]->SetNavigationRuleExplicit(EUINavigation::Down,ContainerCells[(N+Columns)%Count]);
+    }
     const auto* Shop=Snapshot.Shop.IsSet()?&Snapshot.Shop.GetValue():nullptr;
     Products->SetVisibility(Shop?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
     const int32 ProductCount=Shop?Shop->Products.Num():0;
@@ -192,7 +213,7 @@ void UAetherInventoryPage::CellIntent(const FAetherInspectRequest& R,int32,EAeth
     if(!R.Context.Same(Snapshot.Context)||ModalToken.IsValid())return;const auto& D=FAetherV10Definitions::Get();
     if(Intent==EAetherCellIntent::Leave){Session.HideHover();RenderDetails();return;}
     if(R.Target.Kind==EAetherInspectTarget::ItemInstance&&!R.Target.InstanceId.IsValid())return;
-    if(Player.IsValid()&&R.Target.InstanceId.IsValid()&&Intent!=EAetherCellIntent::Hover)
+    if(Player.IsValid()&&R.Target.ContainerId.IsEmpty()&&R.Target.InstanceId.IsValid()&&Intent!=EAetherCellIntent::Hover)
     {
         Player->SelectedInstance=R.Target.InstanceId;bDirty=true;
         if(Menu.IsValid()){auto M=Menu->GetPageMemory(EAetherMenuPage::Inventory);M.SelectedInstance=R.Target.InstanceId;Menu->SavePageMemory(EAetherMenuPage::Inventory,M);}
@@ -211,6 +232,19 @@ void UAetherInventoryPage::RenderDetails()
 bool UAetherInventoryPage::Drop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 Slot)
 {
     if(!From.Context.Same(Snapshot.Context)||!To.Context.Same(Snapshot.Context)||!Snapshot.bCanAct||ModalToken.IsValid())return false;
+    if(!From.Target.ContainerId.IsEmpty()||!To.Target.ContainerId.IsEmpty())
+    {
+        if(!Snapshot.Container.IsSet()||From.Target.Kind!=EAetherInspectTarget::ItemInstance||To.Target.Kind!=EAetherInspectTarget::ItemInstance||
+            From.Target.ContainerId==To.Target.ContainerId||(!From.Target.ContainerId.IsEmpty()&&!To.Target.ContainerId.IsEmpty()))return false;
+        const bool Into=From.Target.ContainerId.IsEmpty();
+        const auto& Id=Into?To.Target.ContainerId:From.Target.ContainerId;
+        if(!Id.Equals(Snapshot.Container->ContainerId,ESearchCase::CaseSensitive))return false;
+        const auto& D=FAetherV10Definitions::Get();Session.OpenDetails(From.Target,Snapshot,D.Items,D.Skills);RenderDetails();
+        const auto Kind=Into?EAetherInspectAction::Deposit:EAetherInspectAction::Withdraw;
+        const auto* Model=Session.GetDetails().IsSet()?&Session.GetDetails().GetValue():nullptr;
+        const auto* A=Model?Model->Actions.FindByPredicate([&](const auto& V){return V.Kind==Kind&&V.bEnabled;}):nullptr;
+        if(!A)return false;const auto Selected=*A;Action(From,Selected);return true;
+    }
     const auto* I=Snapshot.Inventory.Find(From.Target.InstanceId);if(!I)return false;FAetherPlayerCommand C;C.ItemInstanceId=I->InstanceId;
     if(To.Target.Kind==EAetherInspectTarget::EquipmentSlot){C.Type=EAetherCommandType::EquipItem;C.SlotId=To.Target.SlotId;}
     else if(To.Target.Kind!=EAetherInspectTarget::ItemInstance||Slot<0)return false;
@@ -268,7 +302,7 @@ void UAetherInventoryPage::HideConfirmation()
 }
 void UAetherInventoryPage::DismissDetails(){Session.Close();HideConfirmation();RenderDetails();}
 void UAetherInventoryPage::Receive(const FAetherCommandResult& R)
-{Session.Acknowledge(R);bDirty=true;Refresh();if(Notice)Notice->SetText(FText::FromString(ResultText(R.Code)));}
+{Session.Acknowledge(R);bDirty=true;Refresh();if(Notice)Notice->SetText(FText::FromString(R.ActualQuantity>0?FString::Printf(TEXT("已完成 %d 件；剩余物品保留原处。"),R.ActualQuantity):ResultText(R.Code)));}
 void UAetherInventoryPage::SearchChanged(const FText& T)
 {
     if(bUpdating)return;bDirty=true;SearchFilter=T.ToString().Left(256);
@@ -276,7 +310,7 @@ void UAetherInventoryPage::SearchChanged(const FText& T)
 }
 void UAetherInventoryPage::CategoryChanged(FString C,ESelectInfo::Type){if(bUpdating)return;bDirty=true;CategoryFilter=C==TEXT("全部")?FString():C;Refresh();}
 void UAetherInventoryPage::Sort(){if(ModalToken.IsValid())return;FAetherPlayerCommand C;C.Type=EAetherCommandType::SortInventory;C.Enabled=true;Send(C);}
-void UAetherInventoryPage::Retry(){if(Client.IsValid()&&(!Client->HasPending()||!Client->RetryPending()))Client->RequestSnapshot();}
+void UAetherInventoryPage::Retry(){if(Client.IsValid()){if(!Client->HasPending()||!Client->RetryPending())Client->RequestSnapshot();Client->RefreshContainer();}}
 UWidget* UAetherInventoryPage::GetNavigationFocusTarget() const{return Cells.IsEmpty()?nullptr:Cells[0].Get();}
 FReply UAetherInventoryPage::NativeOnPreviewKeyDown(const FGeometry& G,const FKeyEvent& E)
 {

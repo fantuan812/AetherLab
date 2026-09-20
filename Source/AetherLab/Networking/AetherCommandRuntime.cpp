@@ -3,6 +3,7 @@
 #include "AetherProgression.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "Profile/AetherProfileCodec.h"
+#include "World/AetherContainerCodec.h"
 #include "Inventory/AetherResourceGate.h"
 #include "Commands/AetherConsumableDeliveryPump.h"
 #include "Misc/DateTime.h"
@@ -33,6 +34,14 @@ struct FAetherCommandRuntimeImpl
         TFuture<FAetherStoreResult> Proof;
         TFuture<FAetherStoreReadResult> ProofRead;
         double NextDelivery=0;
+        FString ContainerId;
+        FGuid ContainerContext,ContainerTransfer;
+        TFuture<FAetherStoreSnapshotResult> ContainerRead;
+        TArray<uint8> ContainerOutgoing;
+        int64 ContainerRevision=-1,ContainerWorldRevision=-1;
+        uint32 ContainerOffset=0,ContainerChecksum=0;
+        bool bContainerDirty=false,bPreferContainer=false;
+        double NextContainerRead=0;
     };
     TSharedPtr<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
     TUniquePtr<FAetherProfileCoordinator> Coordinator;
@@ -40,6 +49,8 @@ struct FAetherCommandRuntimeImpl
     FAetherResolveConnectedContext Resolve;
     FAetherPublishConnectedState Publish;
     TFunction<void(const FAetherWorldStateV10&)> PublishWorld;
+    TFunction<void(const FAetherContainerStateV10&)> PublishContainer;
+    TFunction<bool(AAetherPlayerController&,const FString&,bool)> AuthorizeContainer;
     TMap<TWeakObjectPtr<AAetherPlayerController>,TUniquePtr<FBinding>> Bindings;
     int32 NextSender=0;
     float SendElapsed=0;
@@ -79,6 +90,49 @@ struct FAetherCommandRuntimeImpl
         // 同一连接最多一份待发送快照，新提交替换尚未发完的旧快照；客户端用 Transfer 区分。
         B.Outgoing=MoveTemp(Bytes);B.Transfer=FGuid::NewGuid();B.Revision=P.Revision;B.Offset=0;
         B.Checksum=FCrc::MemCrc32(B.Outgoing.GetData(),B.Outgoing.Num());B.bReady=!B.bNeedsRecovery;
+    }
+    void CloseContainer(FBinding& B)
+    {
+        const auto Old=B.ContainerContext;
+        B.ContainerContext.Invalidate();B.ContainerId.Reset();B.ContainerRead={};B.ContainerOutgoing.Reset();
+        B.bContainerDirty=false;B.ContainerRevision=-1;B.ContainerWorldRevision=-1;
+        if(auto* C=B.Controller.Get())
+        {
+            if(AuthorizeContainer)AuthorizeContainer(*C,{},false);
+            if(Old.IsValid())C->ClientV10ContainerClosed(B.Channel,Old);
+        }
+    }
+    void PollContainer(FBinding& B)
+    {
+        if(!B.ContainerContext.IsValid())return;
+        // 授权不随异步读取自动延长，离开范围/换场景立刻清掉发送队列。
+        if(!Current(B)||!AuthorizeContainer||!AuthorizeContainer(*B.Controller.Get(),B.ContainerId,false))
+        {CloseContainer(B);return;}
+        const double Now=FPlatformTime::Seconds();
+        if(B.ContainerRead.IsValid()&&B.ContainerRead.IsReady())
+        {
+            auto R=B.ContainerRead.Get();B.ContainerRead={};
+            const auto* Row=R.Values.Find({EAetherAggregateKind::Container,B.ContainerId});
+            const auto* World=R.Values.Find({EAetherAggregateKind::World,TEXT("Main")});
+            FAetherContainerStateV10 Candidate;FString Why;const auto& D=FAetherV10Definitions::Get();
+            if(R.Code==EAetherStoreCode::Busy||R.Code==EAetherStoreCode::Unavailable)
+            {B.bContainerDirty=true;B.NextContainerRead=Now+1;}
+            else if(R.Code!=EAetherStoreCode::Found||!Row||!World||Row->SchemaVersion!=10||World->Revision<0||
+                !AetherContainerCodec::Decode(Row->Payload,D.Items,Candidate,Why)||Candidate.Revision!=Row->Revision||
+                !Candidate.ContainerId.Equals(B.ContainerId,ESearchCase::CaseSensitive)||!Candidate.bActive||!Candidate.Allows(B.Session.CharacterId))
+            {CloseContainer(B);return;}
+            else if(Candidate.Revision>=B.ContainerRevision)
+            {
+                B.ContainerOutgoing=Row->Payload;B.ContainerTransfer=FGuid::NewGuid();B.ContainerOffset=0;
+                B.ContainerChecksum=FCrc::MemCrc32(B.ContainerOutgoing.GetData(),B.ContainerOutgoing.Num());
+                B.ContainerRevision=Candidate.Revision;B.ContainerWorldRevision=World->Revision;
+            }
+        }
+        if(B.bContainerDirty&&!B.ContainerRead.IsValid()&&Now>=B.NextContainerRead)
+        {
+            FAetherStoreSnapshotQuery Q;Q.Keys={{EAetherAggregateKind::Container,B.ContainerId},{EAetherAggregateKind::World,TEXT("Main")}};
+            B.ContainerRead=Store->ReadSnapshot(MoveTemp(Q));B.bContainerDirty=false;B.NextContainerRead=Now+.25;
+        }
     }
     void BeginProof(FBinding& B)
     {
@@ -177,6 +231,25 @@ bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,
     Reason.Reset();return true;
 }
 bool UAetherCommandRuntime::IsInstalled() const{return Impl&&Impl->Coordinator&&!Impl->bShutdownRequested;}
+void UAetherCommandRuntime::SetContainerAuthorizer(TFunction<bool(AAetherPlayerController&,const FString&,bool)> Authorize)
+{if(Impl)Impl->AuthorizeContainer=MoveTemp(Authorize);}
+void UAetherCommandRuntime::QueryContainer(AAetherPlayerController* C,const FAetherV10ContainerQuery& Q)
+{
+    if(!IsInstalled()||Impl->bPolling||!C||!Q.Context.IsValid()||Q.TargetId.Len()>96)return;
+    auto* Found=Impl->Bindings.Find(C);if(!Found)return;auto& B=**Found;
+    if(Q.Channel!=B.Channel||!Impl->Current(B)||!B.Syncs.Consume(FPlatformTime::Seconds(),Q.TargetId.Len(),2,4))return;
+    if(Q.TargetId.IsEmpty()){if(Q.Context==B.ContainerContext)Impl->CloseContainer(B);return;}
+    if(!B.bReady||!Impl->AuthorizeContainer)return;
+    if(Q.Context!=B.ContainerContext||!Q.TargetId.Equals(B.ContainerId,ESearchCase::CaseSensitive))
+    {
+        Impl->CloseContainer(B);
+        if(!Impl->AuthorizeContainer(*C,Q.TargetId,true)){C->ClientV10ContainerClosed(B.Channel,Q.Context);return;}
+        B.ContainerContext=Q.Context;B.ContainerId=Q.TargetId;
+    }
+    B.bContainerDirty=true;
+}
+void UAetherCommandRuntime::SetContainerPublisher(TFunction<void(const FAetherContainerStateV10&)> Publisher)
+{if(Impl)Impl->PublishContainer=MoveTemp(Publisher);}
 void UAetherCommandRuntime::SetWorldPublisher(TFunction<void(const FAetherWorldStateV10&)> Publisher)
 {check(IsInGameThread());if(Impl&&!Impl->bPolling&&!Impl->bTicking)Impl->PublishWorld=MoveTemp(Publisher);}
 bool UAetherCommandRuntime::HasPendingServerFact(const FString& Character,FName Fact) const
@@ -218,7 +291,7 @@ void UAetherCommandRuntime::UnbindPlayer(AAetherPlayerController* C)
 {
     if(!IsInstalled()||Impl->bPolling||!C)return;
     if(auto* B=Impl->Bindings.Find(C))
-    {Impl->Coordinator->EndSession((*B)->Session);Impl->Bindings.Remove(C);if(IsValid(C))C->ClientV10Channel({},{});}
+    {Impl->CloseContainer(**B);Impl->Coordinator->EndSession((*B)->Session);Impl->Bindings.Remove(C);if(IsValid(C))C->ClientV10Channel({},{});}
 }
 void UAetherCommandRuntime::NotifyPawnChanged(AAetherPlayerController* C)
 {
@@ -226,6 +299,7 @@ void UAetherCommandRuntime::NotifyPawnChanged(AAetherPlayerController* C)
     auto* Found=Impl->Bindings.Find(C);if(!Found)return;auto& B=**Found;
     if(B.Pawn.Get()==C->GetPawn()&&B.PlayerState.Get()==C->GetPlayerState<AAetherPlayerState>())return;
     if(B.PlayerState.Get()!=C->GetPlayerState<AAetherPlayerState>()){UnbindPlayer(C);return;}
+    Impl->CloseContainer(B);
     B.Session=Impl->Coordinator->ReplacePawn(B.Session);
     B.Pawn=C->GetPawn();B.Channel=FGuid::NewGuid();B.SceneSequence=0;B.bReady=false;B.Outgoing.Reset();B.Read={};B.Revision=-1;B.InFlightTransfer.Invalidate();
     B.bNeedsRecovery=true;B.bNeedFullRecovery=true;B.bDeliveryRequested=false;B.Delivery.Reset();
@@ -321,6 +395,13 @@ void UAetherCommandRuntime::Tick(float Dt)
     {
         if(Completion.WorldSnapshot.IsSet()&&Impl->PublishWorld)Impl->PublishWorld(Completion.WorldSnapshot.GetValue());
         if(Impl->bShutdownRequested)return;
+        if(Completion.ContainerSnapshot.IsSet())
+        {
+            if(Impl->PublishContainer)Impl->PublishContainer(Completion.ContainerSnapshot.GetValue());
+            for(auto& Pair:Impl->Bindings)if(Pair.Value->ContainerId.Equals(Completion.ContainerSnapshot->ContainerId,ESearchCase::CaseSensitive))
+                Pair.Value->bContainerDirty=true;
+        }
+        if(Impl->bShutdownRequested)return;
         if(!Completion.bMayPublish||!Impl->Coordinator->IsCurrent(Completion.Session))continue;
         for(auto& Pair:Impl->Bindings)
         {
@@ -358,18 +439,25 @@ void UAetherCommandRuntime::Tick(float Dt)
         TGuardValue<bool> Guard(Impl->bPolling,true);
         for(auto& Pair:Impl->Bindings)Impl->PollResources(*Pair.Value);
     }
+    for(auto& Pair:Impl->Bindings)Impl->PollContainer(*Pair.Value);
     Impl->SendElapsed+=FMath::Clamp(Dt,0.f,.1f);if(Impl->SendElapsed<1.f/30.f)return;Impl->SendElapsed=0;
     Keys.Reset();Impl->Bindings.GenerateKeyArray(Keys);if(Keys.IsEmpty())return;
     int32 Sent=0;
     for(int32 I=0;I<Keys.Num()&&Sent<4;++I)
     {
         Impl->NextSender%=Keys.Num();auto* Found=Impl->Bindings.Find(Keys[Impl->NextSender++]);if(!Found)continue;
-        auto& B=**Found;if(!Impl->Current(B)||B.Outgoing.IsEmpty()||B.InFlightTransfer.IsValid())continue;
-        FAetherV10SnapshotChunk Chunk;Chunk.Channel=B.Channel;Chunk.Transfer=B.Transfer;Chunk.Revision=B.Revision;
-        Chunk.Total=B.Outgoing.Num();Chunk.Offset=B.Offset;Chunk.Checksum=B.Checksum;
-        const int32 Size=FMath::Min(AetherV10Network::ChunkBytes,B.Outgoing.Num()-int32(B.Offset));
-        Chunk.Bytes.Append(B.Outgoing.GetData()+B.Offset,Size);B.Offset+=Size;
-        if(B.Offset==uint32(B.Outgoing.Num()))B.Outgoing.Reset();
+        auto& B=**Found;if(!Impl->Current(B)||B.InFlightTransfer.IsValid())continue;
+        const bool Container=!B.ContainerOutgoing.IsEmpty()&&(B.Outgoing.IsEmpty()||B.bPreferContainer);
+        auto& Bytes=Container?B.ContainerOutgoing:B.Outgoing;if(Bytes.IsEmpty())continue;
+        auto& Offset=Container?B.ContainerOffset:B.Offset;
+        FAetherV10SnapshotChunk Chunk;Chunk.Channel=B.Channel;Chunk.Transfer=Container?B.ContainerTransfer:B.Transfer;
+        Chunk.Revision=Container?B.ContainerRevision:B.Revision;
+        if(Container){Chunk.Kind=1;Chunk.Context=B.ContainerContext;Chunk.WorldRevision=B.ContainerWorldRevision;}
+        Chunk.Total=Bytes.Num();Chunk.Offset=Offset;Chunk.Checksum=Container?B.ContainerChecksum:B.Checksum;
+        const int32 Size=FMath::Min(AetherV10Network::ChunkBytes,Bytes.Num()-int32(Offset));
+        Chunk.Bytes.Append(Bytes.GetData()+Offset,Size);Offset+=Size;
+        if(Offset==uint32(Bytes.Num()))Bytes.Reset();
+        B.bPreferContainer=!Container;
         // 每连接最多一个未确认分片，避免慢连接积累可靠 RPC 直到 reliable buffer overflow。
         // 新快照可以替换 Outgoing，但必须先等旧分片确认，不能靠连续提交越过背压。
         B.InFlightTransfer=Chunk.Transfer;B.InFlightEnd=Chunk.Offset+Chunk.Bytes.Num();

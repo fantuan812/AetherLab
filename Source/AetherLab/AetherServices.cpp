@@ -1,4 +1,7 @@
 #include "AetherServices.h"
+#include "World/AetherNativeContainer.h"
+#include "Networking/AetherCommandClient.h"
+#include "Engine/LocalPlayer.h"
 #include "AetherGuide.h"
 #include "AetherFrontier.h"
 #include "Inventory/AetherResourceGate.h"
@@ -85,6 +88,7 @@ EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCha
 void AAetherFrontierCharacter::RefreshInteractionFocus()
 {
     AActor* Previous=InteractionFocus.Prop.IsValid()?static_cast<AActor*>(InteractionFocus.Prop.Get()):static_cast<AActor*>(InteractionFocus.Rescue.Get());
+    if(InteractionFocus.Container.IsValid())Previous=InteractionFocus.Container.Get();
     InteractionFocus=AetherGuide::SelectInteraction(this,Previous);bHasInteractionFocus=true;NativeInteractionFocus.Reset();
     if(UsesNativeSkills())if(auto* Target=InteractionFocus.Prop.Get())
         if(auto Provider=AetherNativeInteraction::Provider(*this,*Target);Provider.IsSet())
@@ -105,6 +109,13 @@ void AAetherFrontierCharacter::InteractV4()
     if(!bHasInteractionFocus)RefreshInteractionFocus();
     // 输入使用最近一次真正显示的快照；失效时只刷新，不在同一次按键偷偷执行新目标。
     const auto Selection=InteractionFocus;
+    if(UsesNativeSkills()&&Selection.Container.IsValid())
+    {
+        if(!AetherGuide::ValidateSelection(this,Selection)){RefreshInteractionFocus();return;}
+        auto* PC=Cast<APlayerController>(GetController());auto* LP=PC?PC->GetLocalPlayer():nullptr;
+        if(LP)LP->GetSubsystem<UAetherCommandClient>()->OpenContainer(Selection.Container->StableId);
+        return;
+    }
     if(UsesNativeSkills()&&NativeInteractionFocus.IsSet())
     {
         auto* Shown=Selection.Prop.Get();

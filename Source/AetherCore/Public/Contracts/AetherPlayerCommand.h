@@ -30,6 +30,7 @@ struct FAetherPlayerCommand
     int64 ExpectedWorldRevision = -1; // 不涉及世界聚合时必须为 -1。
     // 请求 v2 新增。ExecuteInteraction 必须携带；v1 和其他动作一律为 -1。
     int64 ExpectedInteractionRevision = -1;
+    int64 ExpectedContainerRevision = -1; // v3 拾取/转移固定所见容器版本；其他动作必须 -1。
     FGuid ItemInstanceId, OtherInstanceId;
     FString TargetStableId, ContainerId, DefinitionId, SkillId, SlotId, ActionId;
     int32 Quantity = 0;
@@ -60,8 +61,8 @@ struct FAetherCommandResult
 namespace AetherCommands
 {
     inline constexpr uint16 ProtocolVersion = 1; // 保留旧调用者默认值，不改变已保存请求。
-    inline constexpr uint16 LatestProtocolVersion = 2;
-    inline constexpr bool IsSupportedProtocol(int32 Version) { return Version==1||Version==2; }
+    inline constexpr uint16 LatestProtocolVersion = 3;
+    inline constexpr bool IsSupportedProtocol(int32 Version) { return Version==1||Version==2||Version==3; }
     inline constexpr int32 MaxWireBytes = 1024;
     inline constexpr uint16 ResultSchemaVersion = 2;
     // 这里只检查协议形状；是否持有物品、目标距离、权限和版本仍由权威处理器复验。

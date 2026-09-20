@@ -2,6 +2,7 @@
 #include "Subsystems/LocalPlayerSubsystem.h"
 #include "Tickable.h"
 #include "Profile/AetherProfileState.h"
+#include "World/AetherContainerState.h"
 #include "Contracts/AetherPlayerCommand.h"
 #include "Networking/AetherV10Packets.h"
 #include "AetherCommandClient.generated.h"
@@ -18,6 +19,13 @@ class AETHERLAB_API UAetherCommandClient : public ULocalPlayerSubsystem,public F
     GENERATED_BODY()
 public:
     const TOptional<FAetherProfileStateV10>& GetProfile() const{return Profile;}
+    bool OpenContainer(const FString& Id);
+    void CloseContainer();
+    void RefreshContainer();
+    const TOptional<FAetherContainerStateV10>& GetContainer() const{return Container;}
+    FGuid GetContainerContext() const{return ContainerContext;}
+    int64 GetContainerWorldRevision() const{return ContainerWorldRevision;}
+    void ReceiveContainerClosed(AAetherPlayerController* C,FGuid ChannelId,FGuid Context);
     FGuid GetChannel() const{return Channel;}
     const FString& GetOwnerIdentity() const{return Owner;}
     bool HasPending() const;
@@ -62,7 +70,14 @@ private:
     FGuid Channel;
     FString Owner;
     TOptional<FAetherProfileStateV10> Profile;
-    FAssembly Assembly;
+    FAssembly Assembly,ContainerAssembly;
+    TOptional<FAetherContainerStateV10> Container;
+    FGuid ContainerContext;
+    FString RequestedContainer;
+    int64 ContainerWorldRevision=-1,AssemblyWorldRevision=-1;
+    double NextContainerSync=0;
+    void ReceiveContainerChunk(const FAetherV10SnapshotChunk& Chunk);
+    void ResetContainer();
     TArray<FPending> Pending;
     double NextSync=0;
 };

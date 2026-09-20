@@ -106,6 +106,9 @@ bool AetherCommands::Validate(const FAetherPlayerCommand& C, FString& Reason)
     const bool NeedsInteraction=C.ProtocolVersion>=2&&C.Type==EAetherCommandType::ExecuteInteraction;
     if(NeedsInteraction ? (C.ExpectedInteractionRevision<0||C.ExpectedInteractionRevision==MAX_int64) : C.ExpectedInteractionRevision!=-1)
         return Reject(TEXT("Interaction revision does not match protocol/action"));
+    const bool NeedsContainer=C.ProtocolVersion>=3&&(C.Type==EAetherCommandType::PickUpItem||C.Type==EAetherCommandType::TransferItem);
+    if(NeedsContainer?(C.ExpectedContainerRevision<0||C.ExpectedContainerRevision==MAX_int64):C.ExpectedContainerRevision!=-1)
+        return Reject(TEXT("Container revision does not match protocol/action"));
     const auto GuidField=[&](uint32 Bit,const FGuid& G){return (Mask&Bit)!=0 ? G.IsValid() : G==FGuid();};
     if(!GuidField(Item,C.ItemInstanceId)||!GuidField(Other,C.OtherInstanceId)||
         ((Mask&Other)!=0 && C.ItemInstanceId==C.OtherInstanceId))return Reject(TEXT("Invalid or unexpected instance identity"));
@@ -137,6 +140,7 @@ bool AetherCommands::Encode(const FAetherPlayerCommand& C, TArray<uint8>& Bytes,
     W.UInt(uint32(C.Quantity),4);W.UInt(uint32(C.DestinationIndex),4);W.UInt(C.Enabled?1:0,1);W.UInt(uint8(C.TransferDirection),1);
     // v1 的所有字节保持原样；v2 在固定尾部添加一个有符号版本，不复用其他业务字段。
     if(C.ProtocolVersion>=2)W.UInt(C.ExpectedInteractionRevision<0?MAX_uint64:uint64(C.ExpectedInteractionRevision),8);
+    if(C.ProtocolVersion>=3)W.UInt(C.ExpectedContainerRevision<0?MAX_uint64:uint64(C.ExpectedContainerRevision),8);
     Bytes=MoveTemp(W.Bytes);return true;
 }
 
@@ -163,6 +167,12 @@ bool AetherCommands::Decode(const TArray<uint8>& Bytes, FAetherPlayerCommand& Ou
         const uint64 Interaction=R.UInt(8);
         if(Interaction!=MAX_uint64&&Interaction>=uint64(MAX_int64)){Reason=TEXT("Interaction revision overflow");return false;}
         C.ExpectedInteractionRevision=Interaction==MAX_uint64?-1:int64(Interaction);
+    }
+    if(C.ProtocolVersion>=3)
+    {
+        const uint64 Container=R.UInt(8);
+        if(Container!=MAX_uint64&&Container>=uint64(MAX_int64)){Reason=TEXT("Container revision overflow");return false;}
+        C.ExpectedContainerRevision=Container==MAX_uint64?-1:int64(Container);
     }
     if(!R.Valid || R.Offset!=Bytes.Num()){Reason=TEXT("Truncated or trailing command bytes");return false;}
     if(!Validate(C,Reason))return false;

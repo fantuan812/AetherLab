@@ -161,18 +161,20 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             }
             FAetherProfileCompletion C;C.Session=J.Session;C.CommandType=J.Command.Type;C.CommitCertainty=J.Certainty;C.bReservedResources=J.bReservedResources;C.Result=J.Result;C.bMayPublish=Impl->Current(J.Session);
             if(!C.bMayPublish)C.Result.FinalProfileRevision=-1;
+            // 世界与容器是服务器场景事实，提交者断线不会撤销已确认写入。
+            C.WorldSnapshot=MoveTemp(World);
+            if(Container.IsSet()&&(Container->Kind!=EAetherContainerKind::PersonalStorage||Container->OwnerCharacterId.Equals(J.Session.CharacterId,ESearchCase::CaseSensitive)))
+                C.ContainerSnapshot=MoveTemp(Container);
             if(C.bMayPublish)
             {
-                C.Snapshot=MoveTemp(Snapshot);C.WorldSnapshot=MoveTemp(World);
-                // 旧回执仍能回答操作结果，但不得把其他角色的个人仓储内容传给当前会话。
-                if(Container.IsSet()&&(Container->Kind!=EAetherContainerKind::PersonalStorage||Container->OwnerCharacterId.Equals(J.Session.CharacterId,ESearchCase::CaseSensitive)))
-                    C.ContainerSnapshot=MoveTemp(Container);
+                C.Snapshot=MoveTemp(Snapshot);
+                // 私有角色快照仍严格受会话 epoch 约束，运行时容器读取另做现场授权。
             }
             Out.Add(MoveTemp(C));Impl->Jobs.RemoveAtSwap(I);
         };
         using E=FImpl::EStage;
         // 提交尚未发出时，换 Pawn/断线立即取消。提交已排队则等待其结束，但禁止旧 epoch 发布。
-        if(!Impl->Current(J.Session)&&J.Stage!=E::Commit){J.Result.Code=EAetherCommandCode::Unauthorized;Finish();continue;}
+        if(!Impl->Current(J.Session)&&J.Stage!=E::Commit&&J.Stage!=E::RefreshBundle&&J.Stage!=E::Refresh){J.Result.Code=EAetherCommandCode::Unauthorized;Finish();continue;}
         if(J.Stage==E::Receipt||J.Stage==E::Commit)
         {
             if(!J.StoreFuture.IsReady())continue;
@@ -183,7 +185,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             else if(J.Stage==E::Commit&&(R.Code==EAetherStoreCode::Conflict||R.Code==EAetherStoreCode::Invalid||
                 R.Code==EAetherStoreCode::Busy||R.Code==EAetherStoreCode::Expired))
                 J.Certainty=EAetherCommitCertainty::NotCommitted;
-            if(!Impl->Current(J.Session)){J.Result.Code=EAetherCommandCode::Unauthorized;Finish();continue;}
+            if(!Impl->Current(J.Session)&&J.Certainty!=EAetherCommitCertainty::Committed){J.Result.Code=EAetherCommandCode::Unauthorized;Finish();continue;}
             if(R.Code==EAetherStoreCode::Replayed||R.Code==EAetherStoreCode::Committed)
             {if(!Impl->Receipt(J,R))Finish();continue;}
             if(J.Stage==E::Receipt&&R.Code==EAetherStoreCode::Missing)
