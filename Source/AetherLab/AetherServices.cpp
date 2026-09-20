@@ -3,6 +3,8 @@
 #include "AetherFrontier.h"
 #include "Inventory/AetherResourceGate.h"
 #include "ReactiveWorldSubsystem.h"
+#include "Interaction/AetherNativeInteraction.h"
+#include "Definitions/AetherV10Definitions.h"
 
 bool AetherServices::IsService(FName Service)
 {return Service=="Source"||Service=="SupplyRestored"||Service=="Receiver";}
@@ -83,7 +85,18 @@ EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCha
 void AAetherFrontierCharacter::RefreshInteractionFocus()
 {
     AActor* Previous=InteractionFocus.Prop.IsValid()?static_cast<AActor*>(InteractionFocus.Prop.Get()):static_cast<AActor*>(InteractionFocus.Rescue.Get());
-    InteractionFocus=AetherGuide::SelectInteraction(this,Previous);bHasInteractionFocus=true;
+    InteractionFocus=AetherGuide::SelectInteraction(this,Previous);bHasInteractionFocus=true;NativeInteractionFocus.Reset();
+    if(UsesNativeSkills())if(auto* Target=InteractionFocus.Prop.Get())
+        if(auto Provider=AetherNativeInteraction::Provider(*this,*Target);Provider.IsSet())
+        {
+            const auto Offers=Provider->Query({ProfileState()->Profile.CharacterId,Target->Spec.Id.ToString()});
+            for(const auto& Offer:Offers)if(Offer.bPreferred&&Offer.Availability==EAetherOfferAvailability::Available)
+            {
+                NativeInteractionFocus=FAetherInteractionSelection{Offer.TargetStableId,Offer.ActionId,Offer.ProfileRevision,Offer.WorldRevision,Offer.TargetRevision};
+                InteractionFocus.Prompt=TEXT("[")+BindingFor("Interact").GetDisplayName().ToString()+TEXT("] ")+Offer.DisplayVerb;
+                InteractionFocus.bExecutable=true;break;
+            }
+        }
 }
 void AAetherFrontierCharacter::InteractV4()
 {
@@ -92,6 +105,15 @@ void AAetherFrontierCharacter::InteractV4()
     if(!bHasInteractionFocus)RefreshInteractionFocus();
     // 输入使用最近一次真正显示的快照；失效时只刷新，不在同一次按键偷偷执行新目标。
     const auto Selection=InteractionFocus;
+    if(UsesNativeSkills()&&NativeInteractionFocus.IsSet())
+    {
+        auto* Shown=Selection.Prop.Get();
+        if(!Shown||Shown->Spec.Id.ToString()!=NativeInteractionFocus->TargetStableId||Shown->InteractionRevision!=NativeInteractionFocus->InteractionRevision)
+        {NativeInteractionFocus.Reset();RefreshInteractionFocus();return;}
+        FString Why;
+        Feedback=AetherNativeInteraction::Submit(*this,NativeInteractionFocus.GetValue(),Why)?TEXT("请求已提交，正在等待持久确认。"):Why;
+        OnPresentationChanged.Broadcast();return;
+    }
     if(!AetherGuide::ValidateSelection(this,Selection)){RefreshInteractionFocus();return;}
     auto* Target=Selection.Prop.Get();
     if(!Target||!AetherServices::IsService(Selection.ActionId))

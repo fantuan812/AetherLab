@@ -5,7 +5,8 @@
 
 enum class EAetherInteractionActionKind:uint8
 {
-    Talk,TrackObjective,Register,BindInn,Rest,LearnStorySkills,Train,ResetSkills,Trade,Repair,ClaimQuest,ClaimSkillPoints
+    Talk,TrackObjective,Register,BindInn,Rest,LearnStorySkills,Train,ResetSkills,Trade,Repair,ClaimQuest,ClaimSkillPoints,
+    CollectSupply,CollectGather,ClaimDaily,ObserveObjective,RecordDaily
 };
 struct FAetherInteractionActionDefinition
 {

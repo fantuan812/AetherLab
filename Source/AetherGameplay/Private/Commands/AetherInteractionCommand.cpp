@@ -1,6 +1,7 @@
 #include "Commands/AetherInteractionCommand.h"
 #include "Profile/AetherProfileCodec.h"
 #include "World/AetherWorldCodec.h"
+#include "AetherInteractionRewards.h"
 namespace
 {
 using K=EAetherInteractionActionKind;
@@ -52,7 +53,8 @@ bool AetherInteractionCommands::Prepare(const FAetherPlayerCommand& C,const FStr
     Target.bHasStoryGrantAvailable=false;for(const auto& Def:Skills.Skills)Target.bHasStoryGrantAvailable|=EligibleStory(Def.Value,P);
     Target.bHasClaimableSkillPoints=AetherQuestProgression::HasClaimableSkillPoints(P,Progression);
     // 不采信上下文宣称的处理器集合；可执行范围只能来自本编译单元真实实现的有限分支。
-    Target.RegisteredHandlers={K::Register,K::BindInn,K::LearnStorySkills,K::ClaimQuest,K::ClaimSkillPoints};
+    Target.RegisteredHandlers={K::Register,K::BindInn,K::LearnStorySkills,K::ClaimQuest,K::ClaimSkillPoints,
+        K::CollectSupply,K::CollectGather,K::ClaimDaily,K::ObserveObjective,K::RecordDaily};
     FAetherInteractionProvider Provider(*D,Target,Rules);
     const auto Checked=Provider.CheckCommand(Actor,C);if(Checked!=R::Applied)return Fail(Checked);
     const auto* Action=D->Actions.FindByPredicate([&](const auto& A){return A.Id.Equals(C.ActionId,ESearchCase::CaseSensitive);});
@@ -84,6 +86,13 @@ bool AetherInteractionCommands::Prepare(const FAetherPlayerCommand& C,const FStr
         }
         if(Result.AffectedDefinitionIds.IsEmpty())return Fail(R::NotAllowed);
         break;
+    }
+    case K::CollectSupply:case K::CollectGather:case K::ClaimDaily:case K::ObserveObjective:case K::RecordDaily:
+    {
+        const auto Applied=AetherInteractionRewards::Apply(*Action,Context,Next,W,Items,Rules);
+        if(Applied!=R::Applied)return Fail(Applied);
+        Result.AffectedDefinitionIds.Add(Action->ObjectiveId.IsEmpty()?Action->ServiceId:Action->ObjectiveId);
+        QuestResult=AetherQuestProgression::Settle(Next,W.WorldFactSources,{},Items,Skills,Rules,Progression);break;
     }
     default:return Fail(R::UnsupportedAction);
     }

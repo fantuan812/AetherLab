@@ -29,6 +29,7 @@ struct FAetherProfileCommandContext
     double SafeForSeconds=0;
     // 目标注册表提供现场事实；角色进度/版本/可领取点数由交互处理器从数据库重建。
     FAetherInteractionSnapshot Interaction;
+    bool bServiceRequirementsMet=false,bObjectiveFactReady=false;
     FAetherContainerAccessContext Container;
     FAetherSkillRuleContext Skill;
     TArray<FAetherExternalSkillGrant> ExternalSkillGrants;

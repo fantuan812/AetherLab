@@ -5,6 +5,7 @@
 #include "Inventory/AetherResourceGate.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "EngineUtils.h"
+#include "AetherGuide.h"
 
 namespace
 {
@@ -23,6 +24,7 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
     if(!bNativeSceneReady||bWorldRestoreFailed||!C||!PS||C->ProfileState()!=PS||!C->HasAuthority()||
         !Profile.CharacterId.Equals(PS->Profile.CharacterId,ESearchCase::CaseSensitive))return false;
     X={};const auto& D=FAetherV10Definitions::Get();if(!D.bValid)return false;
+    const auto UTC=FDateTime::UtcNow();X.ServerUnixMs=UTC.ToUnixTimestamp()*1000+UTC.GetMillisecond();
     const bool Busy=C->bTravelPending||C->Carried||C->ReviveTarget||(Encounters&&Encounters->IsChanneling(C));
     X.bCanManageInventory=C->Ready()&&!Busy&&C->ResourceGate&&!C->ResourceGate->IsBlocked();
     if(!X.bCanManageInventory)return false;
@@ -46,6 +48,18 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
     {
         I.TargetStableId=Target->Spec.Id.ToString();I.DefinitionId=Target->Service.ToString();I.InteractionRevision=Target->InteractionRevision;
         I.bLoaded=Target->bEnabled&&!Target->IsActorBeingDestroyed();
+        X.bServiceRequirementsMet=I.bLoaded;
+        if(const auto* Required=D.Rules.InteractionRequirements.Find(Target->Service))
+            for(FName Id:*Required)X.bServiceRequirementsMet&=AetherGuide::CanInspectFire(Prop(Id));
+        X.bObjectiveFactReady=X.bServiceRequirementsMet&&(!Target->bInspectableFire||AetherGuide::CanInspectFire(Target));
+        if(AetherGuide::IsPersonalFire(Target->Service))X.bObjectiveFactReady=false; // 只接受真实灭火事件，交互不能补写个人灭火事实。
+        if(Target->Service=="GuardianDefeated")
+            X.bObjectiveFactReady=NativeWorld.IsSet()&&NativeWorld->Abbey.Phase==5&&NativeWorld->Abbey.Participants.Contains(Profile.CharacterId);
+        if(Target->Service=="SealDelivered")
+        {
+            bool HasSeal=false;for(const auto& Item:Profile.Inventory.Items)HasSeal|=Item.DefinitionId==TEXT("AncientSeal")&&Item.Quantity>0;
+            X.bObjectiveFactReady&=HasSeal;
+        }
         I.bInRange=FVector::DistSquared(C->GetActorLocation(),Target->GetActorLocation())<=FMath::Square(250.);
         I.bLineOfSight=Reachable(*C,*Target,250.);
         if(Target->Reactive->bOwnerOnlyStimuli)

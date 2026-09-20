@@ -577,6 +577,404 @@
           ]
         }
       ]
+    },
+    {
+      "Id": "SupplyA",
+      "Actions": [
+        {
+          "Id": "Collect",
+          "Kind": "CollectSupply",
+          "Verb": "收集补给",
+          "IconId": "CollectSupply",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "SupplyA",
+          "ServiceId": "Supply",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "SupplyA"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "SupplyB",
+      "Actions": [
+        {
+          "Id": "Collect",
+          "Kind": "CollectSupply",
+          "Verb": "收集补给",
+          "IconId": "CollectSupply",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "SupplyB",
+          "ServiceId": "Supply",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "SupplyB"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Gather",
+      "Actions": [
+        {
+          "Id": "Collect",
+          "Kind": "CollectGather",
+          "Verb": "采集今日补给",
+          "IconId": "CollectGather",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Gather",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Daily",
+      "Actions": [
+        {
+          "Id": "ClaimDaily",
+          "Kind": "ClaimDaily",
+          "Verb": "结算今日委托",
+          "IconId": "ClaimDaily",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Daily0",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "DailyPatrol",
+      "Actions": [
+        {
+          "Id": "ClaimDaily",
+          "Kind": "ClaimDaily",
+          "Verb": "结算今日委托",
+          "IconId": "ClaimDaily",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Daily1",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "DailyFire",
+      "Actions": [
+        {
+          "Id": "ClaimDaily",
+          "Kind": "ClaimDaily",
+          "Verb": "结算今日委托",
+          "IconId": "ClaimDaily",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Daily2",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": true,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Rescue",
+      "Actions": [
+        {
+          "Id": "Observe",
+          "Kind": "ObserveObjective",
+          "Verb": "救援工匠",
+          "IconId": "ObserveObjective",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "Rescue",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "Rescue"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "SealDelivered",
+      "Actions": [
+        {
+          "Id": "Observe",
+          "Kind": "ObserveObjective",
+          "Verb": "交付古印",
+          "IconId": "ObserveObjective",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "SealDelivered",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "SealDelivered"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "GuardianDefeated",
+      "Actions": [
+        {
+          "Id": "Observe",
+          "Kind": "ObserveObjective",
+          "Verb": "领取遭遇凭据",
+          "IconId": "ObserveObjective",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "GuardianDefeated",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "GuardianDefeated"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Gate",
+      "Actions": [
+        {
+          "Id": "Observe",
+          "Kind": "ObserveObjective",
+          "Verb": "进入城镇",
+          "IconId": "ObserveObjective",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "Gate",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "Gate"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "ForestFire0",
+      "Actions": [
+        {
+          "Id": "Inspect",
+          "Kind": "ObserveObjective",
+          "Verb": "检查已清理的火点",
+          "IconId": "ObserveObjective",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "ForestFire0",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "ForestFire0"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "ForestFire1",
+      "Actions": [
+        {
+          "Id": "Inspect",
+          "Kind": "ObserveObjective",
+          "Verb": "检查已清理的火点",
+          "IconId": "ObserveObjective",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "ForestFire1",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "ForestFire1"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "ForestFire2",
+      "Actions": [
+        {
+          "Id": "Inspect",
+          "Kind": "ObserveObjective",
+          "Verb": "检查已清理的火点",
+          "IconId": "ObserveObjective",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "ForestFire2",
+          "ServiceId": "",
+          "RequiredClaims": [],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [
+            "ForestFire2"
+          ],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Patrol0",
+      "Actions": [
+        {
+          "Id": "Record",
+          "Kind": "RecordDaily",
+          "Verb": "记录委托目标",
+          "IconId": "RecordDaily",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "Patrol0",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Patrol1",
+      "Actions": [
+        {
+          "Id": "Record",
+          "Kind": "RecordDaily",
+          "Verb": "记录委托目标",
+          "IconId": "RecordDaily",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "Patrol1",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
+    },
+    {
+      "Id": "Patrol2",
+      "Actions": [
+        {
+          "Id": "Record",
+          "Kind": "RecordDaily",
+          "Verb": "记录委托目标",
+          "IconId": "RecordDaily",
+          "Priority": 100,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "Patrol2",
+          "ServiceId": "",
+          "RequiredClaims": [
+            "Q_Main_08"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
+        }
+      ],
+      "Dialogue": []
     }
   ]
 }

@@ -5,6 +5,7 @@
 #include "AetherServices.h"
 #include "AetherGuide.h"
 #include "Interaction/AetherLiveTradeSession.h"
+#include "Contracts/AetherInteraction.h"
 #include "AetherFrontierCharacter.generated.h"
 
 class AAetherFrontierProp;
@@ -141,6 +142,7 @@ public:
     // Actor 的网络引用同时区分区域卸载后用同一持久 ID 重建的新实例。
     UFUNCTION(Server,Reliable) void ServerInteractTarget(AActor* Target,FName StableId,FName ActionId,int32 ExpectedProfileRevision);
     FAetherInteractionTarget InteractionFocus;
+    TOptional<FAetherInteractionSelection> NativeInteractionFocus;
     bool bHasInteractionFocus=false;
     void RefreshInteractionFocus();
     UFUNCTION(Client,Reliable) void WorldServiceResult(FGuid Id,EAetherServiceResult Result,int32 Revision);

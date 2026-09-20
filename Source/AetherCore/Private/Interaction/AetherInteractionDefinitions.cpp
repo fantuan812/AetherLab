@@ -24,7 +24,8 @@ bool Names(const TSharedPtr<FJsonObject>& O,const TCHAR* Field,TArray<FString>& 
 bool Kind(const FString& S,EAetherInteractionActionKind& Out)
 {
     static const TCHAR* Names[]={TEXT("Talk"),TEXT("TrackObjective"),TEXT("Register"),TEXT("BindInn"),TEXT("Rest"),
-        TEXT("LearnStorySkills"),TEXT("Train"),TEXT("ResetSkills"),TEXT("Trade"),TEXT("Repair"),TEXT("ClaimQuest"),TEXT("ClaimSkillPoints")};
+        TEXT("LearnStorySkills"),TEXT("Train"),TEXT("ResetSkills"),TEXT("Trade"),TEXT("Repair"),TEXT("ClaimQuest"),TEXT("ClaimSkillPoints"),
+        TEXT("CollectSupply"),TEXT("CollectGather"),TEXT("ClaimDaily"),TEXT("ObserveObjective"),TEXT("RecordDaily")};
     for(int32 I=0;I<UE_ARRAY_COUNT(Names);++I)if(S.Equals(Names[I],ESearchCase::CaseSensitive)){Out=EAetherInteractionActionKind(I);return true;}return false;
 }
 }
@@ -50,7 +51,7 @@ bool FAetherInteractionDefinitions::Validate(const FAetherRules& Rules,const FAe
         TSet<FString> Actions;
         for(const auto& A:D.Actions)
         {
-            if(!Id(A.Id)||Actions.Contains(A.Id)||uint8(A.Kind)>uint8(EAetherInteractionActionKind::ClaimSkillPoints)||
+            if(!Id(A.Id)||Actions.Contains(A.Id)||uint8(A.Kind)>uint8(EAetherInteractionActionKind::RecordDaily)||
                 !Text(A.Verb,64)||!Id(A.IconId)||A.Priority<0||A.Priority>1000)return Fail(TEXT("Invalid action identity/presentation"));
             Actions.Add(A.Id);
             if(!References(A.RequiredClaims)||!References(A.HideAfterClaims))return Fail(TEXT("Unknown/duplicate quest condition"));
@@ -69,6 +70,7 @@ bool FAetherInteractionDefinitions::Validate(const FAetherRules& Rules,const FAe
             if(!A.ObjectiveId.IsEmpty())
             {
                 bool Found=false;for(const auto& O:Rules.Objectives)if(O.Key.ToString().Equals(A.ObjectiveId,ESearchCase::CaseSensitive)){Found=true;break;}
+                if(A.Kind==EAetherInteractionActionKind::RecordDaily)for(const auto& Daily:Rules.Dailies)for(FName Fact:Daily.Facts)Found|=Fact.ToString().Equals(A.ObjectiveId,ESearchCase::CaseSensitive);
                 if(!Found)return Fail(TEXT("Unknown objective reference"));
             }
             using K=EAetherInteractionActionKind;
@@ -81,7 +83,12 @@ bool FAetherInteractionDefinitions::Validate(const FAetherRules& Rules,const FAe
                 const auto* Shop=Economy.Shops.Find(A.ServiceId);
                 if(!Shop||!Shop->Id.Equals(A.ServiceId,ESearchCase::CaseSensitive)||(A.Kind==K::Repair&&!Shop->bRepair))return Fail(TEXT("Unknown shop/repair service"));
             }
-            else if(!A.ServiceId.IsEmpty())return Fail(TEXT("Unexpected shop service"));
+            else if(A.Kind==K::CollectSupply||A.Kind==K::CollectGather)
+            {if(!Rules.LootTables.Contains(FName(*A.ServiceId)))return Fail(TEXT("Unknown collection reward table"));}
+            else if(A.Kind==K::ClaimDaily)
+            {if(!Rules.Dailies.ContainsByPredicate([&](const auto& V){return V.Id.ToString().Equals(A.ServiceId,ESearchCase::CaseSensitive);}))return Fail(TEXT("Unknown daily service"));}
+            else if(!A.ServiceId.IsEmpty())return Fail(TEXT("Unexpected service"));
+            if((A.Kind==K::CollectSupply||A.Kind==K::ObserveObjective)&&A.ObjectiveId.IsEmpty())return Fail(TEXT("Objective service requires a fact"));
             if(A.Kind==K::ClaimQuest&&A.QuestId.IsEmpty())return Fail(TEXT("Claim requires quest"));
         }
         TSet<FString> Reachable;
