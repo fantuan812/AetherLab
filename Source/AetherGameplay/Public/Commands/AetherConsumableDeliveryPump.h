@@ -4,6 +4,9 @@
 // 每个 Poll 重新从当前会话/Pawn 解析资源所有者；指针仅在本次游戏线程调用中使用，不进入后台任务。
 // 返回 nullptr 表示当前代次已失效。解析器不能重入调度器。
 using FAetherResolveConsumableReceiver=TFunction<FAetherConsumableReceiver*(const FAetherProfileSession&)>;
+// 将 receiver 当前资源发布到当前 ASC，必须在 ACK 删除持久投递之前成功。
+// 不能重新播放旧 After；回放时 receiver 可能已经含有随后发生的伤害。
+using FAetherPublishConsumableResources=TFunction<bool(const FAetherProfileSession&,const FAetherConsumableReceiver&)>;
 enum class EAetherDeliveryPumpCode:uint8 { Idle, Pending, Complete, StaleSession, Invalid, Conflict, StorageUnavailable };
 struct FAetherDeliveryPumpResult
 {
@@ -22,7 +25,7 @@ public:
     explicit FAetherConsumableDeliveryPump(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store);
     ~FAetherConsumableDeliveryPump();
     bool Start(const FAetherProfileSession& Session,bool RecoverFullRespawn=false);
-    FAetherDeliveryPumpResult Poll(const FAetherResolveConsumableReceiver& Resolve);
+    FAetherDeliveryPumpResult Poll(const FAetherResolveConsumableReceiver& Resolve,const FAetherPublishConsumableResources& Publish={});
     bool IsPending() const;
 private:
     struct FImpl;

@@ -1,5 +1,7 @@
 #include "Movement/AetherCharacterMovement.h"
 #include "Characters/AetherFrontierCharacter.h"
+#include "Combat/AetherEquipmentMath.h"
+#include "Inventory/AetherResourceGate.h"
 
 namespace
 {
@@ -25,7 +27,7 @@ float UAetherCharacterMovement::GetMaxSpeed() const
 {
     const auto* C=Cast<AAetherFrontierCharacter>(CharacterOwner);
     if(!C)return Super::GetMaxSpeed();
-    if(!C->Alive()||C->bTravelPending||C->CombatTime()<C->StunUntil)return 0;
+    if(C->ResourceGate->IsBlocked()||!C->Alive()||C->bTravelPending||C->CombatTime()<C->StunUntil)return 0;
     if(MovementMode!=MOVE_Walking&&MovementMode!=MOVE_NavWalking)return Super::GetMaxSpeed();
     // 唯一的行走速度决策点，基类战斗 Tick 的旧 MaxWalkSpeed 不再覆盖玩家姿态。
     float Speed=C->Fighter==EAetherFighter::Player?WalkSpeed:C->Fighter==EAetherFighter::Wolf?380.f:230.f;
@@ -33,7 +35,7 @@ float UAetherCharacterMovement::GetMaxSpeed() const
     if(C->IsCrouched())Speed=CrouchSpeed;
     else if(SprintIntent&&CanSprint())Speed=SprintSpeed;
     if(C->bBlocking)Speed=FMath::Min(Speed,220.f);
-    return Speed*(C->Reactive->State.IceFraction>.5?.5f:1.f);
+    return Speed*(C->Reactive->State.IceFraction>.5?1.f-.5f*AetherEquipmentMath::ElementMultiplier(C->Attributes->GearFrostResist.GetCurrentValue()):1.f);
 }
 bool UAetherCharacterMovement::CanCrouchInCurrentState() const
 {

@@ -29,6 +29,7 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 private:
     void ReceiveImpact(const FReactiveImpactEvent& Event);
+    void DispatchImpact(const FReactiveImpactEvent& Event,float Damage);
     TWeakObjectPtr<UReactiveMechanismComponent> Mechanism;
     FDelegateHandle ImpactDelegate;
     uint64 LastEventId=0;

@@ -1,6 +1,7 @@
 #include "AetherServices.h"
 #include "AetherGuide.h"
 #include "AetherFrontier.h"
+#include "Inventory/AetherResourceGate.h"
 #include "ReactiveWorldSubsystem.h"
 
 bool AetherServices::IsService(FName Service)
@@ -116,6 +117,7 @@ void AAetherFrontierCharacter::ServerInteractTarget_Implementation(AActor* Targe
 }
 void AAetherFrontierCharacter::ServerWorldService_Implementation(FAetherWorldServiceCommand Command,AAetherFrontierProp* Target,FName ActionId)
 {
+    if(ResourceGate->IsBlocked())return;
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();auto* PS=ProfileState();if(!Mode||!PS)return;
     if(CombatTime()<NextServerAction)return;NextServerAction=CombatTime()+.12f;
     FAetherInteractionTarget Selection;Selection.Prop=Target;Selection.StableId=Command.TargetId;

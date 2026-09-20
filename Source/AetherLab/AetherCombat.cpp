@@ -1,6 +1,7 @@
 #include "AetherCombat.h"
 #include "Skills/AetherSkillAbilityBinding.h"
 #include "Combat/AetherEquipmentMath.h"
+#include "Inventory/AetherResourceGate.h"
 #include "Equipment/AetherElementDamage.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "AetherAdventure.h"
@@ -150,6 +151,7 @@ AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
     BodyVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surcoat")); BodyVisual->SetupAttachment(RootComponent);
     BodyVisual->SetStaticMesh(Cube.Object); BodyVisual->SetRelativeScale3D(FVector(.5,.6,1.45)); BodyVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ResourceGate=CreateDefaultSubobject<UAetherResourceGate>(TEXT("ResourceGate"));
     Equipment = CreateDefaultSubobject<UAetherEquipmentComponent>(TEXT("Equipment"));
     Equipment->ModifyHit.BindWeakLambda(this,[this](FAetherEquipmentHit& Hit){
         if(!Attributes)return;
@@ -337,12 +339,17 @@ bool AAetherCharacter::TrySpell(int32 Spell)
 }
 
 bool AAetherCharacter::Ready() const
-{ const float T = CombatTime(); return AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy() && !AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag()); }
+{ const float T = CombatTime(); return !ResourceGate->IsBlocked() && AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy() && !AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag()); }
 float AAetherCharacter::CombatTime() const
 { const auto* GS = GetWorld()->GetGameState(); return GS ? GS->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds(); }
 void AAetherCharacter::SetVitals(float HP, float MP, float SP)
 {
     if (!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this) return;
+    if(ResourceGate->IsBlocked())
+    {
+        TWeakObjectPtr<AAetherCharacter> Self=this;
+        if(ResourceGate->Defer([Self,HP,MP,SP]{if(Self.IsValid())Self->SetVitals(HP,MP,SP);}))return;
+    }
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(), FMath::Clamp(HP,0.f,MaxHealth));
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(), FMath::Clamp(MP,0.f,MaximumMana()));
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(), FMath::Clamp(SP,0.f,MaximumStamina()));
@@ -442,7 +449,7 @@ bool AAetherCharacter::RequestMelee(FName Id)
     return Equipment->AcceptedAttackCount>Before;
 }
 void AAetherCharacter::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
-{ ReceiveHit(Hit.Damage,Hit.PostureDamage,Cast<AAetherCharacter>(Hit.Source),true); }
+{ if(!DeferEquipmentHit(Hit))ReceiveHit(Hit.Damage,Hit.PostureDamage,Cast<AAetherCharacter>(Hit.Source),true); }
 void AAetherCharacter::ServerBlock_Implementation(bool Value)
 {
     if (!Value) { bBlocking = false; return; }
@@ -463,6 +470,11 @@ void AAetherCharacter::RecordDodgeCommit()
 void AAetherCharacter::ServerDodge_Implementation(){TryDodge();}
 void AAetherCharacter::ReceiveHit(float Damage, float PostureDamage, AAetherCharacter* Source, bool CanBlock)
 {
+    if(ResourceGate->IsBlocked())
+    {
+        TWeakObjectPtr<AAetherCharacter> Self=this,Other=Source;
+        if(ResourceGate->Defer([Self,Other,Damage,PostureDamage,CanBlock]{if(Self.IsValid())Self->ReceiveHit(Damage,PostureDamage,Other.Get(),CanBlock);}))return;
+    }
     if (!HasAuthority() || !Alive() || CombatTime() < InvulnerableUntil || AbilitySystem->HasMatchingGameplayTag(AetherDodge::InvulnerableTag())) return;
     const float T = CombatTime();
     const bool Front = Source && FVector::DotProduct(GetActorForwardVector(), (Source->GetActorLocation() - GetActorLocation()).GetSafeNormal()) > .25;
@@ -479,6 +491,11 @@ void AAetherCharacter::ReceiveHit(float Damage, float PostureDamage, AAetherChar
 }
 void AAetherCharacter::ApplyPostureDamage(float Amount)
 {
+    if(ResourceGate->IsBlocked())
+    {
+        TWeakObjectPtr<AAetherCharacter> Self=this;
+        if(ResourceGate->Defer([Self,Amount]{if(Self.IsValid())Self->ApplyPostureDamage(Amount);}))return;
+    }
     if(!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this||!Alive()||!FMath::IsFinite(Amount)||Amount<=0)return;
     float Posture=bUseBasicAssets?Attributes->Posture.GetCurrentValue()-Amount:Attributes->Posture.GetCurrentValue()+Amount;
     if(bUseBasicAssets?Posture<=0:Posture>=100)
@@ -487,6 +504,7 @@ void AAetherCharacter::ApplyPostureDamage(float Amount)
 }
 float AAetherCharacter::TakeDamage(float Amount, const FDamageEvent& Event, AController* EventInstigator, AActor* Causer)
 {
+    if(DeferDamage(Amount,Event,EventInstigator,Causer))return 0;
     if (!HasAuthority() || !AbilitySystem || AbilitySystem->GetAvatarActor()!=this || !Alive() || !FMath::IsFinite(Amount) || Amount <= 0) return 0;
     float Mitigated=0;
     const auto DamageClass=Event.DamageTypeClass;
@@ -512,6 +530,17 @@ void AAetherCharacter::Reaction(EReactiveReaction Kind, double Magnitude, FVecto
 void AAetherCharacter::ElectricalWindow(const FReactiveElectricalWindow& Window)
 {
     if(!HasAuthority()||!Alive()||Window.DurationSeconds<.001)return;
+    if(ResourceGate->IsBlocked())
+    {
+        const TWeakObjectPtr<AAetherCharacter> Self=this;auto Copy=Window;
+        TArray<TWeakObjectPtr<AActor>> Sources;
+        for(auto& E:Copy.Contributions){Sources.Add(E.Source);E.Source=nullptr;E.Receiver=nullptr;}
+        if(ResourceGate->Defer([Self,Copy=MoveTemp(Copy),Sources=MoveTemp(Sources)]() mutable {
+            if(!Self.IsValid())return;
+            for(int32 I=0;I<Copy.Contributions.Num();++I){Copy.Contributions[I].Source=Sources[I].Get();Copy.Contributions[I].Receiver=Self.Get();}
+            Self->ElectricalWindow(Copy);
+        }))return;
+    }
     for(const auto& Exposure:Window.Contributions)
     {
         if(!Alive())break;
@@ -587,12 +616,8 @@ void AAetherCharacter::Tick(float Dt)
     NetworkProbe(Dt);
     if (HasAuthority() && Alive() && AbilitySystem->GetAvatarActor()==this)
     {
-        const float Regen = T > ActionUntil && !bBlocking && !Equipment->IsBusy() ? 20 : 4;
-        SetVitals(Health(), Mana() + Dt * 5, Stamina() + Dt * Regen);
-        if (T - LastDamageAt > 2) AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), bUseBasicAssets ? FMath::Min(100.f, Attributes->Posture.GetCurrentValue() + Dt * 12) : FMath::Max(0.f, Attributes->Posture.GetCurrentValue() - Dt * 12));
-        const double Temp = Reactive->State.TemperatureC;
-        if (Temp > 55) { FDamageEvent E(UAetherFireDamage::StaticClass()); TakeDamage(float(FMath::Min(25.0,(Temp - 55) * .12) * Dt), E, nullptr, Reactive->GetLastSourceActor()); }
-        Think(Dt);
+        AdvanceCombatResources(Dt,Reactive->State.TemperatureC,Reactive->GetLastSourceActor());
+        if(!ResourceGate->IsBlocked())Think(Dt);
     }
     GetCharacterMovement()->MaxWalkSpeed = !Alive() || T < StunUntil ? 0.f : (bBlocking ? 220.f : Fighter == EAetherFighter::Player ? 450.f : Fighter==EAetherFighter::Wolf?380.f:230.f) * (Reactive->State.IceFraction > .5 ? 1.f-.5f*AetherEquipmentMath::ElementMultiplier(Attributes->GearFrostResist.GetCurrentValue()) : 1.f);
     Tint(BodyVisual, !Alive() ? FLinearColor(.15f,.15f,.17f) : bWindingUp ? FLinearColor(1,.09f,.01f) : T < StunUntil ? FLinearColor(.1f,.8f,1) : Fighter == EAetherFighter::Player ? FLinearColor(.12f,.34f,.5f) : Fighter == EAetherFighter::FireCaster ? FLinearColor(.55f,.09f,.025f) : FLinearColor(.45f,.3f,.09f));
@@ -601,6 +626,40 @@ void AAetherCharacter::Tick(float Dt)
     Nameplate->SetText(FText::FromString(FString::Printf(TEXT("%s  %.0f\n%s"), N, Health(), bPacified ? TEXT("OATH RELEASED") : bWindingUp ? TEXT("ATTACK INCOMING") : TEXT(""))));
     Nameplate->SetVisibility(Fighter != EAetherFighter::Player);
     if (auto* PC = GetWorld()->GetFirstPlayerController(); PC && PC->PlayerCameraManager) Nameplate->SetWorldRotation((PC->PlayerCameraManager->GetCameraLocation() - Nameplate->GetComponentLocation()).Rotation());
+}
+void AAetherCharacter::AdvanceCombatResources(float Dt,double Temperature,TWeakObjectPtr<AActor> HeatSource)
+{
+    if(ResourceGate->IsBlocked())
+    {
+        const TWeakObjectPtr<AAetherCharacter> Self=this;
+        if(ResourceGate->Defer([Self,Dt,Temperature,HeatSource]{if(Self.IsValid())Self->AdvanceCombatResources(Dt,Temperature,HeatSource);}))return;
+    }
+    if(!HasAuthority()||!Alive()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this)return;
+    const float T=CombatTime(),Regen=T>ActionUntil&&!bBlocking&&!Equipment->IsBusy()?20:4;
+    // 延后的是增量恢复整段动作；不能排队旧绝对生命值而覆盖刚生效的药剂。
+    SetVitals(Health(),Mana()+Dt*5,Stamina()+Dt*Regen);
+    if(T-LastDamageAt>2)AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),
+        bUseBasicAssets?FMath::Min(100.f,Attributes->Posture.GetCurrentValue()+Dt*12):FMath::Max(0.f,Attributes->Posture.GetCurrentValue()-Dt*12));
+    if(Temperature>55){FDamageEvent E(UAetherFireDamage::StaticClass());TakeDamage(float(FMath::Min(25.0,(Temperature-55)*.12)*Dt),E,nullptr,HeatSource.Get());}
+}
+bool AAetherCharacter::DeferEquipmentHit(const FAetherEquipmentHit& Hit)
+{
+    if(!ResourceGate->IsBlocked())return false;
+    const TWeakObjectPtr<AAetherCharacter> Self=this;const TWeakObjectPtr<AActor> Source=Hit.Source;
+    auto Copy=Hit;Copy.Source=nullptr;
+    return ResourceGate->Defer([Self,Source,Copy]() mutable {
+        if(!Self.IsValid())return;Copy.Source=Source.Get();Self->ReceiveEquipmentHit_Implementation(Copy);
+    });
+}
+bool AAetherCharacter::DeferDamage(float Amount,const FDamageEvent& Event,AController* Instigator,AActor* Causer)
+{
+    if(!ResourceGate->IsBlocked())return false;
+    const TWeakObjectPtr<AAetherCharacter> Self=this;const TWeakObjectPtr<AController> SourceController=Instigator;
+    const TWeakObjectPtr<AActor> Source=Causer;const auto DamageClass=Event.DamageTypeClass;
+    // 当前项目的伤害消费仅使用 DamageType 与标量 Amount；位置冲击在物理事件入口整体排队。
+    return ResourceGate->Defer([Self,SourceController,Source,DamageClass,Amount]{
+        if(Self.IsValid()){FDamageEvent Copy(DamageClass);Self->TakeDamage(Amount,Copy,SourceController.Get(),Source.Get());}
+    });
 }
 void AAetherCharacter::NetworkProbe(float Dt)
 {

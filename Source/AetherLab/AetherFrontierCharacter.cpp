@@ -3,6 +3,7 @@
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Interaction/AetherNearbyRegistry.h"
 #include "AetherFrontier.h"
+#include "Inventory/AetherResourceGate.h"
 #include "AetherContent.h"
 #include "AetherRules.h"
 #include "AetherInventoryRules.h"
@@ -250,6 +251,7 @@ void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
 }
 void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 Index)
 {
+    if(ResourceGate->IsBlocked())return; // 新操作可拒绝，已经接受的资源动作由屏障保留。
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>(); auto* PS=ProfileState(); if(!Mode||!PS)return;
     if(bTravelPending&&Action!="Save")return;
     if(CombatTime()<NextServerAction)return;NextServerAction=CombatTime()+.12f;
@@ -293,6 +295,7 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
 }
 void AAetherFrontierCharacter::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
 {
+    if(DeferEquipmentHit(Hit))return;
     if(Reactive->bOwnerOnlyStimuli&&Hit.Source!=GetOwner())return;
     if(auto* Other=Cast<AAetherCharacter>(Hit.Source);Other&&Other->Reactive->bOwnerOnlyStimuli&&Other->GetOwner()!=this)return;
     const bool Blocked=bBlocking&&Equipment->GuardDefinition()&&Hit.Source&&FVector::DotProduct(GetActorForwardVector(),(Hit.Source->GetActorLocation()-GetActorLocation()).GetSafeNormal())>.25;
@@ -368,7 +371,7 @@ void AAetherFrontierCharacter::Tick(float Dt)
         return;
     }
     if(bHealer&&T>NextCompanionAction&&CompanionOwner->Health()<65&&Mana()>=15&&FVector::DistSquared(GetActorLocation(),CompanionOwner->GetActorLocation())<FMath::Square(600.0))
-    {CompanionOwner->SetVitals(CompanionOwner->Health()+20,CompanionOwner->Mana(),CompanionOwner->Stamina());AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(),EGameplayModOp::Additive,-15);NextCompanionAction=T+5;}
+    {NextCompanionAction=T+5;ExecuteCompanionHeal(CompanionOwner.Get());}
     AAetherCharacter* Target=nullptr;double Best=FMath::Square(900.0);
     for(TActorIterator<AAetherCharacter> It(GetWorld());It;++It)if(It->Fighter!=EAetherFighter::Player&&It->Alive())
     {double D=FVector::DistSquared(GetActorLocation(),It->GetActorLocation());if(D<Best)
@@ -386,8 +389,21 @@ void AAetherFrontierCharacter::Tick(float Dt)
     if(Target){SetActorRotation(D.Rotation());if(Controller)Controller->SetControlRotation(D.Rotation());if(T>NextCompanionAction&&Ready()){PerformMelee(false);NextCompanionAction=T+1;}}
 }
 
+void AAetherFrontierCharacter::ExecuteCompanionHeal(TWeakObjectPtr<AAetherFrontierCharacter> Target)
+{
+    auto* Recipient=Target.Get();
+    if(!HasAuthority()||!Recipient||Recipient!=CompanionOwner||!bHealer||!Alive()||!Recipient->Alive()||
+        Mana()<15||FVector::DistSquared(GetActorLocation(),Recipient->GetActorLocation())>FMath::Square(600.))return;
+    const TWeakObjectPtr<AAetherFrontierCharacter> Self=this;
+    if(Recipient->ResourceGate->Defer([Self,Target]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target);}))return;
+    if(ResourceGate->Defer([Self,Target]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target);}))return;
+    // 整个治疗及施法者扣费一起延后，以执行时的当前生命加增量，不排队旧绝对目标。
+    Recipient->SetVitals(Recipient->Health()+20,Recipient->Mana(),Recipient->Stamina());
+    AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(),EGameplayModOp::Additive,-15);
+}
 float AAetherFrontierCharacter::TakeDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer)
 {
+    if(DeferDamage(Amount,Event,EventInstigator,Causer))return 0;
     auto* SourceCharacter=Cast<AAetherFrontierCharacter>(Causer);
     if(Reactive->bOwnerOnlyStimuli&&Causer!=GetOwner()&&(!EventInstigator||EventInstigator->GetPawn()!=GetOwner()))return 0;
     if(SourceCharacter&&SourceCharacter->Reactive->bOwnerOnlyStimuli&&SourceCharacter->GetOwner()!=this)return 0;

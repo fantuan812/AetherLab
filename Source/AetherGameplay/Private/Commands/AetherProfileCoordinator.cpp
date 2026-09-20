@@ -26,6 +26,8 @@ struct FAetherProfileCoordinator::FImpl
     {
         FAetherProfileSession Session;FAetherPlayerCommand Command;FAetherCommandResult Result;
         EStage Stage=EStage::Receipt;
+        EAetherCommitCertainty Certainty=EAetherCommitCertainty::NotSubmitted;
+        bool bReservedResources=false;
         TFuture<FAetherStoreResult> StoreFuture;
         TFuture<FAetherStoreReadResult> ReadFuture;
         TFuture<FAetherStoreSnapshotResult> SnapshotFuture;
@@ -120,6 +122,10 @@ void FAetherProfileCoordinator::EndSession(const FAetherProfileSession& S)
 {check(IsInGameThread()&&!Impl->bPolling);if(Impl->Current(S))Impl->Sessions.Remove(S.CharacterId);}
 bool FAetherProfileCoordinator::IsCurrent(const FAetherProfileSession& S) const
 {check(IsInGameThread());return Impl->Current(S);}
+bool FAetherProfileCoordinator::HasPendingForCharacter(const FString& Character) const
+{
+    return Impl->Jobs.ContainsByPredicate([&](const auto& Job){return Job->Session.CharacterId.Equals(Character,ESearchCase::CaseSensitive);});
+}
 int32 FAetherProfileCoordinator::PendingCount() const
 {check(IsInGameThread());return Impl->Jobs.Num();}
 bool FAetherProfileCoordinator::Submit(const FAetherProfileSession& S,const FAetherPlayerCommand& C,FAetherCommandResult& Rejection)
@@ -153,7 +159,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
                 J.Result.Transfers.Reset();J.Result.ReasonParameters.Reset();J.Result.FinalWorldRevision=-1;
                 if(Snapshot.IsSet())J.Result.FinalProfileRevision=Snapshot->Revision;
             }
-            FAetherProfileCompletion C;C.Session=J.Session;C.Result=J.Result;C.bMayPublish=Impl->Current(J.Session);
+            FAetherProfileCompletion C;C.Session=J.Session;C.CommandType=J.Command.Type;C.CommitCertainty=J.Certainty;C.bReservedResources=J.bReservedResources;C.Result=J.Result;C.bMayPublish=Impl->Current(J.Session);
             if(!C.bMayPublish)C.Result.FinalProfileRevision=-1;
             if(C.bMayPublish)
             {
@@ -171,6 +177,12 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
         {
             if(!J.StoreFuture.IsReady())continue;
             const auto R=J.StoreFuture.Get();
+            // 先记录持久证明，再检查会话。旧 Pawn 完成也不能误报“没提交”。
+            if(R.Code==EAetherStoreCode::Replayed||R.Code==EAetherStoreCode::Committed)
+                J.Certainty=EAetherCommitCertainty::Committed;
+            else if(J.Stage==E::Commit&&(R.Code==EAetherStoreCode::Conflict||R.Code==EAetherStoreCode::Invalid||
+                R.Code==EAetherStoreCode::Busy||R.Code==EAetherStoreCode::Expired))
+                J.Certainty=EAetherCommitCertainty::NotCommitted;
             if(!Impl->Current(J.Session)){J.Result.Code=EAetherCommandCode::Unauthorized;Finish();continue;}
             if(R.Code==EAetherStoreCode::Replayed||R.Code==EAetherStoreCode::Committed)
             {if(!Impl->Receipt(J,R))Finish();continue;}
@@ -219,7 +231,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
                 FAetherTransaction Transaction;
                 if(!AetherInteractionCommands::Prepare(J.Command,J.Session.CharacterId,Snapshot,Context,Impl->Items,Impl->Skills,Impl->Rules,
                     Impl->Economy,Impl->Interactions,Impl->Progression,Transaction,J.Result)){Finish(MoveTemp(Profile));continue;}
-                J.Stage=E::Commit;J.StoreFuture=Impl->Store->Commit(MoveTemp(Transaction));continue;
+                J.Certainty=EAetherCommitCertainty::Unknown;J.Stage=E::Commit;J.StoreFuture=Impl->Store->Commit(MoveTemp(Transaction));continue;
             }
             const auto Allowed=AetherContainerCommands::AuthorizeRead(J.Command,Context,Key);
             if(Allowed!=EAetherCommandCode::Applied||!Key.Equals(J.ContainerKey,ESearchCase::CaseSensitive))
@@ -227,7 +239,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             FAetherTransaction Transaction;
             if(!AetherContainerCommands::Prepare(J.Command,J.Session.CharacterId,Snapshot,Context,Impl->Items,Impl->Skills,Impl->Rules,Transaction,J.Result))
             {Finish(MoveTemp(Profile));continue;}
-            J.Stage=E::Commit;J.StoreFuture=Impl->Store->Commit(MoveTemp(Transaction));continue;
+            J.Certainty=EAetherCommitCertainty::Unknown;J.Stage=E::Commit;J.StoreFuture=Impl->Store->Commit(MoveTemp(Transaction));continue;
         }
         if(!J.ReadFuture.IsReady())continue;
         const auto Read=J.ReadFuture.Get();FAetherProfileStateV10 Current;
@@ -245,6 +257,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
         FAetherProfileCommandContext Context;
         if(!Resolve||!Resolve(J.Session,J.Command,Current,Context))
         {J.Result.Code=EAetherCommandCode::NotReady;J.Result.FinalProfileRevision=Current.Revision;Finish(MoveTemp(Current));continue;}
+        J.bReservedResources=J.Command.Type==EAetherCommandType::UseItem&&Context.ResourceReservationId==J.Command.CommandId;
         if(J.Command.Type==EAetherCommandType::ExecuteInteraction)
         {
             const auto Allowed=AetherInteractionCommands::AuthorizeRead(J.Command,J.Session.CharacterId,Context);
@@ -262,7 +275,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
         if(!AetherProfileCommands::Prepare(J.Command,J.Session.CharacterId,Current,Context,Impl->Items,Impl->Skills,Impl->Rules,Transaction,J.Result,Impl->Economy))
         {Finish(MoveTemp(Current));continue;}
         // 候选仅移交后台，直到持久提交成功并重读才可产生面向玩家的新快照。
-        J.Stage=E::Commit;J.StoreFuture=Impl->Store->Commit(MoveTemp(Transaction));
+        J.Certainty=EAetherCommitCertainty::Unknown;J.Stage=E::Commit;J.StoreFuture=Impl->Store->Commit(MoveTemp(Transaction));
     }
     return Out;
 }

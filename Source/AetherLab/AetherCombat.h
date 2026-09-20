@@ -9,6 +9,7 @@
 #include "AetherEquipmentComponent.h"
 #include "AetherCombat.generated.h"
 
+class UAetherResourceGate;
 class UCameraComponent;
 class USpringArmComponent;
 class UTextRenderComponent;
@@ -92,6 +93,7 @@ class AETHERLAB_API AAetherCharacter : public ACharacter, public IAbilitySystemI
 public:
     AAetherCharacter(const FObjectInitializer& ObjectInitializer=FObjectInitializer::Get());
     FOnAetherCharacterAppearanceChanged OnAppearanceChanged;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherResourceGate> ResourceGate;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAbilitySystemComponent> AbilitySystem;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherAttributes> Attributes;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UReactiveBodyComponent> Reactive;
@@ -153,6 +155,9 @@ public:
     virtual bool SpellUnlocked(int32 Spell) const { return true; }
     UPROPERTY(Replicated) bool bUseBasicAssets = false;
     void SetVitals(float HP, float MP, float SP);
+    bool DeferEquipmentHit(const FAetherEquipmentHit& Hit);
+    bool DeferDamage(float Amount,const FDamageEvent& Event,AController* Instigator,AActor* Causer);
+    void AdvanceCombatResources(float Delta,double Temperature,TWeakObjectPtr<AActor> HeatSource);
     void ResetCombat();
     void ReceiveHit(float Damage, float PostureDamage, AAetherCharacter* Source, bool bCanBlock);
     void PerformMelee(bool bHeavy);

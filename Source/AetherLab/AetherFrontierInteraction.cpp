@@ -1,4 +1,5 @@
 #include "AetherFrontier.h"
+#include "Inventory/AetherResourceGate.h"
 #include "AetherGuide.h"
 #include "AetherRules.h"
 #include "AetherActions.h"
@@ -30,7 +31,7 @@ FString AAetherFrontierMode::Interact(AAetherFrontierCharacter* C)
 FString AAetherFrontierMode::InteractTarget(AAetherFrontierCharacter* C,const FAetherInteractionTarget& Target)
 {
     auto* PS=IsValid(C)?C->ProfileState():nullptr;
-    if(!HasAuthority()||!PS||C->GetWorld()!=GetWorld()||!AetherGuide::ValidateSelection(C,Target))
+    if(!HasAuthority()||!PS||C->ResourceGate->IsBlocked()||C->GetWorld()!=GetWorld()||!AetherGuide::ValidateSelection(C,Target))
         return TEXT("目标、动作或角色进度已变化，请重新交互。");
     if(auto* Downed=Target.Rescue.Get())
     {C->ReviveTarget=Downed;C->ReviveStarted=C->CombatTime();C->ReviveDamageSerial=C->DamageReceivedCount;if(!C->AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass())){C->ReviveTarget=nullptr;return TEXT("无法开始救援，请靠近队友并保持安全。");}return TEXT("正在救援：保持靠近 3 秒，受伤会打断。");}

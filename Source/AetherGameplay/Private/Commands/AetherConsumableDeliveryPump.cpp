@@ -46,7 +46,7 @@ bool FAetherConsumableDeliveryPump::Start(const FAetherProfileSession& S,bool Fu
     Impl->Batch.Reset();Impl->Index=0;Impl->bFullRespawn=FullRespawn;
     Impl->PriorApplied.Reset();Impl->Stage=FImpl::EStage::Resolve;return true;
 }
-FAetherDeliveryPumpResult FAetherConsumableDeliveryPump::Poll(const FAetherResolveConsumableReceiver& Resolve)
+FAetherDeliveryPumpResult FAetherConsumableDeliveryPump::Poll(const FAetherResolveConsumableReceiver& Resolve,const FAetherPublishConsumableResources& Publish)
 {
     check(IsInGameThread()&&!Impl->bPolling);TGuardValue<bool> Guard(Impl->bPolling,true);
     using S=FImpl::EStage;using C=EAetherDeliveryPumpCode;
@@ -100,6 +100,11 @@ FAetherDeliveryPumpResult FAetherConsumableDeliveryPump::Poll(const FAetherResol
         const auto Applied=Receiver->Apply(D,Impl->Session.CharacterId);
         if(Applied!=EAetherEffectApplyCode::Applied&&Applied!=EAetherEffectApplyCode::Replayed)
             return Impl->Finish(Applied==EAetherEffectApplyCode::Invalid?C::Invalid:C::Conflict);
+        // Core-only 接收器测试可省略发布器；生产 ASC 适配必须提供它。
+        // 发布失败保留磁盘记录和 receiver 去重证明，下批仍能恢复，绝不提前 ACK。
+        if(Publish&&!Publish(Impl->Session,*Receiver))return Impl->Finish(C::Conflict);
+        auto* Current=Resolve?Resolve(Impl->Session):nullptr;
+        if(!Current||Current->InstanceId()!=Impl->ReceiverId)return Impl->Finish(C::StaleSession);
         Impl->AckFuture=Impl->Store->AcknowledgeEffect(Impl->Session.CharacterId,D.Id);Impl->Stage=S::Ack;
     }
     return Impl->Result;

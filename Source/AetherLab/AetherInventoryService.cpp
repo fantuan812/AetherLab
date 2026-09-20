@@ -1,4 +1,5 @@
 #include "AetherFrontier.h"
+#include "Inventory/AetherResourceGate.h"
 #include "AetherGuide.h"
 #if !UE_BUILD_SHIPPING
 #include "Tests/AetherTradeNetworkProbe.h"
@@ -55,6 +56,7 @@ void AAetherFrontierCharacter::InventoryResult_Implementation(FGuid Id,EAetherIn
 }
 void AAetherFrontierCharacter::ServerTradeInventory_Implementation(FAetherInventoryCommand C,FGuid Authorization)
 {
+ if(ResourceGate->IsBlocked())return;
  auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();auto* PS=ProfileState();if(!Mode||!PS)return;
  if(C.Action!="Buy"&&C.Action!="Sell"){InventoryResult(C.CommandId,EAetherInventoryResult::InvalidCommand,PS->Profile.Revision,0);return;}
  int32 Revision=PS->Profile.Revision,Moved=0;
@@ -63,6 +65,7 @@ void AAetherFrontierCharacter::ServerTradeInventory_Implementation(FAetherInvent
 }
 void AAetherFrontierCharacter::ServerInventory_Implementation(FAetherInventoryCommand C)
 {
+ if(ResourceGate->IsBlocked())return;
  auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();auto* PS=ProfileState();if(!Mode||!PS)return;
  int32 Revision=PS->Profile.Revision,Moved=0;
  const auto Result=Mode->ExecuteInventory(this,C,Revision,Moved);

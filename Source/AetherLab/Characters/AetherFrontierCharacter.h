@@ -56,6 +56,7 @@ public:
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierProp> Carried;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> CompanionOwner;
     UPROPERTY(Replicated) bool bHealer = false;
+    void ExecuteCompanionHeal(TWeakObjectPtr<AAetherFrontierCharacter> Target);
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> ReviveTarget;
     TWeakObjectPtr<AAetherFrontierCharacter> RescueHolder;
     float RescueLeaseUntil=0;

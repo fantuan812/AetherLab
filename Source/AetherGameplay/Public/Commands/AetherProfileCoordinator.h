@@ -13,9 +13,14 @@ struct FAetherProfileSession
     bool operator==(const FAetherProfileSession& Other) const
     {return CharacterId.Equals(Other.CharacterId,ESearchCase::CaseSensitive)&&SessionId==Other.SessionId&&PawnEpoch==Other.PawnEpoch;}
 };
+// 仅服务器内部的提交证明。客户端业务结果无法区分“提交失败”和“提交成功但刷新失败”。
+enum class EAetherCommitCertainty:uint8 {NotSubmitted,NotCommitted,Committed,Unknown};
 struct FAetherProfileCompletion
 {
     FAetherProfileSession Session;
+    EAetherCommandType CommandType=EAetherCommandType::Invalid;
+    EAetherCommitCertainty CommitCertainty=EAetherCommitCertainty::NotSubmitted;
+    bool bReservedResources=false;
     FAetherCommandResult Result;
     // 这是磁盘已提交的最新状态，不是仅在内存计算的候选；重放时版本可高于原回执。
     TOptional<FAetherProfileStateV10> Snapshot;
@@ -43,6 +48,7 @@ public:
     // Resolve 在读到当前角色后、构建提交前执行；它不得重入协调者的可写 API。
     TArray<FAetherProfileCompletion> Poll(const FAetherResolveProfileContext& Resolve);
     int32 PendingCount() const;
+    bool HasPendingForCharacter(const FString& CharacterId) const;
 private:
     struct FImpl;
     TUniquePtr<FImpl> Impl;

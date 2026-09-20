@@ -1,5 +1,6 @@
 #include "AetherPhysicsDamage.h"
 #include "AetherCombat.h"
+#include "Inventory/AetherResourceGate.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 
@@ -39,6 +40,18 @@ void UAetherPhysicsDamageComponent::ReceiveImpact(const FReactiveImpactEvent& Ev
     // Claim before dispatch, since damage callbacks can synchronously emit another event.
     LastDamageAt.Add(Target,Now);
     for(auto It=LastDamageAt.CreateIterator();It;++It)if(!It.Key().IsValid()||Now-It.Value()>10)It.RemoveCurrent();
+    if(auto* C=Cast<AAetherCharacter>(Target);C&&C->ResourceGate->IsBlocked())
+    {
+        const TWeakObjectPtr<UAetherPhysicsDamageComponent> Self=this;
+        if(C->ResourceGate->Defer([Self,Event,Damage]{if(Self.IsValid())Self->DispatchImpact(Event,Damage);}))return;
+    }
+    DispatchImpact(Event,Damage);
+}
+void UAetherPhysicsDamageComponent::DispatchImpact(const FReactiveImpactEvent& Event,float Damage)
+{
+    auto* Target=Event.Receiver.Get();
+    if(!IsValid(Target)||!IsValid(GetOwner())||!GetOwner()->HasAuthority()||Target->GetWorld()!=GetWorld())return;
+    // 事件已在接收时登记；延迟投递不能再次检查 LastEventId，从而丢失被后来事件越过的命中。
     AActor* Source=Event.Source.Get();
     auto* Pawn=Cast<APawn>(Source);auto* Controller=Pawn?Pawn->GetController():Source?Source->GetInstigatorController():nullptr;
     // Preserve the existing one accepted impact -> one material stimulus policy.
