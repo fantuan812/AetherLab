@@ -110,7 +110,7 @@ FString AAetherFrontierMode::InteractTarget(AAetherFrontierCharacter* C,const FA
         auto* Receiver=Body?Cast<AAetherFrontierProp>(Body->GetOwner()):nullptr;
         if(!Body)return TEXT("附近没有可接收水的目标，或通路被遮挡。");
         if(Receiver&&Receiver->bInspectableFire&&AetherGuide::CanInspectFire(Receiver))
-        {Observe(C,Receiver->Service);return TEXT("已检查清理后的火点，未额外消耗桶中水。");}
+        {Observe(C,Receiver->Service,Receiver->Spec.Id);return TEXT("已检查清理后的火点，未额外消耗桶中水。");}
         const double Water=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()->TransferWater(Nearest->Reactive,Body,FAetherRules::Get().PourKg,C);
         return Water>0?FString::Printf(TEXT("已转移 %.3f kg 水；未被接收的水保留在桶中。"),Water):TEXT("无法转移：水源无液态水、目标已满或通路受阻。");
     }

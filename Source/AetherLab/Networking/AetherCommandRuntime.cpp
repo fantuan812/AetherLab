@@ -35,6 +35,7 @@ struct FAetherCommandRuntimeImpl
     };
     TSharedPtr<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
     TUniquePtr<FAetherProfileCoordinator> Coordinator;
+    TUniquePtr<FAetherServerFactCoordinator> Facts;
     FAetherResolveConnectedContext Resolve;
     FAetherPublishConnectedState Publish;
     TMap<TWeakObjectPtr<AAetherPlayerController>,TUniquePtr<FBinding>> Bindings;
@@ -170,9 +171,18 @@ bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,
     const auto& D=FAetherV10Definitions::Get();if(!D.bValid){Reason=D.Error;return false;}
     Impl=MakeUnique<FAetherCommandRuntimeImpl>();Impl->Store=Store;Impl->Resolve=MoveTemp(Resolve);Impl->Publish=MoveTemp(Publish);
     Impl->Coordinator=MakeUnique<FAetherProfileCoordinator>(Store,D.Items,D.Skills,D.Rules,D.Economy,D.Interactions,D.Progression);
+    Impl->Facts=MakeUnique<FAetherServerFactCoordinator>(Store);
     Reason.Reset();return true;
 }
 bool UAetherCommandRuntime::IsInstalled() const{return Impl&&Impl->Coordinator;}
+bool UAetherCommandRuntime::HasPendingServerFact(const FString& Character,FName Fact) const
+{return IsInstalled()&&Impl->Facts&&Impl->Facts->HasPendingFact(Character,Fact.ToString());}
+bool UAetherCommandRuntime::ObserveServerFact(FAetherServerFact Event,FString& Reason)
+{
+    check(IsInGameThread());
+    if(!IsInstalled()||Impl->bPolling||!Impl->Facts){Reason=TEXT("Native server fact service not ready");return false;}
+    return Impl->Facts->Enqueue(MoveTemp(Event),Reason);
+}
 bool UAetherCommandRuntime::BindVerifiedPlayer(AAetherPlayerController* C,const FString& Character)
 {
     check(IsInGameThread());
@@ -194,6 +204,9 @@ bool UAetherCommandRuntime::BindVerifiedPlayer(AAetherPlayerController* C,const 
     UnbindPlayer(C);if(Impl->Bindings.Num()>=16)return false;
     const auto Session=Impl->Coordinator->BeginSession(Character);if(!Session.SessionId.IsValid())return false;
     auto B=MakeUnique<FAetherCommandRuntimeImpl::FBinding>();B->Controller=C;B->PlayerState=PS;B->Pawn=C->GetPawn();B->Session=Session;B->Channel=FGuid::NewGuid();
+    FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=Character;FString Why;
+    if(!Impl->Facts->Enqueue(MoveTemp(Settle),Why)){Impl->Coordinator->EndSession(Session);return false;}
+    if(auto* Resources=Impl->Gate(*B))Resources->BlockForInitialLoad();
     B->Read=Impl->Store->Read({EAetherAggregateKind::Profile,Character});
     const auto Channel=B->Channel;Impl->Bindings.Add(C,MoveTemp(B));C->ClientV10Channel(Channel,Character);return true;
 }
@@ -215,7 +228,7 @@ void UAetherCommandRuntime::NotifyPawnChanged(AAetherPlayerController* C)
     B.ResourceCommand.Reset();B.Proof={};B.ProofRead={};B.NextDelivery=0;
     if(!B.Session.SessionId.IsValid()){UnbindPlayer(C);return;}
     C->ClientV10Channel(B.Channel,B.Session.CharacterId);
-    if(B.Pawn.IsValid())B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});
+    if(B.Pawn.IsValid()){if(auto* Resources=Impl->Gate(B))Resources->BlockForInitialLoad();B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});}
     // 不重置连接令牌桶，频繁重生不能绕过限流。
 }
 void UAetherCommandRuntime::Receive(AAetherPlayerController* C,const FAetherV10CommandPacket& Packet)
@@ -256,7 +269,7 @@ void UAetherCommandRuntime::Tick(float Dt)
     const auto& D=FAetherV10Definitions::Get();
     for(auto& Pair:Impl->Bindings)
     {
-        auto& B=*Pair.Value;if(!Impl->Current(B)||!B.Read.IsValid()||!B.Read.IsReady()||Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId))continue;
+        auto& B=*Pair.Value;if(!Impl->Current(B)||!B.Read.IsValid()||!B.Read.IsReady()||(Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId)||Impl->Facts->HasPendingForCharacter(B.Session.CharacterId)))continue;
         const auto Read=B.Read.Get();B.Read={};FAetherProfileStateV10 Profile;FString Reason;
         if(Read.Code==EAetherStoreCode::Found&&Read.Value.IsSet()&&Read.Value->SchemaVersion==10&&
             AetherProfileCodec::Decode(Read.Value->Payload,D.Items,D.Skills,D.Rules,Profile,Reason)&&Read.Value->Revision==Profile.Revision)
@@ -298,6 +311,27 @@ void UAetherCommandRuntime::Tick(float Dt)
             Impl->Reply(B,Completion.Result);break;
         }
     }
+    const auto Facts=Impl->Facts->Poll(FPlatformTime::Seconds());
+    for(const auto& Fact:Facts)
+    {
+        if(!Fact.Profile.IsSet())
+        {UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_REJECTED fact=%s code=%d detail=%s"),*Fact.Event.FactId,int32(Fact.Code),*Fact.Detail);continue;}
+        for(auto& Pair:Impl->Bindings)
+        {
+            auto& B=*Pair.Value;
+            if(!B.Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive)||!Impl->Current(B))continue;
+            if(Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId)||
+                (B.bNeedsRecovery&&Impl->Facts->HasPendingForCharacter(B.Session.CharacterId)))
+                B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});
+            else Impl->Queue(B,Fact.Profile.GetValue(),Fact.World.IsSet()?&Fact.World.GetValue():nullptr);
+        }
+        if(Fact.Event.Kind==EAetherServerFactKind::World)
+            for(const auto& Pair:Impl->Bindings)if(!Pair.Value->Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive))
+            {
+                FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=Pair.Value->Session.CharacterId;FString Why;
+                if(!Impl->Facts->Enqueue(MoveTemp(Settle),Why))UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_SETTLE_DEFERRED %s"),*Why);
+            }
+    }
     {
         TGuardValue<bool> Guard(Impl->bPolling,true);
         for(auto& Pair:Impl->Bindings)Impl->PollResources(*Pair.Value);
@@ -328,7 +362,7 @@ void UAetherCommandRuntime::Deinitialize()
     if(Impl)
     {
         for(auto& Pair:Impl->Bindings)if(auto* C=Pair.Key.Get())C->ClientV10Channel({},{});
-        Impl->Bindings.Reset();Impl->Coordinator.Reset();if(Impl->Store)Impl->Store->Close();Impl.Reset();
+        Impl->Bindings.Reset();Impl->Coordinator.Reset();Impl->Facts.Reset();if(Impl->Store)Impl->Store->Close();Impl.Reset();
     }
     Super::Deinitialize();
 }

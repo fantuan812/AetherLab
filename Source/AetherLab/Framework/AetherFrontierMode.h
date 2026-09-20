@@ -54,7 +54,7 @@ public:
     bool CommitOffline(FAetherProfile Next);
     bool SaveWorld();
     EAetherServiceResult ExecuteWorldService(AAetherFrontierCharacter* C,const FAetherWorldServiceCommand& Command,const FAetherInteractionTarget* Selection=nullptr);
-    void Observe(AAetherCharacter* C,FName Fact);
+    void Observe(AAetherCharacter* C,FName Fact,FName Source=NAME_None);
     // 仅服务器内部脚本可即时选目标；网络入口必须使用 InteractTarget。
     FString Interact(AAetherFrontierCharacter* C);
     FString InteractTarget(AAetherFrontierCharacter* C,const FAetherInteractionTarget& Target);

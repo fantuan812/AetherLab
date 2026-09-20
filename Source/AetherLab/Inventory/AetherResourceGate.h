@@ -13,6 +13,7 @@ class AETHERLAB_API UAetherResourceGate : public UActorComponent
 public:
     UAetherResourceGate();
     // 调用方已排空旧写者，并已恢复新 Pawn 的装备上限；开始完整资源重生，恢复期间禁止输入。
+    void BlockForInitialLoad(){if(!Receiver)bRecovering=true;}
     bool BeginFullRespawn(const FString& ServerCharacterId);
     bool FinishRecovery();
     bool Reserve(FGuid Command,FAetherResourceStateV10& Before);

@@ -1,0 +1,34 @@
+#pragma once
+#include "Contracts/AetherTransactionalStore.h"
+#include "Profile/AetherProfileState.h"
+#include "World/AetherWorldState.h"
+
+enum class EAetherServerFactKind:uint8 {Personal,World,Settle,Daily};
+struct FAetherServerFact
+{
+    FString CharacterId,FactId,SourceId,UtcDay;
+    EAetherServerFactKind Kind=EAetherServerFactKind::Personal;
+};
+struct FAetherServerFactCompletion
+{
+    FAetherServerFact Event;
+    EAetherStoreCode Code=EAetherStoreCode::Unavailable;
+    TOptional<FAetherProfileStateV10> Profile;
+    TOptional<FAetherWorldStateV10> World;
+    FString Detail;
+};
+// 仅服务器可信战斗/场景事实可进入；这不是客户端任意 ObjectiveId 写入口。
+// 事实/任务 Claims/点数来源均持久幂等，重复观察不会重复发奖。
+class AETHERGAMEPLAY_API FAetherServerFactCoordinator
+{
+public:
+    explicit FAetherServerFactCoordinator(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store);
+    ~FAetherServerFactCoordinator();
+    bool Enqueue(FAetherServerFact Event,FString& Reason);
+    TArray<FAetherServerFactCompletion> Poll(double ServerMonotonicSeconds);
+    bool HasPendingForCharacter(const FString& CharacterId) const;
+    bool HasPendingFact(const FString& CharacterId,const FString& FactId) const;
+private:
+    struct FImpl;
+    TUniquePtr<FImpl> Impl;
+};

@@ -88,7 +88,12 @@ void AAetherFrontierProp::ReceiveEquipmentHit_Implementation(const FAetherEquipm
     {
         if(Hit.AttackId!="Light")return;
         if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>())if(auto* C=Cast<AAetherFrontierCharacter>(Hit.Source))if(auto* PS=C->ProfileState())
-            for(FName F:{FName("Melee1"),FName("Melee2"),FName("Melee3")})if(!PS->Profile.Evidence.Contains(F)){M->Observe(C,F);break;}
+            for(FName F:{FName("Melee1"),FName("Melee2"),FName("Melee3")})
+            {
+                const auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();
+                if(!PS->Profile.Evidence.Contains(F)&&(!Runtime||!Runtime->HasPendingServerFact(PS->Profile.CharacterId,F)))
+                {M->Observe(C,F);break;}
+            }
         return;
     }
     if(Spec.bInteractiveMaterial)Super::ReceiveEquipmentHit_Implementation(Hit);
@@ -106,7 +111,7 @@ void AAetherFrontierProp::OnMaterialReaction(EReactiveReaction K,double Magnitud
     {
         if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>())
             if(auto* C=Cast<AAetherCharacter>(Reactive->GetLastSourceActor()))
-                if((Service!="TrainingExtinguished"&&!Service.ToString().StartsWith("DailyFire")) || GetOwner()==C)M->Observe(C,Service);
+                if((Service!="TrainingExtinguished"&&!Service.ToString().StartsWith("DailyFire")) || GetOwner()==C)M->Observe(C,Service,Spec.Id);
         bWasBurning=false;bExtinguished=true;
     }
 }
@@ -222,10 +227,28 @@ bool AAetherFrontierMode::SaveWorld()
     auto* Candidate=DuplicateObject<UAetherFrontierSave>(Database,this);
     return CaptureWorldCandidate(Candidate)&&WriteDatabase(Candidate);
 }
-void AAetherFrontierMode::Observe(AAetherCharacter* C,FName Fact)
+void AAetherFrontierMode::Observe(AAetherCharacter* C,FName Fact,FName Source)
 {
     auto* FC=Cast<AAetherFrontierCharacter>(C);if(FC&&FC->CompanionOwner)FC=FC->CompanionOwner;
     auto* PS=FC?FC->ProfileState():nullptr;if(!PS)return;
+    if(auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();Runtime&&Runtime->IsInstalled())
+    {
+        FAetherServerFact Event;Event.CharacterId=PS->Profile.CharacterId;Event.FactId=Fact.ToString();
+        const auto& Rules=FAetherRules::Get();const auto* Rule=Rules.Objectives.Find(Fact);
+        bool Daily=false;for(const auto& D:Rules.Dailies)Daily|=D.Facts.Contains(Fact);
+        if(Daily)Event.Kind=EAetherServerFactKind::Daily;
+        else if(Rule&&Rule->Scope==EAetherObjectiveScope::World)
+        {
+            // 来源必须是这次实际场景事件的稳定实体，不能只凭事实名称推断一次成功。
+            auto* Body=Prop(Source);
+            if(!Body||Body->Service!=Fact||!Rule->FactSources.Contains(Source))return;
+            Event.Kind=EAetherServerFactKind::World;Event.SourceId=Source.ToString();
+        }
+        FString Why;
+        if(!Runtime->ObserveServerFact(MoveTemp(Event),Why))
+        {UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_QUEUE_REJECTED %s"),*Why);FC->Notify(TEXT("任务记录暂不可用，请重新尝试该交互。"));}
+        return;
+    }
     auto Next=PS->Profile;
     if(Fact.ToString().StartsWith("DailyFire")&&Next.Claims.Contains(FName("Q_Main_08")))
     {Next.RefreshDaily(FDateTime::UtcNow().ToString(TEXT("%Y%m%d")));Next.DailyEvidence.AddUnique(Fact);Commit(PS,Next);return;}

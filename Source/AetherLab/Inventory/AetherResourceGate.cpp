@@ -21,7 +21,12 @@ bool UAetherResourceGate::BeginFullRespawn(const FString& Identity)
     if(Receiver||bFaulted||!C||!C->HasAuthority()||!C->AbilitySystem||C->AbilitySystem->GetAvatarActor()!=C||
         Identity.IsEmpty()||Identity.Len()>32)return false;
     // 装备上限已由已提交记录恢复。明确建立新 LifeId，不能将旧生命治疗套到新生命。
-    C->CancelActions();C->SetVitals(C->MaxHealth,C->MaximumMana(),C->MaximumStamina());
+    C->CancelActions();TGuardValue<bool> Guard(bPublishing,true);
+    C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(),C->MaxHealth);
+    if(!IsValid(C)||C->AbilitySystem->GetAvatarActor()!=C)return false;
+    C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(),C->MaximumMana());
+    C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(),C->MaximumStamina());
+    if(!IsValid(C)||C->AbilitySystem->GetAvatarActor()!=C)return false;
     auto S=Sample();S.LifeId=FGuid::NewGuid();S.Revision=0;S.UseReadyAtUnixMs=0;
     if(!S.Validate())return false;
     Receiver=MakeUnique<FAetherConsumableReceiver>(Identity,S);bRecovering=true;return true;
