@@ -21,6 +21,7 @@ struct FAetherObjectiveRule
     bool bRetroactive=false,bInspectableFire=false;
     TArray<FName> FactSources;
 };
+struct FAetherActivityRewardRule { FName DailyClaim,Objective;int32 Gold=0;TMap<FName,int32> Items; };
 struct FAetherDailyRule { FName Id,Service,QuestGate;TMap<FName,int32> Consume,Reward;TArray<FName> Facts;int32 Gold=0;bool bPersonalFires=false; };
 struct FAetherUseRule { double Health=0,Mana=0,Stamina=0,Cooldown=3,SafeSeconds=0; };
 struct FAetherEncounterRule { FVector Center=FVector::ZeroVector;TArray<uint8> Types;float RespawnSeconds=0;FName LootTable="Camp"; };
@@ -36,6 +37,8 @@ struct AETHERCORE_API FAetherRules
     TMap<FName,TArray<FName>> Shops;
     TMap<FName,TMap<FName,int32>> LootTables;
     TArray<FAetherDailyRule> Dailies;
+    TMap<FName,FAetherActivityRewardRule> ActivityRewards;
+    TSet<FName> DailyGatherSources;
     TMap<FName,TArray<FName>> InteractionRequirements;
     TMap<FName,uint8> SpellUnlocks;
     double PourKg=.5,PourRangeCm=600;

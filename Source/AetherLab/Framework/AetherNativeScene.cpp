@@ -13,6 +13,7 @@
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "HAL/PlatformTime.h"
 
 namespace
 {
@@ -117,7 +118,7 @@ bool AAetherFrontierMode::PublishNativeState(AAetherPlayerController& PC,const F
 }
 void AAetherFrontierMode::BeginNativeLogin(AAetherPlayerController* PC)
 {
-    if(!IsValid(PC)||NativeLogins.Contains(PC)||NativePlayersReady.Contains(PC)||NativeLoginRejected.Contains(PC)||!bNativeSceneReady)return;
+    if(!IsValid(PC)||NativeLogins.Contains(PC)||NativePlayersReady.Contains(PC)||NativeLoginRejected.Contains(PC)||!bNativeSceneReady||!bNativeBaselineReady)return;
     auto* PS=PC->GetPlayerState<AAetherPlayerState>();if(!PS||PS->Profile.CharacterId.IsEmpty())return;
     NativeLogins.Add(PC,GetGameInstance()->GetSubsystem<UAetherNativePersistence>()->LoadOrCreateProfile(PS->Profile.CharacterId));
 }
@@ -138,12 +139,31 @@ void AAetherFrontierMode::TickNativeStartup()
             [Self](auto& PC,const auto& P,const auto* W,const auto* C){return Self.IsValid()&&Self->PublishNativeState(PC,P,W,C);},
             [Self](const auto& W,const auto& P,const auto& C,FString& R){return Self.IsValid()&&Self->RestoreNativeScene(W,P,C,R);},Why))
         {FailNativeScene(Why);return;}
-        bNativeSceneReady=true;Encounters->SetActorTickEnabled(true);
+        bNativeSceneReady=true;NativeBaselineStarted=FPlatformTime::Seconds();
         GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SetWorldPublisher(
             [Self](const auto& W){if(Self.IsValid()&&Self->bNativeSceneReady)Self->PublishNativeWorld(W);});
         Persistence->ConfigureCheckpoints(
             [Self](const auto& Before,auto& Next,FString& R){return Self.IsValid()&&Self->CaptureNativeWorld(Before,Next,R);},
             [Self](const auto& W){if(Self.IsValid())Self->PublishNativeWorld(W);});
+
+    }
+    // 首个玩家事实可能推进 World.Revision；在此之前必须保存地图初始物理体，
+    // 否则新世界在第一个周期保存前退出，会留下“已推进但没有物理体”的不可恢复快照。
+    if(!bNativeBaselineReady)
+    {
+        if(NativeBaseline.IsValid())
+        {
+            if(!NativeBaseline.IsReady())return;
+            const auto Result=NativeBaseline.Get();NativeBaseline={};
+            bNativeBaselineReady=(Result.Code==EAetherStoreCode::Committed||Result.Code==EAetherStoreCode::Replayed)&&Result.World.IsSet();
+        }
+        if(!bNativeBaselineReady)
+        {
+            if(FPlatformTime::Seconds()-NativeBaselineStarted>30){FailNativeScene(TEXT("Initial physical checkpoint could not be confirmed"));return;}
+            if(!Persistence->IsSavingWorld())NativeBaseline=Persistence->SaveLoadedPhysics();
+            return;
+        }
+        Encounters->SetActorTickEnabled(true);
         UE_LOG(LogTemp,Display,TEXT("AETHER_V10_SCENE_READY revision=%lld"),NativeWorld->Revision);
     }
     for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)BeginNativeLogin(Cast<AAetherPlayerController>(It->Get()));

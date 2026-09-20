@@ -35,6 +35,8 @@ bool FAetherProfileStateV10::Validate(const FAetherV10ItemDefinitions& I,const F
     for(const auto& P:R.Objectives)Facts.Add(P.Key.ToString());
     for(const auto& Q:R.Quests)Quests.Add(Q.Id.ToString());
     for(const auto& D:R.Dailies){Dailies.Add(D.Id.ToString());for(const auto& F:D.Facts)DailyFacts.Add(F.ToString());}
+    for(const auto& Reward:R.ActivityRewards)Dailies.Add(Reward.Value.DailyClaim.ToString());
+    for(FName Source:R.DailyGatherSources)DailyFacts.Add(Source.ToString());
     if(!Known(Evidence,512,Facts,false)||!Known(Claims,512,Quests,true)||
         !Known(DailyEvidence,64,DailyFacts,false)||!Known(DailyClaims,16,Dailies,true))
         return Fail(TEXT("Unknown/invalid progression ID"));

@@ -51,7 +51,7 @@ public:
     bool bSmoke = false;
     bool bWorldRestoreFailed=false;
     bool IsNativeMode() const{return bNativeMode;}
-    bool NativeSceneReady() const{return bNativeSceneReady;}
+    bool NativeSceneReady() const{return bNativeSceneReady&&bNativeBaselineReady;}
     bool OpenNativeContainer(AAetherPlayerController* Controller,const FString& Id);
     const FAetherWorldStateV10* NativeWorldView() const{return NativeWorld.IsSet()?&NativeWorld.GetValue():nullptr;}
     bool bFailWrites = false;
@@ -80,7 +80,9 @@ public:
     AAetherFrontierProp* Make(FName Id,FName Service,FVector Location,FVector Scale,EAetherObjectKind Kind,const FString& Label);
 private:
     // 只有服务器启动装配持有这些值；旧 Database 是导航/流送的只读投影，不能提交它。
-    bool bNativeMode=true,bNativeSceneReady=false,bNativeFailureReported=false;
+    bool bNativeMode=true,bNativeSceneReady=false,bNativeBaselineReady=false,bNativeFailureReported=false;
+    TFuture<FAetherWorldCheckpointResult> NativeBaseline;
+    double NativeBaselineStarted=0;
     TOptional<FAetherWorldStateV10> NativeWorld;
     TMap<TWeakObjectPtr<AAetherPlayerController>,TFuture<FAetherStoreReadResult>> NativeLogins;
     TSet<TWeakObjectPtr<AAetherPlayerController>> NativePlayersReady,NativeLoginRejected;

@@ -33,6 +33,7 @@ bool AetherServerRewards::Apply(const FAetherServerFact& E,FAetherProfileStateV1
         Loot->ClaimedBy=P.CharacterId;return true;
     }
     if(E.Kind!=EAetherServerFactKind::EncounterReward)return false;
+    const auto* Rule=D.Rules.ActivityRewards.Find(FName(*E.FactId));if(!Rule){Reason=TEXT("Encounter reward definition missing");return false;}
     auto& Run=E.FactId==TEXT("Abbey")?W.Abbey:W.Relay;
     if(!Run.Instance.IsValid()||Run.Instance!=E.InstanceId||Run.Phase!=5||!Run.Participants.Contains(P.CharacterId))
     {Reason=TEXT("Encounter success checkpoint is not committed for this participant");return false;}
@@ -42,14 +43,15 @@ bool AetherServerRewards::Apply(const FAetherServerFact& E,FAetherProfileStateV1
     {
         // UTC 日历单调前进。旧进程已接受但延后完成的奖励不会回退日历或再占新的一天。
         if(P.DailyDate<E.UtcDay){P.DailyDate=E.UtcDay;P.DailyEvidence.Reset();P.DailyClaims.Reset();}
-        const FString Claim=E.FactId+TEXT("Reward");
+        const FString Claim=Rule->DailyClaim.ToString();
         if(P.DailyDate==E.UtcDay&&!P.DailyClaims.Contains(Claim))
         {
-            if(!Grant(P,{{TEXT("Material"),3}},60,TEXT("Encounter.")+E.FactId+TEXT(".")+E.UtcDay,D.Items,true,Reason))return false;
+            TMap<FString,int32> Items;for(const auto& Item:Rule->Items)Items.Add(Item.Key.ToString(),Item.Value);
+            if(!Grant(P,Items,Rule->Gold,TEXT("Encounter.")+E.FactId+TEXT(".")+E.UtcDay,D.Items,true,Reason))return false;
             P.DailyClaims.Add(Claim);
         }
-        if(E.FactId==TEXT("Abbey")&&!P.Evidence.Contains(TEXT("GuardianDefeated")))
-            AetherQuestProgression::Observe(P,TEXT("GuardianDefeated"),D.Rules);
+        if(!Rule->Objective.IsNone()&&!P.Evidence.Contains(Rule->Objective.ToString()))
+            AetherQuestProgression::Observe(P,Rule->Objective.ToString(),D.Rules);
         Receipt=E.InstanceId;
     }
     Run.Settled.AddUnique(P.CharacterId);return true;

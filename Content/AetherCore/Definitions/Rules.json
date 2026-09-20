@@ -843,5 +843,28 @@
     "Q_Main_02": 3,
     "Q_Main_04": 4,
     "Q_Main_05": 8
-  }
+  },
+  "ActivityRewards": {
+    "Abbey": {
+      "DailyClaim": "AbbeyReward",
+      "Objective": "GuardianDefeated",
+      "Gold": 60,
+      "Items": {
+        "Material": 3
+      }
+    },
+    "Relay": {
+      "DailyClaim": "RelayReward",
+      "Objective": "",
+      "Gold": 60,
+      "Items": {
+        "Material": 3
+      }
+    }
+  },
+  "DailyGatherSources": [
+    "SupplyCache0",
+    "SupplyCache1",
+    "SupplyCache2"
+  ]
 }

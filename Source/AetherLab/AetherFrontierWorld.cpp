@@ -392,7 +392,7 @@ void AAetherFrontierMode::CreditHit(AAetherCharacter* Target,AAetherCharacter* S
 }
 void AAetherFrontierMode::Tick(float Dt)
 {
-    Super::Tick(Dt);if(bNativeMode){TickNativeStartup();if(!bNativeSceneReady)return;}if(bWorldRestoreFailed)return;Elapsed+=Dt;SaveTimer+=Dt;PowerTimer+=Dt;WeatherTimer+=Dt;AreaTimer+=Dt;
+    Super::Tick(Dt);if(bNativeMode){TickNativeStartup();if(!bNativeSceneReady||!bNativeBaselineReady)return;}if(bWorldRestoreFailed)return;Elapsed+=Dt;SaveTimer+=Dt;PowerTimer+=Dt;WeatherTimer+=Dt;AreaTimer+=Dt;
     auto* S=GetGameState<AAetherFrontierState>();
     if(bNativeRegionBarrier)
     {
