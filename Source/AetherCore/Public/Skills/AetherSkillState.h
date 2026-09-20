@@ -56,6 +56,8 @@ struct AETHERCORE_API FAetherSkillStateV10
     // 都只发布经过完整校验的候选值。命令重放、版本与磁盘原子提交由外层协调者负责。
     FAetherSkillMutation AwardPoints(const FString& EventId,int32 Points,const FAetherSkillDefinitionsV10& Definitions);
     FAetherSkillMutation GrantStory(const FString& SkillId,const FString& EventId,const FAetherSkillDefinitionsV10& Definitions);
+    // 详情与技能树使用同一学习条件查询；只读查询不创建支付记录或临时命令。
+    EAetherSkillMutationCode CanLearnNext(const FString& SkillId,const FAetherSkillRuleContext& Context,const FAetherSkillDefinitionsV10& Definitions) const;
     FAetherSkillMutation LearnNext(const FString& SkillId,FGuid CommandId,const FAetherSkillRuleContext& Context,const FAetherSkillDefinitionsV10& Definitions);
     // 空 RootSkill 表示重置全部自由学习；非空表示该节点及失去前置的后继。
     FAetherSkillMutation Reset(const FString& RootSkill,const FAetherSkillRuleContext& Context,const FAetherSkillDefinitionsV10& Definitions,const TArray<FAetherExternalSkillGrant>& Grants={});

@@ -111,19 +111,28 @@ FAetherSkillMutation FAetherSkillStateV10::GrantStory(const FString& SkillId,con
     auto Next=*this;Next.StoryGrants.Add(SkillId,EventId);
     return Publish(MoveTemp(Next),{E::Applied,0,{SkillId}},D);
 }
+EAetherSkillMutationCode FAetherSkillStateV10::CanLearnNext(const FString& SkillId,const FAetherSkillRuleContext& C,const FAetherSkillDefinitionsV10& D) const
+{
+    FString Reason;if(!Validate(D,Reason)||C.CharacterLevel<1||C.CharacterLevel>100)return E::Invalid;
+    const auto* S=D.Skills.Find(SkillId);if(!S||!S->SkillId.Equals(SkillId,ESearchCase::CaseSensitive))return E::Missing;
+    if(Busy(C))return E::NotReady;
+    const auto* Effect=D.Effect(SkillId,PermanentRank(SkillId)+1);
+    if(!Effect)return E::MaxRank;
+    if(S->bStoryBase&&!StoryGrants.Contains(SkillId))return E::StoryRequired;
+    if(!PrerequisitesMet(*this,*S))return E::Prerequisite;
+    if(C.CharacterLevel<Effect->RequiredLevel)return E::LevelRequired;
+    if(!S->RequiredQuest.IsEmpty()&&!C.CompletedQuests.Contains(S->RequiredQuest))return E::QuestRequired;
+    if(AvailableSkillPoints<Effect->PointCost)return E::InsufficientPoints;
+    return E::Applied;
+}
 FAetherSkillMutation FAetherSkillStateV10::LearnNext(const FString& SkillId,FGuid CommandId,const FAetherSkillRuleContext& C,const FAetherSkillDefinitionsV10& D)
 {
     FString Reason;if(!Validate(D,Reason)||!CommandId.IsValid()||C.CharacterLevel<1||C.CharacterLevel>100)return {E::Invalid};
     const auto* S=D.Skills.Find(SkillId);if(!S||!S->SkillId.Equals(SkillId,ESearchCase::CaseSensitive))return {E::Missing};
     if(Busy(C))return {E::NotReady};
     for(const auto& P:Purchases)if(P.CommandId==CommandId)return {E::Conflict};
+    const E Allowed=CanLearnNext(SkillId,C,D);if(Allowed!=E::Applied)return {Allowed};
     const int32 Rank=PermanentRank(SkillId)+1;const auto* Effect=D.Effect(SkillId,Rank);
-    if(!Effect)return {E::MaxRank};
-    if(S->bStoryBase&&!StoryGrants.Contains(SkillId))return {E::StoryRequired};
-    if(!PrerequisitesMet(*this,*S))return {E::Prerequisite};
-    if(C.CharacterLevel<Effect->RequiredLevel)return {E::LevelRequired};
-    if(!S->RequiredQuest.IsEmpty()&&!C.CompletedQuests.Contains(S->RequiredQuest))return {E::QuestRequired};
-    if(AvailableSkillPoints<Effect->PointCost)return {E::InsufficientPoints};
     auto Next=*this;Next.LearnedRanks.Add(SkillId,Rank);Next.AvailableSkillPoints-=Effect->PointCost;
     // 实付价格随记录保存。定义将来涨价/降价，退款都不会凭空增减历史成本。
     Next.Purchases.Add({SkillId,Rank,Effect->PointCost,CommandId});
