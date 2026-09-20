@@ -14,6 +14,7 @@ class USpringArmComponent;
 class UTextRenderComponent;
 class UStaticMeshComponent;
 class UAetherCharacterDefinition;
+DECLARE_MULTICAST_DELEGATE(FOnAetherCharacterAppearanceChanged);
 
 UCLASS()
 class AETHERLAB_API UAetherAttributes : public UAttributeSet
@@ -60,6 +61,7 @@ class AETHERLAB_API AAetherCharacter : public ACharacter, public IAbilitySystemI
     GENERATED_BODY()
 public:
     AAetherCharacter(const FObjectInitializer& ObjectInitializer=FObjectInitializer::Get());
+    FOnAetherCharacterAppearanceChanged OnAppearanceChanged;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAbilitySystemComponent> AbilitySystem;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherAttributes> Attributes;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UReactiveBodyComponent> Reactive;

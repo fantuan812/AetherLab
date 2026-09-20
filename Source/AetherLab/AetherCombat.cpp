@@ -187,6 +187,7 @@ void AAetherCharacter::ApplyCharacterDefinition()
         if(bUseBasicAssets&&GetNetMode()!=NM_DedicatedServer){GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);GetMesh()->SetAnimInstanceClass(UAetherAnimInstance::StaticClass());}
         Equipment->SetAttachmentTarget(GetMesh());
         Nameplate->SetRelativeLocation(FVector(0,0,CharacterDefinition->CapsuleHalfHeight+35));
+        OnAppearanceChanged.Broadcast();
     }
 }
 void AAetherCharacter::CycleEquipment()

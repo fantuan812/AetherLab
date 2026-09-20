@@ -14,6 +14,7 @@ class USpinBox;
 class UButton;
 class UScrollBox;
 class AAetherPlayerState;
+class UAetherCharacterPreviewWidget;
 UCLASS()
 class UAetherFrontierViewModel : public UObject
 {
@@ -51,6 +52,7 @@ private:
  EAetherMenuPage ShownPage=EAetherMenuPage::None;
  FTimerHandle LiveDetailsTimer;
  UPROPERTY() TObjectPtr<UScrollBox> BodyScroll;
+ UPROPERTY() TObjectPtr<UAetherCharacterPreviewWidget> CharacterPreview;
 public:
  UPROPERTY() TObjectPtr<UAetherFrontierViewModel> Model;
 private:

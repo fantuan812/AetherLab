@@ -39,8 +39,8 @@
     },
     {
       "id": "V10-08",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "uncompiled_untested_code_for_LocalPlayer_isolated_preview_scene_shared_equipment_visual_resolver_versioned_async_appearance_mouse_gamepad_orbit_and_release_lifecycle; asset_authoring_script_written_not_executed; CommonUI_assets_alpha_two_body_types_release_acceptance_pending"
     },
     {
       "id": "V10-09",
@@ -103,5 +103,6 @@
       "acceptance": "not_run"
     }
   ],
-  "note": "状态仅随实际实现与验证更新。阶段完成不等于完整发布验收。按方案工作包表校正：V10-12 是图形技能树，NPC/交互进度归 V10-13。"
+  "note": "状态仅随实际实现与验证更新。阶段完成不等于完整发布验收。按方案工作包表校正：V10-12 是图形技能树，NPC/交互进度归 V10-13。",
+  "verificationPolicy": "用户要求：先完成全部剩余代码及必要资产，再统一编译、测试与修复；当前新增代码未编译、未测试，既往通过记录只代表历史提交。"
 }

@@ -14,6 +14,9 @@ class AETHERLAB_API UAetherCharacterDefinition : public UPrimaryDataAsset
 public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName CharacterId;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftObjectPtr<USkeletalMesh> BodyMesh;
+    // 预览使用独立待机，不读取真实角色倒地/施法状态；体型不兼容时回到参考姿态并提示。
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftObjectPtr<UAnimSequence> PreviewIdleAnimation =
+        TSoftObjectPtr<UAnimSequence>(FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle.MM_Idle")));
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftObjectPtr<UAnimSequence> WalkAnimation;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftObjectPtr<UAnimSequence> AttackAnimation;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FRotator MeshRotation = FRotator(0,-90,0);

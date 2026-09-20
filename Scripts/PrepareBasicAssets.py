@@ -29,12 +29,13 @@ cat=create('DA_EquipmentCatalog',ue.AetherEquipmentCatalog);cat.set_editor_prope
 body=L.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple')
 walk=L.load_asset('/Game/Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd')
 hit=L.load_asset('/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_01')
-assert body and walk and hit,'Official template assets unavailable'
+idle=L.load_asset('/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle')
+assert body and walk and hit and idle,'Official template assets unavailable'
 chars={}
 for name in ['Player','Guard','Caster','Boss']:
     c=create('DA_Character_'+name,ue.AetherCharacterDefinition)
     eq=[slot('MainHand','BellHammer')] if name=='Boss' else [slot('MainHand','EmberFocus')] if name=='Caster' else [slot('MainHand','TrainingSword'),slot('OffHand','TrainingShield')]
-    props(c,character_id='UE_'+name,body_mesh=body,walk_animation=walk,attack_animation=hit,capsule_half_height=88,capsule_radius=34,initial_equipment=eq,quick_equip_items=['TrainingSword','TrainingHammer','TideStaff'])
+    props(c,character_id='UE_'+name,body_mesh=body,preview_idle_animation=idle,walk_animation=walk,attack_animation=hit,capsule_half_height=88,capsule_radius=34,initial_equipment=eq,quick_equip_items=['TrainingSword','TrainingHammer','TideStaff'])
     L.save_loaded_asset(c);chars[name]=c
 content=create('DA_GameContent',ue.AetherGameContent);props(content,equipment_catalog=cat,player=chars['Player'],guard=chars['Guard'],caster=chars['Caster'],boss=chars['Boss']);L.save_loaded_asset(content)
 print('AETHER_BASIC_ASSETS_PASS')

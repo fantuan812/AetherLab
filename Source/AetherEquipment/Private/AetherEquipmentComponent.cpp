@@ -1,4 +1,5 @@
 #include "AetherEquipmentComponent.h"
+#include "AetherEquipmentVisuals.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "Components/SkinnedMeshComponent.h"
@@ -193,15 +194,12 @@ void UAetherEquipmentComponent::RebuildVisuals()
     if (!AttachmentTarget || !Catalog || GetNetMode()==NM_DedicatedServer) return;
     TArray<FSoftObjectPath> Missing;for(const auto& S:Slots)if(auto* D=Catalog->Find(S.ItemId);D&&!D->Mesh.IsNull()&&!D->Mesh.Get()&&!FailedVisualAssets.Contains(D->Mesh.ToSoftObjectPath()))Missing.AddUnique(D->Mesh.ToSoftObjectPath());
     if(!Missing.IsEmpty()){VisualLoad=UAssetManager::GetStreamableManager().RequestAsyncLoad(Missing,FStreamableDelegate::CreateUObject(this,&UAetherEquipmentComponent::RebuildVisuals));return;}
-    for (const auto& S:Slots)
+    for(const auto& Spec:AetherEquipmentVisuals::Resolve(Catalog,Slots))
     {
-        auto* D=Catalog->Find(S.ItemId); if (!D || !AttachmentTarget->DoesSocketExist(D->Socket)) continue;
-        auto* Mesh=D->Mesh.Get(); if (!Mesh) continue;
-        auto* V=NewObject<UStaticMeshComponent>(GetOwner()); V->SetStaticMesh(Mesh); V->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        V->SetGenerateOverlapEvents(false); V->SetupAttachment(AttachmentTarget,D->Socket);
-        // Equipment meshes are already imported in centimetres. FBX skeletons
-        // can carry a 100x root-unit scale; inherit the hand pose, not that scale.
-        V->SetAbsolute(false,false,true); V->RegisterComponent(); V->SetRelativeTransform(D->GripTransform); Visuals.Add(S.Slot,V);
+        auto* Mesh=Spec.Mesh.Get();if(!Mesh)continue;
+        auto* V=NewObject<UStaticMeshComponent>(GetOwner());
+        if(!AetherEquipmentVisuals::Attach(AttachmentTarget,V,Spec,Mesh)){V->DestroyComponent();continue;}
+        V->RegisterComponent();Visuals.Add(Spec.Slot,V);
     }
 }
 void UAetherEquipmentComponent::EndPlay(const EEndPlayReason::Type Reason)

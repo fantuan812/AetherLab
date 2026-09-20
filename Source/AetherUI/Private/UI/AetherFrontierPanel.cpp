@@ -1,4 +1,6 @@
 #include "AetherFrontierPanel.h"
+#include "Preview/AetherCharacterPreviewWidget.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "AetherGuide.h"
 #include "AetherFrontier.h"
 #include "Blueprint/WidgetTree.h"
@@ -64,6 +66,7 @@ void UAetherFrontierPanel::NativeConstruct()
 void UAetherFrontierPanel::NativeDestruct()
 {
  SavePageMemory();
+ if(CharacterPreview)CharacterPreview->SetSource(nullptr);
  if(Menu.IsValid())Menu->OnChanged.RemoveAll(this);
  if(BoundCharacter.IsValid())BoundCharacter->OnPresentationChanged.RemoveAll(this);
  if(BoundProfile.IsValid())BoundProfile->OnProfilePublished.RemoveAll(this);
@@ -122,7 +125,12 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
  auto* Border=WidgetTree->ConstructWidget<UBorder>();Border->SetBrushColor(FLinearColor(.015f,.025f,.04f,.98f));Border->SetPadding(FMargin(24));WidgetTree->RootWidget=Border;
  auto* Box=WidgetTree->ConstructWidget<UVerticalBox>();Border->SetContent(Box);
  Heading=WidgetTree->ConstructWidget<UTextBlock>();Heading->SetColorAndOpacity(FSlateColor(FLinearColor(1,.8f,.4f)));Box->AddChildToVerticalBox(Heading);
- auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();BodyScroll=Scroll;auto* BodySlot=Box->AddChildToVerticalBox(Scroll);BodySlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));BodySlot->SetPadding(FMargin(0,18));
+ auto* Content=WidgetTree->ConstructWidget<UHorizontalBox>();
+ auto* ContentSlot=Box->AddChildToVerticalBox(Content);ContentSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));ContentSlot->SetPadding(FMargin(0,18));
+ CharacterPreview=CreateWidget<UAetherCharacterPreviewWidget>(this,UAetherCharacterPreviewWidget::StaticClass());
+ if(CharacterPreview){auto* PreviewSlot=Content->AddChildToHorizontalBox(CharacterPreview);FSlateChildSize Size(ESlateSizeRule::Fill);Size.Value=.4f;PreviewSlot->SetSize(Size);PreviewSlot->SetPadding(FMargin(0,0,16,0));}
+ auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();BodyScroll=Scroll;
+ auto* BodySlot=Content->AddChildToHorizontalBox(Scroll);FSlateChildSize BodySize(ESlateSizeRule::Fill);BodySize.Value=.6f;BodySlot->SetSize(BodySize);
  Body=WidgetTree->ConstructWidget<UTextBlock>();Body->SetAutoWrapText(true);Scroll->AddChild(Body);
  auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(Row);
  auto Add=[&](const TCHAR* Label,UTextBlock*& Text){auto* Button=WidgetTree->ConstructWidget<UButton>();Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetText(FText::FromString(Label));Button->SetContent(Text);Row->AddChildToHorizontalBox(Button);return Button;};
@@ -153,7 +161,10 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
 }
 void UAetherFrontierPanel::RefreshSnapshot()
 {
- BindProfile();auto* C=BoundCharacter.Get();if(!C){SetVisibility(ESlateVisibility::Collapsed);return;}
+ BindProfile();auto* C=BoundCharacter.Get();
+ const bool PreviewOpen=C&&C->bPanel&&C->Panel==1;
+ if(CharacterPreview){CharacterPreview->SetVisibility(PreviewOpen?ESlateVisibility::Visible:ESlateVisibility::Collapsed);CharacterPreview->SetSource(PreviewOpen?C:nullptr);}
+ if(!C){SetVisibility(ESlateVisibility::Collapsed);return;}
  // 关闭后真正折叠。后续由菜单/复制事件唤醒，不保留透明的逐帧轮询控件。
  const bool Open=C->bPanel&&C->Panel!=4;SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(!Open)return;
