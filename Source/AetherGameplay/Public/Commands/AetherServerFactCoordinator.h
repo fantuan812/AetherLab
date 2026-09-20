@@ -3,10 +3,11 @@
 #include "Profile/AetherProfileState.h"
 #include "World/AetherWorldState.h"
 
-enum class EAetherServerFactKind:uint8 {Personal,World,Settle,Daily};
+enum class EAetherServerFactKind:uint8 {Personal,World,Settle,Daily,EncounterReward,LegacyLoot};
 struct FAetherServerFact
 {
     FString CharacterId,FactId,SourceId,UtcDay;
+    FGuid InstanceId; // 服务器遭遇/旧掉落实例，不接受客户端任意奖励 ID。
     EAetherServerFactKind Kind=EAetherServerFactKind::Personal;
 };
 struct FAetherServerFactCompletion

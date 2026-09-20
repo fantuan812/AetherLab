@@ -526,6 +526,7 @@ void AAetherFrontierMode::SpawnLoot(const FAetherWorldLoot& Loot)
 }
 bool AAetherFrontierMode::RecordCampClear(FName Definition,FGuid Instance)
 {
+ if(bNativeMode)return RecordNativeCampClear(Definition,Instance);
  if(!Instance.IsValid())return false;const auto* Rule=FAetherRules::Get().Encounters.Find(Definition);if(!Rule||Rule->RespawnSeconds<=0)return false;
  if(Database->CampReceipts.ContainsByPredicate([&](const auto& R){return R.Instance==Instance;}))return true;
  auto* Next=DuplicateObject<UAetherFrontierSave>(Database,this);Next->Loot.RemoveAll([](const auto& L){return !L.ClaimedBy.IsEmpty();});if(Next->Loot.Num()>=128)return false;
@@ -536,6 +537,7 @@ bool AAetherFrontierMode::RecordCampClear(FName Definition,FGuid Instance)
 }
 FString AAetherFrontierMode::ClaimLoot(AAetherFrontierCharacter* C,FName Id)
 {
+ if(bNativeMode)return ClaimNativeLegacyLoot(C,Id);
  auto* PS=C?C->ProfileState():nullptr;auto* Actor=Prop(Id);if(!PS||!C->Alive()||C->bTravelPending||!Actor||Actor->Service!="Loot"||FVector::DistSquared(C->GetActorLocation(),Actor->GetActorLocation())>FMath::Square(250.))return TEXT("Loot out of reach.");
  FCollisionQueryParams Q(SCENE_QUERY_STAT(Loot),false,C);Q.AddIgnoredActor(Actor);if(GetWorld()->LineTraceTestByChannel(C->GetActorLocation(),Actor->GetActorLocation(),ECC_Visibility,Q))return TEXT("Loot is obstructed.");
  auto* Next=DuplicateObject<UAetherFrontierSave>(Database,this);auto* Loot=Next->Loot.FindByPredicate([&](const auto& L){return Id==FName(*FString("Loot_"+L.ClaimId.ToString(EGuidFormats::Digits)));});

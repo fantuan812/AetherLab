@@ -51,6 +51,12 @@ void AAetherFrontierMode::PublishNativeWorld(const FAetherWorldStateV10& W)
     Database->Loot.Reset();for(const auto& L:W.Loot)
     {FAetherWorldLoot V;V.ClaimId=L.ClaimId;V.Location=L.Location;V.Definition=FName(*L.Definition);V.Count=L.Count;V.ClaimedBy=L.ClaimedBy;
         for(const auto& I:L.Items)V.Items.Add(FName(*I.Key),I.Value);Database->Loot.Add(V);}
+    if(bNativeSceneReady)for(const auto& Loot:Database->Loot)
+    {
+        const FName Id=FName(*(TEXT("Loot_")+Loot.ClaimId.ToString(EGuidFormats::Digits)));
+        if(Loot.ClaimedBy.IsEmpty())SpawnLoot(Loot);
+        else if(auto* A=Prop(Id)){Registry.Remove(Id);Props.Remove(A);A->Destroy();}
+    }
     // 提交发布不再次 Restore 物理体/遭遇，避免覆盖提交期间仍在进行的模拟。
 }
 bool AAetherFrontierMode::RestoreNativeScene(const FAetherWorldStateV10& W,const TMap<FString,int64>& Profiles,
@@ -133,6 +139,8 @@ void AAetherFrontierMode::TickNativeStartup()
             [Self](const auto& W,const auto& P,const auto& C,FString& R){return Self.IsValid()&&Self->RestoreNativeScene(W,P,C,R);},Why))
         {FailNativeScene(Why);return;}
         bNativeSceneReady=true;Encounters->SetActorTickEnabled(true);
+        GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SetWorldPublisher(
+            [Self](const auto& W){if(Self.IsValid()&&Self->bNativeSceneReady)Self->PublishNativeWorld(W);});
         Persistence->ConfigureCheckpoints(
             [Self](const auto& Before,auto& Next,FString& R){return Self.IsValid()&&Self->CaptureNativeWorld(Before,Next,R);},
             [Self](const auto& W){if(Self.IsValid())Self->PublishNativeWorld(W);});

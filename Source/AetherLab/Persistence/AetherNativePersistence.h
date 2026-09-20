@@ -23,6 +23,8 @@ public:
     TFuture<FAetherStoreReadResult> LoadOrCreateProfile(const FString& ServerCharacterId);
     // 正常周期物理保存；完成前不能据此卸载实体。一次仅允许一个检查点，避免累积过时快照。
     TFuture<FAetherWorldCheckpointResult> SaveLoadedPhysics();
+    // 服务器领域幂等变更与当前物理快照共同 CAS；不用于任何裸角色奖励或资源扣费。
+    TFuture<FAetherWorldCheckpointResult> SaveWorldMutation(FAetherCaptureWorldCheckpoint Mutation);
     bool IsSavingWorld() const{return Checkpoint.IsValid();}
     void ConfigureCheckpoints(FAetherCaptureWorldCheckpoint Capture,TFunction<void(const FAetherWorldStateV10&)> Published)
     {DomainCapture=MoveTemp(Capture);CheckpointPublished=MoveTemp(Published);}

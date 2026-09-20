@@ -26,6 +26,7 @@ public:
     bool IsInstalled() const;
     // 地图切换撤销旧连接与回调，排空已接受的写入后才允许重新安装。
     void UninstallBackend();
+    void SetWorldPublisher(TFunction<void(const FAetherWorldStateV10&)> Publisher);
     // 可信场景/战斗事件入口；没有对应客户端 RPC。
     bool ObserveServerFact(FAetherServerFact Event,FString& Reason);
     bool HasPendingServerFact(const FString& CharacterId,FName Fact) const;

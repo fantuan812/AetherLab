@@ -38,6 +38,7 @@ struct FAetherCommandRuntimeImpl
     TUniquePtr<FAetherServerFactCoordinator> Facts;
     FAetherResolveConnectedContext Resolve;
     FAetherPublishConnectedState Publish;
+    TFunction<void(const FAetherWorldStateV10&)> PublishWorld;
     TMap<TWeakObjectPtr<AAetherPlayerController>,TUniquePtr<FBinding>> Bindings;
     int32 NextSender=0;
     float SendElapsed=0;
@@ -175,6 +176,8 @@ bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,
     Reason.Reset();return true;
 }
 bool UAetherCommandRuntime::IsInstalled() const{return Impl&&Impl->Coordinator&&!Impl->bShutdownRequested;}
+void UAetherCommandRuntime::SetWorldPublisher(TFunction<void(const FAetherWorldStateV10&)> Publisher)
+{check(IsInGameThread());if(Impl&&!Impl->bPolling&&!Impl->bTicking)Impl->PublishWorld=MoveTemp(Publisher);}
 bool UAetherCommandRuntime::HasPendingServerFact(const FString& Character,FName Fact) const
 {return IsInstalled()&&Impl->Facts&&Impl->Facts->HasPendingFact(Character,Fact.ToString());}
 bool UAetherCommandRuntime::ObserveServerFact(FAetherServerFact Event,FString& Reason)
@@ -304,6 +307,8 @@ void UAetherCommandRuntime::Tick(float Dt)
     }
     for(const auto& Completion:Done)
     {
+        if(Completion.WorldSnapshot.IsSet()&&Impl->PublishWorld)Impl->PublishWorld(Completion.WorldSnapshot.GetValue());
+        if(Impl->bShutdownRequested)return;
         if(!Completion.bMayPublish||!Impl->Coordinator->IsCurrent(Completion.Session))continue;
         for(auto& Pair:Impl->Bindings)
         {
@@ -317,6 +322,8 @@ void UAetherCommandRuntime::Tick(float Dt)
     const auto Facts=Impl->Facts->Poll(FPlatformTime::Seconds());
     for(const auto& Fact:Facts)
     {
+        if(Fact.World.IsSet()&&Impl->PublishWorld)Impl->PublishWorld(Fact.World.GetValue());
+        if(Impl->bShutdownRequested)return;
         if(!Fact.Profile.IsSet())
         {UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_REJECTED fact=%s code=%d detail=%s"),*Fact.Event.FactId,int32(Fact.Code),*Fact.Detail);continue;}
         for(auto& Pair:Impl->Bindings)

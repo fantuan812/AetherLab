@@ -5,6 +5,7 @@
 #include "Quests/AetherQuestProgression.h"
 #include "Contracts/AetherPlayerCommand.h"
 #include "Misc/DateTime.h"
+#include "AetherServerReward.h"
 
 namespace
 {
@@ -15,7 +16,7 @@ bool Stable(const FString& S)
     return true;
 }
 bool Same(const FAetherServerFact& A,const FAetherServerFact& B)
-{return A.Kind==B.Kind&&A.CharacterId.Equals(B.CharacterId,ESearchCase::CaseSensitive)&&A.FactId==B.FactId&&A.SourceId==B.SourceId&&A.UtcDay==B.UtcDay;}
+{return A.Kind==B.Kind&&A.CharacterId.Equals(B.CharacterId,ESearchCase::CaseSensitive)&&A.FactId==B.FactId&&A.SourceId==B.SourceId&&A.UtcDay==B.UtcDay&&A.InstanceId==B.InstanceId;}
 }
 struct FAetherServerFactCoordinator::FImpl
 {
@@ -58,8 +59,17 @@ bool FAetherServerFactCoordinator::Enqueue(FAetherServerFact E,FString& Reason)
     bool Valid=!Impl->bPolling&&D.bValid&&!E.CharacterId.IsEmpty()&&E.CharacterId.Len()<=32;
     for(TCHAR C:E.CharacterId)Valid&=C>=32;
     FTCHARToUTF8 U(*E.CharacterId);FUTF8ToTCHAR Back(U.Get(),U.Length());Valid&=E.CharacterId.Equals(FString(Back.Length(),Back.Get()),ESearchCase::CaseSensitive);
-    if(E.Kind!=EAetherServerFactKind::Daily)Valid&=E.UtcDay.IsEmpty();
-    if(E.Kind==EAetherServerFactKind::Daily)
+    const bool Reward=E.Kind==EAetherServerFactKind::EncounterReward||E.Kind==EAetherServerFactKind::LegacyLoot;
+    if(!Reward)Valid&=!E.InstanceId.IsValid();
+    if(E.Kind!=EAetherServerFactKind::Daily&&E.Kind!=EAetherServerFactKind::EncounterReward)Valid&=E.UtcDay.IsEmpty();
+    if(E.Kind==EAetherServerFactKind::EncounterReward)
+    {
+        E.UtcDay=FDateTime::UtcNow().ToString(TEXT("%Y%m%d"));
+        Valid&=(E.FactId==TEXT("Abbey")||E.FactId==TEXT("Relay"))&&E.SourceId.IsEmpty()&&E.InstanceId.IsValid();
+    }
+    else if(E.Kind==EAetherServerFactKind::LegacyLoot)
+        Valid&=E.FactId==TEXT("Loot")&&E.SourceId.IsEmpty()&&E.InstanceId.IsValid();
+    else if(E.Kind==EAetherServerFactKind::Daily)
     {
         E.UtcDay=FDateTime::UtcNow().ToString(TEXT("%Y%m%d"));bool Known=false;
         for(const auto& Daily:D.Rules.Dailies)for(FName Fact:Daily.Facts)Known|=Fact.ToString().Equals(E.FactId,ESearchCase::CaseSensitive);
@@ -140,7 +150,9 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                 {
                     auto Next=P;auto World=W;
                     bool Allowed=true;
-                    if(J.Event.Kind==EAetherServerFactKind::Personal)
+                    if(J.Event.Kind==EAetherServerFactKind::EncounterReward||J.Event.Kind==EAetherServerFactKind::LegacyLoot)
+                        Allowed=AetherServerRewards::Apply(J.Event,Next,World,D,Why);
+                    else if(J.Event.Kind==EAetherServerFactKind::Personal)
                         Allowed=Next.Evidence.Contains(J.Event.FactId)||AetherQuestProgression::Observe(Next,J.Event.FactId,D.Rules);
                     else if(J.Event.Kind==EAetherServerFactKind::World)
                     {
@@ -162,7 +174,7 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                     }
                     const auto Settled=Allowed?AetherQuestProgression::Settle(Next,World.WorldFactSources,{},D.Items,D.Skills,D.Rules,D.Progression):FAetherQuestMutation();
                     TArray<uint8> ProfileBytes,WorldBytes;
-                    if(!Allowed)Finish(EAetherStoreCode::Invalid,TEXT("Fact is not available to this character"));
+                    if(!Allowed)Finish(EAetherStoreCode::Invalid,Why.IsEmpty()?TEXT("Fact is not available to this character"):Why);
                     else if((Settled.Code!=EAetherQuestMutationCode::Applied&&Settled.Code!=EAetherQuestMutationCode::Unchanged)||
                         !AetherProfileCodec::Encode(Next,D.Items,D.Skills,D.Rules,ProfileBytes,Why)||
                         !AetherWorldCodec::Encode(World,D.Items,D.Rules,R.ProfileRevisions,WorldBytes,Why))
@@ -175,7 +187,7 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                     {
                         ++Next.Revision;++World.Revision;auto Index=R.ProfileRevisions;Index[J.Event.CharacterId]=Next.Revision;
                         FAetherTransaction T;T.ActorId=J.Event.CharacterId;T.ExpectedProfileRevision=P.Revision;T.CommandId=AetherTransactions::NewCommandId(P.Revision);
-                        const FString Request=FString::Printf(TEXT("AETHER_SERVER_FACT_1|%d|%s|%s|%s"),int32(J.Event.Kind),*J.Event.FactId,*J.Event.SourceId,*J.Event.UtcDay);
+                        const FString Request=FString::Printf(TEXT("AETHER_SERVER_FACT_2|%d|%s|%s|%s|%s"),int32(J.Event.Kind),*J.Event.FactId,*J.Event.SourceId,*J.Event.UtcDay,*J.Event.InstanceId.ToString(EGuidFormats::Digits));
                         FTCHARToUTF8 Bytes(*Request);T.Request.Append(reinterpret_cast<const uint8*>(Bytes.Get()),Bytes.Length());
                         FAetherCommandResult Result;Result.CommandId=T.CommandId;Result.Code=EAetherCommandCode::Applied;
                         Result.FinalProfileRevision=Next.Revision;Result.FinalWorldRevision=World.Revision;

@@ -89,6 +89,7 @@ void AAetherEncounterDirector::Settle(FAetherEncounterRun& R)
 {
     if(R.Phase!=EAetherEncounterPhase::Succeeded)return;
     auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(!M)return;
+    if(M->IsNativeMode()){M->SettleNativeEncounter(R);return;}
     for(const auto& Id:R.Participants)
     {
         if(R.Settled.Contains(Id))continue;

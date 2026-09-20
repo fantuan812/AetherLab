@@ -109,6 +109,11 @@ private:
     TFuture<FAetherWorldCheckpointResult> NativeRegionSave;
     TOptional<FAetherWorldCheckpointResult> NativeRegionOutcome;
     void AdvanceNativeRegions(const TArray<FName>& Unload,const TArray<const FAetherWorldPlacement*>& Load);
+    struct FNativeCampWrite {FGuid Instance;TFuture<FAetherWorldCheckpointResult> Write;};
+    TMap<FName,FNativeCampWrite> NativeCampWrites;
+    bool RecordNativeCampClear(FName Definition,FGuid Instance);
+    void SettleNativeEncounter(FAetherEncounterRun& Run);
+    FString ClaimNativeLegacyLoot(AAetherFrontierCharacter* Character,FName StableId);
     bool CaptureNativeWorld(const FAetherWorldStateV10& Previous,FAetherWorldStateV10& Candidate,FString& Reason) const;
     void ApplyObjectDefinition(AAetherFrontierProp* A,FName Definition);
     AAetherFrontierProp* SpawnPlacement(const FAetherWorldPlacement& Placement);

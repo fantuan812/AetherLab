@@ -113,7 +113,8 @@ void UAetherNativePersistence::PollLogins()
     }
     for(auto& Done:Completed)Done.Job->Result.SetValue(MoveTemp(Done.Result));
 }
-TFuture<FAetherWorldCheckpointResult> UAetherNativePersistence::SaveLoadedPhysics()
+TFuture<FAetherWorldCheckpointResult> UAetherNativePersistence::SaveLoadedPhysics(){return SaveWorldMutation({});}
+TFuture<FAetherWorldCheckpointResult> UAetherNativePersistence::SaveWorldMutation(FAetherCaptureWorldCheckpoint Mutation)
 {
     check(IsInGameThread());auto Promise=MakeUnique<TPromise<FAetherWorldCheckpointResult>>();auto Future=Promise->GetFuture();
     if(State!=EAetherNativePersistencePhase::Active||Checkpoint||!Store||!GetWorld())
@@ -121,9 +122,10 @@ TFuture<FAetherWorldCheckpointResult> UAetherNativePersistence::SaveLoadedPhysic
     Checkpoint=MakeUnique<FAetherWorldCheckpoint>(Store.ToSharedRef());FString Why;
     const TWeakObjectPtr<UWorld> Scene=GetWorld();
     const auto Capture=DomainCapture;
-    if(!Checkpoint->Start([Scene,Capture](const auto& Previous,auto& Candidate,FString& Reason){
+    if(!Checkpoint->Start([Scene,Capture,Mutation=MoveTemp(Mutation)](const auto& Previous,auto& Candidate,FString& Reason){
         if(!Scene.IsValid()){Reason=TEXT("World destroyed during checkpoint");return false;}
-        return Capture?Capture(Previous,Candidate,Reason):AetherNativeWorldPhysics::CaptureLoaded(*Scene.Get(),Previous,Candidate,Reason);
+        if(!(Capture?Capture(Previous,Candidate,Reason):AetherNativeWorldPhysics::CaptureLoaded(*Scene.Get(),Previous,Candidate,Reason)))return false;
+        return !Mutation||Mutation(Previous,Candidate,Reason);
     },Why))
     {Checkpoint.Reset();FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Invalid;R.Detail=Why;Promise->SetValue(MoveTemp(R));return Future;}
     CheckpointPromise=MoveTemp(Promise);return Future;
