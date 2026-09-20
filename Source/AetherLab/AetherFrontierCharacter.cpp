@@ -68,7 +68,14 @@ void AAetherFrontierCharacter::UnPossessed()
 void AAetherFrontierCharacter::OnRep_PlayerState()
 { Super::OnRep_PlayerState(); BindPersistentAbilities(); OnPresentationChanged.Broadcast(); }
 bool AAetherFrontierCharacter::SpellUnlocked(int32 Spell) const
-{ const auto* PS=ProfileState(); return Spell>=0 && Spell<4 && (!PS || (PS->Profile.LearnedSpells&(1<<Spell))!=0); }
+{
+    if(UsesNativeSkills())
+    {
+        const auto* State=NativeSkillView();const auto* Id=State?State->Hotbar.Find(Spell):nullptr;
+        return Id&&SkillUnlocked(*Id);
+    }
+    const auto* PS=ProfileState();return Spell>=0&&Spell<4&&(!PS||(PS->Profile.LearnedSpells&(1<<Spell))!=0);
+}
 void AAetherFrontierCharacter::ApplyProfileEquipment()
 {
     auto* PS=ProfileState(); if (!HasAuthority()||!PS) return;

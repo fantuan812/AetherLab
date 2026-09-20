@@ -44,8 +44,16 @@ struct FAetherCommandRuntimeImpl
         if(!Current(B)||!P.CharacterId.Equals(B.Session.CharacterId,ESearchCase::CaseSensitive)||P.Revision<B.Revision)return;
         // 先发布持久事实，失败保持未就绪，不能让界面领先于角色实际能力。
         B.bReady=false;B.Outgoing.Reset();B.Revision=P.Revision;
-        {TGuardValue<bool> Guard(bPolling,true);if(!Publish(*B.Controller.Get(),P,World,Container)||!Current(B))return;}
-        const auto& D=FAetherV10Definitions::Get();FString Reason;TArray<uint8> Bytes;
+        FString Reason;
+        {
+            TGuardValue<bool> Guard(bPolling,true);
+            if(!Publish(*B.Controller.Get(),P,World,Container)||!Current(B))return;
+            // 完整场景/装备适配通过后，把已提交永久技能写入本连接的持续 ASC。
+            // 外部来源由服务器适配器先行重建；这里保留它们，不用空数组抹掉装备/临时授权。
+            const auto Grants=B.PlayerState->GetNativeSkillGrants();
+            if(!B.PlayerState->PublishNativeSkills(P,Grants,Reason)||!Current(B))return;
+        }
+        const auto& D=FAetherV10Definitions::Get();TArray<uint8> Bytes;
         if(!AetherProfileCodec::Encode(P,D.Items,D.Skills,D.Rules,Bytes,Reason))return;
         // 同一连接最多一份待发送快照，新提交替换尚未发完的旧快照；客户端用 Transfer 区分。
         B.Outgoing=MoveTemp(Bytes);B.Transfer=FGuid::NewGuid();B.Revision=P.Revision;B.Offset=0;

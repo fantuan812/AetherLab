@@ -52,4 +52,57 @@ FGameplayAbilitySpec* Find(UAbilitySystemComponent& ASC,const FString& SkillId)
         }
     return Found;
 }
+bool Publish(UAbilitySystemComponent& ASC,const FAetherSkillStateV10& State,const TArray<FAetherExternalSkillGrant>& Grants,FString& Reason)
+{
+    check(IsInGameThread());const auto& D=FAetherSkillDefinitionsV10::Get();
+    if(!ASC.GetOwnerActor()||!ASC.GetOwnerActor()->HasAuthority()||!ASC.GetAvatarActor()||
+        !State.Validate(D,Reason)||!FAetherSkillStateV10::ValidateExternalGrants(Grants,D))
+    {if(Reason.IsEmpty())Reason=TEXT("Invalid authoritative skill projection");return false;}
+    TMap<FString,FGameplayAbilitySpecHandle> Existing;
+    // 改动前先检查整组身份，不能更新了一半后才发现重复/未知标签。
+    for(const auto& Spec:ASC.GetActivatableAbilities())
+    {
+        if(!Spec.Ability||Spec.Ability->GetClass()!=UAetherSpellAbility::StaticClass())continue;
+        const FString Id=Identify(Spec);
+        if(Id.IsEmpty()||Existing.Contains(Id)){Reason=TEXT("Ambiguous skill ability identity");return false;}
+        Existing.Add(Id,Spec.Handle);
+    }
+    TArray<FString> Ids;D.Skills.GenerateKeyArray(Ids);Ids.Sort();
+    for(const auto& Id:Ids)
+        if(!TagFor(Id).IsValid()){Reason=TEXT("Skill tag unavailable");return false;}
+    for(const auto& Id:Ids)
+    {
+        const auto& Definition=D.Skills.FindChecked(Id);
+        const int32 Rank=State.EffectiveRank(Id,Grants);
+        const auto* ExistingHandle=Existing.Find(Id);
+        if(!Definition.bActive||Rank<=0)
+        {
+            if(ExistingHandle){ASC.CancelAbilityHandle(*ExistingHandle);ASC.ClearAbility(*ExistingHandle);}
+            continue;
+        }
+        int32 Input=INDEX_NONE;
+        for(int32 Slot=0;Slot<FAetherSkillStateV10::HotbarCapacity;++Slot)
+            if(const auto* Skill=State.Hotbar.Find(Slot);Skill&&Skill->Equals(Id,ESearchCase::CaseSensitive)){Input=Slot;break;}
+        if(ExistingHandle)
+        {
+            auto* Spec=ASC.FindAbilitySpecFromHandle(*ExistingHandle);
+            if(!Spec){Reason=TEXT("Skill spec disappeared during publication");return false;}
+            if(Spec->Level!=Rank||Spec->InputID!=Input)
+            {
+                // 等级/授权变化结束旧执行，不能让旧实例继续用原来已失效的等级计算效果。
+                ASC.CancelAbilityHandle(*ExistingHandle);
+                Spec=ASC.FindAbilitySpecFromHandle(*ExistingHandle);if(!Spec){Reason=TEXT("Skill removed during cancellation");return false;}
+                Spec->Level=Rank;Spec->InputID=Input;ASC.MarkAbilitySpecDirty(*Spec);
+            }
+        }
+        else
+        {
+            FGameplayAbilitySpec Spec(UAetherSpellAbility::StaticClass(),Rank,Input);
+            Spec.GetDynamicSpecSourceTags().AddTag(TagFor(Id));
+            if(!ASC.GiveAbility(Spec).IsValid()){Reason=TEXT("Skill grant failed");return false;}
+        }
+    }
+    Reason.Reset();return true;
+}
+
 }

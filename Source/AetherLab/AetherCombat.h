@@ -115,9 +115,9 @@ public:
     bool FindSkillTarget(const FString& SkillId,int32 Rank,FHitResult& Hit,FVector& Origin,FVector& Direction) const;
     bool ExecuteSkill(const FString& SkillId,int32 Rank);
     bool TrySkill(const FString& SkillId);
-    bool SkillUnlocked(const FString& SkillId) const;
-    void GrantSpells();
-    bool TrySpell(int32 Spell);
+    virtual bool SkillUnlocked(const FString& SkillId) const;
+    virtual void GrantSpells();
+    virtual bool TrySpell(int32 Spell);
     virtual bool SpellUnlocked(int32 Spell) const { return true; }
     UPROPERTY(Replicated) bool bUseBasicAssets = false;
     void SetVitals(float HP, float MP, float SP);
