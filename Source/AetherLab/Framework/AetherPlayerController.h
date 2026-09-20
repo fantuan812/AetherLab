@@ -13,5 +13,12 @@ public:
     virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
     virtual void SpawnDefaultHUD() override;
     virtual void FlushPressedKeys() override;
+    virtual void BeginPlay() override;
+    virtual void SetPawn(APawn* InPawn) override;
+    virtual void OnRep_Pawn() override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
+private:
+    void BindMenuPawn();
+public:
     virtual bool ShouldFlushKeysWhenViewportFocusChanges() const override {return true;}
 };

@@ -1,5 +1,6 @@
 #include "Characters/AetherFrontierCharacter.h"
 #include "AetherGuide.h"
+#include "Presentation/AetherMenuSubsystem.h"
 #include "Interaction/AetherNearbyRegistry.h"
 #include "AetherFrontier.h"
 #include "AetherContent.h"
@@ -59,11 +60,13 @@ void AAetherFrontierCharacter::PossessedBy(AController* C)
     Super::PossessedBy(C); BindPersistentAbilities();
     if(HasAuthority() && ProfileState())
     { Equipment->bProfileManaged=true;GrantSpells();if(HasActorBegunPlay())ApplyProfileEquipment(); }
+    // 本地权威服不会收到 OnRep_PlayerState；PossessedBy 完成后同样发布上下文就绪事件。
+    OnPresentationChanged.Broadcast();
 }
 void AAetherFrontierCharacter::UnPossessed()
 {ReleaseHeldInput();CloseTrade();Super::UnPossessed();}
 void AAetherFrontierCharacter::OnRep_PlayerState()
-{ Super::OnRep_PlayerState(); BindPersistentAbilities(); }
+{ Super::OnRep_PlayerState(); BindPersistentAbilities(); OnPresentationChanged.Broadcast(); }
 bool AAetherFrontierCharacter::SpellUnlocked(int32 Spell) const
 { const auto* PS=ProfileState(); return Spell>=0 && Spell<4 && (!PS || (PS->Profile.LearnedSpells&(1<<Spell))!=0); }
 void AAetherFrontierCharacter::ApplyProfileEquipment()
@@ -155,6 +158,7 @@ void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I)
     Enhanced->BindActionValueLambda(Action("LookX",EKeys::MouseX,EInputActionValueType::Axis1D),ETriggerEvent::Triggered,[this](const FInputActionValue& V){Yaw(V.Get<float>());});
     Enhanced->BindActionValueLambda(Action("LookY",EKeys::MouseY,EInputActionValueType::Axis1D),ETriggerEvent::Triggered,[this](const FInputActionValue& V){Pitch(V.Get<float>());});
     Sub->AddMappingContext(GameplayContext,0);
+    OnPresentationChanged.Broadcast();
 }
 FKey AAetherFrontierCharacter::BindingFor(FName Name) const
 {
@@ -399,4 +403,5 @@ void AAetherFrontierCharacter::CycleItem()
  if(!bPanel||!ProfileState())return;
  if(Panel==1&&!ProfileState()->Profile.Inventory.IsEmpty()){SelectedItem=(SelectedItem+1)%ProfileState()->Profile.Inventory.Num();SelectedInstance=ProfileState()->Profile.Inventory[SelectedItem].InstanceId;}
  if(Panel==2)TrackedQuest=AetherGuide::SelectQuest(ProfileState()->Profile,TrackedQuest,true);
+ OnPresentationChanged.Broadcast();
 }

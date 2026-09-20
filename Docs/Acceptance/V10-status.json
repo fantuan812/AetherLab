@@ -24,8 +24,8 @@
     },
     {
       "id": "V10-05",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "in_progress",
+      "acceptance": "LocalPlayer_menu_ownership_toggle_switch_Escape_layer_tokens_page_memory_and_Pawn_cleanup; legacy_UMG_commit_replication_selection_event_refresh_without_NativeTick_and_relative_anchors; 67_rule_tests_pass_without_warnings; real_Enhanced_Input_and_focused_Slate_shortcuts_commit_refresh_unpossess_repossess_pass_with_1280x720_and_actual_3440x1440_PNGs; dedicated_two_client_merchant_regression_pass; CommonUI_formal_widget_assets_full_graphical_pages_gamepad_and_release_matrix_pending"
     },
     {
       "id": "V10-06",

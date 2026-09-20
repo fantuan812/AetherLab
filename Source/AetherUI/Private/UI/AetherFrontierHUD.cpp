@@ -1,6 +1,7 @@
 #include "UI/AetherFrontierHUD.h"
 #include "AetherFrontier.h"
 #include "AetherFrontierPanel.h"
+#include "Tests/AetherMenuInteractionProbe.h"
 #include "Engine/Canvas.h"
 #include "EngineUtils.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -13,7 +14,7 @@ void AAetherFrontierHUD::BeginPlay()
 {Super::BeginPlay();if(PlayerOwner&&PlayerOwner->IsLocalController()){PanelWidget=CreateWidget<UAetherFrontierPanel>(PlayerOwner,UAetherFrontierPanel::StaticClass());if(PanelWidget)PanelWidget->AddToViewport();}}
 void AAetherFrontierHUD::DrawHUD()
 {
-    Super::DrawHUD();auto* C=Cast<AAetherFrontierCharacter>(GetOwningPawn());auto* PS=C?C->ProfileState():nullptr;if(!Canvas||!C||!PS)return;
+    Super::DrawHUD();AetherMenuInteraction::Tick(this,PanelWidget);auto* C=Cast<AAetherFrontierCharacter>(GetOwningPawn());auto* PS=C?C->ProfileState():nullptr;if(!Canvas||!C||!PS)return;
     const float W=Canvas->SizeX,H=Canvas->SizeY;const auto& P=PS->Profile;
     DrawRect(FLinearColor(.018,.026,.04,.92),20,20,400,108);
     DrawText(TEXT("AETHERLAB / EMBER FRONTIER"),FLinearColor(.9,.74,.4),34,29,nullptr,1.2);

@@ -28,7 +28,7 @@ void AAetherFrontierCharacter::SubmitInventory(FName Action,FName Definition)
   const FGuid Current=P.Equipped.FindRef(Slot);C.ItemInstanceId=Choices[(Choices.Find(Current)+1)%Choices.Num()];C.Action="Equip";
   if(Action=="CycleOff"&&Current.IsValid()){C.Action="Unequip";C.ItemInstanceId=Current;}
  }
- PendingInventory=C;
+ PendingInventory=C;OnPresentationChanged.Broadcast();
  if(Action=="Buy"||Action=="Sell")ServerTradeInventory(C,PendingTradeAuthorization);else ServerInventory(C);
 }
 void AAetherFrontierCharacter::InventoryResult_Implementation(FGuid Id,EAetherInventoryResult Result,int32 Revision,int32 Transferred)
@@ -51,6 +51,7 @@ void AAetherFrontierCharacter::InventoryResult_Implementation(FGuid Id,EAetherIn
  case EAetherInventoryResult::InsufficientFunds:Feedback=TEXT("金币不足。");break;
  default:Feedback=TEXT("无法执行，请检查选中物品、数量和目标。");break;
  }
+ OnPresentationChanged.Broadcast();
 }
 void AAetherFrontierCharacter::ServerTradeInventory_Implementation(FAetherInventoryCommand C,FGuid Authorization)
 {

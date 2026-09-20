@@ -72,7 +72,7 @@ EAetherServiceResult AAetherFrontierMode::ExecuteWorldService(AAetherFrontierCha
     Candidate->ServiceReceipts.Add(Receipt);
     if(!WriteDatabase(Candidate))return EAetherServiceResult::StorageFailure;
 
-    PS->Profile=MoveTemp(Profile);PS->ForceNetUpdate();
+    PS->Profile=MoveTemp(Profile);PS->ForceNetUpdate();PS->OnProfilePublished.Broadcast();
     State->bSupplyRestored=Candidate->bSupplyRestored;State->bPowerOn=Candidate->bPowerOn;State->ForceNetUpdate();
     State->bWorkshopRestored=Candidate->bWorkshopRestored;
     if(Target->Service=="Source"){Target->Mechanism->bPowerEnabled=NewPower;Target->ForceNetUpdate();}

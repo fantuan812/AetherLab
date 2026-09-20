@@ -2,7 +2,8 @@
 #include "AetherGuide.h"
 #include "AetherFrontier.h"
 #include "Blueprint/WidgetTree.h"
-#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Engine/LocalPlayer.h"
+#include "TimerManager.h"
 #include "Components/Border.h"
 #include "Components/SpinBox.h"
 #include "Components/VerticalBox.h"
@@ -17,7 +18,7 @@
 #include "ReactiveWorldSubsystem.h"
 void UAetherFrontierViewModel::Refresh(AAetherFrontierCharacter* C)
 {
- if(!C||!C->ProfileState())return;const auto& P=C->ProfileState()->Profile;FString Text,Title,First="Close",Second="Close";
+ if(!C||!C->ProfileState())return;++RefreshCount;const auto& P=C->ProfileState()->Profile;FString Text,Title,First="Close",Second="Close";
  switch(C->Panel)
  {
  case 1:
@@ -47,7 +48,72 @@ void UAetherFrontierViewModel::Refresh(AAetherFrontierCharacter* C)
  }
  Heading=FText::FromString(Title);Body=FText::FromString(Text);PrimaryLabel=FText::FromString(First);SecondaryLabel=FText::FromString(Second);
 }
-void UAetherFrontierPanel::NativeConstruct(){Super::NativeConstruct();SetIsFocusable(false);}
+void UAetherFrontierPanel::NativeConstruct()
+{
+ Super::NativeConstruct();SetIsFocusable(false);
+ // 相对锚点交给 Slate/UMG 布局，分辨率或 DPI 变化不需要每帧重写像素坐标。
+ SetDesiredSizeInViewport(FVector2D::ZeroVector);SetPositionInViewport(FVector2D::ZeroVector,false);
+ SetAnchorsInViewport(FAnchors(.12f,.12f,.88f,.86f));
+ if(auto* LP=GetOwningLocalPlayer())
+ {
+  Menu=LP->GetSubsystem<UAetherMenuSubsystem>();
+  Menu->OnChanged.AddUObject(this,&UAetherFrontierPanel::HandleMenuChanged);
+ }
+ HandleMenuChanged();
+}
+void UAetherFrontierPanel::NativeDestruct()
+{
+ SavePageMemory();
+ if(Menu.IsValid())Menu->OnChanged.RemoveAll(this);
+ if(BoundCharacter.IsValid())BoundCharacter->OnPresentationChanged.RemoveAll(this);
+ if(BoundProfile.IsValid())BoundProfile->OnProfilePublished.RemoveAll(this);
+ if(GetWorld())GetWorld()->GetTimerManager().ClearTimer(LiveDetailsTimer);
+ BoundCharacter.Reset();BoundProfile.Reset();Menu.Reset();Super::NativeDestruct();
+}
+void UAetherFrontierPanel::SavePageMemory()
+{
+ // 换 Pawn 时子系统已清空页面记忆，不能用旧 Widget 的缓存把它重新写回去。
+ if(!Menu.IsValid()||!BoundCharacter.IsValid()||Menu->GetBoundPawn()!=BoundCharacter.Get()||ShownPage==EAetherMenuPage::None)return;
+ auto Memory=Menu->GetPageMemory(ShownPage);
+ if(BodyScroll)Memory.ScrollOffset=BodyScroll->GetScrollOffset();
+ Memory.SelectedInstance=BoundCharacter->SelectedInstance;Menu->SavePageMemory(ShownPage,Memory);
+}
+void UAetherFrontierPanel::BindCharacter()
+{
+ auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());
+ if(BoundCharacter.Get()==C)return;
+ if(BoundCharacter.IsValid())BoundCharacter->OnPresentationChanged.RemoveAll(this);
+ BoundCharacter=C;ShownRevision=-1;ShownShop=NAME_None;ShownTradeToken.Invalidate();
+ if(C)C->OnPresentationChanged.AddUObject(this,&UAetherFrontierPanel::RefreshSnapshot);
+ BindProfile();
+}
+void UAetherFrontierPanel::BindProfile()
+{
+ auto* PS=BoundCharacter.IsValid()?BoundCharacter->ProfileState():nullptr;
+ if(BoundProfile.Get()==PS)return;
+ if(BoundProfile.IsValid())BoundProfile->OnProfilePublished.RemoveAll(this);
+ BoundProfile=PS;ShownRevision=-1;
+ if(PS)PS->OnProfilePublished.AddUObject(this,&UAetherFrontierPanel::RefreshSnapshot);
+}
+void UAetherFrontierPanel::HandleMenuChanged()
+{
+ SavePageMemory();BindCharacter();
+ auto* C=BoundCharacter.Get();ShownPage=C&&C->bPanel?EAetherMenuPage(C->Panel):EAetherMenuPage::None;
+ RefreshSnapshot();
+ if(Menu.IsValid()&&BodyScroll&&ShownPage!=EAetherMenuPage::None)
+ {
+  const auto Memory=Menu->GetPageMemory(ShownPage);BodyScroll->SetScrollOffset(Memory.ScrollOffset);
+ }
+ GetWorld()->GetTimerManager().ClearTimer(LiveDetailsTimer);
+ if(C&&C->bPanel)GetWorld()->GetTimerManager().SetTimer(LiveDetailsTimer,this,&UAetherFrontierPanel::RefreshLiveDetails,.25f,true);
+}
+void UAetherFrontierPanel::RefreshLiveDetails()
+{
+ auto* C=BoundCharacter.Get();if(!C||!C->bPanel)return;
+ RefreshTrade(C,C->Panel==1);
+ // 队友生命和交易距离不是档案版本；只在相关页面打开时更新实时展示。
+ if(C->Panel==5&&Model){Model->Refresh(C);Body->SetText(Model->Body);}
+}
 TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
 {
  if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this,TEXT("WidgetTree"));
@@ -56,7 +122,7 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
  auto* Border=WidgetTree->ConstructWidget<UBorder>();Border->SetBrushColor(FLinearColor(.015f,.025f,.04f,.98f));Border->SetPadding(FMargin(24));WidgetTree->RootWidget=Border;
  auto* Box=WidgetTree->ConstructWidget<UVerticalBox>();Border->SetContent(Box);
  Heading=WidgetTree->ConstructWidget<UTextBlock>();Heading->SetColorAndOpacity(FSlateColor(FLinearColor(1,.8f,.4f)));Box->AddChildToVerticalBox(Heading);
- auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();auto* BodySlot=Box->AddChildToVerticalBox(Scroll);BodySlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));BodySlot->SetPadding(FMargin(0,18));
+ auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();BodyScroll=Scroll;auto* BodySlot=Box->AddChildToVerticalBox(Scroll);BodySlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));BodySlot->SetPadding(FMargin(0,18));
  Body=WidgetTree->ConstructWidget<UTextBlock>();Body->SetAutoWrapText(true);Scroll->AddChild(Body);
  auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();Box->AddChildToVerticalBox(Row);
  auto Add=[&](const TCHAR* Label,UTextBlock*& Text){auto* Button=WidgetTree->ConstructWidget<UButton>();Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetText(FText::FromString(Label));Button->SetContent(Text);Row->AddChildToHorizontalBox(Button);return Button;};
@@ -85,11 +151,12 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
  Add(TEXT("  关闭  "),X)->OnClicked.AddDynamic(this,&UAetherFrontierPanel::ClosePanel);
  return Super::RebuildWidget();
 }
-void UAetherFrontierPanel::NativeTick(const FGeometry& G,float Dt)
+void UAetherFrontierPanel::RefreshSnapshot()
 {
- Super::NativeTick(G,Dt);auto* PC=GetOwningPlayer();auto* C=PC?Cast<AAetherFrontierCharacter>(PC->GetPawn()):nullptr;if(!C)return;
- // Keep the widget visible to tick while its content is transparent; no hidden-widget polling dependency.
- const bool Open=C->bPanel&&C->Panel!=4;SetRenderOpacity(Open?1:0);SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::HitTestInvisible);
+ BindProfile();auto* C=BoundCharacter.Get();if(!C){SetVisibility(ESlateVisibility::Collapsed);return;}
+ // 关闭后真正折叠。后续由菜单/复制事件唤醒，不保留透明的逐帧轮询控件。
+ const bool Open=C->bPanel&&C->Panel!=4;SetVisibility(Open?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+ if(!Open)return;
  InventoryRow->SetVisibility(Open&&C->Panel==1?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(Open&&C->Panel==1&&FMath::RoundToInt(Quantity->GetValue())!=C->InventoryQuantity)Quantity->SetValue(C->InventoryQuantity);
  if(Open&&C->Panel==1&&C->ProfileState()&&ShownRevision!=C->ProfileState()->Profile.Revision)
@@ -105,15 +172,14 @@ void UAetherFrontierPanel::NativeTick(const FGeometry& G,float Dt)
  SettingsRow->SetVisibility(Open&&C->Panel==6?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(Open&&C->Panel==6&&BindingAction->GetOptionCount()==0)
  {TArray<FName> Names;C->InputActions.GetKeys(Names);Names.Sort(FNameLexicalLess());for(auto Name:Names)if(Name!="LookX"&&Name!="LookY"&&Name!="Escape")BindingAction->AddOption(Name.ToString());BindingAction->SetSelectedOption(TEXT("Cast"));}
- if(Open){Model->Refresh(C);Heading->SetText(Model->Heading);Body->SetText(Model->Body);PrimaryText->SetText(Model->PrimaryLabel);SecondaryText->SetText(Model->SecondaryLabel);SecondaryText->GetParent()->SetVisibility(Model->SecondaryLabel.ToString()==TEXT("Close")?ESlateVisibility::Collapsed:ESlateVisibility::Visible);int32 W,H;PC->GetViewportSize(W,H);SetPositionInViewport(FVector2D(W*.17,H*.16));SetDesiredSizeInViewport(FVector2D(W*.66,H*.65)/FMath::Max(.1f,UWidgetLayoutLibrary::GetViewportScale(this)));}
- if(Open!=WasOpen){WasOpen=Open;PC->bShowMouseCursor=Open;if(Open){C->ReleaseHeldInput();FInputModeGameAndUI Mode;Mode.SetHideCursorDuringCapture(false);PC->SetInputMode(Mode);}else PC->SetInputMode(FInputModeGameOnly());}
+ if(Open){Model->Refresh(C);Heading->SetText(Model->Heading);Body->SetText(Model->Body);PrimaryText->SetText(Model->PrimaryLabel);SecondaryText->SetText(Model->SecondaryLabel);SecondaryText->GetParent()->SetVisibility(Model->SecondaryLabel.ToString()==TEXT("Close")?ESlateVisibility::Collapsed:ESlateVisibility::Visible);}
 }
 void UAetherFrontierPanel::Primary()
 {if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->SubmitInventory("Equip");else if(C->Panel==2)C->ServerAction("Claim");else if(C->Panel==5)C->ServerAction("Invite");else if(C->Panel==6)C->ServerAction("Save");else ClosePanel();}}
 void UAetherFrontierPanel::Secondary()
 {if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){if(C->Panel==1)C->SubmitInventory("Use");else if(C->Panel==5)C->ServerAction("AcceptInvite");else if(C->Panel==6)C->ServerAction("Recover");else ClosePanel();}}
 void UAetherFrontierPanel::NextItem(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->CycleItem();}
-void UAetherFrontierPanel::ClosePanel(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){C->CloseTrade();C->bPanel=false;}}
+void UAetherFrontierPanel::ClosePanel(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->ClosePanel();}
 
 void UAetherFrontierPanel::ActionSelected(FString Action,ESelectInfo::Type)
 {
@@ -125,13 +191,13 @@ void UAetherFrontierPanel::KeySelected(FInputChord Key)
  ActionSelected(BindingAction->GetSelectedOption(),ESelectInfo::Direct);
 }
 
-void UAetherFrontierPanel::SetQuantity(float V){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->InventoryQuantity=FMath::Clamp(FMath::RoundToInt(V),1,1000);}
+void UAetherFrontierPanel::SetQuantity(float V){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){C->InventoryQuantity=FMath::Clamp(FMath::RoundToInt(V),1,1000);C->OnPresentationChanged.Broadcast();}}
 void UAetherFrontierPanel::SetMergeTarget(FString V,ESelectInfo::Type){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){const int32 Index=MergeTarget->FindOptionIndex(V);C->MergeDestination=MergeInstances.IsValidIndex(Index)?MergeInstances[Index]:FGuid();}}
 void UAetherFrontierPanel::Split(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Split");}
 void UAetherFrontierPanel::Merge(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Merge");}
 void UAetherFrontierPanel::RetryPending(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());C&&C->PendingInventory.CommandId.IsValid())C->SubmitInventory(NAME_None);}
 void UAetherFrontierPanel::Buy(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->SubmitInventory("Buy",*Product->GetSelectedOption());}
-void UAetherFrontierPanel::Sell(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))C->RequestSale();}
+void UAetherFrontierPanel::Sell(){if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn())){C->RequestSale();RefreshSnapshot();}}
 
 void UAetherFrontierPanel::RefreshTrade(AAetherFrontierCharacter* C,bool Open)
 {
@@ -171,3 +237,18 @@ void UAetherFrontierPanel::RefreshTrade(AAetherFrontierCharacter* C,bool Open)
  if(Pending)Details+=TEXT("\n上次操作等待确认。");
  TradeInfo->SetText(FText::FromString(Details));
 }
+
+FReply UAetherFrontierPanel::NativeOnPreviewKeyDown(const FGeometry& Geometry,const FKeyEvent& Event)
+{
+ auto* C=BoundCharacter.Get();
+ // 改键控件正在录入时由控件消费按键（含 Escape 取消），不能把 I/K 等当作切页。
+ if(!C||!C->bPanel||(BindingKey&&BindingKey->GetIsSelectingKey()))return Super::NativeOnPreviewKeyDown(Geometry,Event);
+ if(Event.GetKey()==EKeys::Escape){if(!Event.IsRepeat())C->MenuBack();return FReply::Handled();}
+ const TPair<FName,int32> Pages[]={{"I",1},{"J",2},{"K",3},{"M",4},{"P",5}};
+ for(const auto& Page:Pages)
+  if(Event.GetKey()==C->BindingFor(Page.Key)){if(!Event.IsRepeat())C->SelectPanel(Page.Value);return FReply::Handled();}
+ return Super::NativeOnPreviewKeyDown(Geometry,Event);
+}
+
+UWidget* UAetherFrontierPanel::GetPrimaryFocusTarget() const
+{return PrimaryText?PrimaryText->GetParent():nullptr;}

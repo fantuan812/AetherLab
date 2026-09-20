@@ -93,9 +93,9 @@ void AAetherFrontierMode::CaptureWorkshop()
     if(SmokeStage==0&&Elapsed>3)
     {C->SetActorLocation(FVector(5220,5550,110));PC->SetControlRotation(FRotator(-8,-40,0));SmokeStage=1;}
     if(SmokeStage==1&&Elapsed>6){FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir()/TEXT("Automation/V806-Interaction.png"),true,false);SmokeStage=2;}
-    if(SmokeStage==2&&Elapsed>8){C->bPanel=true;C->Panel=1;SmokeStage=3;}
+    if(SmokeStage==2&&Elapsed>8){C->OpenPanel(1);SmokeStage=3;}
     if(SmokeStage==3&&Elapsed>9){FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir()/TEXT("Automation/V806-Inventory.png"),true,false);SmokeStage=4;}
-    if(SmokeStage==4&&Elapsed>11){C->Panel=2;SmokeStage=5;}
+    if(SmokeStage==4&&Elapsed>11){C->OpenPanel(2);SmokeStage=5;}
     if(SmokeStage==5&&Elapsed>12){FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir()/TEXT("Automation/V806-Quests.png"),true,false);SmokeStage=6;}
     if(Elapsed>15)FPlatformMisc::RequestExit(false);
 #endif

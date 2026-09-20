@@ -1,5 +1,7 @@
 #include "Framework/AetherPlayerController.h"
 #include "Presentation/AetherPresentation.h"
+#include "Presentation/AetherMenuSubsystem.h"
+#include "Engine/LocalPlayer.h"
 #include "GameFramework/HUD.h"
 #include "Characters/AetherFrontierCharacter.h"
 
@@ -25,4 +27,18 @@ void AAetherPlayerController::FlushPressedKeys()
     // 先撤销攻击保持，再让 Enhanced Input 派发 Canceled，避免失焦被当作松键攻击。
     if(auto* C=Cast<AAetherFrontierCharacter>(GetPawn()))C->ReleaseHeldInput();
     Super::FlushPressedKeys();
+}
+
+void AAetherPlayerController::BindMenuPawn()
+{
+    if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherMenuSubsystem>()->AttachPawn(Cast<AAetherFrontierCharacter>(GetPawn()));
+}
+void AAetherPlayerController::BeginPlay(){Super::BeginPlay();BindMenuPawn();}
+void AAetherPlayerController::SetPawn(APawn* InPawn){Super::SetPawn(InPawn);BindMenuPawn();}
+void AAetherPlayerController::OnRep_Pawn(){Super::OnRep_Pawn();BindMenuPawn();}
+void AAetherPlayerController::EndPlay(const EEndPlayReason::Type Reason)
+{
+    if(auto* LP=GetLocalPlayer())
+        if(auto* Menu=LP->GetSubsystem<UAetherMenuSubsystem>();Menu->GetBoundPawn()==GetPawn())Menu->AttachPawn(nullptr);
+    Super::EndPlay(Reason);
 }

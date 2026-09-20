@@ -195,7 +195,7 @@ bool AAetherFrontierMode::Commit(AAetherPlayerState* PS,FAetherProfile Next,FNam
     ++Next.Revision;
     if(auto* P=Candidate->Profiles.FindByPredicate([&](const auto& V){return V.CharacterId==Next.CharacterId;}))*P=Next;else Candidate->Profiles.Add(Next);
     if(!WriteDatabase(Candidate))return false;
-    PS->Profile=MoveTemp(Next);PS->ForceNetUpdate();
+    PS->Profile=MoveTemp(Next);PS->ForceNetUpdate();PS->OnProfilePublished.Broadcast();
     if(PS->Profile.Claims.Contains(FName("Q_Main_03")))
      for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Reactive->bOwnerOnlyStimuli&&It->GetOwner()==PS->GetPawn())It->Pacify();
     return true;
@@ -451,7 +451,7 @@ FString AAetherFrontierMode::ClaimLoot(AAetherFrontierCharacter* C,FName Id)
  auto* Next=DuplicateObject<UAetherFrontierSave>(Database,this);auto* Loot=Next->Loot.FindByPredicate([&](const auto& L){return Id==FName(*FString("Loot_"+L.ClaimId.ToString(EGuidFormats::Digits)));});
  if(!Loot||!Loot->ClaimedBy.IsEmpty())return TEXT("Already claimed.");auto Profile=PS->Profile;TMap<FName,int32> Items=Loot->Items;if(Items.IsEmpty())Items.Add(Loot->Definition,Loot->Count);if(Profile.Revision==MAX_int32||!AetherItems::Grant(Profile,Items,0,FAetherRules::Get()))return TEXT("Inventory full; loot remains.");
  ++Profile.Revision;Loot->ClaimedBy=Profile.CharacterId;if(auto* Stored=Next->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==Profile.CharacterId;}))*Stored=Profile;else Next->Profiles.Add(Profile);
- if(!WriteDatabase(Next))return TEXT("Storage unavailable; loot unchanged.");PS->Profile=MoveTemp(Profile);PS->ForceNetUpdate();Props.Remove(Actor);Actor->Destroy();return TEXT("Shared loot claimed and saved once.");
+ if(!WriteDatabase(Next))return TEXT("Storage unavailable; loot unchanged.");PS->Profile=MoveTemp(Profile);PS->ForceNetUpdate();PS->OnProfilePublished.Broadcast();Props.Remove(Actor);Actor->Destroy();return TEXT("Shared loot claimed and saved once.");
 }
 
 void AAetherFrontierMode::CollectPublicFacts(FAetherWorldFacts& Facts) const
@@ -481,5 +481,5 @@ void AAetherFrontierMode::RefreshWorldProgress()
         if(auto* Stored=Candidate->Profiles.FindByPredicate([&](const auto& P){return P.CharacterId==Next.CharacterId;}))*Stored=Next;else Candidate->Profiles.Add(Next);
     }
     if(!CaptureWorldCandidate(Candidate)||!WriteDatabase(Candidate))return;
-    for(auto& Pair:Publish){Pair.Key->Profile=MoveTemp(Pair.Value);Pair.Key->ForceNetUpdate();}
+    for(auto& Pair:Publish){Pair.Key->Profile=MoveTemp(Pair.Value);Pair.Key->ForceNetUpdate();Pair.Key->OnProfilePublished.Broadcast();}
 }

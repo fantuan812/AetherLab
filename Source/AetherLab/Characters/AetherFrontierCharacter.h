@@ -15,9 +15,11 @@ class UPhysicsHandleComponent;
 class UInputMappingContext;
 class UInputAction;
 class UAetherFrontierPanel;
+class UAetherMenuSubsystem;
+DECLARE_MULTICAST_DELEGATE(FOnAetherPresentationChanged);
 struct FAetherWorldPlacement;
 
-// 角色身体与组件的生命周期入口；菜单状态将在 UI 工作包迁入 LocalPlayer。
+// 角色身体与组件的生命周期入口；菜单由 LocalPlayer 子系统持有，此处保留旧玩法查询镜像。
 UCLASS()
 class AETHERLAB_API AAetherFrontierCharacter : public AAetherCharacter
 {
@@ -58,6 +60,12 @@ public:
     bool bDebugOverlay = false;
     void ToggleDebug(){bDebugOverlay=!bDebugOverlay;}
     void ToggleWeather(){ServerAction("Weather");}
+    UAetherMenuSubsystem* MenuSubsystem() const;
+    void SelectPanel(int32 NewPanel);
+    void OpenPanel(int32 NewPanel);
+    void ClosePanel();
+    void MenuBack();
+    FOnAetherPresentationChanged OnPresentationChanged;
     bool bPanel = false;
     int32 Panel = 0;
     float PressedAt = 0;
@@ -148,14 +156,13 @@ private:
     void Throw(){if(!bPanel)ServerAction("Throw");}
     void ClaimRewards(){if(bPanel&&Panel==2)ServerAction("Claim");}
     void Carry(){if(!bPanel)ServerAction("Carry");} void Push(){if(!bPanel)ServerAction("Push");}
-    void EquipNext(){SubmitInventory("CycleMain");} void Shield(){SubmitInventory("CycleOff");}
+    void EquipNext(){if(!bPanel)SubmitInventory("CycleMain");} void Shield(){if(!bPanel)SubmitInventory("CycleOff");}
     void SaveV4(){ServerAction("Save");} void Recruit(){ServerAction("Recruit");}
     void SplitStack(){if(bPanel&&Panel==1)SubmitInventory("Split");}
     void MergeStacks(){if(bPanel&&Panel==1)SubmitInventory("Merge");}
     void ToggleInventory(){SelectPanel(1);} void ToggleQuests(){SelectPanel(2);}
     void ToggleSkills(){SelectPanel(3);} void ToggleMap(){SelectPanel(4);}
-    void ToggleParty(){SelectPanel(5);} void ToggleMenu(){SelectPanel(6);}
-    void SelectPanel(int32 NewPanel){const bool Open=!bPanel||Panel!=NewPanel;if(!Open||NewPanel!=1)CloseTrade();Panel=NewPanel;bPanel=Open;if(Open)ReleaseHeldInput();}
+    void ToggleParty(){SelectPanel(5);} void ToggleMenu(){MenuBack();}
     void CastSelectedV4(){if(!bPanel)TrySpell(SelectedSpell);}
     void Spell0(){SelectedSpell=0;} void Spell1(){SelectedSpell=1;} void Spell2(){SelectedSpell=2;} void Spell3(){SelectedSpell=3;}
     void Forward(float V); void Right(float V); void Yaw(float V); void Pitch(float V);
