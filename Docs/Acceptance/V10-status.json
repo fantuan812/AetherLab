@@ -15,7 +15,7 @@
     {
       "id": "V10-03",
       "status": "in_progress",
-      "acceptance": "typed_requests_v1_v2_with_explicit_interaction_revision_and_backward_readable_result_v2; 22_opcode_routes_with_partial_interaction_service_coverage_and_atomic_consumable_outbox; receipt_first_async_coordinator_with_consistent_multi_aggregate_reads_session_and_Pawn_epochs; 61_rule_tests_pass_and_exact_identity_stack_metadata_checks; connection_authentication_rate_limit_RPC_owner_snapshot_and_gameplay_cutover_pending"
+      "acceptance": "typed_requests_v1_v2_with_explicit_interaction_revision_and_backward_readable_result_v2; 22_opcode_routes_with_partial_interaction_service_coverage_and_atomic_consumable_outbox; receipt_first_async_coordinator_with_consistent_multi_aggregate_reads_session_and_Pawn_epochs; 61_rule_tests_pass_and_exact_identity_stack_metadata_checks; uncompiled_untested_owner_Controller_RPC_bounded_preallocation_rate_limits_Pawn_channels_ack_backpressure_LocalPlayer_frozen_retry_and_receipt_snapshot_barrier; production_boot_identity_binding_authoritative_context_publication_and_gameplay_cutover_pending"
     },
     {
       "id": "V10-04",
@@ -45,7 +45,7 @@
     {
       "id": "V10-09",
       "status": "in_progress",
-      "acceptance": "uncompiled_untested_native_five_target_inspection_with_exact_owner_session_revision_identity_shared_equip_stats_and_skill_learning_query; independent_hover_detail_confirmation_session_fixed_command_bytes_and_receipt_snapshot_barrier; reusable_scroll_detail_and_quantity_confirmation_widgets; production_snapshot_RPC_CommonUI_hosts_visual_assets_and_end_to_end_acceptance_pending"
+      "acceptance": "uncompiled_untested_native_five_target_inspection_with_exact_owner_session_revision_identity_shared_equip_stats_and_skill_learning_query; independent_hover_detail_confirmation_session_fixed_command_bytes_and_receipt_snapshot_barrier; reusable_scroll_detail_and_quantity_confirmation_widgets; uncompiled_untested_revision_bound_CommandId_fix_and_skill_page_native_channel_host; production_boot_CommonUI_other_hosts_visual_assets_and_end_to_end_acceptance_pending"
     },
     {
       "id": "V10-10",
@@ -60,7 +60,7 @@
     {
       "id": "V10-12",
       "status": "in_progress",
-      "acceptance": "uncompiled_untested_twelve_node_graph_layout_separated_from_prerequisite_rules_state_projection_real_Slate_nodes_arrows_placeholder_icons_mouse_pan_zoom_Dpad_navigation_detail_confirmation_hotbar_and_point_source_pages; existing_K_page_readonly_legacy_story_projection_no_invented_points; native_snapshot_command_receipt_contracts_and_Blueprint_authoring_script_written; production_growth_RPC_ASC_CommonUI_drag_bind_reset_service_assets_and_acceptance_pending"
+      "acceptance": "uncompiled_untested_twelve_node_graph_layout_separated_from_prerequisite_rules_state_projection_real_Slate_nodes_arrows_placeholder_icons_mouse_pan_zoom_Dpad_navigation_detail_confirmation_hotbar_and_point_source_pages; existing_K_page_readonly_legacy_story_projection_no_invented_points; native_snapshot_command_receipt_contracts_and_Blueprint_authoring_script_written; uncompiled_untested_LocalPlayer_snapshot_command_receipt_retry_wiring; production_backend_install_ASC_CommonUI_drag_bind_reset_service_assets_and_acceptance_pending"
     },
     {
       "id": "V10-13",

@@ -27,6 +27,8 @@ public:
     // 关页不丢弃待确认命令；拥有者会话销毁前由统一命令服务接管重试/回执。
     void Close();
     bool Acknowledge(const FAetherCommandResult& Result);
+    // 仅供命令服务明确拒绝入队（未发送任何字节）时解除本地挂起，不能当作已发送请求的撤销。
+    bool RejectBeforeSend(FGuid CommandId);
     const TOptional<FAetherInspectionDispatch>& GetPendingDispatch() const{return Pending;}
     // Esc 的顺序：数量/危险确认 -> 持续详情 -> 悬停；返回 false 后由菜单关闭页面。
     bool Back();

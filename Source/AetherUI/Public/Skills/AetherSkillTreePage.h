@@ -5,6 +5,7 @@
 #include "AetherSkillTreePage.generated.h"
 
 class AAetherFrontierCharacter;
+class UAetherCommandClient;
 class UAetherMenuSubsystem;
 class UAetherSkillGraphWidget;
 class UAetherInspectionCard;
@@ -15,7 +16,7 @@ class UBorder;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAetherSkillCommandReady,const FAetherInspectionDispatch&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAetherSkillQuestRequested,const FString&);
 
-// 图形技能页只消费已发布的快照。生产命令服务接入时订阅 OnCommandReady，并交回真实回执与提交快照。
+// 图形技能页消费 LocalPlayer 的已发布快照；原生后端未安装时保留旧档案只读投影。
 UCLASS()
 class AETHERUI_API UAetherSkillTreePage : public UUserWidget
 {
@@ -41,6 +42,9 @@ private:
     void ShowConfirmation();
     void HideConfirmation();
     void HandleMenu();
+    void HandleNativeProfile();
+    void DispatchNativeCommand(const FAetherInspectionDispatch& Dispatch);
+    UFUNCTION() void RetryNativeCommand();
     void ApplyCommandAvailability(FAetherInspectionModel& Model) const;
     void SelectHotbar(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action,bool Comparison);
     UFUNCTION() void PreviousSources();
@@ -53,6 +57,7 @@ private:
     TOptional<FAetherSkillNodeIdentity> Selected,PendingNode;
     TWeakObjectPtr<AAetherFrontierCharacter> LegacySource,NativePawn;
     TWeakObjectPtr<UAetherMenuSubsystem> Menu;
+    TWeakObjectPtr<UAetherCommandClient> CommandClient;
     bool bNativeSnapshot=false;
     int32 LegacyRevision=-1,SourcePage=0;
     FGuid ModalToken;

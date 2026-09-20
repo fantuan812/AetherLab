@@ -95,6 +95,11 @@ void FAetherInspectionSession::MarkPending()
     Details->Message=TEXT("请求待确认，等待命令服务回执及提交快照。");
     for(auto& A:Details->Actions){A.bEnabled=false;A.DisabledReason=Details->Message;}
 }
+bool FAetherInspectionSession::RejectBeforeSend(FGuid Id)
+{
+    if(!Pending.IsSet()||!Pending->Command.IsSet()||Pending->Command->CommandId!=Id||Receipt.IsSet())return false;
+    Pending.Reset();return true;
+}
 bool FAetherInspectionSession::Acknowledge(const FAetherCommandResult& Result)
 {
     FString Reason;

@@ -2,6 +2,9 @@
 #include "Presentation/AetherPresentation.h"
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/GameInstance.h"
+#include "Networking/AetherCommandRuntime.h"
+#include "Networking/AetherCommandClient.h"
 #include "GameFramework/HUD.h"
 #include "Characters/AetherFrontierCharacter.h"
 
@@ -34,11 +37,17 @@ void AAetherPlayerController::BindMenuPawn()
     if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherMenuSubsystem>()->AttachPawn(Cast<AAetherFrontierCharacter>(GetPawn()));
 }
 void AAetherPlayerController::BeginPlay(){Super::BeginPlay();BindMenuPawn();}
-void AAetherPlayerController::SetPawn(APawn* InPawn){Super::SetPawn(InPawn);BindMenuPawn();}
+void AAetherPlayerController::SetPawn(APawn* InPawn)
+{
+    Super::SetPawn(InPawn);BindMenuPawn();
+    if(HasAuthority())if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->NotifyPawnChanged(this);
+}
 void AAetherPlayerController::OnRep_Pawn(){Super::OnRep_Pawn();BindMenuPawn();}
 void AAetherPlayerController::EndPlay(const EEndPlayReason::Type Reason)
 {
     if(auto* LP=GetLocalPlayer())
         if(auto* Menu=LP->GetSubsystem<UAetherMenuSubsystem>();Menu->GetBoundPawn()==GetPawn())Menu->AttachPawn(nullptr);
+    if(HasAuthority())if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->UnbindPlayer(this);
+    if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->DetachController(this);
     Super::EndPlay(Reason);
 }

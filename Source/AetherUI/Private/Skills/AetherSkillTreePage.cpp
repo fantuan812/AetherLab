@@ -14,6 +14,8 @@
 #include "Components/Border.h"
 #include "Components/TextBlock.h"
 #include "Engine/LocalPlayer.h"
+#include "Networking/AetherCommandClient.h"
+#include "Definitions/AetherV10Definitions.h"
 #include "InputCoreTypes.h"
 
 TSharedRef<SWidget> UAetherSkillTreePage::RebuildWidget()
@@ -28,6 +30,9 @@ TSharedRef<SWidget> UAetherSkillTreePage::RebuildWidget()
         auto* Reset=WidgetTree->ConstructWidget<UButton>();auto* ResetText=WidgetTree->ConstructWidget<UTextBlock>();
         ResetText->SetText(FText::FromString(TEXT("重置视图")));Reset->SetContent(ResetText);Header->AddChildToHorizontalBox(Reset);
         Reset->OnClicked.AddDynamic(this,&UAetherSkillTreePage::ResetGraphView);
+        auto* Retry=WidgetTree->ConstructWidget<UButton>();auto* RetryText=WidgetTree->ConstructWidget<UTextBlock>();
+        RetryText->SetText(FText::FromString(TEXT("同步 / 重试原请求")));Retry->SetContent(RetryText);Header->AddChildToHorizontalBox(Retry);
+        Retry->OnClicked.AddDynamic(this,&UAetherSkillTreePage::RetryNativeCommand);
         Notice=WidgetTree->ConstructWidget<UTextBlock>();Notice->SetAutoWrapText(true);Root->AddChildToVerticalBox(Notice);
         auto* Body=WidgetTree->ConstructWidget<UHorizontalBox>();Root->AddChildToVerticalBox(Body)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
         Graph=WidgetTree->ConstructWidget<UAetherSkillGraphWidget>();Graph->OnNodeSelected.AddUObject(this,&UAetherSkillTreePage::Select);
@@ -57,29 +62,76 @@ void UAetherSkillTreePage::NativeConstruct()
     Super::NativeConstruct();
     if(auto* LP=GetOwningLocalPlayer())Menu=LP->GetSubsystem<UAetherMenuSubsystem>();
     if(Menu.IsValid()){Menu->OnChanged.RemoveAll(this);Menu->OnChanged.AddUObject(this,&UAetherSkillTreePage::HandleMenu);}
+    if(auto* LP=GetOwningLocalPlayer())CommandClient=LP->GetSubsystem<UAetherCommandClient>();
+    if(CommandClient.IsValid())
+    {
+        CommandClient->OnChanged.RemoveAll(this);CommandClient->OnResult.RemoveAll(this);
+        CommandClient->OnChanged.AddUObject(this,&UAetherSkillTreePage::HandleNativeProfile);
+        CommandClient->OnResult.AddUObject(this,&UAetherSkillTreePage::ReceiveReceipt);
+        OnCommandReady.RemoveAll(this);OnCommandReady.AddUObject(this,&UAetherSkillTreePage::DispatchNativeCommand);
+        HandleNativeProfile();
+    }
 }
 void UAetherSkillTreePage::NativeDestruct()
 {
     if(Menu.IsValid())Menu->OnChanged.RemoveAll(this);
-    ClosePresentation();Menu.Reset();OnCommandReady.Clear();OnTrackQuest.Clear();Super::NativeDestruct();
+    if(CommandClient.IsValid()){CommandClient->OnChanged.RemoveAll(this);CommandClient->OnResult.RemoveAll(this);}
+    CommandClient.Reset();ClosePresentation();Menu.Reset();OnCommandReady.Clear();OnTrackQuest.Clear();Super::NativeDestruct();
+}
+void UAetherSkillTreePage::HandleNativeProfile()
+{
+    if(!CommandClient.IsValid())return;
+    const auto& P=CommandClient->GetProfile();
+    if(!P.IsSet())
+    {
+        if(bNativeSnapshot||CommandClient->GetChannel().IsValid())
+        {
+            HideConfirmation();Session=FAetherInspectionSession();Snapshot={};Selected.Reset();PendingNode.Reset();
+            NativePawn.Reset();bNativeSnapshot=false;LegacyRevision=-1;Refresh();
+        }
+        return;
+    }
+    FAetherInspectionSnapshot S;
+    S.Context.OwnerIdentity=P->CharacterId;S.Context.SessionId=CommandClient->GetChannel();
+    S.Context.SnapshotRevision=P->Revision;S.ProfileRevision=P->Revision;S.Inventory=P->Inventory;S.Skills=P->Skills;
+    S.SkillContext.CharacterLevel=FMath::Clamp(1+P->Experience/200,1,100);
+    for(const auto& Claim:P->Claims)S.SkillContext.CompletedQuests.Add(Claim);
+    // 这里只推导公开的永久成长条件；不伪造 NPC 距离、重置许可或临时 ASC 来源。
+    PublishSnapshot(S);
+}
+void UAetherSkillTreePage::DispatchNativeCommand(const FAetherInspectionDispatch& D)
+{
+    if(!D.Command.IsSet())return;
+    FString Reason;
+    if(!CommandClient.IsValid()||!CommandClient->Submit(Snapshot.Context.SessionId,Snapshot.Context.OwnerIdentity,D.CommandBytes,Reason))
+    {
+        // Submit 返回 false 保证未发送；本地失败不能伪装为服务器事务回执。
+        Session.RejectBeforeSend(D.Command->CommandId);Session.Refresh(Snapshot,FAetherV10Definitions::Get().Items,FAetherSkillDefinitionsV10::Get());
+        Refresh();if(Notice)Notice->SetText(FText::FromString(Reason.IsEmpty()?TEXT("命令通道不可用。"):Reason));
+    }
+}
+void UAetherSkillTreePage::RetryNativeCommand()
+{
+    if(!CommandClient.IsValid())return;
+    if(!CommandClient->HasPending()||!CommandClient->RetryPending())CommandClient->RequestSnapshot();
 }
 void UAetherSkillTreePage::PublishSnapshot(const FAetherInspectionSnapshot& S)
 {
     const bool NewOwner=!Snapshot.Context.OwnerIdentity.Equals(S.Context.OwnerIdentity,ESearchCase::CaseSensitive)||Snapshot.Context.SessionId!=S.Context.SessionId;
     if(NewOwner){HideConfirmation();Session=FAetherInspectionSession();Selected.Reset();SourcePage=0;}
     bNativeSnapshot=true;NativePawn=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());Snapshot=S;LegacySource.Reset();LegacyRevision=-1;
-    Session.Refresh(Snapshot,FAetherV10ItemDefinitions(),FAetherSkillDefinitionsV10::Get());
+    Session.Refresh(Snapshot,FAetherV10Definitions::Get().Items,FAetherSkillDefinitionsV10::Get());
     if(!Session.GetDraft().IsSet())HideConfirmation();
     Refresh();
 }
 void UAetherSkillTreePage::ReceiveReceipt(const FAetherCommandResult& Result)
 {
     if(Session.Acknowledge(Result))
-    {Session.Refresh(Snapshot,FAetherV10ItemDefinitions(),FAetherSkillDefinitionsV10::Get());Refresh();}
+    {Session.Refresh(Snapshot,FAetherV10Definitions::Get().Items,FAetherSkillDefinitionsV10::Get());Refresh();}
 }
 void UAetherSkillTreePage::SetLegacySource(AAetherFrontierCharacter* C)
 {
-    if(bNativeSnapshot)return;
+    if(bNativeSnapshot||(CommandClient.IsValid()&&CommandClient->GetChannel().IsValid()))return;
     if(!C||!C->ProfileState()){ClosePresentation();LegacySource.Reset();LegacyRevision=-1;Snapshot={};Refresh();return;}
     const auto& P=C->ProfileState()->Profile;
     const bool NewOwner=LegacySource.Get()!=C||!Snapshot.Context.OwnerIdentity.Equals(P.CharacterId,ESearchCase::CaseSensitive);
@@ -92,11 +144,17 @@ void UAetherSkillTreePage::SetLegacySource(AAetherFrontierCharacter* C)
     {Snapshot.Context={};Refresh();return;}
     Snapshot.SkillContext.CharacterLevel=FMath::Clamp(1+P.Experience/200,1,100);
     Snapshot.SkillContext.CompletedQuests.Reset();for(FName Claim:P.Claims)Snapshot.SkillContext.CompletedQuests.Add(Claim.ToString());
-    Session.Refresh(Snapshot,FAetherV10ItemDefinitions(),FAetherSkillDefinitionsV10::Get());Refresh();
+    Session.Refresh(Snapshot,FAetherV10Definitions::Get().Items,FAetherSkillDefinitionsV10::Get());Refresh();
 }
 void UAetherSkillTreePage::ApplyCommandAvailability(FAetherInspectionModel& M) const
 {
-    if(bNativeSnapshot&&OnCommandReady.IsBound())return;
+    if(bNativeSnapshot&&OnCommandReady.IsBound())
+    {
+        if(!CommandClient.IsValid()||!CommandClient->HasPending())return;
+        for(auto& A:M.Actions)if(A.Kind!=EAetherInspectAction::FocusSkill&&A.Kind!=EAetherInspectAction::TrackQuest)
+        {A.bEnabled=false;A.DisabledReason=TEXT("原请求尚未确认，请等待或点击重试。");}
+        return;
+    }
     for(auto& A:M.Actions)if(A.Kind!=EAetherInspectAction::FocusSkill&&A.Kind!=EAetherInspectAction::TrackQuest)
     {A.bEnabled=false;A.DisabledReason=TEXT("技能成长暂不可用；基础能力仍可向导师学习。");}
 }
@@ -108,7 +166,7 @@ void UAetherSkillTreePage::Refresh()
     Graph->SetModel(TreeModel);
     Points->SetText(FText::FromString(FString::Printf(TEXT("技能点：%d"),TreeModel.AvailablePoints)));
     Notice->SetText(FText::FromString(!TreeModel.bValid?TreeModel.Message:
-        bNativeSnapshot?TEXT("点击查看 · 右键详情 · 空白拖动 / 滚轮缩放 · 方向键或手柄方向键选择"):
+        bNativeSnapshot?(CommandClient.IsValid()&&CommandClient->HasPending()?TEXT("有待确认请求；重连后可点击重试，仅查询或重发原命令。"):TEXT("点击查看 · 右键详情 · 空白拖动 / 滚轮缩放 · 方向键或手柄方向键选择")):
         TEXT("当前展示已学基础能力和成长路线。技能成长暂不可用；基础能力仍可向导师学习。")));
     if(Session.GetDetails().IsSet()){auto M=Session.GetDetails().GetValue();ApplyCommandAvailability(M);Details->SetModel(M);}
     else if(TreeModel.bValid&&!TreeModel.Nodes.IsEmpty())Select(Selected.IsSet()?Selected.GetValue():TreeModel.Nodes[0].Identity,false);
@@ -130,7 +188,7 @@ void UAetherSkillTreePage::Select(const FAetherSkillNodeIdentity& Node,bool Focu
 {
     if(!TreeModel.Nodes.ContainsByPredicate([&](const auto& N){return N.Identity==Node;}))return;
     HideConfirmation();Selected=Node;FAetherInspectTarget T;T.Kind=EAetherInspectTarget::SkillNode;T.DefinitionId=Node.SkillId;T.SkillRank=Node.Rank;
-    Session.OpenDetails(T,Snapshot,FAetherV10ItemDefinitions(),FAetherSkillDefinitionsV10::Get());
+    Session.OpenDetails(T,Snapshot,FAetherV10Definitions::Get().Items,FAetherSkillDefinitionsV10::Get());
     if(Details){auto M=Session.GetDetails().GetValue();ApplyCommandAvailability(M);Details->SetModel(M);if(FocusDetail)Details->SetKeyboardFocus();}
     if(Graph)Graph->SelectNode(Node);
 }
@@ -140,7 +198,7 @@ void UAetherSkillTreePage::RequestAction(const FAetherInspectRequest& R,const FA
         !R.Target.DefinitionId.Equals(Session.GetDetails()->Request.Target.DefinitionId,ESearchCase::CaseSensitive)||
         R.Target.SkillRank!=Session.GetDetails()->Request.Target.SkillRank)return;
     const bool Navigation=A.Kind==EAetherInspectAction::FocusSkill||A.Kind==EAetherInspectAction::TrackQuest;
-    if(!Navigation&&(!bNativeSnapshot||!OnCommandReady.IsBound()))return;
+    if(!Navigation&&(!bNativeSnapshot||!OnCommandReady.IsBound()||(CommandClient.IsValid()&&CommandClient->HasPending())))return;
     const FGuid Token=Session.BeginAction(A.Kind,A.Argument);if(!Token.IsValid())return;
     if(A.bNeedsConfirmation||A.MaxQuantity>1)ShowConfirmation();else Confirm(Token,1);
 }
@@ -152,7 +210,7 @@ void UAetherSkillTreePage::Confirm(FGuid Token,int32 Count)
     if(Kind!=EAetherInspectAction::FocusSkill&&Kind!=EAetherInspectAction::TrackQuest&&(!bNativeSnapshot||!OnCommandReady.IsBound()))
     {Session.Back();HideConfirmation();Refresh();return;}
     FAetherInspectionDispatch Dispatch;FString Reason;
-    const bool Done=Session.Confirm(Token,Count,Snapshot,FAetherV10ItemDefinitions(),FAetherSkillDefinitionsV10::Get(),Dispatch,Reason);
+    const bool Done=Session.Confirm(Token,Count,Snapshot,FAetherV10Definitions::Get().Items,FAetherSkillDefinitionsV10::Get(),Dispatch,Reason);
     HideConfirmation();
     if(Done)
     {

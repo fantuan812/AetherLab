@@ -1,0 +1,39 @@
+#pragma once
+#include "Subsystems/GameInstanceSubsystem.h"
+#include "Tickable.h"
+#include "Commands/AetherProfileCoordinator.h"
+#include "Networking/AetherV10Packets.h"
+#include "AetherCommandRuntime.generated.h"
+
+class AAetherPlayerController;
+struct FAetherCommandRuntimeImpl;
+using FAetherResolveConnectedContext=TFunction<bool(AAetherPlayerController&,const FAetherPlayerCommand&,const FAetherProfileStateV10&,FAetherProfileCommandContext&)>;
+
+// 返回 true 之前，启动适配器必须已幂等发布当前 Pawn/ASC 以及涉及的世界、容器事实。
+using FAetherPublishConnectedState=TFunction<bool(AAetherPlayerController&,const FAetherProfileStateV10&,const FAetherWorldStateV10*,const FAetherContainerStateV10*)>;
+
+// 只负责连接、流量和游戏线程发布；规则留在原生协调者，后台 SQLite 线程不捕获 UObject。
+UCLASS()
+class AETHERLAB_API UAetherCommandRuntime : public UGameInstanceSubsystem,public FTickableGameObject
+{
+    GENERATED_BODY()
+public:
+    UAetherCommandRuntime();
+    virtual ~UAetherCommandRuntime() override;
+    // 由完成迁移/恢复的服务器启动流程注入。不会自行打开、创建、导入或覆盖玩家存档。
+    bool InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason);
+    bool IsInstalled() const;
+    bool BindVerifiedPlayer(AAetherPlayerController* Controller,const FString& CanonicalCharacterId);
+    void UnbindPlayer(AAetherPlayerController* Controller);
+    void NotifyPawnChanged(AAetherPlayerController* Controller);
+    void Receive(AAetherPlayerController* Controller,const FAetherV10CommandPacket& Packet);
+    void RequestSnapshot(AAetherPlayerController* Controller,FGuid Channel);
+    void AcknowledgeSnapshot(AAetherPlayerController* Controller,FGuid Channel,FGuid Transfer,uint32 NextOffset);
+    virtual void Tick(float DeltaSeconds) override;
+    virtual bool IsTickable() const override;
+    virtual TStatId GetStatId() const override;
+    virtual UWorld* GetTickableGameObjectWorld() const override;
+    virtual void Deinitialize() override;
+private:
+    TUniquePtr<FAetherCommandRuntimeImpl> Impl;
+};
