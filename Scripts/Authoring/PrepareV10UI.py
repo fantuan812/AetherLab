@@ -64,7 +64,7 @@ def author_layout(name):
     dependencies(spec)
     asset = load_optional("/Game/UI/Widgets/" + name)
     result = ue.AetherWidgetAuthoring.apply_layout(asset, json.dumps(spec, ensure_ascii=False))
-    success, reason = result if isinstance(result, tuple) else (bool(result), "")
+    success, reason = result if isinstance(result, tuple) else (result is not None and result is not False, result if isinstance(result, str) else "")
     if not success:
         raise RuntimeError("布局制作失败：" + name + " " + reason)
     visiting.remove(name)

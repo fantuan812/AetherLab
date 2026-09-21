@@ -59,7 +59,7 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   if(!C||!C->ProfileState()||!C->Ready()||!C->HasGameplayBindings()||!Client->GetProfile().IsSet())return;
   GameKey(EKeys::I);break;
  case 1:
-  if(!Check(C&&C->bPanel&&C->Panel==1&&Panel->IsVisible()&&PC->bShowMouseCursor&&!PC->IsPaused(),TEXT("Enhanced I opens visible inventory without pausing world")))return;
+  if(!Check(C&&C->bPanel&&C->Panel==1&&Panel->IsActivated()&&PC->bShowMouseCursor&&!PC->IsPaused(),TEXT("Enhanced I opens visible inventory without pausing world")))return;
   IdleRefreshes=Panel->Model->RefreshCount;Capture(TEXT("Inventory.png"));break;
  case 2:
   if(!Check(Panel->Model->RefreshCount==IdleRefreshes,TEXT("Idle inventory does not rebuild snapshot every frame")))return;
@@ -74,22 +74,22 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   Capture(TEXT("Journal.png"));
   break;
  case 3:
-  if(!Check(C&&C->Panel==2&&Panel->IsVisible(),TEXT("Focused J switches page")))return;
+  if(!Check(C&&C->Panel==2&&Panel->IsActivated(),TEXT("Focused J switches page")))return;
   if(!Check(FocusedKey(EKeys::Escape),TEXT("Focused Escape is handled")))return;break;
  case 4:
-  if(!Check(C&&!C->bPanel&&!Panel->IsVisible()&&!PC->bShowMouseCursor,TEXT("Escape closes current page and restores game input")))return;
+  if(!Check(C&&!C->bPanel&&!Panel->IsActivated()&&!PC->bShowMouseCursor,TEXT("Escape closes current page and restores game input")))return;
   GameKey(EKeys::I);break;
  case 5:
-  if(!Check(C&&C->Panel==1&&Panel->IsVisible(),TEXT("Collapsed widget reopens from menu event")))return;
+  if(!Check(C&&C->Panel==1&&Panel->IsActivated(),TEXT("Collapsed widget reopens from menu event")))return;
   if(!Check(FocusedKey(EKeys::I),TEXT("Same focused shortcut closes page")))return;break;
  case 6:
-  if(!Check(C&&!C->bPanel&&!Panel->IsVisible(),TEXT("Repeated same shortcut closes")))return;
+  if(!Check(C&&!C->bPanel&&!Panel->IsActivated(),TEXT("Repeated same shortcut closes")))return;
   GameKey(EKeys::Escape);break;
  case 7:
-  if(!Check(C&&C->Panel==6&&Panel->IsVisible(),TEXT("Escape from gameplay opens system page")))return;
+  if(!Check(C&&C->Panel==6&&Panel->IsActivated(),TEXT("Escape from gameplay opens system page")))return;
   if(!Check(FocusedKey(EKeys::M),TEXT("Focused map shortcut accepted")))return;break;
  case 8:
-  if(!Check(C&&C->bPanel&&C->Panel==4&&PC->bShowMouseCursor&&Panel->IsVisible(),TEXT("Formal map shares menu input ownership")))return;
+  if(!Check(C&&C->bPanel&&C->Panel==4&&PC->bShowMouseCursor&&Panel->IsActivated(),TEXT("Formal map shares menu input ownership")))return;
   C->StartJumpInput();C->SetSprintInput(true);
   if(!Check(!C->bPressedJump&&!C->bSprinting,TEXT("Map blocks local jump and sprint")))return;
   Capture(TEXT("Map.png"));GameKey(EKeys::Escape);break;
@@ -98,7 +98,7 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   C->OpenPanel(1);OldPawn=C;OldProfile=C->ProfileState();SpawnLocation=C->GetActorLocation();
   PC->UnPossess();break;
  case 10:
-  if(!Check(!C&&!Panel->IsVisible()&&!PC->bShowMouseCursor&&OldPawn.IsValid()&&
+  if(!Check(!C&&!Panel->IsActivated()&&!PC->bShowMouseCursor&&OldPawn.IsValid()&&
       !OldPawn->OnPresentationChanged.IsBoundToObject(Panel)&&OldProfile.IsValid()&&
       !OldProfile->OnProfilePublished.IsBoundToObject(Panel),TEXT("Unpossess collapses UI and unsubscribes old Pawn and PlayerState")))return;
   {
@@ -113,11 +113,11 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   GameKey(EKeys::I);break;
  case 12:
   UE_LOG(LogTemp,Display,TEXT("V10_MENU_REBIND pawn=%s open=%d page=%d visible=%d pawn_sub=%d profile_sub=%d old_sub=%d"),
-      *GetNameSafe(C),C?C->bPanel:0,C?C->Panel:0,Panel->IsVisible(),
+      *GetNameSafe(C),C?C->bPanel:0,C?C->Panel:0,Panel->IsActivated(),
       C?C->OnPresentationChanged.IsBoundToObject(Panel):0,
       C&&C->ProfileState()?C->ProfileState()->OnProfilePublished.IsBoundToObject(Panel):0,
       OldPawn.IsValid()?OldPawn->OnPresentationChanged.IsBoundToObject(Panel):0);
-  if(!Check(C&&C!=OldPawn.Get()&&C->bPanel&&Panel->IsVisible()&&
+  if(!Check(C&&C!=OldPawn.Get()&&C->bPanel&&Panel->IsActivated()&&
       Menu->GetBoundPawn()==C&&C->ProfileState()->OnProfilePublished.IsBoundToObject(Panel)&&
       !OldPawn->OnPresentationChanged.IsBoundToObject(Panel),TEXT("Replacement Pawn binds fresh UI context and can reopen inventory")))return;
   Capture(TEXT("NewPawn.png"));break;

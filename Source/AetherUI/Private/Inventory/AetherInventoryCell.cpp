@@ -25,6 +25,8 @@ TSharedRef<SWidget> UAetherInventoryCell::RebuildWidget()
         Icon=WidgetTree->ConstructWidget<UImage>();Icon->SetDesiredSizeOverride(FVector2D(32,32));Rows->AddChildToVerticalBox(Icon);
         Label=WidgetTree->ConstructWidget<UTextBlock>();Label->SetAutoWrapText(true);Rows->AddChildToVerticalBox(Label);
     }
+    // 空格首次绘制也隐藏无资源图片，避免 UImage 默认白色刷块。
+    if(Icon&&ShownIcon.IsEmpty())Icon->SetVisibility(ESlateVisibility::Collapsed);
     return Super::RebuildWidget();
 }
 void UAetherInventoryCell::Present(const FAetherInspectRequest& In,int32 SlotValue,const FString& Text,const FString& IconId,bool Filtered,bool Selected)

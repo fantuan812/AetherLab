@@ -102,7 +102,7 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
         if(Into)
         {
             const auto* Item=P.Inventory.Find(C.ItemInstanceId);if(!Item)return Fail(R::Missing);
-            if(Item->bLocked)return Fail(R::NotAllowed);
+            // 私人保管不等于出售或丢弃：锁定与绑定状态原样转移；共享容器仍走 CanRemove。
             if(Container.Kind==EAetherContainerKind::PersonalStorage)
             {
                 if(!Item->BoundToCharacter.IsEmpty()&&!Item->BoundToCharacter.Equals(Actor,ESearchCase::CaseSensitive))return Fail(R::NotAllowed);

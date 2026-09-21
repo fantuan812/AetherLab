@@ -1,4 +1,5 @@
 #include "Misc/AutomationTest.h"
+#include "Persistence/AetherLegacyV9Reader.h"
 #include "Framework/AetherFrontier.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/FileHelper.h"
@@ -74,7 +75,9 @@ bool FAetherV10FreezeLegacy::RunTest(const FString&)
     }
     TArray<uint8> Bytes;
     if (!TestTrue(TEXT("Frozen fixture exists"), FFileHelper::LoadFileToArray(Bytes, *FixturePath))) return false;
-    auto* Save = Cast<UAetherFrontierSave>(UGameplayStatics::LoadGameFromMemory(Bytes));
+    // 正式迁移入口解析旧类路径；通用 SaveGame loader 不修复已迁移的类字符串。
+    auto Frozen = AetherLegacyV9::Read(Bytes);
+    auto* Save = Frozen.Snapshot.Get();
     if (!TestNotNull(TEXT("v9 save reader recognizes fixture"), Save)) return false;
     TestEqual(TEXT("All bitmasks plus full/twohand/pending"), Save->Profiles.Num(), 19);
     for (const auto& Profile : Save->Profiles) TestTrue(TEXT("Loaded profile invariant"), Profile.Validate());

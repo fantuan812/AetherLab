@@ -21,27 +21,34 @@ folder = "/Game/AetherCore/Input"
 library = ue.EditorAssetLibrary
 tools = ue.AssetToolsHelpers.get_asset_tools()
 library.make_directory(folder)
+def data_factory(cls):
+    factory = ue.DataAssetFactory()
+    factory.set_editor_property("data_asset_class", cls)
+    return factory
+
 actions = {}
 for name, key in rows.items():
     path = folder + "/IA_" + name
     action = load_optional(path) if library.does_asset_exist(path) else tools.create_asset(
-        "IA_" + name, folder, ue.InputAction, ue.InputActionFactory())
+        "IA_" + name, folder, ue.InputAction, data_factory(ue.InputAction))
     if not isinstance(action, ue.InputAction):
         raise RuntimeError("InputAction 类型冲突：" + path)
     action.set_editor_property("value_type", ue.InputActionValueType.AXIS1D
-                              if name in ("LookX", "LookY") or name.startswith("Pad") else ue.InputActionValueType.BOOLEAN)
+                              if name in ("LookX", "LookY", "PadMoveX", "PadMoveY", "PadLookX", "PadLookY") else ue.InputActionValueType.BOOLEAN)
     action.set_editor_property("consume_input", False)
     if not library.save_loaded_asset(action):
         raise RuntimeError("无法保存：" + path)
     actions[name] = action
 path = folder + "/IMC_Gameplay"
 context = load_optional(path) if library.does_asset_exist(path) else tools.create_asset(
-    "IMC_Gameplay", folder, ue.InputMappingContext, ue.InputMappingContextFactory())
+    "IMC_Gameplay", folder, ue.InputMappingContext, data_factory(ue.InputMappingContext))
 if not isinstance(context, ue.InputMappingContext):
     raise RuntimeError("MappingContext 类型冲突")
 context.unmap_all()
 for name, key in rows.items():
-    context.map_key(actions[name], ue.Key(key))
+    input_key = ue.Key()
+    input_key.set_editor_property("key_name", key)
+    context.map_key(actions[name], input_key)
 # 特定设备附加映射与 Chord 由角色安装到上下文副本；不修改已烘焙的默认资产。
 if not library.save_loaded_asset(context):
     raise RuntimeError("无法保存游戏输入上下文")

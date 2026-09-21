@@ -45,7 +45,7 @@ bool FAetherExactIdentityTest::RunTest(const FString&)
     FAetherProfileCommandContext Context;Context.bCanManageInventory=true;FAetherTransaction T;FAetherCommandResult Result;
     TestFalse(TEXT("Command cannot authorize another spelling of actor"),AetherProfileCommands::Prepare(Command,TEXT("alice"),Profile,Context,Items,Skills,Rules,T,Result));
     TestTrue(TEXT("Identity mismatch is unauthorized"),Result.Code==EAetherCommandCode::Unauthorized);
-    Command.Type=EAetherCommandType::TransferItem;Command.Enabled=false;Command.Quantity=1;Command.ExpectedWorldRevision=0;Command.TargetStableId=TEXT("chest.a");Command.ContainerId=TEXT("Storage.Alice");
+    Command.ProtocolVersion=AetherCommands::LatestProtocolVersion;Command.ExpectedContainerRevision=0;Command.Type=EAetherCommandType::TransferItem;Command.Enabled=false;Command.Quantity=1;Command.ExpectedWorldRevision=0;Command.TargetStableId=TEXT("chest.a");Command.ContainerId=TEXT("Storage.Alice");
     Context.Container.bAuthorized=Context.Container.bTargetReady=Context.Container.bContainerSession=Context.Container.bCanDeposit=true;
     Context.Container.TargetStableId=TEXT("Chest.A");Context.Container.ContainerId=TEXT("Storage.Alice");FString Key;
     TestTrue(TEXT("Target case alias cannot reuse another interaction session"),AetherContainerCommands::AuthorizeRead(Command,Context,Key)==EAetherCommandCode::OutOfReach);

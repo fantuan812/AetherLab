@@ -160,7 +160,11 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
                 if(Snapshot.IsSet())J.Result.FinalProfileRevision=Snapshot->Revision;
             }
             FAetherProfileCompletion C;C.Session=J.Session;C.CommandType=J.Command.Type;C.CommitCertainty=J.Certainty;C.bReservedResources=J.bReservedResources;C.Result=J.Result;C.bMayPublish=Impl->Current(J.Session);
-            if(!C.bMayPublish)C.Result.FinalProfileRevision=-1;
+            if(!C.bMayPublish)
+            {
+                // 持久结果仍供世界恢复使用，但旧 Pawn 的回执不能携带可应用到新 Pawn 的转移。
+                C.Result={};C.Result.CommandId=J.Command.CommandId;C.Result.Code=EAetherCommandCode::Unauthorized;
+            }
             // 世界与容器是服务器场景事实，提交者断线不会撤销已确认写入。
             C.WorldSnapshot=MoveTemp(World);
             if(Container.IsSet()&&(Container->Kind!=EAetherContainerKind::PersonalStorage||Container->OwnerCharacterId.Equals(J.Session.CharacterId,ESearchCase::CaseSensitive)))

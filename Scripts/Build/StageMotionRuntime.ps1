@@ -1,10 +1,11 @@
-param([ValidateSet('CPU','Vulkan')][string]$Backend='CPU',[string]$SourceProject='')
+param([ValidateSet('CPU','Vulkan')][string]$Backend='CPU',[string]$SourceProject='',[string]$ArtifactProject='')
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 if(!$SourceProject){$SourceProject=$taskRoot}
+if(!$ArtifactProject){$ArtifactProject=$SourceProject}
 $taskLock=Get-Content -LiteralPath (Join-Path $taskRoot 'Build/ThirdParty/MotionBricks.lock.json') -Raw | ConvertFrom-Json
 $taskBundle=Get-Content -LiteralPath (Join-Path $taskRoot 'Build/ThirdParty/MotionBricks.bundle.json') -Raw | ConvertFrom-Json
-$taskBuild=Join-Path $SourceProject "Saved/ThirdParty/build-motion-$Backend"
+$taskBuild=Join-Path $ArtifactProject "Saved/ThirdParty/build-motion-$Backend"
 $taskArtifacts=Get-Content -LiteralPath (Join-Path $taskBuild 'artifacts.json') -Raw | ConvertFrom-Json
 if($taskArtifacts.revision -ne $taskLock.revision -or $taskArtifacts.ggml -ne $taskLock.ggmlRevision -or $taskArtifacts.backend -ne $Backend){throw 'Native artifacts differ from the pinned recipe.'}
 $taskCache=Get-Content -LiteralPath (Join-Path $taskBuild 'CMakeCache.txt') -Raw

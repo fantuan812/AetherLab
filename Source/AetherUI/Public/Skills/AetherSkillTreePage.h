@@ -33,6 +33,7 @@ public:
     virtual void NativeConstruct() override;
     virtual FReply NativeOnMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event) override;
     virtual void NativeDestruct() override;
+    virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
 private:
     void Refresh();
     void Select(const FAetherSkillNodeIdentity& Node,bool FocusDetail);

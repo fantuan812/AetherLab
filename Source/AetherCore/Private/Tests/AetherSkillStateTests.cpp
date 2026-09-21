@@ -72,9 +72,9 @@ bool FAetherSkillSourcesTest::RunTest(const FString&)
     TestTrue(TEXT("Losing equipment keeps recognizable disabled slot"),S.Hotbar.FindRef(1)==Storm&&S.Validate(D,Reason));
     Grants.Add({TEXT("Item.8"),Storm,2,EAetherSkillGrantSource::Equipment});
     TestEqual(TEXT("Reequipping restores same slot authorization"),S.EffectiveRank(S.Hotbar.FindRef(1),Grants),2);
-    auto Passive=D;Passive.Skills[Storm].bActive=false;
     FAetherSkillStateV10 Empty;
-    TestTrue(TEXT("Passive skill cannot bind"),Empty.Bind(0,Storm,Grants,Passive).Code==E::NotAuthorized);
+    TArray<FAetherExternalSkillGrant> PassiveGrants={{TEXT("Item.Ward"),TEXT("Storm.Ward"),1,EAetherSkillGrantSource::Equipment}};
+    TestTrue(TEXT("Passive skill cannot bind"),Empty.Bind(0,TEXT("Storm.Ward"),PassiveGrants,D).Code==E::NotAuthorized);
     TestTrue(TEXT("Out-of-range slot rejected"),S.Bind(4,Storm,Grants,D).Code==E::Invalid);
     const auto Copy=Grants[0];Grants.Add(Copy);
     TestFalse(TEXT("Same external source cannot duplicate"),FAetherSkillStateV10::ValidateExternalGrants(Grants,D));

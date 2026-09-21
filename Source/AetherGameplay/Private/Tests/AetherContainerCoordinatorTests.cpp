@@ -14,7 +14,8 @@ namespace
 {
 FAetherPlayerCommand ContainerCommand(EAetherCommandType Type,int64 Profile,int64 World,FGuid Item,int32 Quantity)
 {
-    FAetherPlayerCommand C;C.Type=Type;C.CommandId=AetherTransactions::NewCommandId(Profile);
+    FAetherPlayerCommand C;C.Type=Type;C.ProtocolVersion=AetherCommands::LatestProtocolVersion;
+    if(Type==EAetherCommandType::PickUpItem||Type==EAetherCommandType::TransferItem)C.ExpectedContainerRevision=0;C.CommandId=AetherTransactions::NewCommandId(Profile);
     C.ExpectedProfileRevision=Profile;C.ExpectedWorldRevision=World;C.ItemInstanceId=Item;C.Quantity=Quantity;return C;
 }
 TArray<FAetherProfileCompletion> Drain(FAetherProfileCoordinator& Service,const FAetherResolveProfileContext& Resolve,int32 Count=1)
@@ -102,7 +103,7 @@ bool FAetherContainerCoordinatorTest::RunTest(const FString&)
     Alice=Done[0].Snapshot.GetValue();
     TestTrue(TEXT("Reuse advances tombstone revision and keeps registry bounded"),Done[0].ContainerSnapshot->Revision==2&&Done[0].ContainerSnapshot->Inventory.Items[0].InstanceId!=DropItem&&DB.Store->ReadRevisions(EAetherAggregateKind::Container).Get().Revisions.Num()==2);
     // 在读事务等待期间目标卸载：第二次现场复验阻止发起写事务。
-    auto Withdraw=ContainerCommand(EAetherCommandType::PickUpItem,Bob.Revision,3,Done[0].ContainerSnapshot->Inventory.Items[0].InstanceId,1);Withdraw.TargetStableId=TEXT("Drop.Actor");
+    auto Withdraw=ContainerCommand(EAetherCommandType::PickUpItem,Bob.Revision,3,Done[0].ContainerSnapshot->Inventory.Items[0].InstanceId,1);Withdraw.TargetStableId=TEXT("Drop.Actor");Withdraw.ExpectedContainerRevision=2;
     int32 Checks=0;
     const FAetherResolveProfileContext Vanishes=[&](const auto&,const auto&,const auto&,auto& Out){Out=Context;if(++Checks>1)Out.Container.bTargetReady=false;return true;};
     Service.Submit(SessionB,Withdraw,Rejection);Done=Drain(Service,Vanishes);
@@ -111,7 +112,7 @@ bool FAetherContainerCoordinatorTest::RunTest(const FString&)
     auto Deposit=ContainerCommand(EAetherCommandType::TransferItem,Alice.Revision,3,Bound.InstanceId,2);Deposit.TargetStableId=Context.Container.TargetStableId;Deposit.ContainerId=Storage.ContainerId;
     Service.Submit(SessionA,Deposit,Rejection);Done=Drain(Service,Resolve);
     TestTrue(TEXT("Owner can store locked bound instance without losing state"),Done.Num()==1&&Done[0].Result.Code==EAetherCommandCode::Applied&&Done[0].ContainerSnapshot.IsSet()&&Done[0].ContainerSnapshot->Inventory.Find(Bound.InstanceId)&&Done[0].ContainerSnapshot->Inventory.Find(Bound.InstanceId)->SameStackKey(Bound));
-    auto Steal=ContainerCommand(EAetherCommandType::TransferItem,Bob.Revision,4,Bound.InstanceId,1);Steal.TargetStableId=Context.Container.TargetStableId;Steal.ContainerId=Storage.ContainerId;Steal.TransferDirection=EAetherTransferDirection::FromContainer;
+    auto Steal=ContainerCommand(EAetherCommandType::TransferItem,Bob.Revision,4,Bound.InstanceId,1);Steal.TargetStableId=Context.Container.TargetStableId;Steal.ContainerId=Storage.ContainerId;Steal.TransferDirection=EAetherTransferDirection::FromContainer;Steal.ExpectedContainerRevision=1;
     // 即使测试故意给出错误的已授权标志，持久 owner 仍在候选层二次阻止越权。
     Service.Submit(SessionB,Steal,Rejection);Done=Drain(Service,Resolve);
     TestTrue(TEXT("Persistent ownership blocks forged container context and hides contents"),Done.Num()==1&&Done[0].Result.Code==EAetherCommandCode::Unauthorized&&!Done[0].ContainerSnapshot.IsSet()&&!Done[0].WorldSnapshot.IsSet());

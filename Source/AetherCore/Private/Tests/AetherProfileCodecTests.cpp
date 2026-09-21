@@ -40,7 +40,9 @@ bool FAetherProfileCodecTest::RunTest(const FString&)
     for(int32 N=0;N<Bytes.Num();++N)
     {
         TArray<uint8> Cut;Cut.Append(Bytes.GetData(),N);
-        TestFalse(TEXT("Every truncation rejected"),AetherProfileCodec::Decode(Cut,Items,Skills,Rules,Out,Reason));
+        // WER1 之前的完整历史 DTO 仍可读；仅这一个精确边界不是截断错误。
+        if(N==Bytes.Num()-12)TestTrue(TEXT("Complete pre-WER1 DTO remains compatible"),AetherProfileCodec::Decode(Cut,Items,Skills,Rules,Out,Reason)&&Out.WearSequence==0);
+        else TestFalse(TEXT("Partial base or extension rejected"),AetherProfileCodec::Decode(Cut,Items,Skills,Rules,Out,Reason));
         TestEqual(TEXT("Failure never clears caller profile"),Out.Gold,123);
     }
     Again=Bytes;Again[4]=99;TestFalse(TEXT("Unknown profile schema rejected"),AetherProfileCodec::Decode(Again,Items,Skills,Rules,Out,Reason));

@@ -48,17 +48,23 @@ bool FAetherEconomyRulesTest::RunTest(const FString&)
     P.Inventory.Items[0].BoundToCharacter.Reset();if(!TestTrue(TEXT("Explicit unlocked unbound sale allowed"),Prepare()))return false;
     AetherProfileCodec::Decode(T.Writes[0].Value.Payload,Items,Skills,Rules,Next,Reason);
     TestTrue(TEXT("Partial sale keeps original instance metadata"),Next.Inventory.Find(I.InstanceId)->Quantity==1&&Next.Inventory.Find(I.InstanceId)->Quality==1&&Next.Gold==1000+Items.Items[TEXT("Potion")].SellPrice);
-    // 满包先有可合并空间，后一个奖励品类无格子：整条领取必须失败，不留下先发的一半。
+    // v10 允许分批领取：只发能容纳的物品，未领取部分保留同一 RewardId，金币只结算一次。
     P.Inventory.Items.Reset();
     for(int32 N=0;N<32;++N){auto F=I;F.InstanceId=FGuid(9,0,0,N+1);F.Quality=0;F.bLocked=false;F.SlotIndex=N;F.Quantity=N==0?19:20;P.Inventory.Items.Add(F);}
     FAetherPendingRewardV10 Reward;Reward.RewardId=FGuid(8,7,6,5);Reward.SourceId=TEXT("Quest.Test");Reward.Gold=37;Reward.Items={{TEXT("Potion"),1},{TEXT("Ration"),1}};P.PendingRewards.Add(Reward);
     C=Make(EAetherCommandType::ClaimReward,0);C.DefinitionId=TEXT("Reward.")+Reward.RewardId.ToString(EGuidFormats::Digits);
-    T.ActorId=TEXT("Sentinel");TestFalse(TEXT("Partial-fit reward rejected atomically"),Prepare());
-    TestTrue(TEXT("Full bag retains all pending value and currency"),Result.Code==EAetherCommandCode::Capacity&&Result.ActualQuantity==0&&Result.AffectedIds.IsEmpty()&&P.Gold==1000&&P.PendingRewards.Num()==1&&P.Inventory.At(0)->Quantity==19&&P.ClaimedRewardIds.IsEmpty()&&T.ActorId==TEXT("Sentinel"));
-    TArray<uint8> FailureReply;TestTrue(TEXT("Partial-fit rejection is a valid non-transfer reply"),AetherCommands::EncodeResult(Result,FailureReply,Reason));
-    P.Inventory.Items.RemoveAt(31);TestTrue(TEXT("Freeing one slot allows entire reward"),Prepare());
-    AetherProfileCodec::Decode(T.Writes[0].Value.Payload,Items,Skills,Rules,Next,Reason);
-    TestTrue(TEXT("Full reward and claim ledger share candidate"),Next.Gold==1037&&Next.PendingRewards.IsEmpty()&&Next.ClaimedRewardIds.Contains(Reward.RewardId)&&Next.Inventory.At(0)->Quantity==20&&Next.Inventory.At(31)->DefinitionId==TEXT("Ration"));
+    TestTrue(TEXT("Partial reward fits available stack room"),Prepare());
+    TestTrue(TEXT("Partial candidate decodes"),AetherProfileCodec::Decode(T.Writes[0].Value.Payload,Items,Skills,Rules,Next,Reason));
+    TestTrue(TEXT("Only fitted item and gold settle; remainder retains identity"),Next.Gold==1037&&Next.Inventory.At(0)->Quantity==20&&Next.PendingRewards.Num()==1&&Next.PendingRewards[0].RewardId==Reward.RewardId&&Next.PendingRewards[0].Gold==0&&Next.PendingRewards[0].Items.Num()==1&&Next.PendingRewards[0].Items.FindRef(TEXT("Ration"))==1&&Next.ClaimedRewardIds.IsEmpty());
+    TestTrue(TEXT("Candidate does not modify committed input"),P.Gold==1000&&P.Inventory.At(0)->Quantity==19);
+    P=Next;C=Make(EAetherCommandType::ClaimReward,P.Revision);C.DefinitionId=TEXT("Reward.")+Reward.RewardId.ToString(EGuidFormats::Digits);
+    T.ActorId=TEXT("Sentinel");TestFalse(TEXT("Remaining reward cannot fit full bag"),Prepare());
+    TestTrue(TEXT("Capacity rejection publishes no candidate"),Result.Code==EAetherCommandCode::Capacity&&Result.ActualQuantity==0&&T.ActorId==TEXT("Sentinel"));
+    P.Inventory.Items.RemoveAt(31);TestTrue(TEXT("Free slot receives remaining reward"),Prepare());
+    TestTrue(TEXT("Remaining candidate decodes"),AetherProfileCodec::Decode(T.Writes[0].Value.Payload,Items,Skills,Rules,Next,Reason));
+    TestTrue(TEXT("Gold cannot repeat and completed reward enters claim ledger"),Next.Gold==1037&&Next.PendingRewards.IsEmpty()&&Next.ClaimedRewardIds.Contains(Reward.RewardId)&&Next.Inventory.At(31)->DefinitionId==TEXT("Ration"));
+    P=Next;C=Make(EAetherCommandType::ClaimReward,P.Revision);C.DefinitionId=TEXT("Reward.")+Reward.RewardId.ToString(EGuidFormats::Digits);
+    TestFalse(TEXT("New request cannot reclaim finished reward"),Prepare());
     return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherEconomyTransactionTest,"Aether.V10.Economy.DurableBuyRepairAndReward",

@@ -17,24 +17,13 @@ folder = root / "ContentSource/Motion/Clips"
 folder.mkdir(parents=True, exist_ok=True)
 for name, style in [("CrouchIdle", "crouch_idle"), ("CrouchWalk", "crouch")]:
     asset_path = "/Game/Animation/Controlled/A_" + name
-    asset_data = lib.find_asset_data(asset_path)
-    inputs = ue.IKRetargetBatchOperationInputs()
-    inputs.set_editor_property("assets_to_retarget", [asset_data])
-    inputs.set_editor_property("source_mesh", source)
-    inputs.set_editor_property("target_mesh", target)
-    inputs.set_editor_property("ik_retarget_asset", retargeter)
-    inputs.set_editor_property("prefix", "G1_")
-    inputs.set_editor_property("target_path", "/Game/Animation/Motion/Authored")
-    inputs.set_editor_property("include_referenced_assets", False)
-    inputs.set_editor_property("overwrite_existing_files", True)
-    result = ue.IKRetargetBatchOperation.run_batch_retarget(inputs)
-    if len(result) != 1:
-        raise RuntimeError("蹲姿重定向输出数量错误：" + name)
-    animation = result[0].get_asset()
-    if not lib.save_loaded_asset(animation):
-        raise RuntimeError("无法保存重定向蹲姿")
-    ok, reason = ue.AetherMotionAuthoring.export_clip(animation, target,
-        str(root / "ContentSource/Motion/G1Skeleton.json"), str(folder / (style + ".json")))
-    if not ok:
+    source_clip = load_optional(asset_path)
+    animation, reason = ue.AetherMotionAuthoring.retarget_clip(source_clip, source, target, retargeter,
+        "/Game/Animation/Motion/Authored/G1_A_" + name)
+    if not animation:
         raise RuntimeError(reason)
+    reason = ue.AetherMotionAuthoring.export_clip(animation, target,
+        str(root / "ContentSource/Motion/G1Skeleton.json"), str(folder / (style + ".json")))
+    if reason is None:
+        raise RuntimeError("G1 姿态导出失败：" + name)
 ue.log("V10_CROUCH_POSES_EXPORTED; next run MotionAuthor style and StageMotionRuntime")

@@ -288,6 +288,15 @@ void UAetherSkillTreePage::HandleMenu()
     HandleNativeProfile();
     if(ModalToken.IsValid()&&!Menu->HasLayer(ModalToken)){if(Session.GetDraft().IsSet())Session.Back();HideConfirmation();}
 }
+FReply UAetherSkillTreePage::NativeOnPreviewKeyDown(const FGeometry& G,const FKeyEvent& E)
+{
+    if(E.GetKey()==EKeys::Escape||E.GetKey()==EKeys::Gamepad_FaceButton_Right)
+    {
+        if(!E.IsRepeat()){if(Session.Back()){ClosePresentation();}else if(Menu.IsValid())Menu->Back();}
+        return FReply::Handled();
+    }
+    return Super::NativeOnPreviewKeyDown(G,E);
+}
 void UAetherSkillTreePage::ClosePresentation()
 {
     HideConfirmation();Session.Close();if(Graph)Graph->CancelInteraction();

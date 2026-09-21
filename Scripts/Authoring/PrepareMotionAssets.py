@@ -35,9 +35,10 @@ def main():
         target = require("/Game/Characters/Mannequins/Meshes/SKM_" + body + "_Simple")
         profile_path = OUTPUT + "/DA_Motion" + body
         if not LIBRARY.does_asset_exist(profile_path):
-            ok, reason = ue.AetherMotionAuthoring.create_retarget_assets(source, target, body)
-            if not ok:
-                raise RuntimeError(reason)
+            reason = ue.AetherMotionAuthoring.create_retarget_assets(source, target, body)
+            # UE Python 将 bool + 单 out 参数映射为成功时 out 值，失败时 None；空字符串也是成功。
+            if reason is None:
+                raise RuntimeError("重定向作者失败：" + body)
         profiles.append(require(profile_path))
         for path in [profile_path, OUTPUT + "/RTG_G1_" + body, OUTPUT + "/RTG_" + body + "_G1", OUTPUT + "/IK_" + body]:
             resources.append(require(path))

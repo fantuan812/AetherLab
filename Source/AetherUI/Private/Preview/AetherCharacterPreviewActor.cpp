@@ -1,5 +1,6 @@
 #include "Preview/AetherCharacterPreviewActor.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/PointLightComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
@@ -18,6 +19,9 @@ AAetherCharacterPreviewActor::AAetherCharacterPreviewActor()
     FallbackBody=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MissingBody"));FallbackBody->SetupAttachment(Root);
     FallbackBody->SetCollisionEnabled(ECollisionEnabled::NoCollision);FallbackBody->SetGenerateOverlapEvents(false);
     FallbackBody->SetCanEverAffectNavigation(false);FallbackBody->SetVisibility(false);
+    // 独立世界没有地图的天空环境；固定补光保证深色官方材质仍可辨识。
+    auto* Fill=CreateDefaultSubobject<UPointLightComponent>(TEXT("PreviewFill"));Fill->SetupAttachment(Root);
+    Fill->SetRelativeLocation(FVector(220,-100,180));Fill->SetIntensity(8000);Fill->SetAttenuationRadius(1200);Fill->SetCastShadows(false);
     Capture=CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("PreviewCapture"));Capture->SetupAttachment(Root);
     Capture->bCaptureEveryFrame=false;Capture->bCaptureOnMovement=false;
     Capture->PrimitiveRenderMode=ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;

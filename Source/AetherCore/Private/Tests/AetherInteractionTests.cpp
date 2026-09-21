@@ -28,7 +28,8 @@ bool FAetherInteractionDefinitionTest::RunTest(const FString&)
 {
     FString Reason,Json;FAetherEconomyDefinitionsV10 Economy;const auto D=Definitions(Reason,Economy,Json);
     if(!TestTrue(*Reason,D.Validate(FAetherRules::Get(),Economy,Reason)))return false;
-    TestEqual(TEXT("Seven initial target definitions"),D.Targets.Num(),7);
+    for(const TCHAR* Id:{TEXT("Teacher"),TEXT("Register"),TEXT("Inn"),TEXT("Shop"),TEXT("Armorer"),TEXT("Background")})
+        TestTrue(TEXT("Formal service definition remains available"),D.Targets.Contains(Id));
     auto Bad=D;Bad.Targets[TEXT("Teacher")].Actions[1].RequiredClaims.Add(TEXT("MissingQuest"));
     TestFalse(TEXT("Unknown quest rejected"),Bad.Validate(FAetherRules::Get(),Economy,Reason));
     Bad=D;Bad.Targets[TEXT("Teacher")].Actions[1].RequiredClaims[0]=TEXT("q_main_02");
@@ -74,11 +75,11 @@ bool FAetherInteractionQueryTest::RunTest(const FString&)
     FAetherInteractionSelection Selection{S.TargetStableId,TEXT("Train"),S.ProfileRevision,S.WorldRevision,S.InteractionRevision};
     const auto Check=[&](const auto& State,const auto& Choice){return FAetherInteractionProvider(D.Targets[State.DefinitionId],State,Rules).CheckSelection(Q,Choice);};
     TestTrue(TEXT("Exact offered action passes revalidation"),Check(S,Selection)==R::Applied);
-    FAetherPlayerCommand Execute;Execute.Type=EAetherCommandType::ExecuteInteraction;Execute.ProtocolVersion=2;
+    FAetherPlayerCommand Execute;Execute.Type=EAetherCommandType::ExecuteInteraction;Execute.ProtocolVersion=AetherCommands::LatestProtocolVersion;
     Execute.CommandId=FGuid(0,8,1,2);Execute.ExpectedProfileRevision=S.ProfileRevision;Execute.ExpectedWorldRevision=S.WorldRevision;
     Execute.ExpectedInteractionRevision=S.InteractionRevision;Execute.TargetStableId=S.TargetStableId;Execute.ActionId=TEXT("Train");
     FAetherInteractionProvider Provider(D.Targets[TEXT("Teacher")],S,Rules);
-    TestTrue(TEXT("Typed v2 command checks the complete selection identity"),Provider.CheckCommand(TEXT("Alice"),Execute)==R::Applied);
+    TestTrue(TEXT("Current command checks the complete selection identity"),Provider.CheckCommand(TEXT("Alice"),Execute)==R::Applied);
     Execute.ProtocolVersion=1;Execute.ExpectedInteractionRevision=-1;
     TestTrue(TEXT("Readable legacy interaction cannot authorize new execution without target revision"),Provider.CheckCommand(TEXT("Alice"),Execute)==R::UnsupportedProtocol);
     auto Changed=Selection;Changed.TargetStableId=TEXT("NPC.Adjacent");

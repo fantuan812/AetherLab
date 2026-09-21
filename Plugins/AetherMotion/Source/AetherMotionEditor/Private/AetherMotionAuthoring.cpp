@@ -1,5 +1,9 @@
 #include "AetherMotionAuthoring.h"
 #include "Misc/PackageName.h"
+#include "Misc/ScopeExit.h"
+#include "AssetCompilingManager.h"
+#include "UObject/UObjectGlobals.h"
+#include "Retargeter/IKRetargetProcessor.h"
 THIRD_PARTY_INCLUDES_START
 #include <openssl/sha.h>
 THIRD_PARTY_INCLUDES_END
@@ -233,7 +237,8 @@ UAnimSequence* UAetherMotionAuthoring::ImportClip(const FString& Json,USkeletalM
 }
 bool UAetherMotionAuthoring::ExportClip(UAnimSequence* Animation,USkeletalMesh* Source,const FString& Json,const FString& Output,FString& Why)
 {
-    Why.Reset();auto O=Load(Json,Why);FAetherMotionSkeleton S;
+    Why.Reset();ON_SCOPE_EXIT{if(!Why.IsEmpty())UE_LOG(LogTemp,Error,TEXT("AETHER_MOTION_EXPORT_FAIL %s"),*Why);};
+    FAssetCompilingManager::Get().FinishAllCompilation();auto O=Load(Json,Why);FAetherMotionSkeleton S;
     if(!Skeleton(O,S,Why)||!Match(S,Source,Why)||!Animation||Animation->GetSkeleton()!=Source->GetSkeleton()){Why=TEXT("导出前必须把动画重定向到 G1 source");return false;}
     const auto* Model=Animation->GetDataModel();if(!Model||Model->GetPlayLength()<=0||Model->GetPlayLength()>60){Why=TEXT("只导出 0 至 60 秒的有效动作");return false;}
     const int32 Frames=FMath::FloorToInt(Model->GetPlayLength()*30)+1;if(Frames<4||Frames>1800)return false;
@@ -248,7 +253,7 @@ bool UAetherMotionAuthoring::ExportClip(UAnimSequence* Animation,USkeletalMesh* 
             if(T.ContainsNaN()||!T.GetScale3D().Equals(FVector::OneVector,.001)){Why=TEXT("风格包含无效变换或非单位缩放");return false;}
             if(J==0){const FVector V=Inverse.TransformVector(T.GetTranslation()/100.);P={Number(V.X),Number(V.Y),Number(V.Z)};}
             else if(!T.GetTranslation().Equals(Source->GetRefSkeleton().GetRefBonePose()[J].GetTranslation(),.05))
-            {Why=TEXT("G1 风格不支持非根骨骼平移；请先修正重定向比例");return false;}
+            {Why=FString::Printf(TEXT("G1 non-root translation: bone=%s frame=%d pose=%s bind=%s"),*S.Names[J].ToString(),F,*T.GetTranslation().ToString(),*Source->GetRefSkeleton().GetRefBonePose()[J].GetTranslation().ToString());return false;}
             const FQuat R=FQuat(B*FQuatRotationMatrix(T.GetRotation())*Inverse).GetNormalized();
             Q.Append({Number(R.X),Number(R.Y),Number(R.Z),Number(R.W)});
         }
@@ -265,4 +270,68 @@ bool UAetherMotionAuthoring::ExportClip(UAnimSequence* Animation,USkeletalMesh* 
     O->SetArrayField(TEXT("roots"),Roots);O->SetArrayField(TEXT("rotations"),Rotations);O->SetStringField(TEXT("sourceAsset"),Animation->GetPathName());
     FString Text;FJsonSerializer::Serialize(O.ToSharedRef(),TJsonWriterFactory<>::Create(&Text));
     if(!FFileHelper::SaveStringToFile(Text,*Output,FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM)){Why=TEXT("姿态文件写入失败");return false;}return true;
+}
+
+UAnimSequence* UAetherMotionAuthoring::RetargetClip(UAnimSequence* Animation,USkeletalMesh* Source,USkeletalMesh* Target,UIKRetargeter* Retargeter,const FString& Path,FString& Why)
+{
+    Why.Reset();
+    if(!AuthoringAllowed(Why)||!Animation||!Source||!Target||!Retargeter||Animation->GetSkeleton()!=Source->GetSkeleton()||
+       !Path.StartsWith(TEXT("/Game/Animation/Motion/Authored/"))){Why=TEXT("Invalid offline retarget inputs");return nullptr;}
+    // 先完成源资产加载，再写独立序列；避免复制源 DataModel 的 OnEndLoad 通知与目标压缩任务相撞。
+    FlushAsyncLoading();FAssetCompilingManager::Get().FinishAllCompilation();
+    FRetargetProfile Profile;Profile.FillProfileWithAssetSettings(Retargeter);
+    FRetargetInitParameters Init;Init.SourceSkeletalMesh=Source;Init.TargetSkeletalMesh=Target;Init.RetargeterAsset=Retargeter;Init.CustomProfile=&Profile;
+    FIKRetargetProcessor Processor;Processor.Initialize(Init);
+    if(!Processor.IsInitialized()){Why=TEXT("Cannot initialize offline IK retargeter");return nullptr;}
+    const auto* Model=Animation->GetDataModel();if(!Model||Model->GetPlayLength()<=0||Model->GetPlayLength()>60){Why=TEXT("Invalid source duration");return nullptr;}
+    const int32 Frames=FMath::RoundToInt(Model->GetPlayLength()*30);
+    const auto& Ref=Source->GetRefSkeleton();const auto& TargetRef=Target->GetRefSkeleton();
+    TArray<TArray<FVector3f>> Positions,Scales;TArray<TArray<FQuat4f>> Rotations;
+    Positions.SetNum(TargetRef.GetNum());Scales.SetNum(TargetRef.GetNum());Rotations.SetNum(TargetRef.GetNum());
+    double MaxProjectionCm=0;
+    for(int32 Frame=0;Frame<=Frames;++Frame)
+    {
+        TArray<FTransform> Global;Global.SetNum(Ref.GetNum());
+        const auto Time=Model->GetFrameRate().AsFrameTime(Frame/30.);
+        for(int32 Bone=0;Bone<Ref.GetNum();++Bone)
+        {
+            const FName Name=Ref.GetBoneName(Bone);const int32 Parent=Ref.GetParentIndex(Bone);
+            const FTransform Local=Model->IsValidBoneTrackName(Name)?Model->EvaluateBoneTrackTransform(Name,Time,EAnimInterpolationType::Linear):Ref.GetRefBonePose()[Bone];
+            Global[Bone]=Parent>=0?Local*Global[Parent]:Local;
+        }
+        FRetargetRunParameters Run;Run.SourceGlobalPose=&Global;Run.Profile=&Profile;Run.DeltaTime=1.f/30.f;
+        const auto& Pose=Processor.RunRetargeter(Run);
+        if(Pose.Num()!=TargetRef.GetNum()){Why=TEXT("Retarget output topology differs");return nullptr;}
+        TArray<FTransform> Canonical;Canonical.SetNum(Pose.Num());
+        for(int32 Bone=0;Bone<Pose.Num();++Bone)
+        {
+            const int32 Parent=TargetRef.GetParentIndex(Bone);
+            FTransform Local=Parent>=0?Pose[Bone].GetRelativeTransform(Pose[Parent]):Pose[Bone];
+            // G1 模型只表示根平移和关节转动。重定向可能移动髋链起点，作者阶段投影回固定骨长，
+            // 同时测量全局关节误差并限幅；不能静默丢弃任意非刚性动画。
+            if(Parent>=0)Local.SetTranslation(TargetRef.GetRefBonePose()[Bone].GetTranslation());
+            Canonical[Bone]=Parent>=0?Local*Canonical[Parent]:Local;
+            MaxProjectionCm=FMath::Max(MaxProjectionCm,FVector::Dist(Canonical[Bone].GetTranslation(),Pose[Bone].GetTranslation()));
+            if(Local.ContainsNaN()){Why=TEXT("Non-finite retarget pose");return nullptr;}
+            Positions[Bone].Add(FVector3f(Local.GetTranslation()));Rotations[Bone].Add(FQuat4f(Local.GetRotation().GetNormalized()));Scales[Bone].Add(FVector3f(Local.GetScale3D()));
+        }
+    }
+    UE_LOG(LogTemp,Display,TEXT("AETHER_G1_PROJECTION max_joint_error_cm=%.4f"),MaxProjectionCm);
+    if(MaxProjectionCm>5){Why=FString::Printf(TEXT("G1 fixed-bone projection exceeds 5 cm: %.4f"),MaxProjectionCm);return nullptr;}
+    const FString ObjectPath=Path+TEXT(".")+FPackageName::GetLongPackageAssetName(Path);
+    auto* Result=LoadObject<UAnimSequence>(nullptr,*ObjectPath);
+    if(!Result)Result=Asset<UAnimSequence>(Path,Why);if(!Result)return nullptr;
+    Result->SetSkeleton(Target->GetSkeleton());Result->bEnableRootMotion=false;
+    auto& Controller=Result->GetController();Controller.InitializeModel();Controller.OpenBracket(FText::FromString(TEXT("Offline IK retarget to G1")),false);
+    Controller.SetFrameRate(FFrameRate(30,1),false);Controller.SetNumberOfFrames(FFrameNumber(Frames),false);bool OK=true;
+    for(int32 Bone=0;Bone<TargetRef.GetNum();++Bone)
+    {
+        const FName Name=TargetRef.GetBoneName(Bone);
+        if(!Result->GetDataModel()->IsValidBoneTrackName(Name))OK&=Controller.AddBoneCurve(Name,false);
+        OK&=Controller.SetBoneTrackKeys(Name,Positions[Bone],Rotations[Bone],Scales[Bone],false);
+    }
+    Controller.NotifyPopulated();Controller.CloseBracket(false);
+    if(!OK){Why=TEXT("Cannot write retargeted bone tracks");return nullptr;}
+    Result->PostEditChange();FAssetCompilingManager::Get().FinishAllCompilation();
+    return Save(Result,Why)?Result:nullptr;
 }

@@ -19,6 +19,7 @@
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Engine/LocalPlayer.h"
+#include "Framework/Application/SlateApplication.h"
 namespace
 {
 const TCHAR* PageTitle(EAetherMenuPage P)
@@ -119,8 +120,11 @@ FReply UAetherFrontierPanel::NativeOnPreviewKeyDown(const FGeometry& G,const FKe
         if(!E.IsRepeat())for(int32 I=0;I<6;++I)if(Order[I]==ShownPage){Menu->OpenPage(Order[(I+(E.GetKey()==EKeys::Gamepad_RightShoulder?1:5))%6]);break;}
         return FReply::Handled();
     }
-    // 背包/技能先处理详情返回与文本输入，再处理各自菜单快捷键。
-    if(ShownPage==EAetherMenuPage::Inventory||ShownPage==EAetherMenuPage::Skills)return Super::NativeOnPreviewKeyDown(G,E);
+    // 只有返回键交给页面先关闭详情；全局切页键不能被整页无条件跳过。
+    const bool Back=E.GetKey()==EKeys::Escape||E.GetKey()==EKeys::Gamepad_FaceButton_Right;
+    if(Back&&(ShownPage==EAetherMenuPage::Inventory||ShownPage==EAetherMenuPage::Skills))return Super::NativeOnPreviewKeyDown(G,E);
+    const auto Focused=FSlateApplication::Get().GetKeyboardFocusedWidget();
+    if(!Back&&Focused.IsValid()&&Focused->GetTypeAsString().Contains(TEXT("EditableText")))return Super::NativeOnPreviewKeyDown(G,E);
     if(E.GetKey()==EKeys::Escape||E.GetKey()==EKeys::Gamepad_FaceButton_Right){if(!E.IsRepeat())Menu->Back();return FReply::Handled();}
     if(auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn()))
     {

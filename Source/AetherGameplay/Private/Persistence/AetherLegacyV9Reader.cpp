@@ -57,7 +57,7 @@ class FTagScanner
     {
         if (Depth > 8 || ++Nodes > 32) return Fail(TEXT("Property type tree exceeds v9 bounds"));
         FName Name; int32 Count = 0; Ar << Name << Count;
-        if (Ar.IsError() || Name != Expected.GetName() || Count != Expected.GetParameterCount())
+        if (Ar.IsError() || (Name != Expected.GetName() && !(Name == TEXT("/Script/AetherLab") && Expected.GetName() == TEXT("/Script/AetherGameplay"))) || Count != Expected.GetParameterCount())
             return Fail(TEXT("Property type does not match frozen v9 layout"));
         for (int32 I = 0; I < Count; ++I) if (!Type(Expected.GetParameter(I), Depth + 1)) return false;
         return true;
@@ -238,6 +238,8 @@ FString AetherLegacyV9::LayoutFingerprint()
         if (Script) { Script->DestroyStruct(DefaultData); FMemory::Free(DefaultData); }
     };
     VisitStruct(UAetherFrontierSave::StaticClass());
+    // 模块迁移不改变磁盘字段。将当前包名归一为冻结 v9 包名，仍逐字段验证类型与默认值。
+    for (FString& Line : Lines) Line.ReplaceInline(TEXT("/Script/AetherGameplay"), TEXT("/Script/AetherLab"), ESearchCase::CaseSensitive);
     Lines.Sort();
     return FMD5::HashAnsiString(*FString::Join(Lines, TEXT("\n")));
 }

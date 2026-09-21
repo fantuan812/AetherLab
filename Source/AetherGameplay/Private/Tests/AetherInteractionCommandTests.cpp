@@ -51,7 +51,7 @@ bool FAetherInteractionCommitTest::RunTest(const FString&)
     {Out=Context;++Resolved;if(Resolved==2&&UnloadSecond)Out.Interaction.bLoaded=false;if(Resolved==2&&ChangeDefinition)Out.Interaction.DefinitionId=TEXT("Inn");return true;};
     const auto Command=[&](const TCHAR* Action,int64 Profile,int64 W)
     {
-        FAetherPlayerCommand C;C.Type=EAetherCommandType::ExecuteInteraction;C.ProtocolVersion=2;
+        FAetherPlayerCommand C;C.Type=EAetherCommandType::ExecuteInteraction;C.ProtocolVersion=AetherCommands::LatestProtocolVersion;
         C.CommandId=AetherTransactions::NewCommandId(Profile);C.ExpectedProfileRevision=Profile;C.ExpectedWorldRevision=W;
         C.TargetStableId=Context.Interaction.TargetStableId;C.ExpectedInteractionRevision=Context.Interaction.InteractionRevision;C.ActionId=Action;return C;
     };

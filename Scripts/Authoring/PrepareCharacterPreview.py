@@ -1,5 +1,4 @@
-"""v10 角色预览资产制作入口；本轮仅编写，不执行。
-全部剩余实现结束、允许统一编译阶段后，在 UE Editor Python 环境运行。
+"""v10 角色预览资产制作入口，在已构建作者模块的 UE Editor Python 环境运行。
 只使用项目已包含的 UE 官方 Manny/Quinn 和基础资源，不导入第三方模型。
 """
 import unreal as ue
@@ -61,7 +60,7 @@ def prepare_material():
     texture.set_editor_property("sampler_type", ue.MaterialSamplerType.SAMPLERTYPE_LINEAR_COLOR)
     alpha = editing.create_material_expression(material, ue.MaterialExpressionOneMinus, -160, 160)
     # SCS_SceneColorHDR 输出反向不透明度；黑底/全透明问题不能用固定 Opacity=1 隐藏。
-    if not editing.connect_material_expressions(texture, "A", alpha, "Input"):
+    if not editing.connect_material_expressions(texture, "A", alpha, ""):
         raise RuntimeError("无法连接预览 alpha")
     if not editing.connect_material_property(texture, "RGB", ue.MaterialProperty.MP_EMISSIVE_COLOR):
         raise RuntimeError("无法连接预览颜色")
@@ -95,7 +94,7 @@ def main():
     manny, quinn, idle = prepare_body_definitions()
     factory = ue.WidgetBlueprintFactory()
     factory.set_editor_property("parent_class", ue.AetherCharacterPreviewWidget)
-    widget, _ = create_asset("WBP_CharacterPreview", "/Game/UI/Inventory", ue.WidgetBlueprint, factory)
+    widget, _ = create_asset("WBP_CharacterPreview", "/Game/UI/Widgets", ue.WidgetBlueprint, factory)
     library.save_loaded_asset(widget)
     # 显式 Cook 标签把运行时软引用资产纳入包，避免只在编辑器缓存命中时可用。
     factory = ue.DataAssetFactory()
