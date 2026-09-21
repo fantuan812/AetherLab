@@ -1,5 +1,6 @@
 #include "UI/AetherPlayerHUDWidget.h"
 #include "UI/AetherHUDSection.h"
+#include "Inventory/AetherNativeInventory.h"
 #include "UI/AetherWidgetAssets.h"
 #include "Components/Image.h"
 #include "Engine/Texture2D.h"
@@ -32,12 +33,13 @@ TSharedRef<SWidget> UAetherPlayerHUDWidget::RebuildWidget()
             auto* Slot=Root->AddChildToCanvas(Border);Slot->SetAnchors(FAnchors(Anchor.X,Anchor.Y));Slot->SetAlignment(Align);Slot->SetPosition(Position);Slot->SetSize(Size);
             return Border->GetRows();
         };
-        auto* Resources=Panel(TEXT("WBP_Vitals"),FVector2D(0,0),FVector2D(0,0),FVector2D(20,20),FVector2D(300,155));
+        auto* Resources=Panel(TEXT("WBP_Vitals"),FVector2D(0,0),FVector2D(0,0),FVector2D(20,20),FVector2D(320,225));
         const TCHAR* Names[]={TEXT("生命"),TEXT("法力"),TEXT("体力")};const FLinearColor Colors[]={FLinearColor(.8,.23,.2),FLinearColor(.22,.5,.9),FLinearColor(.2,.75,.45)};
         for(int32 I=0;I<3;++I)
         {
             Vitals.Add(Text(*WidgetTree,*Resources,Names[I]));auto* B=WidgetTree->ConstructWidget<UProgressBar>();B->SetFillColorAndOpacity(Colors[I]);Resources->AddChildToVerticalBox(B);Bars.Add(B);
         }
+        EffectsRow=WidgetTree->ConstructWidget<UHorizontalBox>();Resources->AddChildToVerticalBox(EffectsRow);
         auto* Quest=Panel(TEXT("WBP_QuestTracker"),FVector2D(1,0),FVector2D(1,0),FVector2D(-20,20),FVector2D(280,190));
         Guidance=Text(*WidgetTree,*Quest,TEXT(""),FLinearColor(1,.82,.45));
         auto* Hotbar=Panel(TEXT("WBP_QuickBar"),FVector2D(.5,1),FVector2D(.5,1),FVector2D(0,-20),FVector2D(540,160));
@@ -80,6 +82,27 @@ void UAetherPlayerHUDWidget::Refresh()
     const TCHAR* Names[]={TEXT("生命"),TEXT("法力"),TEXT("体力")};
     for(int32 I=0;I<3;++I)
     {Bars[I]->SetPercent(FMath::Clamp(Value[I]/FMath::Max(1.f,Max[I]),0.f,1.f));Vitals[I]->SetText(FText::FromString(FString::Printf(TEXT("%s %.0f / %.0f"),Names[I],Value[I],Max[I])));}
+    TArray<FAetherInspectStatusEffect> Effects;AetherNativeInventory::StatusEffects(*C,Effects);
+    TArray<FGuid> EffectIds;for(const auto& E:Effects)EffectIds.Add(E.InstanceId);
+    if(EffectIds!=ShownEffects)
+    {
+        ShownEffects=EffectIds;EffectsRow->ClearChildren();EffectLabels.Reset();
+        for(const auto& E:Effects)
+        {
+            auto* Col=WidgetTree->ConstructWidget<UVerticalBox>();EffectsRow->AddChildToHorizontalBox(Col);
+            auto* Icon=WidgetTree->ConstructWidget<UImage>();Icon->SetDesiredSizeOverride(FVector2D(24,24));Col->AddChildToVerticalBox(Icon);
+            EffectLabels.Add(Text(*WidgetTree,*Col,E.DisplayName));
+            const auto Path=AetherWidgetAssets::Icon(E.IconId);TWeakObjectPtr<UImage> WeakIcon=Icon;
+            if(Path.IsValid())UAssetManager::GetStreamableManager().RequestAsyncLoad(Path,[Path,WeakIcon]()
+            {if(WeakIcon.IsValid())WeakIcon->SetBrushFromTexture(Cast<UTexture2D>(Path.ResolveObject()));});
+        }
+    }
+    for(int32 I=0;I<Effects.Num();++I)
+    {
+        const auto& E=Effects[I];FString Label=E.DisplayName.Replace(TEXT(" · 旅舍祝福"),TEXT(""));
+        if(E.ExpiresAtServerSeconds.IsSet())Label+=FString::Printf(TEXT("\n%.0f 秒"),FMath::Max(0.0,E.ExpiresAtServerSeconds.GetValue()-C->CombatTime()));
+        EffectLabels[I]->SetText(FText::FromString(Label));
+    }
     const auto* Net=LP->GetSubsystem<UAetherCommandClient>();const auto& Profile=Net->GetProfile();
     const auto& Definitions=FAetherV10Definitions::Get().Skills;
     for(int32 I=0;I<Skills.Num();++I)

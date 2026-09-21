@@ -131,3 +131,6 @@
 
 ### 输入与战斗职责拆分
 输入状态和绑定生命周期迁至 PlayerInputComponent；伤害/格挡/韧性结算与生命内伤害状态迁至 CombatComponent；Attributes、SpellAbility、Projectile 独立编译。未编译、未测试。详见 Architecture/V10-character-responsibilities.zh-CN.md。
+
+### 身体状态与技能节点
+实际 WBP 技能节点、服务器状态实例和统一详情/HUD 已接入；临时授权撤销支持失败重试及新身体完整恢复。未编译、未测试，详见 ../Architecture/V10-status-skill-widgets.zh-CN.md。

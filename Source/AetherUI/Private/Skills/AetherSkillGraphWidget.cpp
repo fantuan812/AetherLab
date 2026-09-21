@@ -1,6 +1,12 @@
 #include "Skills/AetherSkillGraphWidget.h"
 #include "Skills/AetherSkillDragDrop.h"
-#include "Widgets/SLeafWidget.h"
+#include "Widgets/SPanel.h"
+#include "Widgets/SNullWidget.h"
+#include "Layout/Children.h"
+#include "Layout/ArrangedChildren.h"
+#include "Skills/AetherSkillNodeWidget.h"
+#include "UI/AetherWidgetAssets.h"
+#include "Blueprint/UserWidget.h"
 #include "Rendering/DrawElements.h"
 #include "Styling/CoreStyle.h"
 #include "Input/Reply.h"
@@ -8,9 +14,23 @@
 #include "Framework/Application/SlateApplication.h"
 
 DECLARE_DELEGATE_TwoParams(FGraphSelection,const FAetherSkillNodeIdentity&,bool);
-class SAetherSkillGraph : public SLeafWidget
+class SAetherSkillGraph : public SPanel
 {
 public:
+    SAetherSkillGraph():NodeChildren(this){}
+    void SetNodes(const TArray<TSharedRef<SWidget>>& Widgets)
+    {
+        NodeChildren.Reset();for(const auto& W:Widgets)NodeChildren.Add(W);
+        Invalidate(EInvalidateWidgetReason::Layout);
+    }
+    virtual FChildren* GetChildren() override{return &NodeChildren;}
+    virtual void OnArrangeChildren(const FGeometry& G,FArrangedChildren& Arranged) const override
+    {
+        const auto T=Transform(G.GetLocalSize());
+        for(int32 I=0;I<NodeChildren.Num()&&I<Model.Nodes.Num();++I)
+            Arranged.AddWidget(G.MakeChild(ConstCastSharedRef<SWidget>(NodeChildren.GetChildAt(I)),FVector2D(156,104),
+                FSlateLayoutTransform(float(T.Scale),T.Offset+(Model.Nodes[I].Position+FVector2D(2,2))*T.Scale)));
+    }
     SLATE_BEGIN_ARGS(SAetherSkillGraph){} SLATE_EVENT(FGraphSelection,OnSelected) SLATE_END_ARGS()
     void Construct(const FArguments& Args){OnSelected=Args._OnSelected;SetClipping(EWidgetClipping::ClipToBounds);}
     void SetModel(const FAetherSkillTreeModel& NewModel)
@@ -22,18 +42,18 @@ public:
         Selected=SameOwner&&Previous.IsSet()?Model.Nodes.IndexOfByPredicate([&](const auto& N){return N.Identity==Previous.GetValue();}):INDEX_NONE;
         if(!Model.Nodes.IsValidIndex(Selected))Selected=Model.Nodes.IsEmpty()?INDEX_NONE:0;
         if(!SameOwner){Pan=FVector2D::ZeroVector;Zoom=1;bPanning=false;}
-        SetToolTipText(FText::GetEmpty());Invalidate(EInvalidateWidgetReason::Paint);
+        SetToolTipText(FText::GetEmpty());Invalidate(EInvalidateWidgetReason::Layout);
     }
     void SelectNode(const FAetherSkillNodeIdentity& Node)
     {
         const int32 Index=Model.Nodes.IndexOfByPredicate([&](const auto& N){return N.Identity==Node;});
-        if(Index!=INDEX_NONE){Selected=Index;CenterSelection();Invalidate(EInvalidateWidgetReason::Paint);}
+        if(Index!=INDEX_NONE){Selected=Index;CenterSelection();Invalidate(EInvalidateWidgetReason::Layout);}
     }
-    void ResetView(){Pan=FVector2D::ZeroVector;Zoom=1;Invalidate(EInvalidateWidgetReason::Paint);}
+    void ResetView(){Pan=FVector2D::ZeroVector;Zoom=1;Invalidate(EInvalidateWidgetReason::Layout);}
     void CancelInteraction(){bPanning=false;SetToolTipText(FText::GetEmpty());}
     virtual bool SupportsKeyboardFocus() const override{return true;}
     virtual FVector2D ComputeDesiredSize(float) const override{return FVector2D(720,580);}
-    virtual int32 OnPaint(const FPaintArgs&,const FGeometry& G,const FSlateRect&,FSlateWindowElementList& Out,int32 Layer,const FWidgetStyle&,bool) const override
+    virtual int32 OnPaint(const FPaintArgs& Args,const FGeometry& G,const FSlateRect& Clip,FSlateWindowElementList& Out,int32 Layer,const FWidgetStyle& Style,bool Enabled) const override
     {
         const auto* Brush=FCoreStyle::Get().GetBrush("WhiteBrush");const FVector2D View=G.GetLocalSize();
         FSlateDrawElement::MakeBox(Out,Layer,G.ToPaintGeometry(),Brush,ESlateDrawEffect::None,FLinearColor(.018f,.025f,.04f,1));
@@ -56,33 +76,14 @@ public:
             const FLinearColor Border=I==Selected?FLinearColor(1,.83f,.4f):N.bAuthorized?Element:FLinearColor(.32f,.35f,.42f);
             FSlateDrawElement::MakeBox(Out,Layer+2,G.ToPaintGeometry(Size,FSlateLayoutTransform(P)),Brush,ESlateDrawEffect::None,Border);
             FSlateDrawElement::MakeBox(Out,Layer+3,G.ToPaintGeometry(Size-FVector2D(4,4),FSlateLayoutTransform(P+FVector2D(2,2))),Brush,ESlateDrawEffect::None,FLinearColor(.055f,.07f,.1f));
-            const FVector2D Icon=P+FVector2D(22,24)*T.Scale;
-            auto IconLine=[&](TArray<FVector2D> Points)
-            {for(auto& V:Points)V=Icon+V*T.Scale;Line(Points,Element,2,Layer+4);};
-            // 基础几何占位图标，不依赖第三方贴图；正式美术可替换而不改变节点身份。
-            switch(N.Mechanic)
-            {
-            case EAetherSkillMechanic::Fire:IconLine({{0,18},{-11,8},{-6,-4},{0,-18},{4,-3},{11,6},{8,16},{0,18}});break;
-            case EAetherSkillMechanic::Water:IconLine({{0,-18},{-10,3},{-9,13},{0,18},{9,13},{10,3},{0,-18}});break;
-            case EAetherSkillMechanic::Frost:IconLine({{-13,-13},{13,13}});IconLine({{-13,13},{13,-13}});IconLine({{-17,0},{17,0}});IconLine({{0,-17},{0,17}});break;
-            default:IconLine({{5,-18},{-10,3},{0,3},{-5,18},{12,-4},{3,-4},{5,-18}});break;
-            }
-            auto Text=[&](const FString& Value,FVector2D At,int32 Point,FLinearColor Color)
-            {
-                const auto Font=FCoreStyle::GetDefaultFontStyle("Regular",FMath::Max(8,FMath::RoundToInt(Point*T.Scale)));
-                FSlateDrawElement::MakeText(Out,Layer+5,G.ToPaintGeometry(FVector2D::ZeroVector,FSlateLayoutTransform(P+At*T.Scale)),Value,Font,ESlateDrawEffect::None,Color);
-            };
-            Text(N.Title+FString::Printf(TEXT(" %d"),N.Identity.Rank),FVector2D(46,17),13,FLinearColor::White);
-            Text(AetherSkillTree::StateLabel(N.State),FVector2D(12,62),12,Border);
-            Text(N.bPermanent?TEXT("✓ 永久授权"):N.bAuthorized?TEXT("◇ 外部授权"):TEXT("○ 未学习"),FVector2D(12,83),10,FLinearColor(.7f,.76f,.84f));
         }
-        return Layer+5;
+        return SPanel::OnPaint(Args,G,Clip,Out,Layer+4,Style,Enabled);
     }
     virtual FReply OnMouseButtonDown(const FGeometry& G,const FPointerEvent& E) override
     {
         const FVector2D P=G.AbsoluteToLocal(E.GetScreenSpacePosition());const int32 Hit=HitNode(G,P);
         if((E.GetEffectingButton()==EKeys::LeftMouseButton||E.GetEffectingButton()==EKeys::RightMouseButton)&&Hit!=INDEX_NONE)
-        {const bool Detail=E.GetEffectingButton()==EKeys::RightMouseButton;Selected=Hit;OnSelected.ExecuteIfBound(Model.Nodes[Hit].Identity,Detail);Invalidate(EInvalidateWidgetReason::Paint);if(!Detail){DragContext=Model.Context;DragNode=Model.Nodes[Hit].Identity;}return Detail?FReply::Handled():FReply::Handled().SetUserFocus(SharedThis(this)).DetectDrag(SharedThis(this),EKeys::LeftMouseButton);}
+        {const bool Detail=E.GetEffectingButton()==EKeys::RightMouseButton;Selected=Hit;OnSelected.ExecuteIfBound(Model.Nodes[Hit].Identity,Detail);Invalidate(EInvalidateWidgetReason::Layout);if(!Detail){DragContext=Model.Context;DragNode=Model.Nodes[Hit].Identity;}return Detail?FReply::Handled():FReply::Handled().SetUserFocus(SharedThis(this)).DetectDrag(SharedThis(this),EKeys::LeftMouseButton);}
         if(E.GetEffectingButton()==EKeys::MiddleMouseButton||E.GetEffectingButton()==EKeys::LeftMouseButton)
         {bPanning=true;return FReply::Handled().CaptureMouse(SharedThis(this)).SetUserFocus(SharedThis(this));}
         return E.GetEffectingButton()==EKeys::RightMouseButton?FReply::Handled():FReply::Unhandled();
@@ -107,7 +108,7 @@ public:
         if(bPanning)
         {
             Pan+=G.AbsoluteToLocal(E.GetScreenSpacePosition())-G.AbsoluteToLocal(E.GetLastScreenSpacePosition());ClampPan(G.GetLocalSize());
-            Invalidate(EInvalidateWidgetReason::Paint);return FReply::Handled();
+            Invalidate(EInvalidateWidgetReason::Layout);return FReply::Handled();
         }
         const int32 Hit=HitNode(G,G.AbsoluteToLocal(E.GetScreenSpacePosition()));
         SetToolTipText(Hit==INDEX_NONE?FText::GetEmpty():FText::FromString(Model.Nodes[Hit].Title+TEXT("\n")+Model.Nodes[Hit].Reason));
@@ -119,7 +120,7 @@ public:
         const auto World=(Mouse-Before.Offset)/Before.Scale;
         Zoom=FMath::Clamp(Zoom*FMath::Pow(1.15f,E.GetWheelDelta()),.7f,3.f);
         const auto After=Transform(G.GetLocalSize());Pan+=Mouse-(After.Offset+World*After.Scale);ClampPan(G.GetLocalSize());
-        Invalidate(EInvalidateWidgetReason::Paint);return FReply::Handled();
+        Invalidate(EInvalidateWidgetReason::Layout);return FReply::Handled();
     }
     virtual FReply OnKeyDown(const FGeometry&,const FKeyEvent& E) override
     {
@@ -169,8 +170,9 @@ private:
         if(!Model.Nodes.IsValidIndex(Selected))return;const auto View=GetCachedGeometry().GetLocalSize();const auto T=Transform(View);
         const auto P=T.Offset+(Model.Nodes[Selected].Position+FVector2D(80,54))*T.Scale;
         if(P.X<80||P.X>View.X-80||P.Y<60||P.Y>View.Y-60)Pan+=View*.5-P;
-        ClampPan(View);Invalidate(EInvalidateWidgetReason::Paint);
+        ClampPan(View);Invalidate(EInvalidateWidgetReason::Layout);
     }
+    TSlotlessChildren<SWidget> NodeChildren;
     FAetherInspectContext DragContext;TOptional<FAetherSkillNodeIdentity> DragNode;
     FAetherSkillTreeModel Model;FGraphSelection OnSelected;int32 Selected=INDEX_NONE;
     FVector2D Pan=FVector2D::ZeroVector;float Zoom=1;bool bPanning=false;
@@ -178,9 +180,23 @@ private:
 TSharedRef<SWidget> UAetherSkillGraphWidget::RebuildWidget()
 {
     Graph=SNew(SAetherSkillGraph).OnSelected(FGraphSelection::CreateWeakLambda(this,[this](const auto& N,bool Detail){OnNodeSelected.Broadcast(N,Detail);}));
-    Graph->SetModel(Model);return Graph.ToSharedRef();
+    Graph->SetModel(Model);RefreshNodes();return Graph.ToSharedRef();
 }
-void UAetherSkillGraphWidget::SetModel(const FAetherSkillTreeModel& InModel){Model=InModel;if(Graph)Graph->SetModel(Model);}
+void UAetherSkillGraphWidget::SetModel(const FAetherSkillTreeModel& InModel){Model=InModel;if(Graph){Graph->SetModel(Model);RefreshNodes();}}
+void UAetherSkillGraphWidget::RefreshNodes()
+{
+    auto* Owner=GetTypedOuter<UUserWidget>();if(!Owner||!Graph)return;
+    while(Nodes.Num()<Model.Nodes.Num())Nodes.Add(CreateWidget<UAetherSkillNodeWidget>(Owner,AetherWidgetAssets::Class<UAetherSkillNodeWidget>()));
+    if(Nodes.Num()>Model.Nodes.Num())Nodes.SetNum(Model.Nodes.Num());
+    TArray<TSharedRef<SWidget>> Widgets;
+    for(int32 I=0;I<Nodes.Num();++I)
+    {
+        if(Nodes[I]){Nodes[I]->SetNode(Model.Nodes[I]);Widgets.Add(Nodes[I]->TakeWidget());}
+        else {Widgets.Add(SNullWidget::NullWidget);UE_LOG(LogTemp,Error,TEXT("AETHER_SKILL_NODE_CREATE_FAILED %d"),I);}
+    }
+    Graph->SetNodes(Widgets);
+}
+
 void UAetherSkillGraphWidget::SelectNode(const FAetherSkillNodeIdentity& Node){if(Graph)Graph->SelectNode(Node);}
 void UAetherSkillGraphWidget::ResetView(){if(Graph)Graph->ResetView();}
 void UAetherSkillGraphWidget::CancelInteraction()
@@ -188,4 +204,4 @@ void UAetherSkillGraphWidget::CancelInteraction()
     if(!Graph)return;Graph->CancelInteraction();
     if(Graph->HasMouseCapture()&&FSlateApplication::IsInitialized())FSlateApplication::Get().ReleaseAllPointerCapture();
 }
-void UAetherSkillGraphWidget::ReleaseSlateResources(bool Children){CancelInteraction();Super::ReleaseSlateResources(Children);Graph.Reset();}
+void UAetherSkillGraphWidget::ReleaseSlateResources(bool Children){CancelInteraction();Super::ReleaseSlateResources(Children);Graph.Reset();for(auto* Node:Nodes)if(Node)Node->ReleaseSlateResources(Children);Nodes.Reset();}

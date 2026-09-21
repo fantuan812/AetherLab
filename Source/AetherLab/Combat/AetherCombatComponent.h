@@ -5,6 +5,15 @@
 class AAetherCharacter;
 class AController;
 struct FDamageEvent;
+// 展示实例跟随一次连续身体状态；消失后再次出现必须生成新身份，防止旧详情串到新状态。
+USTRUCT()
+struct FAetherBodyStatusPresentation
+{
+    GENERATED_BODY()
+    UPROPERTY() FGuid InstanceId;
+    UPROPERTY() FName Kind;
+    UPROPERTY() double ExpiresAt=0;
+};
 // 身体生命内的命中/格挡/硬直结算和伤害序号；持久属性仍由 PlayerState 的 ASC 拥有。
 UCLASS()
 class AETHERLAB_API UAetherCombatComponent : public UActorComponent
@@ -12,6 +21,8 @@ class AETHERLAB_API UAetherCombatComponent : public UActorComponent
     GENERATED_BODY()
 public:
     UAetherCombatComponent();
+    virtual void TickComponent(float Delta,ELevelTick Type,FActorComponentTickFunction* Function) override;
+    UPROPERTY(Replicated) TArray<FAetherBodyStatusPresentation> StatusEffects;
     void ReceiveHit(float Damage,float PostureDamage,AAetherCharacter* Source,bool CanBlock);
     void ApplyPostureDamage(float Amount);
     float ApplyDamage(float Amount,const FDamageEvent& Event,AController* Instigator,AActor* Causer);

@@ -149,7 +149,7 @@ void UAetherInventoryPage::Refresh()
     if(BeforeGeneration==Generation&&!bDirty)
     {
         // 时间变化不改变对象身份；详情仍用同一实例更新倒计时，不强制重建格网/焦点。
-        Snapshot.ServerTimeSeconds=Next.ServerTimeSeconds;
+        Snapshot.ServerTimeSeconds=Next.ServerTimeSeconds;Snapshot.StatusEffects=MoveTemp(Next.StatusEffects);
         if(Session.GetDetails().IsSet()&&Session.GetDetails()->Request.Target.Kind==EAetherInspectTarget::StatusEffect)
         {const auto& D=FAetherV10Definitions::Get();Session.Refresh(Snapshot,D.Items,D.Skills);RenderDetails();}
         return;

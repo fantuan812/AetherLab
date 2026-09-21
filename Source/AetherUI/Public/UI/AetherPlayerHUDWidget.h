@@ -5,6 +5,7 @@ class UProgressBar;
 class UImage;
 class UTextBlock;
 class UVerticalBox;
+class UHorizontalBox;
 class UBorder;
 UCLASS()
 class AETHERUI_API UAetherPlayerHUDWidget : public UUserWidget
@@ -17,6 +18,9 @@ public:
 private:
     void Refresh();
     FTimerHandle Timer;
+    UPROPERTY() TObjectPtr<UHorizontalBox> EffectsRow;
+    TArray<FGuid> ShownEffects;
+    UPROPERTY() TArray<TObjectPtr<UTextBlock>> EffectLabels;
     UPROPERTY() TArray<TObjectPtr<UProgressBar>> Bars;
     UPROPERTY() TArray<TObjectPtr<UTextBlock>> Vitals;
     UPROPERTY() TArray<TObjectPtr<UTextBlock>> Skills;

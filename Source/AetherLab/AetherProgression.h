@@ -76,6 +76,7 @@ private:
     TMap<FString,FAetherTemporarySkillSource> TemporarySkillSources;
     TWeakObjectPtr<APawn> TemporaryGrantAvatar;
     FTimerHandle TemporaryGrantTimer;
+    bool bTemporaryPublicationPending=false;
     TOptional<FAetherProfileStateV10> NativeProfile;
     FActiveGameplayEffectHandle NativeEquipmentSource;
     int64 NativeEquipmentRevision=-1;

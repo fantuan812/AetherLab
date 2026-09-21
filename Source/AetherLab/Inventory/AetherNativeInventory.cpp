@@ -5,6 +5,7 @@
 #include "Networking/AetherCommandClient.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "Contracts/AetherTransaction.h"
+#include "Combat/AetherEquipmentMath.h"
 #include "Engine/LocalPlayer.h"
 
 namespace
@@ -22,22 +23,8 @@ bool AetherNativeInventory::Snapshot(AAetherFrontierCharacter& C,int64 Revision,
     Out.Container=Net->GetContainer();Out.ContainerContext=Net->GetContainerContext();Out.ContainerWorldRevision=Net->GetContainerWorldRevision();
     Out.ProfileRevision=P.Revision;Out.Inventory=P.Inventory;Out.Skills=P.Skills;Out.Gold=P.Gold;
     Out.ServerTimeSeconds=C.CombatTime();
-    if(const auto* PS=C.ProfileState();PS&&PS->SkillGrants.ProfileRevision==P.Revision)
-    {
-        Out.ExternalGrants=PS->GetNativeSkillGrants();
-        for(const auto& G:PS->SkillGrants.Rows)
-        {
-            if(G.Source!=uint8(EAetherSkillGrantSource::Temporary)||!G.InstanceId.IsValid())continue;
-            const auto* D=FAetherV10Definitions::Get().Skills.Skills.Find(G.SkillId);if(!D)continue;
-            FAetherInspectStatusEffect Effect;Effect.InstanceId=G.InstanceId;Effect.DefinitionId=G.SkillId;
-            Effect.DisplayName=D->DisplayName+TEXT(" · 旅舍祝福");Effect.IconId=D->IconId;Effect.Source=TEXT("旅舍休息");
-            Effect.ExpiresAtServerSeconds=G.ExpiresAtServerSeconds;
-            Effect.Impacts.Add({TEXT("rank"),TEXT("授权等级"),FString::FromInt(G.Rank)});
-            if(const auto* Rank=FAetherV10Definitions::Get().Skills.Effect(G.SkillId,G.Rank))
-                for(const auto& Stat:Rank->PassiveStats)Effect.Impacts.Add({Stat.Key,Stat.Key,FString::Printf(TEXT("+%.1f"),Stat.Value)});
-            Out.StatusEffects.Add(MoveTemp(Effect));
-        }
-    }
+    StatusEffects(C,Out.StatusEffects);
+    if(const auto* PS=C.ProfileState();PS&&PS->SkillGrants.ProfileRevision==P.Revision)Out.ExternalGrants=PS->GetNativeSkillGrants();
     Out.bCanAct=C.Ready()&&!C.Carried&&!C.ReviveTarget&&!C.bTravelPending&&!Net->HasPending();
     if(auto* W=C.GetWorld()->GetGameState<AAetherFrontierState>())Out.WorldRevision=W->NativeWorldRevision;
     const auto Shop=C.ActiveShop();const auto* Definition=FAetherV10Definitions::Get().Economy.Shops.Find(Shop.ToString());
@@ -113,4 +100,64 @@ bool AetherNativeInventory::Shortcut(AAetherFrontierCharacter& C,FName Action,FN
     }
     else {Why=TEXT("不支持该背包快捷操作。");return false;}
     return Submit(C,MoveTemp(Cmd),P.Revision,Why);
+}
+
+
+void AetherNativeInventory::StatusEffects(AAetherFrontierCharacter& C,TArray<FAetherInspectStatusEffect>& Out)
+{
+    Out.Reset();auto* Net=Client(C);
+    if(const auto* PS=C.ProfileState();PS&&Net&&Net->GetProfile().IsSet()&&PS->SkillGrants.ProfileRevision==Net->GetProfile()->Revision)
+    {
+        for(const auto& G:PS->SkillGrants.Rows)
+        {
+            if(G.Source!=uint8(EAetherSkillGrantSource::Temporary)||!G.InstanceId.IsValid()||G.ExpiresAtServerSeconds<=C.CombatTime())continue;
+            const auto* D=FAetherV10Definitions::Get().Skills.Skills.Find(G.SkillId);if(!D)continue;
+            FAetherInspectStatusEffect Effect;Effect.InstanceId=G.InstanceId;Effect.DefinitionId=G.SkillId;
+            Effect.DisplayName=D->DisplayName+TEXT(" · 旅舍祝福");Effect.IconId=D->IconId;Effect.Source=TEXT("旅舍休息");
+            Effect.ExpiresAtServerSeconds=G.ExpiresAtServerSeconds;
+            Effect.Impacts.Add({TEXT("rank"),TEXT("授权等级"),FString::FromInt(G.Rank)});
+            if(const auto* Rank=FAetherV10Definitions::Get().Skills.Effect(G.SkillId,G.Rank))
+                for(const auto& Stat:Rank->PassiveStats)Effect.Impacts.Add({Stat.Key,Stat.Key,FString::Printf(TEXT("+%.1f"),Stat.Value)});
+            Out.Add(MoveTemp(Effect));
+        }
+    }
+
+    if(!C.CombatRuntime||!C.Reactive||!C.Attributes)return;
+    const auto& State=C.Reactive->State;
+    for(const auto& S:C.CombatRuntime->StatusEffects)
+    {
+        if(!S.InstanceId.IsValid()||(S.ExpiresAt>0&&S.ExpiresAt<=C.CombatTime()))continue;
+        FAetherInspectStatusEffect E;E.InstanceId=S.InstanceId;E.DefinitionId=TEXT("Body.")+S.Kind.ToString();
+        if(S.ExpiresAt>0)E.ExpiresAtServerSeconds=S.ExpiresAt;
+        E.Source=TEXT("当前身体与环境状态");
+        if(S.Kind==TEXT("Heat"))
+        {
+            E.DisplayName=TEXT("灼热");E.IconId=TEXT("Fire.Ignite");
+            E.Impacts.Add({TEXT("temperature"),TEXT("体表温度"),FString::Printf(TEXT("%.1f °C"),State.TemperatureC)});
+            const double Damage=FMath::Min(25.0,FMath::Max(0.0,(State.TemperatureC-55)*.12))*AetherEquipmentMath::ElementMultiplier(C.Attributes->GearFireResist.GetCurrentValue());
+            E.Impacts.Add({TEXT("damage"),TEXT("当前每秒火伤害"),FString::Printf(TEXT("%.1f"),Damage)});
+            E.Impacts.Add({TEXT("ends"),TEXT("解除条件"),TEXT("降温到 55 °C 以下")});
+        }
+        else if(S.Kind==TEXT("Frozen"))
+        {
+            E.DisplayName=TEXT("冻结");E.IconId=TEXT("Frost.Freeze");
+            E.Impacts.Add({TEXT("ice"),TEXT("结冰比例"),FString::Printf(TEXT("%.0f%%"),State.IceFraction*100)});
+            E.Impacts.Add({TEXT("movement"),TEXT("当前移速下降"),FString::Printf(TEXT("%.0f%%"),50*AetherEquipmentMath::ElementMultiplier(C.Attributes->GearFrostResist.GetCurrentValue()))});
+            E.Impacts.Add({TEXT("ends"),TEXT("解除条件"),TEXT("融化到结冰比例不高于 50%")});
+        }
+        else if(S.Kind==TEXT("Wet"))
+        {
+            E.DisplayName=TEXT("潮湿");E.IconId=TEXT("Water.Draw");
+            E.Impacts.Add({TEXT("wetness"),TEXT("导电湿润度"),FString::Printf(TEXT("%.0f%%"),State.ElectricalWetness01*100)});
+            E.Impacts.Add({TEXT("shock"),TEXT("电击伤害增加"),FString::Printf(TEXT("%.1f%%"),State.ElectricalWetness01*25)});
+            E.Impacts.Add({TEXT("ends"),TEXT("解除条件"),TEXT("身体干燥")});
+        }
+        else if(S.Kind==TEXT("Stun"))
+        {
+            E.DisplayName=TEXT("眩晕");E.IconId=TEXT("Storm.Strike");E.Source=TEXT("受击、招架反制或电击");
+            E.Impacts.Add({TEXT("action"),TEXT("限制"),TEXT("暂时无法移动、攻击或施法")});
+        }
+        else continue;
+        Out.Add(MoveTemp(E));
+    }
 }

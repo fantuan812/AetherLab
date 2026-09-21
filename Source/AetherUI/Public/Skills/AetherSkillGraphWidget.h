@@ -3,6 +3,7 @@
 #include "Skills/AetherSkillTreeModel.h"
 #include "AetherSkillGraphWidget.generated.h"
 class SAetherSkillGraph;
+class UAetherSkillNodeWidget;
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAetherSkillNodeSelected,const FAetherSkillNodeIdentity&,bool);
 
 // 专用图形控件：真实节点/连线/命中区域，不把技能树拼成一段 TextBlock。
@@ -20,6 +21,8 @@ public:
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
 private:
+    void RefreshNodes();
+    UPROPERTY(Transient) TArray<TObjectPtr<UAetherSkillNodeWidget>> Nodes;
     FAetherSkillTreeModel Model;
     TSharedPtr<SAetherSkillGraph> Graph;
 };

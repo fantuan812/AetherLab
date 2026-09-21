@@ -11,6 +11,7 @@ UClass* Resolve(UClass* NativeClass,const TCHAR* Variant)
         {TEXT("AetherFrontierPanel"),TEXT("WBP_PlayerMenu")},
         {TEXT("AetherInventoryPage"),TEXT("WBP_InventoryPage")},
         {TEXT("AetherSkillTreePage"),TEXT("WBP_SkillTreePage")},
+        {TEXT("AetherSkillNodeWidget"),TEXT("WBP_SkillNode")},
         {TEXT("AetherJournalPage"),TEXT("WBP_JournalPage")},
         {TEXT("AetherMapPage"),TEXT("WBP_MapPage")},
         {TEXT("AetherPartyPage"),TEXT("WBP_PartyPage")},

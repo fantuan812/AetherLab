@@ -12,6 +12,7 @@ bool AAetherPlayerState::GrantRestBlessing(FString& Reason)
     // 只增强已经获得的引泉，不允许休息跳过故事必需训练。
     if(NativeProfile->Skills.PermanentRank(TEXT("Water.Draw"))<=0){Reason.Reset();return true;}
     RefreshTemporarySkills();
+    const auto PreviousSources=TemporarySkillSources;const auto PreviousGrants=NativeSkillGrants;
     auto Grants=NativeSkillGrants;
     const double End=C->CombatTime()+300;
     const TPair<const TCHAR*,const TCHAR*> Gifts[]={{TEXT("Inn.WaterTraining"),TEXT("Water.Draw")},{TEXT("Inn.WaterWard"),TEXT("Water.Ward")}};
@@ -25,7 +26,14 @@ bool AAetherPlayerState::GrantRestBlessing(FString& Reason)
     }
     TemporaryGrantAvatar=C;
     GetWorld()->GetTimerManager().SetTimer(TemporaryGrantTimer,this,&AAetherPlayerState::RefreshTemporarySkills,.25f,true);
-    if(!PublishNativeSkills(NativeProfile.GetValue(),Grants,Reason))return false;
+    if(!PublishNativeSkills(NativeProfile.GetValue(),Grants,Reason))
+    {
+        // 休息授权失败不留下半个新祝福。恢复旧的期望值；若 ASC 也暂不可发布，由计时器重试恢复。
+        TemporarySkillSources=PreviousSources;NativeSkillGrants=PreviousGrants;
+        FString RollbackReason;bTemporaryPublicationPending=!PublishNativeSkills(NativeProfile.GetValue(),PreviousGrants,RollbackReason);
+        return false;
+    }
+    bTemporaryPublicationPending=false;
     return true;
 }
 void AAetherPlayerState::RefreshTemporarySkills()
@@ -36,17 +44,25 @@ void AAetherPlayerState::RefreshTemporarySkills()
     const double Now=C?C->CombatTime():0;
     TSet<FString> Remove;
     for(const auto& Pair:TemporarySkillSources)if(!SameLife||Pair.Value.ExpiresAt<=Now)Remove.Add(Pair.Key);
-    if(Remove.IsEmpty())return;
+    if(Remove.IsEmpty()&&!bTemporaryPublicationPending)return;
     for(const auto& Key:Remove)TemporarySkillSources.Remove(Key);
     NativeSkillGrants.RemoveAll([&](const auto& G){return G.Source==EAetherSkillGrantSource::Temporary&&Remove.Contains(G.SourceId);});
-    if(TemporarySkillSources.IsEmpty()){GetWorld()->GetTimerManager().ClearTimer(TemporaryGrantTimer);TemporaryGrantAvatar.Reset();}
+    bTemporaryPublicationPending=true;
     // 授权撤销与详情复制同时发布；持久学习/快捷位仍保留，过期不能删除永久技能。
     if(NativeProfile.IsSet()&&AbilitySystem&&AbilitySystem->GetAvatarActor()==GetPawn())
     {
         FString Why;
         const auto Grants=NativeSkillGrants;
-        if(!PublishNativeSkills(NativeProfile.GetValue(),Grants,Why))
-            UE_LOG(LogTemp,Error,TEXT("AETHER_TEMPORARY_SKILL_REVOKE_FAILED %s"),*Why);
+        if(PublishNativeSkills(NativeProfile.GetValue(),Grants,Why))
+        {
+            bTemporaryPublicationPending=false;
+            if(TemporarySkillSources.IsEmpty()){GetWorld()->GetTimerManager().ClearTimer(TemporaryGrantTimer);TemporaryGrantAvatar.Reset();}
+        }
+        else
+        {
+            bNativeSkillReady=false;AbilitySystem->CancelAllAbilities();
+            UE_LOG(LogTemp,Warning,TEXT("AETHER_TEMPORARY_SKILL_REVOKE_RETRY %s"),*Why);
+        }
     }
 }
 void AAetherPlayerState::EndPlay(const EEndPlayReason::Type Reason)

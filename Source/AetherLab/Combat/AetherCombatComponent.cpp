@@ -7,9 +7,30 @@
 #include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
-UAetherCombatComponent::UAetherCombatComponent(){SetIsReplicatedByDefault(true);}
+UAetherCombatComponent::UAetherCombatComponent()
+{
+    SetIsReplicatedByDefault(true);PrimaryComponentTick.bCanEverTick=true;PrimaryComponentTick.TickInterval=.1f;
+}
+void UAetherCombatComponent::TickComponent(float Delta,ELevelTick Type,FActorComponentTickFunction* Function)
+{
+    Super::TickComponent(Delta,Type,Function);
+    auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority())return;
+    if(!C->Alive()){StatusEffects.Reset();return;}
+    // 这里只镜像既有战斗规则，不另造叠层、伤害或状态计时器。
+    const auto Update=[&](FName Kind,bool Active,double End=0)
+    {
+        const int32 Index=StatusEffects.IndexOfByPredicate([&](const auto& S){return S.Kind==Kind;});
+        if(!Active){if(Index!=INDEX_NONE)StatusEffects.RemoveAt(Index);return;}
+        if(Index==INDEX_NONE){FAetherBodyStatusPresentation S;S.InstanceId=FGuid::NewGuid();S.Kind=Kind;S.ExpiresAt=End;StatusEffects.Add(S);}
+        else StatusEffects[Index].ExpiresAt=End;
+    };
+    Update(TEXT("Heat"),C->Reactive&&C->Reactive->State.TemperatureC>55);
+    Update(TEXT("Frozen"),C->Reactive&&C->Reactive->State.IceFraction>.5);
+    Update(TEXT("Wet"),C->Reactive&&C->Reactive->State.ElectricalWetness01>.05);
+    Update(TEXT("Stun"),C->CombatTime()<C->StunUntil,C->StunUntil);
+}
 void UAetherCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(UAetherCombatComponent,LastDamageAt);DOREPLIFETIME(UAetherCombatComponent,DamageReceivedCount);}
+{Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(UAetherCombatComponent,StatusEffects);DOREPLIFETIME(UAetherCombatComponent,LastDamageAt);DOREPLIFETIME(UAetherCombatComponent,DamageReceivedCount);}
 void UAetherCombatComponent::ReceiveHit(float Damage,float PostureDamage,AAetherCharacter* Source,bool CanBlock)
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C)return;

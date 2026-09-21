@@ -38,11 +38,12 @@ bool AAetherPlayerState::PublishNativeSkills(const FAetherProfileStateV10& P,con
 }
 bool AAetherPlayerState::RebindNativeSkills(FString& Reason)
 {
-    if(!HasAuthority()||!NativeSkills.IsSet()||bPublishingNativeSkills||!GetPawn()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=GetPawn())
+    if(!HasAuthority()||!NativeProfile.IsSet()||bPublishingNativeSkills||!GetPawn()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=GetPawn())
     {Reason=TEXT("Native skill avatar not ready");return false;}
-    TGuardValue<bool> Guard(bPublishingNativeSkills,true);bNativeSkillReady=false;
-    if(!AetherSkillBinding::Publish(*AbilitySystem,NativeSkills.GetValue(),NativeSkillGrants,Reason))return false;
-    bNativeSkillReady=true;return true;
+    // 新身体先撤销旧生命的临时来源，再完整发布能力和持续属性，避免只有 AbilitySpec 恢复。
+    RefreshTemporarySkills();
+    const auto Grants=NativeSkillGrants;
+    return PublishNativeSkills(NativeProfile.GetValue(),Grants,Reason);
 }
 
 TArray<FAetherExternalSkillGrant> AAetherPlayerState::GetNativeSkillGrants() const
@@ -50,7 +51,12 @@ TArray<FAetherExternalSkillGrant> AAetherPlayerState::GetNativeSkillGrants() con
     if(HasAuthority())return NativeSkillGrants;
     TArray<FAetherExternalSkillGrant> Grants;
     if(SkillGrants.Rows.Num()>256)return Grants;
-    for(const auto& V:SkillGrants.Rows)Grants.Add({V.SourceId,V.SkillId,V.Rank,EAetherSkillGrantSource(V.Source)});
+    const auto* C=Cast<AAetherCharacter>(GetPawn());
+    for(const auto& V:SkillGrants.Rows)
+    {
+        if(V.Source==uint8(EAetherSkillGrantSource::Temporary)&&(!C||V.ExpiresAtServerSeconds<=C->CombatTime()))continue;
+        Grants.Add({V.SourceId,V.SkillId,V.Rank,EAetherSkillGrantSource(V.Source)});
+    }
     if(!FAetherSkillStateV10::ValidateExternalGrants(Grants,FAetherV10Definitions::Get().Skills))Grants.Reset();
     return Grants;
 }
