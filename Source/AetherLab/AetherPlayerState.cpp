@@ -24,8 +24,16 @@ bool AAetherPlayerState::PublishNativeSkills(const FAetherProfileStateV10& P,con
     // 先记已见提交版本，失败后拒绝旧回读；同版本允许修复重试，不能退回旧等级。
     NativeSkillRevision=P.Revision;NativeSkills=P.Skills;NativeSkillGrants=Grants;
     if(!AetherSkillBinding::Publish(*AbilitySystem,P.Skills,Grants,Reason))return false;
+    // 一个持续效果句柄聚合装备和被动。更换 Avatar、洗点和重复快照均替换数值，不做永久加法。
+    auto Stats=P.Inventory.EquippedStats(D.Items);
+    for(const auto& Pair:D.Skills.Skills)if(!Pair.Value.bActive)
+        if(const auto* Effect=D.Skills.Effect(Pair.Key,P.Skills.EffectiveRank(Pair.Key,Grants)))
+            for(const auto& Stat:Effect->PassiveStats)Stats.FindOrAdd(Stat.Key)+=Stat.Value;
+    if(!AetherEquipmentEffects::Publish(*AbilitySystem,NativeEquipmentSource,Stats,Reason))return false;
     SkillGrantPresentation.Reset();
-    for(const auto& G:Grants){FAetherSkillGrantPresentation V;V.SourceId=G.SourceId;V.SkillId=G.SkillId;V.Rank=G.Rank;V.Source=uint8(G.Source);SkillGrantPresentation.Add(MoveTemp(V));}
+    for(const auto& G:Grants){FAetherSkillGrantPresentation V;V.SourceId=G.SourceId;V.SkillId=G.SkillId;V.Rank=G.Rank;V.Source=uint8(G.Source);
+        if(const auto* Temporary=TemporarySkillSources.Find(G.SourceId)){V.InstanceId=Temporary->InstanceId;V.ExpiresAtServerSeconds=Temporary->ExpiresAt;}
+        SkillGrantPresentation.Add(MoveTemp(V));}
     SkillGrantRevision=P.Revision;bNativeSkillReady=true;ForceNetUpdate();OnProfilePublished.Broadcast();return true;
 }
 bool AAetherPlayerState::RebindNativeSkills(FString& Reason)

@@ -21,6 +21,23 @@ bool AetherNativeInventory::Snapshot(AAetherFrontierCharacter& C,int64 Revision,
     const auto& P=Net->GetProfile().GetValue();Out={};Out.Context={P.CharacterId,Net->GetChannel(),Revision};
     Out.Container=Net->GetContainer();Out.ContainerContext=Net->GetContainerContext();Out.ContainerWorldRevision=Net->GetContainerWorldRevision();
     Out.ProfileRevision=P.Revision;Out.Inventory=P.Inventory;Out.Skills=P.Skills;Out.Gold=P.Gold;
+    Out.ServerTimeSeconds=C.CombatTime();
+    if(const auto* PS=C.ProfileState())
+    {
+        Out.ExternalGrants=PS->GetNativeSkillGrants();
+        for(const auto& G:PS->SkillGrantPresentation)
+        {
+            if(G.Source!=uint8(EAetherSkillGrantSource::Temporary)||!G.InstanceId.IsValid())continue;
+            const auto* D=FAetherV10Definitions::Get().Skills.Skills.Find(G.SkillId);if(!D)continue;
+            FAetherInspectStatusEffect Effect;Effect.InstanceId=G.InstanceId;Effect.DefinitionId=G.SkillId;
+            Effect.DisplayName=D->DisplayName+TEXT(" · 旅舍祝福");Effect.IconId=D->IconId;Effect.Source=TEXT("旅舍休息");
+            Effect.ExpiresAtServerSeconds=G.ExpiresAtServerSeconds;
+            Effect.Impacts.Add({TEXT("rank"),TEXT("授权等级"),FString::FromInt(G.Rank)});
+            if(const auto* Rank=FAetherV10Definitions::Get().Skills.Effect(G.SkillId,G.Rank))
+                for(const auto& Stat:Rank->PassiveStats)Effect.Impacts.Add({Stat.Key,Stat.Key,FString::Printf(TEXT("+%.1f"),Stat.Value)});
+            Out.StatusEffects.Add(MoveTemp(Effect));
+        }
+    }
     Out.bCanAct=C.Ready()&&!C.Carried&&!C.ReviveTarget&&!C.bTravelPending&&!Net->HasPending();
     if(auto* W=C.GetWorld()->GetGameState<AAetherFrontierState>())Out.WorldRevision=W->NativeWorldRevision;
     const auto Shop=C.ActiveShop();const auto* Definition=FAetherV10Definitions::Get().Economy.Shops.Find(Shop.ToString());

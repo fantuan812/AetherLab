@@ -23,55 +23,127 @@
       "SkillId": "Water.Draw",
       "Rank": 1,
       "X": 0,
-      "Y": 150
+      "Y": 300
     },
     {
       "SkillId": "Water.Draw",
       "Rank": 2,
       "X": 220,
-      "Y": 150
+      "Y": 300
     },
     {
       "SkillId": "Water.Draw",
       "Rank": 3,
       "X": 440,
-      "Y": 150
+      "Y": 300
     },
     {
       "SkillId": "Frost.Freeze",
       "Rank": 1,
       "X": 0,
-      "Y": 300
+      "Y": 600
     },
     {
       "SkillId": "Frost.Freeze",
       "Rank": 2,
       "X": 220,
-      "Y": 300
+      "Y": 600
     },
     {
       "SkillId": "Frost.Freeze",
       "Rank": 3,
       "X": 440,
-      "Y": 300
+      "Y": 600
     },
     {
       "SkillId": "Storm.Strike",
       "Rank": 1,
       "X": 0,
-      "Y": 450
+      "Y": 900
     },
     {
       "SkillId": "Storm.Strike",
       "Rank": 2,
       "X": 220,
-      "Y": 450
+      "Y": 900
     },
     {
       "SkillId": "Storm.Strike",
       "Rank": 3,
       "X": 440,
-      "Y": 450
+      "Y": 900
+    },
+    {
+      "SkillId": "Fire.Ward",
+      "Rank": 1,
+      "X": 0,
+      "Y": 140
+    },
+    {
+      "SkillId": "Fire.Ward",
+      "Rank": 2,
+      "X": 220,
+      "Y": 140
+    },
+    {
+      "SkillId": "Fire.Ward",
+      "Rank": 3,
+      "X": 440,
+      "Y": 140
+    },
+    {
+      "SkillId": "Water.Ward",
+      "Rank": 1,
+      "X": 0,
+      "Y": 440
+    },
+    {
+      "SkillId": "Water.Ward",
+      "Rank": 2,
+      "X": 220,
+      "Y": 440
+    },
+    {
+      "SkillId": "Water.Ward",
+      "Rank": 3,
+      "X": 440,
+      "Y": 440
+    },
+    {
+      "SkillId": "Frost.Ward",
+      "Rank": 1,
+      "X": 0,
+      "Y": 740
+    },
+    {
+      "SkillId": "Frost.Ward",
+      "Rank": 2,
+      "X": 220,
+      "Y": 740
+    },
+    {
+      "SkillId": "Frost.Ward",
+      "Rank": 3,
+      "X": 440,
+      "Y": 740
+    },
+    {
+      "SkillId": "Storm.Ward",
+      "Rank": 1,
+      "X": 0,
+      "Y": 1040
+    },
+    {
+      "SkillId": "Storm.Ward",
+      "Rank": 2,
+      "X": 220,
+      "Y": 1040
+    },
+    {
+      "SkillId": "Storm.Ward",
+      "Rank": 3,
+      "X": 440,
+      "Y": 1040
     }
   ]
 }

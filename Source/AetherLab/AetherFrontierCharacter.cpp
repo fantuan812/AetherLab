@@ -49,6 +49,7 @@ void AAetherFrontierCharacter::BindPersistentAbilities()
             if(auto* Old=Cast<AAetherCharacter>(PS->AbilitySystem->GetAvatarActor());Old&&Old!=this)Old->CancelActions();
         }
         AbilitySystem=PS->AbilitySystem; Attributes=PS->Attributes; AbilitySystem->InitAbilityActorInfo(PS,this);
+        if(HasAuthority())PS->RefreshTemporarySkills();
     }
 }
 void AAetherFrontierCharacter::BeginPlay()

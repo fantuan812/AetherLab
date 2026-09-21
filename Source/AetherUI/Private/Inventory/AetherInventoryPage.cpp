@@ -1,4 +1,5 @@
 #include "UI/AetherWidgetAssets.h"
+#include "UI/AetherPageWidgets.h"
 #include "UI/AetherMenuRoot.h"
 #include "Inventory/AetherInventoryPage.h"
 #include "Inventory/AetherNativeInventory.h"
@@ -65,6 +66,7 @@ TSharedRef<SWidget> UAetherInventoryPage::RebuildWidget()
         auto Button=[&](const TCHAR* Text){auto* B=WidgetTree->ConstructWidget<UButton>();auto* T=WidgetTree->ConstructWidget<UTextBlock>();T->SetText(FText::FromString(Text));B->SetContent(T);Toolbar->AddChildToHorizontalBox(B);return B;};
         Button(TEXT("整理并合并"))->OnClicked.AddDynamic(this,&UAetherInventoryPage::Sort);
         Button(TEXT("同步 / 重试"))->OnClicked.AddDynamic(this,&UAetherInventoryPage::Retry);
+        StatusBar=WidgetTree->ConstructWidget<UHorizontalBox>();Root->AddChildToVerticalBox(StatusBar);
         Notice=WidgetTree->ConstructWidget<UTextBlock>();Notice->SetAutoWrapText(true);Root->AddChildToVerticalBox(Notice);
         auto* Body=WidgetTree->ConstructWidget<UHorizontalBox>();Root->AddChildToVerticalBox(Body)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
         auto Column=[&](float Weight){auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();auto* Slot=Body->AddChildToHorizontalBox(Scroll);FSlateChildSize Size(ESlateSizeRule::Fill);Size.Value=Weight;Slot->SetSize(Size);Slot->SetPadding(FMargin(6,0));auto* Box=WidgetTree->ConstructWidget<UVerticalBox>();Scroll->AddChild(Box);return Box;};
@@ -141,10 +143,31 @@ void UAetherInventoryPage::Refresh()
     const int64 ContainerRevision=Next.Container.IsSet()?Next.Container->Revision:-1;
     if(SeenContainerContext!=Next.ContainerContext||SeenContainerRevision!=ContainerRevision||SeenContainerWorld!=Next.ContainerWorldRevision)
     {++Generation;SeenContainerContext=Next.ContainerContext;SeenContainerRevision=ContainerRevision;SeenContainerWorld=Next.ContainerWorldRevision;}
-    if(BeforeGeneration==Generation&&!bDirty)return;
+    FString StatusKey;
+    for(const auto& Effect:Next.StatusEffects)StatusKey+=Effect.InstanceId.ToString()+FString::SanitizeFloat(Effect.ExpiresAtServerSeconds.Get(0));
+    if(StatusKey!=SeenStatuses){SeenStatuses=StatusKey;++Generation;}
+    if(BeforeGeneration==Generation&&!bDirty)
+    {
+        // 时间变化不改变对象身份；详情仍用同一实例更新倒计时，不强制重建格网/焦点。
+        Snapshot.ServerTimeSeconds=Next.ServerTimeSeconds;
+        if(Session.GetDetails().IsSet()&&Session.GetDetails()->Request.Target.Kind==EAetherInspectTarget::StatusEffect)
+        {const auto& D=FAetherV10Definitions::Get();Session.Refresh(Snapshot,D.Items,D.Skills);RenderDetails();}
+        return;
+    }
     bDirty=false;Next.Context.SnapshotRevision=Generation;Snapshot=MoveTemp(Next);const auto& D=FAetherV10Definitions::Get();
     Session.Refresh(Snapshot,D.Items,D.Skills);if(!Session.GetDraft().IsSet())HideConfirmation();
     Preview->SetSource(C);
+    StatusBar->ClearChildren();
+    for(const auto& Effect:Snapshot.StatusEffects)
+    {
+        auto* B=WidgetTree->ConstructWidget<UAetherPageButton>();auto* Text=WidgetTree->ConstructWidget<UTextBlock>();
+        Text->SetText(FText::FromString(Effect.DisplayName+TEXT(" · 详情")));B->SetContent(Text);StatusBar->AddChildToHorizontalBox(B);
+        B->Bind(FSimpleDelegate::CreateWeakLambda(this,[this,Id=Effect.InstanceId]()
+        {
+            FAetherInspectTarget Target;Target.Kind=EAetherInspectTarget::StatusEffect;Target.InstanceId=Id;
+            const auto& D=FAetherV10Definitions::Get();Session.OpenDetails(Target,Snapshot,D.Items,D.Skills);RenderDetails();Details->SetUserFocus(GetOwningPlayer());
+        }));
+    }
     Summary->SetText(FText::FromString(FString::Printf(TEXT("背包 %d / %d · 金币 %d%s"),Snapshot.Inventory.Items.Num(),Snapshot.Inventory.Capacity,Snapshot.Gold,Snapshot.Shop.IsSet()?TEXT(" · 商店服务已开启"):TEXT(""))));
     const auto MakeCell=[&](UUniformGridPanel* Parent,int32 Index,int32 ColumnCount)
     {

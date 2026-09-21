@@ -75,6 +75,12 @@ void UAetherInspectionCard::AddEffect(const TCHAR* Label,const FAetherSkillRankE
 {
     AddLine(Label,FLinearColor(.6f,.8f,1));
     AddLine(FString::Printf(TEXT("技能点 %d · 需求等级 %d"),E.PointCost,E.RequiredLevel));
+    if(!E.PassiveStats.IsEmpty())
+    {
+        TArray<FString> Keys;E.PassiveStats.GetKeys(Keys);Keys.Sort();
+        for(const auto& Key:Keys)AddLine(FString::Printf(TEXT("被动 %s +%.1f"),*Key,E.PassiveStats[Key]));
+        return;
+    }
     AddLine(FString::Printf(TEXT("法力 %.1f · 冷却 %.2f 秒 · 距离 %.0f 厘米 · 半径 %.0f 厘米"),E.ManaCost,E.Cooldown,E.RangeCm,E.TargetRadiusCm));
     // 直接呈现公共等级解析结果，不在 UI 重算材料反应或把水输出量当作免费资源。
     AddLine(FString::Printf(TEXT("热传递 %.1f J · 水转移 %.3f kg · 电刺激 %.1f J"),E.HeatJ,E.WaterKg,E.ElectricalJ));

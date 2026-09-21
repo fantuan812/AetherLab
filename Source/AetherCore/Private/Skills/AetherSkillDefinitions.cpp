@@ -54,17 +54,26 @@ bool FAetherSkillDefinitionsV10::Validate(FString& Reason) const
         {
             if(R.PointCost<0||R.PointCost>100||R.RequiredLevel<1||R.RequiredLevel>100||
                 !FMath::IsFinite(R.ManaCost)||R.ManaCost<0||R.ManaCost>100||
-                !FMath::IsFinite(R.Cooldown)||R.Cooldown<=0||R.Cooldown>60||
-                !FMath::IsFinite(R.RangeCm)||R.RangeCm<1||R.RangeCm>10000||
+                !FMath::IsFinite(R.Cooldown)||R.Cooldown<0||(D.bActive&&R.Cooldown==0)||R.Cooldown>60||
+                !FMath::IsFinite(R.RangeCm)||R.RangeCm<0||(D.bActive&&R.RangeCm==0)||R.RangeCm>10000||
                 !FMath::IsFinite(R.TargetRadiusCm)||R.TargetRadiusCm<0||R.TargetRadiusCm>500||
                 !FMath::IsFinite(R.HeatJ)||FMath::Abs(R.HeatJ)>1000000||
                 !FMath::IsFinite(R.WaterKg)||R.WaterKg<0||R.WaterKg>3||
                 !FMath::IsFinite(R.ElectricalJ)||R.ElectricalJ<0||R.ElectricalJ>100000)
                 return Fail(TEXT("Invalid rank effect"));
-            if((D.Mechanic==EAetherSkillMechanic::Fire&&(R.HeatJ<=0||R.WaterKg!=0||R.ElectricalJ!=0))||
+            if(D.bActive&&!R.PassiveStats.IsEmpty())return Fail(TEXT("Active skill cannot contain passive statistics"));
+            if(!D.bActive)
+            {
+                if(R.PassiveStats.IsEmpty()||R.PassiveStats.Num()>5||R.ManaCost!=0||R.Cooldown!=0||R.RangeCm!=0||R.TargetRadiusCm!=0||R.HeatJ!=0||R.WaterKg!=0||R.ElectricalJ!=0)
+                    return Fail(TEXT("Invalid passive skill effect"));
+                for(const auto& Stat:R.PassiveStats)
+                    if((Stat.Key!=TEXT("Armor")&&Stat.Key!=TEXT("FireResist")&&Stat.Key!=TEXT("WaterResist")&&Stat.Key!=TEXT("FrostResist")&&Stat.Key!=TEXT("StormResist"))||
+                        !FMath::IsFinite(Stat.Value)||Stat.Value<=0||Stat.Value>50)return Fail(TEXT("Unknown passive attribute"));
+            }
+            if(D.bActive&&((D.Mechanic==EAetherSkillMechanic::Fire&&(R.HeatJ<=0||R.WaterKg!=0||R.ElectricalJ!=0))||
                 (D.Mechanic==EAetherSkillMechanic::Water&&(R.WaterKg<=0||R.HeatJ!=0||R.ElectricalJ!=0))||
                 (D.Mechanic==EAetherSkillMechanic::Frost&&(R.HeatJ>=0||R.WaterKg!=0||R.ElectricalJ!=0))||
-                (D.Mechanic==EAetherSkillMechanic::Lightning&&(R.ElectricalJ<=0||R.HeatJ!=0||R.WaterKg!=0)))
+                (D.Mechanic==EAetherSkillMechanic::Lightning&&(R.ElectricalJ<=0||R.HeatJ!=0||R.WaterKg!=0))))
                 return Fail(TEXT("Rank effect does not match finite mechanic"));
         }
         if(D.bStoryBase&&D.Ranks[0].PointCost!=0)return Fail(TEXT("Mandatory story base cannot cost free-spend points"));
@@ -106,10 +115,17 @@ FAetherSkillDefinitionsV10 FAetherSkillDefinitionsV10::Parse(const FString& Json
             const TSharedPtr<FJsonObject>* R=nullptr;FAetherSkillRankEffect E;
             if(!V->TryGetObject(R)||!R||!R->IsValid()||
                 !Integer(*R,TEXT("PointCost"),E.PointCost,0,100)||!Integer(*R,TEXT("RequiredLevel"),E.RequiredLevel,1,100)||
-                !Number(*R,TEXT("ManaCost"),E.ManaCost,0,100)||!Number(*R,TEXT("Cooldown"),E.Cooldown,0.01,60)||
-                !Number(*R,TEXT("RangeCm"),E.RangeCm,1,10000)||!Number(*R,TEXT("TargetRadiusCm"),E.TargetRadiusCm,0,500)||
+                !Number(*R,TEXT("ManaCost"),E.ManaCost,0,100)||!Number(*R,TEXT("Cooldown"),E.Cooldown,0,60)||
+                !Number(*R,TEXT("RangeCm"),E.RangeCm,0,10000)||!Number(*R,TEXT("TargetRadiusCm"),E.TargetRadiusCm,0,500)||
                 !Number(*R,TEXT("HeatJ"),E.HeatJ,-1000000,1000000)||!Number(*R,TEXT("WaterKg"),E.WaterKg,0,3)||
                 !Number(*R,TEXT("ElectricalJ"),E.ElectricalJ,0,100000))return Fail(TEXT("Incomplete rank effect"));
+            if((*R)->HasField(TEXT("PassiveStats")))
+            {
+                const TSharedPtr<FJsonObject>* Stats=nullptr;
+                if(!(*R)->TryGetObjectField(TEXT("PassiveStats"),Stats)||!Stats||!Stats->IsValid())return Fail(TEXT("Invalid passive statistics"));
+                for(const auto& Pair:(*Stats)->Values)
+                {double Value=0;if(!Pair.Value->TryGetNumber(Value)||!FMath::IsFinite(Value))return Fail(TEXT("Invalid passive value"));E.PassiveStats.Add(Pair.Key,Value);}
+            }
             S.Ranks.Add(E);
         }
         for(const auto& V:*Parents)

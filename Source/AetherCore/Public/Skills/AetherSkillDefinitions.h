@@ -7,6 +7,7 @@ struct FAetherSkillRankEffect
     int32 PointCost=0, RequiredLevel=1;
     double ManaCost=0, Cooldown=0, RangeCm=0, TargetRadiusCm=12;
     double HeatJ=0, WaterKg=0, ElectricalJ=0;
+    TMap<FString,double> PassiveStats; // 有限白名单被动，绝不混作施法输出。
 };
 struct FAetherSkillPrerequisite { FString SkillId; int32 Rank=1; };
 struct FAetherSkillDefinitionV10

@@ -16,6 +16,13 @@ struct FAetherSkillGrantPresentation
     UPROPERTY() FString SkillId;
     UPROPERTY() int32 Rank=1;
     UPROPERTY() uint8 Source=0;
+    UPROPERTY() FGuid InstanceId;
+    UPROPERTY() double ExpiresAtServerSeconds=0;
+};
+struct FAetherTemporarySkillSource
+{
+    FGuid InstanceId;
+    double ExpiresAt=0;
 };
 DECLARE_MULTICAST_DELEGATE(FOnAetherProfilePublished);
 
@@ -44,6 +51,9 @@ public:
     const FAetherProfileStateV10* GetNativeProfile() const{return NativeProfile.IsSet()?&NativeProfile.GetValue():nullptr;}
     const FAetherSkillStateV10* GetNativeSkills() const{return bNativeSkillReady&&NativeSkills.IsSet()?&NativeSkills.GetValue():nullptr;}
     TArray<FAetherExternalSkillGrant> GetNativeSkillGrants() const;
+    bool GrantRestBlessing(FString& Reason);
+    void RefreshTemporarySkills();
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) TArray<FAetherSkillGrantPresentation> SkillGrantPresentation;
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) int64 SkillGrantRevision=-1;
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) bool bNativeSkillsEnabled=false;
@@ -52,6 +62,9 @@ public:
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystem; }
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:
+    TMap<FString,FAetherTemporarySkillSource> TemporarySkillSources;
+    TWeakObjectPtr<APawn> TemporaryGrantAvatar;
+    FTimerHandle TemporaryGrantTimer;
     TOptional<FAetherProfileStateV10> NativeProfile;
     FActiveGameplayEffectHandle NativeEquipmentSource;
     int64 NativeEquipmentRevision=-1;

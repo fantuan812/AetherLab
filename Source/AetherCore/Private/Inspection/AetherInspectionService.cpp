@@ -123,7 +123,7 @@ void Skill(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FA
     Field(M,TEXT("permanentRank"),TEXT("永久等级"),FString::FromInt(M.PermanentSkillRank));
     Field(M,TEXT("effectiveRank"),TEXT("实际授权等级"),FString::FromInt(M.EffectiveSkillRank));
     Field(M,TEXT("points"),TEXT("可用技能点"),FString::FromInt(S.Skills.AvailableSkillPoints));
-    Field(M,TEXT("cast"),TEXT("施法限制"),TEXT("需要满足施法距离、目标、材料、资源及当前动作条件。"));
+    Field(M,TEXT("cast"),Def->bActive?TEXT("施法限制"):TEXT("被动效果"),Def->bActive?TEXT("需要满足施法距离、目标、材料、资源及当前动作条件。"):TEXT("授权期间自动生效，来源合并取最高等级；不能拖入施法栏。"));
     if(const auto* Story=S.Skills.StoryGrants.Find(Def->SkillId))Field(M,TEXT("story"),TEXT("故事授予"),*Story);
     for(const auto& Grant:S.ExternalGrants)if(Grant.SkillId==Def->SkillId)
         Field(M,TEXT("external"),Grant.Source==EAetherSkillGrantSource::Equipment?TEXT("装备授予"):TEXT("临时授予"),Grant.SourceId);

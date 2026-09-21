@@ -184,6 +184,258 @@
           "ElectricalJ": 10000
         }
       ]
+    },
+    {
+      "SkillId": "Fire.Ward",
+      "DisplayName": "余烬护佑",
+      "IconId": "Fire.Ignite",
+      "RequiredQuest": "Q_Main_02",
+      "Active": false,
+      "StoryBase": false,
+      "Mechanic": 0,
+      "LegacyBit": -1,
+      "Prerequisites": [
+        {
+          "SkillId": "Fire.Ignite",
+          "Rank": 1
+        }
+      ],
+      "Ranks": [
+        {
+          "PointCost": 1,
+          "RequiredLevel": 1,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 1,
+            "FireResist": 5
+          }
+        },
+        {
+          "PointCost": 2,
+          "RequiredLevel": 2,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 2,
+            "FireResist": 10
+          }
+        },
+        {
+          "PointCost": 3,
+          "RequiredLevel": 3,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 3,
+            "FireResist": 15
+          }
+        }
+      ]
+    },
+    {
+      "SkillId": "Water.Ward",
+      "DisplayName": "流水护佑",
+      "IconId": "Water.Draw",
+      "RequiredQuest": "Q_Main_02",
+      "Active": false,
+      "StoryBase": false,
+      "Mechanic": 1,
+      "LegacyBit": -1,
+      "Prerequisites": [
+        {
+          "SkillId": "Water.Draw",
+          "Rank": 1
+        }
+      ],
+      "Ranks": [
+        {
+          "PointCost": 1,
+          "RequiredLevel": 1,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 1,
+            "WaterResist": 5
+          }
+        },
+        {
+          "PointCost": 2,
+          "RequiredLevel": 2,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 2,
+            "WaterResist": 10
+          }
+        },
+        {
+          "PointCost": 3,
+          "RequiredLevel": 3,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 3,
+            "WaterResist": 15
+          }
+        }
+      ]
+    },
+    {
+      "SkillId": "Frost.Ward",
+      "DisplayName": "寒霜护佑",
+      "IconId": "Frost.Freeze",
+      "RequiredQuest": "Q_Main_04",
+      "Active": false,
+      "StoryBase": false,
+      "Mechanic": 2,
+      "LegacyBit": -1,
+      "Prerequisites": [
+        {
+          "SkillId": "Frost.Freeze",
+          "Rank": 1
+        }
+      ],
+      "Ranks": [
+        {
+          "PointCost": 1,
+          "RequiredLevel": 1,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 1,
+            "FrostResist": 5
+          }
+        },
+        {
+          "PointCost": 2,
+          "RequiredLevel": 2,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 2,
+            "FrostResist": 10
+          }
+        },
+        {
+          "PointCost": 3,
+          "RequiredLevel": 3,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 3,
+            "FrostResist": 15
+          }
+        }
+      ]
+    },
+    {
+      "SkillId": "Storm.Ward",
+      "DisplayName": "雷霆护佑",
+      "IconId": "Storm.Strike",
+      "RequiredQuest": "Q_Main_05",
+      "Active": false,
+      "StoryBase": false,
+      "Mechanic": 3,
+      "LegacyBit": -1,
+      "Prerequisites": [
+        {
+          "SkillId": "Storm.Strike",
+          "Rank": 1
+        }
+      ],
+      "Ranks": [
+        {
+          "PointCost": 1,
+          "RequiredLevel": 1,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 1,
+            "StormResist": 5
+          }
+        },
+        {
+          "PointCost": 2,
+          "RequiredLevel": 2,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 2,
+            "StormResist": 10
+          }
+        },
+        {
+          "PointCost": 3,
+          "RequiredLevel": 3,
+          "ManaCost": 0,
+          "Cooldown": 0,
+          "RangeCm": 0,
+          "TargetRadiusCm": 0,
+          "HeatJ": 0,
+          "WaterKg": 0,
+          "ElectricalJ": 0,
+          "PassiveStats": {
+            "Armor": 3,
+            "StormResist": 15
+          }
+        }
+      ]
     }
   ]
 }

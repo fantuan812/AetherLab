@@ -4,6 +4,7 @@
 #include "Inventory/AetherInventoryCell.h"
 #include "Inspection/AetherInspectionSession.h"
 #include "Contracts/AetherPlayerCommand.h"
+class UHorizontalBox;
 #include "AetherInventoryPage.generated.h"
 class UAetherCommandClient;
 class UAetherMenuSubsystem;
@@ -55,7 +56,8 @@ private:
     int64 Generation=0,SeenProfile=-1,SeenWorld=-1,SeenContainerRevision=-1,SeenContainerWorld=-1;
     FGuid SeenContainerContext;
     FGuid SeenChannel,SeenTrade,ModalToken;
-    FString CategoryFilter,SearchFilter,SeenShop;
+    FString CategoryFilter,SearchFilter,SeenShop,SeenStatuses;
+    UPROPERTY(Transient) TObjectPtr<UHorizontalBox> StatusBar;
     FGuid SeenSelected;
     bool bUpdating=false,bWasOpen=false,bSeenCanAct=false,bDirty=true;
     FTimerHandle ServiceTimer;
