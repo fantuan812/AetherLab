@@ -44,7 +44,11 @@ void AAetherPlayerState::RefreshTemporarySkills()
     const double Now=C?C->CombatTime():0;
     TSet<FString> Remove;
     for(const auto& Pair:TemporarySkillSources)if(!SameLife||Pair.Value.ExpiresAt<=Now)Remove.Add(Pair.Key);
-    if(Remove.IsEmpty()&&!bTemporaryPublicationPending)return;
+    if(Remove.IsEmpty()&&!bTemporaryPublicationPending)
+    {
+        if(TemporarySkillSources.IsEmpty()){GetWorld()->GetTimerManager().ClearTimer(TemporaryGrantTimer);TemporaryGrantAvatar.Reset();}
+        return;
+    }
     for(const auto& Key:Remove)TemporarySkillSources.Remove(Key);
     NativeSkillGrants.RemoveAll([&](const auto& G){return G.Source==EAetherSkillGrantSource::Temporary&&Remove.Contains(G.SourceId);});
     bTemporaryPublicationPending=true;

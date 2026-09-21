@@ -1,7 +1,7 @@
 #pragma once
 #include "Animation/AnimInstance.h"
 #include "AetherMotionSourceAnimInstance.generated.h"
-UCLASS(Transient)
+UCLASS(Transient,Blueprintable)
 class AETHERMOTIONRUNTIME_API UAetherMotionSourceAnimInstance : public UAnimInstance
 {
     GENERATED_BODY()

@@ -1,6 +1,6 @@
-#include "../AetherFrontier.h"
+#include "Framework/AetherFrontier.h"
 #include "Quests/AetherGuide.h"
-#include "../AetherRules.h"
+#include "Framework/AetherRules.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Controller.h"

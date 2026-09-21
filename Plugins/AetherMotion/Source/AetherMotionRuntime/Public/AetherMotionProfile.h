@@ -2,6 +2,7 @@
 #include "Engine/DataAsset.h"
 #include "AetherMotionProfile.generated.h"
 class USkeletalMesh;
+class UAnimInstance;
 class UAetherMotionBoundaryAsset;
 class UIKRetargeter;
 UCLASS(BlueprintType)
@@ -11,6 +12,8 @@ class AETHERMOTIONRUNTIME_API UAetherMotionProfile : public UDataAsset
 public:
     UPROPERTY(EditAnywhere) int32 Revision=1;
     UPROPERTY(EditAnywhere) TSoftObjectPtr<USkeletalMesh> SourceMesh;
+    UPROPERTY(EditAnywhere) TSoftClassPtr<UAnimInstance> SourceAnimationClass =
+        TSoftClassPtr<UAnimInstance>(FSoftObjectPath(TEXT("/Game/Animation/Motion/ABP_G1MotionSource.ABP_G1MotionSource_C")));
     UPROPERTY(EditAnywhere) TSoftObjectPtr<UIKRetargeter> Retargeter;
     UPROPERTY(EditAnywhere) TMap<FName,FString> Styles;
     UPROPERTY(EditAnywhere) FString SkeletonSha256;

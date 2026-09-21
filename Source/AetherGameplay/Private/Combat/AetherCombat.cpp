@@ -136,7 +136,12 @@ void AAetherCharacter::ApplyCharacterDefinition()
         GetCapsuleComponent()->SetCapsuleSize(CharacterDefinition->CapsuleRadius,CharacterDefinition->CapsuleHalfHeight);
         GetMesh()->SetRelativeLocation(FVector(0,0,-CharacterDefinition->CapsuleHalfHeight));
         GetMesh()->SetRelativeRotation(CharacterDefinition->MeshRotation);
-        if(bUseBasicAssets&&GetNetMode()!=NM_DedicatedServer){GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);GetMesh()->SetAnimInstanceClass(UAetherAnimInstance::StaticClass());}
+        if(bUseBasicAssets&&GetNetMode()!=NM_DedicatedServer)
+        {
+            auto* Class=CharacterDefinition->AnimationClass.Get();
+            if(!Class)UE_LOG(LogTemp,Error,TEXT("AETHER_CHARACTER_ANIMBP_MISSING %s"),*CharacterDefinition->AnimationClass.ToString());
+            GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);GetMesh()->SetAnimInstanceClass(Class?Class:UAetherAnimInstance::StaticClass());
+        }
         Equipment->SetAttachmentTarget(GetMesh());
         Nameplate->SetRelativeLocation(FVector(0,0,CharacterDefinition->CapsuleHalfHeight+35));
         OnAppearanceChanged.Broadcast();
@@ -500,7 +505,7 @@ void AAetherCharacter::Tick(float Dt)
     if(Motion&&GetNetMode()!=NM_DedicatedServer)
     {
         const bool Controlled=AllowsGeneratedMotion();
-        FName Style=bIsCrouched?FName("Crouch"):GetVelocity().Size2D()<5?FName("Idle"):Health()<MaxHealth*.3f?FName("Injured"):FName("Walk");
+        FName Style=bIsCrouched?(GetVelocity().Size2D()<5?FName("CrouchIdle"):FName("Crouch")):GetVelocity().Size2D()<5?FName("Idle"):Health()<MaxHealth*.3f?FName("Injured"):FName("Walk");
         if(!bIsCrouched&&Health()>=MaxHealth*.3f&&GetVelocity().Size2D()>=5)
             if(const auto* Player=Cast<AAetherFrontierCharacter>(this);Player&&Player->LockedTarget)
             {

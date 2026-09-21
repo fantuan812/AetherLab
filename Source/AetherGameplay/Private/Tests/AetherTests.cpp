@@ -1,7 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "HAL/PlatformTime.h"
 #include "ReactiveSimulation.h"
-#include "../AetherCombat.h"
+#include "Combat/AetherCombat.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 namespace

@@ -1,5 +1,5 @@
-#include "../AetherFrontier.h"
-#include "../AetherAnimation.h"
+#include "Framework/AetherFrontier.h"
+#include "Animation/AetherAnimation.h"
 #include "Animation/AnimSequence.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"

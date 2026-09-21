@@ -48,7 +48,8 @@ void UAetherAnimInstance::UpdateActions(AAetherCharacter& Character,const FAethe
    ControlledTime=Loop?FMath::Fmod(FMath::Max(0.f,Elapsed),FMath::Max(.01f,Length)):
        FMath::Clamp(Duration>0?Elapsed/Duration*Length:Elapsed,0.f,Length);
  }
- ControlledWeight=FMath::FInterpTo(ControlledWeight,Selected?1.f:0.f,Dt,18);
+ const float GeneratedCrouch=Frame.bCrouched&&Id.ToString().StartsWith(TEXT("Crouch"))&&C->Motion?C->Motion->GeneratedWeight():0.f;
+ ControlledWeight=FMath::FInterpTo(ControlledWeight,Selected?1.f-GeneratedCrouch:0.f,Dt,18);
  if(!Selected&&ControlledWeight<.001f)ControlledClip=nullptr;
  // 格挡使用完整受控动画，取消旧的单骨骼抬臂替代。
  ControlledActionId=Id;const bool Busy=Frame.bAttacking;

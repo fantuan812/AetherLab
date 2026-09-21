@@ -1,6 +1,6 @@
-#include "../AetherFrontier.h"
+#include "Framework/AetherFrontier.h"
 #include "Quests/AetherGuide.h"
-#include "../AetherInventoryRules.h"
+#include "Inventory/AetherInventoryRules.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"

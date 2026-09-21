@@ -1,5 +1,5 @@
-#include "../AetherFrontier.h"
-#include "AetherLegacyFixture.h"
+#include "Framework/AetherFrontier.h"
+#include "Tests/AetherLegacyFixture.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"

@@ -13,7 +13,7 @@ void UAetherAssetPreload::Tick(float)
  if(!Content||!Content->EquipmentCatalog){bFailed=true;UE_LOG(LogTemp,Error,TEXT("AETHER_ASSET_ROOT_FAILED"));return;}
  TArray<FSoftObjectPath> Paths;
  for(auto* D:{Content->Player.Get(),Content->Guard.Get(),Content->Caster.Get(),Content->Boss.Get()})if(D)
- {Paths.AddUnique(D->BodyMesh.ToSoftObjectPath());Paths.AddUnique(D->WalkAnimation.ToSoftObjectPath());Paths.AddUnique(D->AttackAnimation.ToSoftObjectPath());}
+ {Paths.AddUnique(D->BodyMesh.ToSoftObjectPath());Paths.AddUnique(D->AnimationClass.ToSoftObjectPath());Paths.AddUnique(D->WalkAnimation.ToSoftObjectPath());Paths.AddUnique(D->AttackAnimation.ToSoftObjectPath());}
  for(const auto& D:Content->EquipmentCatalog->Items)if(D){Paths.AddUnique(D->Mesh.ToSoftObjectPath());for(const auto& A:D->Attacks)Paths.AddUnique(A.Animation.ToSoftObjectPath());}
  Paths.AddUnique(FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle.MM_Idle")));
  Paths.AddUnique(FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple")));

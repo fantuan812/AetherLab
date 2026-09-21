@@ -1,6 +1,6 @@
 #include "Misc/AutomationTest.h"
-#include "../AetherProgression.h"
-#include "../AetherRules.h"
+#include "Framework/AetherProgression.h"
+#include "Framework/AetherRules.h"
 #include "ReactiveSimulation.h"
 #if WITH_DEV_AUTOMATION_TESTS
 using namespace Reactive;

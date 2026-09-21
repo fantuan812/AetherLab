@@ -61,6 +61,7 @@ private:
     FGuid SeenSelected;
     bool bUpdating=false,bWasOpen=false,bSeenCanAct=false,bDirty=true;
     FTimerHandle ServiceTimer;
+    int32 Columns=8;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UUniformGridPanel> Grid;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UUniformGridPanel> Equipment;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UUniformGridPanel> Products;

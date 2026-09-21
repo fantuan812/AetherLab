@@ -1,5 +1,5 @@
 #include "Misc/AutomationTest.h"
-#include "../AetherFrontier.h"
+#include "Framework/AetherFrontier.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"

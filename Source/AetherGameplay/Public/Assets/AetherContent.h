@@ -7,6 +7,7 @@
 
 class USkeletalMesh;
 class UAnimSequence;
+class UAnimInstance;
 UCLASS(BlueprintType)
 class AETHERGAMEPLAY_API UAetherCharacterDefinition : public UPrimaryDataAsset
 {
@@ -17,6 +18,8 @@ public:
     // 预览使用独立待机，不读取真实角色倒地/施法状态；体型不兼容时回到参考姿态并提示。
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftObjectPtr<UAnimSequence> PreviewIdleAnimation =
         TSoftObjectPtr<UAnimSequence>(FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle.MM_Idle")));
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftClassPtr<UAnimInstance> AnimationClass =
+        TSoftClassPtr<UAnimInstance>(FSoftObjectPath(TEXT("/Game/Animation/ABP_AetherCharacter.ABP_AetherCharacter_C")));
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftObjectPtr<UAnimSequence> WalkAnimation;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftObjectPtr<UAnimSequence> AttackAnimation;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FRotator MeshRotation = FRotator(0,-90,0);

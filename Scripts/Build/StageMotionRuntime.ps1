@@ -32,6 +32,17 @@ foreach($taskFile in $taskArtifacts.files){
 foreach($taskFile in $taskBundle.files){
  Copy-VerifiedMotionFile (Join-Path $SourceProject ('Saved/ThirdParty/MotionBundle/'+$taskFile.path)) $taskFile.path $taskFile.bytes $taskFile.sha256
 }
+# 自制风格只接受导出来源和 mbstyle 摘要一致的制品；质量报告独立记录。
+$taskStyleRoot=Join-Path $taskRoot 'ContentSource/Motion/Styles'
+if(Test-Path -LiteralPath $taskStyleRoot){
+ foreach($taskStyle in Get-ChildItem -LiteralPath $taskStyleRoot -File -Filter '*.mbstyle'){
+  if($taskStyle.BaseName -notmatch '^[A-Za-z0-9_]+$'){throw 'Invalid authored style name.'}
+  $taskSourceRecord=Get-Content -LiteralPath ([IO.Path]::ChangeExtension($taskStyle.FullName,'.source.json')) -Raw | ConvertFrom-Json
+  $taskHash=(Get-FileHash -LiteralPath $taskStyle.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+  if($taskSourceRecord.styleSha256 -ne $taskHash -or !$taskSourceRecord.sourceFileSha256 -or !$taskSourceRecord.sourceAsset){throw 'Authored style lacks matching source provenance.'}
+  Copy-VerifiedMotionFile $taskStyle.FullName ('styles/'+$taskStyle.Name) $taskStyle.Length $taskHash
+ }
+}
 $taskLicenses=@{
  'MotionBricks-LICENSE.txt'='Plugins/AetherMotion/ThirdPartyNotices/MotionBricks-LICENSE.txt'
  'GGML-LICENSE.txt'='Plugins/AetherMotion/ThirdPartyNotices/GGML-LICENSE.txt'

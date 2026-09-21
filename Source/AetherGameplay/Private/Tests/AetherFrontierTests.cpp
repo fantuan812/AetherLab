@@ -1,5 +1,5 @@
 #include "Misc/AutomationTest.h"
-#include "../AetherProgression.h"
+#include "Framework/AetherProgression.h"
 #include "ReactiveSimulation.h"
 #if WITH_DEV_AUTOMATION_TESTS
 namespace {constexpr auto V4Flags=EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter;}

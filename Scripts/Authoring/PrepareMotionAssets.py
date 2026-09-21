@@ -48,7 +48,7 @@ def main():
         data = json.loads(clip.read_text(encoding="utf-8-sig"))
         style_names = {"idle": "Idle", "walk": "Walk", "injured": "Injured", "injured_walk": "Injured",
                        "combat": "Combat", "walk_boxing": "Combat", "strafeleft": "StrafeLeft", "walk_left": "StrafeLeft",
-                       "straferight": "StrafeRight", "walk_right": "StrafeRight"}
+                       "straferight": "StrafeRight", "walk_right": "StrafeRight", "crouch": "Crouch", "crouch_idle": "CrouchIdle"}
         style = style_names.get(clip.stem.lower())
         if style:
             if data.get("skeletonSha256") != skeleton_data["skeletonSha256"] or len(data["roots"]) < 4:
@@ -69,7 +69,12 @@ def main():
             resources.append(asset)
     for profile in profiles:
         profile.set_editor_property("skeleton_sha256", skeleton_data["skeletonSha256"])
-        profile.set_editor_property("transition_boundaries", boundaries)
+        styles = dict(profile.get_editor_property("styles"))
+        for key, filename in [("Crouch", "crouch"), ("CrouchIdle", "crouch_idle")]:
+            if (ROOT / "ContentSource/Motion/Styles" / (filename + ".mbstyle")).is_file():
+                styles[ue.Name(key)] = filename
+        profile.set_editor_property("styles", styles)
+        profile.set_editor_property("transition_boundaries", {k:v for k,v in boundaries.items() if ue.Name(k) in styles})
         if not LIBRARY.save_loaded_asset(profile):
             raise RuntimeError("动作配置保存失败")
     path = OUTPUT + "/DA_MotionCook"

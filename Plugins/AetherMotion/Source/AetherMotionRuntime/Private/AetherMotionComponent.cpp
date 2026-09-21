@@ -33,7 +33,7 @@ void UAetherMotionComponent::LoadAssets()
         if(!Self.IsValid()||!Self->Agent||Self->AssetGeneration!=Generation)return;
         Self->Profile=Self->ProfileAsset.Get();FString Why;
         if(!Self->Profile||!Self->Profile->Validate(Why)){Self->Message=Why.IsEmpty()?TEXT("动作配置资产缺失"):Why;return;}
-        TArray<FSoftObjectPath> Paths={Self->Profile->SourceMesh.ToSoftObjectPath(),Self->Profile->Retargeter.ToSoftObjectPath()};
+        TArray<FSoftObjectPath> Paths={Self->Profile->SourceMesh.ToSoftObjectPath(),Self->Profile->Retargeter.ToSoftObjectPath(),Self->Profile->SourceAnimationClass.ToSoftObjectPath()};
         for(const auto& Pair:Self->Profile->TransitionBoundaries)Paths.Add(Pair.Value.ToSoftObjectPath());
         Self->Loading=UAssetManager::GetStreamableManager().RequestAsyncLoad(Paths,[Self,Generation](){if(Self.IsValid()&&Self->Agent&&Self->AssetGeneration==Generation)Self->AssetsReady();});
     });
@@ -41,6 +41,7 @@ void UAetherMotionComponent::LoadAssets()
 void UAetherMotionComponent::AssetsReady()
 {
     if(!Profile||!Profile->SourceMesh.Get()||!Profile->Retargeter.Get())return;
+    if(!Profile->SourceAnimationClass.Get()){Message=TEXT("G1 动画蓝图资源缺失");return;}
     auto* Character=Cast<ACharacter>(GetOwner());if(!Character)return;
     SourceMesh=NewObject<USkeletalMeshComponent>(Character,TEXT("GeneratedMotionSource"));
     SourceMesh->SetupAttachment(Character->GetRootComponent());SourceMesh->SetAbsolute(false,false,false);
@@ -48,7 +49,7 @@ void UAetherMotionComponent::AssetsReady()
     SourceMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);SourceMesh->SetVisibility(false);SourceMesh->SetHiddenInGame(true);
     SourceMesh->VisibilityBasedAnimTickOption=EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
     SourceMesh->SetSkeletalMeshAsset(Profile->SourceMesh.Get());SourceMesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
-    SourceMesh->SetAnimInstanceClass(UAetherMotionSourceAnimInstance::StaticClass());SourceMesh->RegisterComponent();
+    SourceMesh->SetAnimInstanceClass(Profile->SourceAnimationClass.Get());SourceMesh->RegisterComponent();
     SourceMesh->AddTickPrerequisiteComponent(this);Character->GetMesh()->AddTickPrerequisiteComponent(SourceMesh);
     Stamp.ProfileRevision=Profile->Revision;
 }

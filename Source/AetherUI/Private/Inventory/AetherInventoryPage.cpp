@@ -29,7 +29,6 @@
 #include "InputCoreTypes.h"
 namespace
 {
-constexpr int32 Columns=8;
 FString SlotName(const FString& Id)
 {
     static const TMap<FString,FString> Names={{TEXT("MainHand"),TEXT("主手")},{TEXT("OffHand"),TEXT("副手")},{TEXT("Head"),TEXT("头部")},{TEXT("Chest"),TEXT("胸部")},
@@ -140,6 +139,15 @@ void UAetherInventoryPage::Refresh()
     if(!C||!AetherNativeInventory::Snapshot(*C,Generation,Next))
     {Session.Close();HideConfirmation();if(Preview)Preview->SetSource(nullptr);Summary->SetText(FText::FromString(TEXT("等待原生背包同步")));Grid->ClearChildren();Cells.Reset();RenderDetails();return;}
     if(Player.Get()!=C||SeenChannel!=Next.Context.SessionId){HideConfirmation();Session=FAetherInspectionSession();Player=C;SeenProfile=-1;}
+    // 列数取实际中心滚动视口；固定物理槽索引保持不变，重排不会改变命令目标。
+    float Width=0;
+    for(UWidget* Parent=Grid->GetParent();Parent;Parent=Parent->GetParent())
+        if(Cast<UScrollBox>(Parent)){Width=Parent->GetCachedGeometry().GetLocalSize().X;break;}
+    if(Width>0)
+    {
+        const int32 NextColumns=FMath::Clamp(FMath::FloorToInt((Width-18)/82),2,8);
+        if(NextColumns!=Columns){Columns=NextColumns;bDirty=true;}
+    }
     const int64 BeforeGeneration=Generation;
     const FString CurrentShop=Next.Shop.IsSet()?Next.Shop->Id:FString();
     if(SeenSelected!=C->SelectedInstance){SeenSelected=C->SelectedInstance;bDirty=true;}
@@ -185,6 +193,7 @@ void UAetherInventoryPage::Refresh()
     {Grid->ClearChildren();Cells.Reset();for(int32 I=0;I<Snapshot.Inventory.Capacity;++I)Cells.Add(MakeCell(Grid,I,Columns));}
     for(int32 Slot=0;Slot<Cells.Num();++Slot)
     {
+        if(auto* Layout=Cast<UUniformGridSlot>(Cells[Slot]->Slot)){Layout->SetRow(Slot/Columns);Layout->SetColumn(Slot%Columns);}
         const auto* I=Snapshot.Inventory.At(Slot);const auto* Def=I?D.Items.Items.Find(I->DefinitionId):nullptr;
         FAetherInspectTarget Target;Target.Kind=EAetherInspectTarget::ItemInstance;if(I)Target.InstanceId=I->InstanceId;
         FString Label=FString::Printf(TEXT("%02d · 空"),Slot+1);bool Filtered=false;
@@ -218,12 +227,13 @@ void UAetherInventoryPage::Refresh()
     if(ContainerCells.Num()!=Count){ContainerGrid->ClearChildren();ContainerCells.Reset();for(int32 N=0;N<Count;++N)ContainerCells.Add(MakeCell(ContainerGrid,N,Columns));}
     for(int32 N=0;N<Count;++N)
     {
+        if(auto* Layout=Cast<UUniformGridSlot>(ContainerCells[N]->Slot)){Layout->SetRow(N/Columns);Layout->SetColumn(N%Columns);}
         const auto* Item=Container->Inventory.At(N);const auto* Def=Item?D.Items.Items.Find(Item->DefinitionId):nullptr;
         FAetherInspectTarget T;T.ContainerId=Container->ContainerId;if(Item)T.InstanceId=Item->InstanceId;
         ContainerCells[N]->Present(AetherInspection::Pin(Snapshot,T),N,Def?Def->DisplayName+LINE_TERMINATOR+FString::Printf(TEXT("×%d"),Item->Quantity):TEXT("空"),Def?Def->IconId:FString(),false,false);
         ContainerCells[N]->SetNavigationRuleExplicit(EUINavigation::Left,ContainerCells[(N+Count-1)%Count]);
         ContainerCells[N]->SetNavigationRuleExplicit(EUINavigation::Right,ContainerCells[(N+1)%Count]);
-        ContainerCells[N]->SetNavigationRuleExplicit(EUINavigation::Up,N<Columns&&!Cells.IsEmpty()?Cells[FMath::Min(N,Cells.Num()-1)].Get():ContainerCells[(N+Count-Columns)%Count].Get());
+        ContainerCells[N]->SetNavigationRuleExplicit(EUINavigation::Up,N<Columns&&!Cells.IsEmpty()?Cells[FMath::Min(N,Cells.Num()-1)].Get():ContainerCells[(N+Count-(Columns%Count))%Count].Get());
         ContainerCells[N]->SetNavigationRuleExplicit(EUINavigation::Down,ContainerCells[(N+Columns)%Count]);
     }
     const auto* Shop=Snapshot.Shop.IsSet()?&Snapshot.Shop.GetValue():nullptr;
@@ -232,6 +242,7 @@ void UAetherInventoryPage::Refresh()
     if(ProductCells.Num()!=ProductCount){Products->ClearChildren();ProductCells.Reset();for(int32 I=0;I<ProductCount;++I)ProductCells.Add(MakeCell(Products,I,4));}
     for(int32 N=0;N<ProductCount;++N)
     {
+        if(auto* Layout=Cast<UUniformGridSlot>(ProductCells[N]->Slot)){const int32 ProductColumns=FMath::Min(Columns,4);Layout->SetRow(N/ProductColumns);Layout->SetColumn(N%ProductColumns);}
         const auto* Def=D.Items.Items.Find(Shop->Products[N]);if(!Def)continue;
         FAetherInspectTarget T;T.Kind=EAetherInspectTarget::ItemDefinition;T.DefinitionId=Def->Id;
         ProductCells[N]->Present(AetherInspection::Pin(Snapshot,T),INDEX_NONE,Def->DisplayName+LINE_TERMINATOR+FString::Printf(TEXT("%d 金币"),Def->BuyPrice),Def->IconId,false,false);

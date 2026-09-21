@@ -9,7 +9,9 @@ bool FAetherSkillDefinitionTest::RunTest(const FString&)
 {
     const auto& D=FAetherSkillDefinitionsV10::Get();FString Reason;
     if(!TestTrue(*Reason,D.Validate(Reason)))return false;
-    TestEqual(TEXT("Four elemental routes"),D.Skills.Num(),4);
+    TestEqual(TEXT("Four active and four passive routes"),D.Skills.Num(),8);
+    for(const auto& Pair:D.Skills)if(!Pair.Value.bActive)
+    {TestEqual(TEXT("Passive route has three ranks"),Pair.Value.Ranks.Num(),3);TestFalse(TEXT("Passive rank changes real attributes"),Pair.Value.Ranks.Last().PassiveStats.IsEmpty());}
     for(int32 Bit=0;Bit<4;++Bit)
     {
         const auto* S=D.Legacy(Bit);if(!TestNotNull(TEXT("Legacy bit has explicit stable mapping"),S))return false;
