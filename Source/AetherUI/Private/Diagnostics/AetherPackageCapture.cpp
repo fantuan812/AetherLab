@@ -6,11 +6,14 @@
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Preview/AetherCharacterPreviewSubsystem.h"
 #include "AetherMotionComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "MotionBricksScheduler.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/Engine.h"
 #include "GameFramework/PlayerController.h"
+#include "Camera/PlayerCameraManager.h"
 #include "UnrealClient.h"
 #include "HAL/PlatformTime.h"
 #include "HAL/IConsoleManager.h"
@@ -22,13 +25,28 @@
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 
+namespace
+{
+int32 PosedBones(USkeletalMeshComponent* Mesh)
+{
+ if(!Mesh||!Mesh->GetSkeletalMeshAsset()||!Mesh->GetAnimInstance())return 0;
+ const auto& Ref=Mesh->GetSkeletalMeshAsset()->GetRefSkeleton().GetRefBonePose();
+ const auto& Actual=Mesh->GetBoneSpaceTransforms();int32 Count=0;
+ for(int32 I=1;I<FMath::Min(Ref.Num(),Actual.Num());++I)
+ {
+  if(Actual[I].ContainsNaN())return 0;
+  if(!Actual[I].GetRotation().Equals(Ref[I].GetRotation(),.01f)||!Actual[I].GetTranslation().Equals(Ref[I].GetTranslation(),.5f))++Count;
+ }
+ return Count;
+}
+}
 void AetherPackageCapture::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* Panel)
 {
     // Shipping 仍保留只读支持诊断：只经正式菜单服务开页、截图和记录资源，不授予物品、不改玩家进度。
     // 必须同时给出独立 UserDir 和隔离前缀；正常启动没有诊断 Tick 工作。
     static FString Token=[](){FString Value;FParse::Value(FCommandLine::Get(),TEXT("AetherPackageCapture="),Value);return Value;}();
     if(Token.IsEmpty()||!HUD||!Panel)return;
-    struct FState{double Start=FPlatformTime::Seconds(),Next=0;int32 Step=0,Backend=0;bool Done=false;FString Dir;};
+    struct FState{double Start=FPlatformTime::Seconds(),Next=0,PoseReadyAt=0;int32 Step=0,Backend=0,BodyPosed=0,SourcePosed=0;float GeneratedWeight=0;double RootHeight=0,PelvisHeight=0;bool Done=false;FString Dir;TMap<FString,FString> PoseState;};
     static FState S;if(S.Done)return;
     if(S.Dir.IsEmpty())
     {
@@ -46,6 +64,10 @@ void AetherPackageCapture::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* Pa
     {
         auto Result=MakeShared<FJsonObject>();Result->SetBoolField(TEXT("passed"),Passed);Result->SetStringField(TEXT("reason"),Reason);
         Result->SetBoolField(TEXT("shipping"),UE_BUILD_SHIPPING!=0);Result->SetBoolField(TEXT("fullGameplayAcceptance"),false);
+        Result->SetNumberField(TEXT("bodyPosedBones"),S.BodyPosed);Result->SetNumberField(TEXT("sourcePosedBones"),S.SourcePosed);
+        Result->SetNumberField(TEXT("generatedWeight"),S.GeneratedWeight);
+        Result->SetNumberField(TEXT("rootHeightCm"),S.RootHeight);Result->SetNumberField(TEXT("pelvisHeightCm"),S.PelvisHeight);
+        auto Pose=MakeShared<FJsonObject>();for(const auto& V:S.PoseState)Pose->SetStringField(V.Key,V.Value);Result->SetObjectField(TEXT("poseState"),Pose);
         Result->SetNumberField(TEXT("backend"),S.Backend);Result->SetNumberField(TEXT("step"),S.Step);
         Result->SetStringField(TEXT("projectDir"),FPaths::ConvertRelativePathToFull(FPaths::ProjectDir()));
         Result->SetNumberField(TEXT("nativeCalls"),double(AetherMotionScheduler().Inspect().NativeCalls));
@@ -63,7 +85,24 @@ void AetherPackageCapture::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* Pa
     if(!C->Ready()||C->bTravelPending||!Client->GetProfile().IsSet()||!Client->GetChannel().IsValid())return;
     if(S.Step==0)
     {
-        if(S.Backend>0&&AetherMotionScheduler().Inspect().NativeCalls<2)return;
+        S.BodyPosed=PosedBones(C->GetMesh());S.SourcePosed=PosedBones(C->Motion?C->Motion->GetSourceMesh():nullptr);
+        S.GeneratedWeight=C->Motion?C->Motion->GeneratedWeight():0;
+        // 调用模型成功仍可能没有驱动最终图；实际源姿态和人物姿态均须离开参考姿势。
+        S.RootHeight=C->GetMesh()->GetSocketTransform(TEXT("root"),RTS_Component).GetLocation().Z;
+        S.PelvisHeight=C->GetMesh()->GetSocketTransform(TEXT("pelvis"),RTS_Component).GetLocation().Z;
+        const bool Ready=FMath::Abs(S.RootHeight)<10&&S.PelvisHeight>20&&S.PelvisHeight<180&&S.BodyPosed>=8&&(S.Backend==0||(AetherMotionScheduler().Inspect().NativeCalls>=2&&S.SourcePosed>=8&&S.GeneratedWeight>.9f));
+        if(!Ready){S.PoseReadyAt=0;return;}
+        if(S.PoseReadyAt==0){S.PoseReadyAt=Now;return;}
+        if(Now-S.PoseReadyAt<2)return;
+        S.PoseState.Add(TEXT("actor"),C->GetActorLocation().ToString());S.PoseState.Add(TEXT("mesh"),C->GetMesh()->GetComponentTransform().ToString());
+        S.PoseState.Add(TEXT("camera"),PC->PlayerCameraManager->GetCameraLocation().ToString());
+        S.PoseState.Add(TEXT("cameraRotation"),PC->PlayerCameraManager->GetCameraRotation().ToString());
+        for(const TCHAR* Bone:{TEXT("root"),TEXT("pelvis"),TEXT("head"),TEXT("foot_l"),TEXT("foot_r")})
+        {
+            S.PoseState.Add(Bone,C->GetMesh()->GetSocketTransform(Bone,RTS_Component).ToString());
+            FVector2D Screen;const bool Visible=PC->ProjectWorldLocationToScreen(C->GetMesh()->GetSocketLocation(Bone),Screen);
+            S.PoseState.Add(FString(Bone)+TEXT("Screen"),FString::Printf(TEXT("%d %s"),Visible,*Screen.ToString()));
+        }
         FScreenshotRequest::RequestScreenshot(S.Dir/TEXT("World.png"),true,false);
         S.Step=1;S.Next=Now+1;return;
     }

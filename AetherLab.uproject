@@ -36,6 +36,11 @@
       "TargetDenyList": [
         "Server"
       ]
+    },
+    {
+      "Name": "AetherAnimationEditor",
+      "Type": "UncookedOnly",
+      "LoadingPhase": "Default"
     }
   ],
   "Plugins": [

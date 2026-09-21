@@ -27,6 +27,10 @@ for path, parent, mesh_path in definitions:
         asset = tools.create_asset(name, path.rsplit("/", 1)[0], ue.AnimBlueprint, factory)
     if not isinstance(asset, ue.AnimBlueprint):
         raise RuntimeError("动画蓝图资产冲突：" + path)
+    # UE Python 将 bool 返回值作为成功标志：成功返回 out Reason（空字符串），失败返回 None。
+    reason = ue.AetherAnimationAuthoring.connect_native_pose(asset, parent == ue.AetherMotionSourceAnimInstance)
+    if reason is None or reason:
+        raise RuntimeError("原生动画输出未连接：" + path + " " + str(reason))
     ue.BlueprintEditorLibrary.compile_blueprint(asset)
     if not lib.save_loaded_asset(asset):
         raise RuntimeError("保存动画蓝图失败：" + path)

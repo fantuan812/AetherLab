@@ -15,7 +15,7 @@
     },
     {
       "Name": "AetherMotionEditor",
-      "Type": "Editor",
+      "Type": "UncookedOnly",
       "LoadingPhase": "Default"
     }
   ],

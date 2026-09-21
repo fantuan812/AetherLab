@@ -26,6 +26,7 @@ THIRD_PARTY_INCLUDES_END
 #include "Rig/IKRigDefinition.h"
 #include "RigEditor/IKRigController.h"
 #include "Retargeter/IKRetargeter.h"
+#include "Retargeter/RetargetOps/RootMotionGeneratorOp.h"
 #include "RetargetEditor/IKRetargeterController.h"
 #include "Misc/FileHelper.h"
 #include "Misc/PackageName.h"
@@ -218,7 +219,11 @@ bool UAetherMotionAuthoring::CreateRetargetAssets(USkeletalMesh* Source,USkeleta
 UAnimSequence* UAetherMotionAuthoring::ImportClip(const FString& Json,USkeletalMesh* Source,const FString& Path,FString& Why)
 {
     Why.Reset();FAetherMotionClip C;if(!Clip(Load(Json,Why),C,Why)||!Match(*C.Skeleton,Source,Why))return nullptr;
-    auto* Animation=Asset<UAnimSequence>(Path,Why);if(!Animation)return nullptr;Animation->SetSkeleton(Source->GetSkeleton());
+    if(!Path.StartsWith(TEXT("/Game/Animation/Motion/Baked/"))||!FPackageName::IsValidLongPackageName(Path)){Why=TEXT("Import output must be an authored Baked clip");return nullptr;}
+    // 已管理的派生片段可重复导入，避免源 JSON 更新而 uasset 仍保留旧骨盆高度。
+    auto* Animation=LoadObject<UAnimSequence>(nullptr,*(Path+TEXT(".")+FPackageName::GetLongPackageAssetName(Path)));
+    if(Animation&&Animation->GetSkeleton()!=Source->GetSkeleton()){Why=TEXT("Existing clip has a different skeleton");return nullptr;}
+    if(!Animation)Animation=Asset<UAnimSequence>(Path,Why);if(!Animation)return nullptr;Animation->SetSkeleton(Source->GetSkeleton());
     auto& Controller=Animation->GetController();Controller.InitializeModel();Controller.OpenBracket(FText::FromString(TEXT("导入 G1 真实推理姿态")),false);
     Controller.SetFrameRate(FFrameRate(30,1),false);Controller.SetNumberOfFrames(FFrameNumber(int32(C.Frames)-1),false);
     TArray<TArray<FVector3f>> Positions;TArray<TArray<FQuat4f>> Rotations;Positions.SetNum(34);Rotations.SetNum(34);
@@ -231,7 +236,7 @@ UAnimSequence* UAetherMotionAuthoring::ImportClip(const FString& Json,USkeletalM
         for(int32 J=0;J<34;++J){Positions[J].Add(FVector3f(Pose[J].GetTranslation()));Rotations[J].Add(FQuat4f(Pose[J].GetRotation()));}
     }
     TArray<FVector3f> Scale;Scale.Init(FVector3f::OneVector,C.Frames);bool OK=true;
-    for(int32 J=0;J<34;++J){OK&=Controller.AddBoneCurve(C.Skeleton->Names[J],false);OK&=Controller.SetBoneTrackKeys(C.Skeleton->Names[J],Positions[J],Rotations[J],Scale,false);}
+    for(int32 J=0;J<34;++J){if(!Animation->GetDataModel()->IsValidBoneTrackName(C.Skeleton->Names[J]))OK&=Controller.AddBoneCurve(C.Skeleton->Names[J],false);OK&=Controller.SetBoneTrackKeys(C.Skeleton->Names[J],Positions[J],Rotations[J],Scale,false);}
     Controller.NotifyPopulated();Controller.CloseBracket(false);
     if(!OK){Why=TEXT("动画轨道写入失败");return nullptr;}Animation->PostEditChange();return Save(Animation,Why)?Animation:nullptr;
 }
@@ -334,4 +339,40 @@ UAnimSequence* UAetherMotionAuthoring::RetargetClip(UAnimSequence* Animation,USk
     if(!OK){Why=TEXT("Cannot write retargeted bone tracks");return nullptr;}
     Result->PostEditChange();FAssetCompilingManager::Get().FinishAllCompilation();
     return Save(Result,Why)?Result:nullptr;
+}
+
+bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkeletalMesh* G1,bool Reverse,FString& Why)
+{
+ Why.Reset();if(!AuthoringAllowed(Why)||!Retargeter||!G1||G1->GetRefSkeleton().GetNum()!=34)return false;
+ const auto& Ref=G1->GetRefSkeleton();TArray<FTransform> Global;Global.SetNum(Ref.GetNum());double MinZ=0;
+ for(int32 I=0;I<Ref.GetNum();++I)
+ {
+  const int32 Parent=Ref.GetParentIndex(I);Global[I]=Parent<0?Ref.GetRefBonePose()[I]:Ref.GetRefBonePose()[I]*Global[Parent];
+  MinZ=FMath::Min(MinZ,Global[I].GetTranslation().Z);
+ }
+ const double Height=-MinZ;
+ if(Height<40||Height>150){Why=TEXT("G1 reference leg height invalid");return false;}
+ auto* Controller=UIKRetargeterController::GetController(Retargeter);
+ // 模型中立坐标原点在骨盆，UE pelvis op 却按离地高度求体型比例。
+ // 只校准 retarget pose 到足底地面，不改锁定的 34 骨模型或推理结果单位。
+ const auto Side=Reverse?ERetargetSourceOrTarget::Target:ERetargetSourceOrTarget::Source;
+ // UE 的 SetRootOffsetInRetargetPose 接收增量，重复执行必须减去已有偏移，防止身高逐次减半。
+ Controller->SetRootOffsetInRetargetPose(FVector(0,0,Height)-Controller->GetRootOffsetInRetargetPose(Side),Side);
+ bool FoundRoot=false;
+ for(int32 I=0;I<Controller->GetNumRetargetOps();++I)
+  if(auto* Root=Cast<UIKRetargetRootMotionController>(Controller->GetOpController(I)))
+  {
+   FoundRoot=true;
+   // G1 的唯一根就是骨盆，反向输出由 pelvis op 负责，不能再被 root op 覆盖。
+   Controller->SetRetargetOpEnabled(I,!Reverse);
+   if(!Reverse)
+   {
+    Root->SetSourceRootBone(TEXT("pelvis_skel"));Root->SetTargetRootBone(TEXT("root"));
+    auto& Settings=*static_cast<FIKRetargetRootMotionOpSettings*>(Controller->GetRetargetOpByIndex(I)->GetSettings());Settings.TargetPelvis.BoneName=TEXT("pelvis");
+    Settings.RootMotionSource=ERootMotionSource::GenerateFromTargetPelvis;Settings.RootHeightSource=ERootMotionHeightSource::SnapToGround;
+    Settings.bMaintainOffsetFromPelvis=true;
+   }
+  }
+ if(!FoundRoot){Why=TEXT("Retarget root op missing");return false;}
+ Retargeter->PostEditChange();return Save(Retargeter,Why);
 }

@@ -39,6 +39,10 @@ def main():
             # UE Python 将 bool + 单 out 参数映射为成功时 out 值，失败时 None；空字符串也是成功。
             if reason is None:
                 raise RuntimeError("重定向作者失败：" + body)
+        for reverse, retarget_path in [(False, OUTPUT + "/RTG_G1_" + body), (True, OUTPUT + "/RTG_" + body + "_G1")]:
+            reason = ue.AetherMotionAuthoring.calibrate_retarget(require(retarget_path), source, reverse)
+            if reason is None or reason:
+                raise RuntimeError("重定向根高度校准失败：" + body + " " + str(reason))
         profiles.append(require(profile_path))
         for path in [profile_path, OUTPUT + "/RTG_G1_" + body, OUTPUT + "/RTG_" + body + "_G1", OUTPUT + "/IK_" + body]:
             resources.append(require(path))
@@ -46,7 +50,7 @@ def main():
     for clip in sorted((ROOT / "ContentSource/Motion/Clips").glob("*.json")):
         path = OUTPUT + "/Baked/AN_" + clip.stem
         animation = load_optional(path)
-        if not animation:
+        if not animation or clip.stem.lower() in ("crouch", "crouch_idle"):
             animation, reason = ue.AetherMotionAuthoring.import_clip(str(clip), source, path)
             if not animation:
                 raise RuntimeError(reason)

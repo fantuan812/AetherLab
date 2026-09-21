@@ -6,6 +6,11 @@
 #include "Engine/SkeletalMesh.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimInstance.h"
+#include "Animation/AnimBlueprint.h"
+#include "AnimGraphNode_Root.h"
+#include "AnimGraphNode_AetherCharacterPose.h"
+#include "AnimGraphNode_AetherGeneratedPose.h"
+#include "EdGraph/EdGraph.h"
 #include "Retargeter/IKRetargeter.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
@@ -39,6 +44,17 @@ int32 UAetherValidateV10ContentCommandlet::Main(const FString&)
         };
         Visit(Entry.Value->AsObject());
     }
+    // 骨架/生成类存在并不能证明图会产生姿态，必须检查正式输出连接。
+    for(const bool SourcePose:{false,true})
+    {
+        const TCHAR* Path=SourcePose?TEXT("/Game/Animation/Motion/ABP_G1MotionSource.ABP_G1MotionSource"):TEXT("/Game/Animation/ABP_AetherCharacter.ABP_AetherCharacter");
+        auto* BP=LoadObject<UAnimBlueprint>(nullptr,Path);bool Connected=false;
+        if(BP)for(UEdGraph* Graph:BP->FunctionGraphs)if(Graph)for(UEdGraphNode* Node:Graph->Nodes)
+            if(auto* Root=Cast<UAnimGraphNode_Root>(Node))for(auto* Pin:Root->Pins)
+                if(Pin->Direction==EGPD_Input&&Pin->PinName==TEXT("Result"))for(auto* Link:Pin->LinkedTo)
+                    Connected|=Link&&(SourcePose?Link->GetOwningNode()->IsA<UAnimGraphNode_AetherGeneratedPose>():Link->GetOwningNode()->IsA<UAnimGraphNode_AetherCharacterPose>());
+        Check(BP&&BP->Status!=BS_Error&&Connected,FString(Path)+TEXT(" connected native pose output"));
+    }
     auto* Actions=LoadObject<UAetherActionSet>(nullptr,TEXT("/Game/Animation/Controlled/DA_Actions.DA_Actions"));
     Check(Actions!=nullptr,TEXT("Controlled action set"));
     if(Actions)for(const TCHAR* Name:{TEXT("Death"),TEXT("GetUp"),TEXT("Stun"),TEXT("Hit"),TEXT("Land"),TEXT("LandHeavy"),TEXT("CrouchIdle"),TEXT("CrouchWalk"),TEXT("CrouchBack"),TEXT("CrouchLeft"),TEXT("CrouchRight"),TEXT("CarryIdle"),TEXT("CarryWalk"),TEXT("Pickup"),TEXT("PutDown"),TEXT("Throw"),TEXT("Rescue"),TEXT("Vault"),TEXT("Cast"),TEXT("Guard"),TEXT("DodgeForward"),TEXT("DodgeBack"),TEXT("DodgeLeft"),TEXT("DodgeRight")})
@@ -52,6 +68,11 @@ int32 UAetherValidateV10ContentCommandlet::Main(const FString&)
         auto* P=LoadObject<UAetherMotionProfile>(nullptr,*Path);FString Why;
         Check(P&&P->Validate(Why),Path+TEXT(" ")+Why);if(!P)continue;
         Check(P->SourceMesh.LoadSynchronous()&&P->Retargeter.LoadSynchronous()&&P->SourceAnimationClass.LoadSynchronous(),Path+TEXT(" rig/mesh/AnimBP"));
+        if(auto* R=P->Retargeter.Get())
+        {
+            const auto* Pose=R->GetCurrentRetargetPose(ERetargetSourceOrTarget::Source);
+            Check(Pose&&Pose->GetRootTranslationDelta().Z>40&&Pose->GetRootTranslationDelta().Z<150,Path+TEXT(" calibrated G1 pelvis height"));
+        }
         for(const TCHAR* Style:{TEXT("Idle"),TEXT("Walk"),TEXT("Combat"),TEXT("StrafeLeft"),TEXT("StrafeRight"),TEXT("Injured"),TEXT("Crouch"),TEXT("CrouchIdle")})
         {Check(P->Styles.Contains(Style),Path+TEXT(" style ")+Style);Check(P->TransitionBoundaries.Contains(Style),Path+TEXT(" boundary ")+Style);}
     }

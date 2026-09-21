@@ -1,4 +1,7 @@
 #include "Animation/AetherAnimation.h"
+#include "Animation/AnimNode_AetherCharacterPose.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "AetherMotionComponent.h"
 #include "AnimNodes/AnimNode_RetargetPoseFromMesh.h"
 #include "Combat/AetherCombat.h"
@@ -78,3 +81,31 @@ struct FAetherAnimProxy : FAnimInstanceProxy
 }
 FAnimInstanceProxy* UAetherAnimInstance::CreateAnimInstanceProxy(){return new FAetherAnimProxy(this);}
 void UAetherAnimInstance::DestroyAnimInstanceProxy(FAnimInstanceProxy* Proxy){delete Proxy;}
+
+void FAnimNode_AetherCharacterPose::Initialize_AnyThread(const FAnimationInitializeContext& Context)
+{
+ FAnimNode_Base::Initialize_AnyThread(Context);
+ // 蓝图必须继承人物动画类，避免把其他代理解释为人物代理。
+ NativeRoot=Cast<UAetherAnimInstance>(Context.AnimInstanceProxy->GetAnimInstanceObject())
+  ?static_cast<FAetherAnimProxy*>(Context.AnimInstanceProxy)->GetCustomRootNode():nullptr;
+ if(NativeRoot)NativeRoot->Initialize_AnyThread(Context);
+}
+void FAnimNode_AetherCharacterPose::CacheBones_AnyThread(const FAnimationCacheBonesContext& Context)
+{
+ if(NativeRoot)NativeRoot->CacheBones_AnyThread(Context);
+}
+void FAnimNode_AetherCharacterPose::Update_AnyThread(const FAnimationUpdateContext& Context)
+{
+ if(NativeRoot)NativeRoot->Update_AnyThread(Context);
+}
+void FAnimNode_AetherCharacterPose::Evaluate_AnyThread(FPoseContext& Output)
+{
+ if(NativeRoot)NativeRoot->Evaluate_AnyThread(Output);else Output.ResetToRefPose();
+#if !UE_BUILD_SHIPPING
+ if(!bReported&&FParse::Param(FCommandLine::Get(),TEXT("AetherAnimationCheck")))
+ {
+  bReported=true;auto* Proxy=static_cast<FAetherAnimProxy*>(Output.AnimInstanceProxy);
+  UE_LOG(LogTemp,Display,TEXT("AETHER_ANIMATION_GRAPH root=%d ground=%s bones=%d"),NativeRoot!=nullptr,*GetNameSafe(Proxy->Ground.GetBlendSpace()),Output.Pose.GetNumBones());
+ }
+#endif
+}

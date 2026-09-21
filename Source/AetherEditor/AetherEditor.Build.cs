@@ -9,6 +9,6 @@ public class AetherEditor : ModuleRules
         bUseUnity = false;
         AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine" });
-        PrivateDependencyModuleNames.AddRange(new[] { "AetherCore", "AetherGameplay", "UnrealEd", "NavigationSystem", "Json", "AssetRegistry", "UMG", "UMGEditor", "SlateCore", "Kismet", "KismetCompiler", "AetherUI", "AetherMotionRuntime", "IKRig" });
+        PrivateDependencyModuleNames.AddRange(new[] { "AetherCore", "AetherGameplay", "UnrealEd", "NavigationSystem", "Json", "AssetRegistry", "UMG", "UMGEditor", "SlateCore", "Kismet", "KismetCompiler", "AetherUI", "AetherMotionRuntime", "AetherMotionEditor", "AetherAnimationEditor", "AnimGraph", "BlueprintGraph", "IKRig" });
     }
 }
