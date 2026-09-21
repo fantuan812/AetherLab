@@ -54,6 +54,13 @@
     {
       "Name": "AetherMotion",
       "Enabled": true
+    },
+    {
+      "Name": "CommonUI",
+      "Enabled": true,
+      "TargetDenyList": [
+        "Server"
+      ]
     }
   ]
 }

@@ -1,4 +1,5 @@
 #include "Dialogue/AetherDialoguePage.h"
+#include "CommonInputBaseTypes.h"
 #include "Interaction/AetherDialogueSession.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "Definitions/AetherV10Definitions.h"
@@ -52,7 +53,7 @@ TSharedRef<SWidget> UAetherDialoguePage::RebuildWidget()
 void UAetherDialoguePage::NativeConstruct()
 {
     Super::NativeConstruct();SetIsFocusable(true);
-    SetAnchorsInViewport(FAnchors(.2f,.2f,.8f,.85f));SetDesiredSizeInViewport(FVector2D::ZeroVector);SetPositionInViewport(FVector2D::ZeroVector,false);
+    // 嵌入根栈；不再单独挂到 Viewport。
     if(auto* LP=GetOwningLocalPlayer()){Session=LP->GetSubsystem<UAetherDialogueSession>();Session->OnChanged.AddUObject(this,&UAetherDialoguePage::Refresh);}
     Player=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());if(Player.IsValid())Player->OnPresentationChanged.AddUObject(this,&UAetherDialoguePage::RefreshFeedback);
     Refresh();
@@ -93,3 +94,6 @@ FReply UAetherDialoguePage::NativeOnKeyDown(const FGeometry& G,const FKeyEvent& 
     if(E.GetKey()==EKeys::Escape||E.GetKey()==EKeys::Gamepad_FaceButton_Right){if(Session.IsValid())Session->Close();return FReply::Handled();}
     return Super::NativeOnKeyDown(G,E);
 }
+
+TOptional<FUIInputConfig> UAetherDialoguePage::GetDesiredInputConfig() const
+{FUIInputConfig C(ECommonInputMode::Menu,EMouseCaptureMode::NoCapture,EMouseLockMode::DoNotLock,false);C.bIgnoreMoveInput=true;C.bIgnoreLookInput=true;return C;}

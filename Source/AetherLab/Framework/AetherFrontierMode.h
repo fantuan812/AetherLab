@@ -75,7 +75,8 @@ public:
     bool RecordCampClear(FName Definition,FGuid Instance);
     FString ClaimLoot(AAetherFrontierCharacter* C,FName Id);
     void SpawnLoot(const FAetherWorldLoot& Loot);
-    bool ExecutePartyAction(AAetherFrontierCharacter* C,FName Action);
+    bool ExecutePartyAction(AAetherFrontierCharacter* C,FName Action,AAetherPlayerState* InviteTarget=nullptr,AAetherFrontierCharacter* Companion=nullptr);
+    int32 PartySize(const FString& Leader) const;
     bool CanChangeParty(const AAetherFrontierCharacter* C) const;
     void LeaveParty(AAetherPlayerState* PS);
     void CreditHit(AAetherCharacter* Target,AAetherCharacter* Source);

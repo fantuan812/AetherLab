@@ -1,5 +1,6 @@
 #pragma once
-#include "Blueprint/UserWidget.h"
+#include "CommonActivatableWidget.h"
+#include "Input/UIActionBindingHandle.h"
 #include "Components/Button.h"
 #include "AetherDialoguePage.generated.h"
 class UAetherDialogueSession;
@@ -23,11 +24,12 @@ private:
 
 // 独立对话页只消费会话视图，不写任务、不生成目标、不决定服务资格。
 UCLASS()
-class AETHERUI_API UAetherDialoguePage : public UUserWidget
+class AETHERUI_API UAetherDialoguePage : public UCommonActivatableWidget
 {
     GENERATED_BODY()
 public:
     virtual TSharedRef<SWidget> RebuildWidget() override;
+    virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
     virtual void NativeConstruct() override;
     virtual void NativeDestruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;

@@ -24,13 +24,30 @@ EAetherCommandCode AetherProfileEconomy::Apply(const FAetherPlayerCommand& C,FAe
         if(!Found)return P.ClaimedRewardIds.Contains(RewardId)?Code::NotAllowed:Code::Missing;
         if(P.ClaimedRewardIds.Num()>=4096||int64(P.Gold)+Found->Gold>10000000)return Code::Capacity;
         const auto Reward=*Found;TArray<FString> Keys;Reward.Items.GetKeys(Keys);Keys.Sort();
-        int32 Total=0;
+        int32 Total=0;auto Remaining=Reward;
         for(const auto& Key:Keys)
         {
-            const auto Result=Mutation(P.Inventory.AddNew(Key,Reward.Items[Key],Items),R);
-            if(Result!=Code::Applied)return Result;Total+=Reward.Items[Key];
+            // 以实际剩余格数和完整 StackKey 试算最大可领取量；未容纳部分仍属于同一 RewardId。
+            int32 Low=0,High=Reward.Items[Key];
+            while(Low<High)
+            {
+                const int32 Count=Low+(High-Low+1)/2;auto Candidate=P.Inventory;
+                const auto Trial=Candidate.AddNew(Key,Count,Items);
+                if(Trial.Code==EAetherInventoryMutationCode::Applied)Low=Count;
+                else if(Trial.Code==EAetherInventoryMutationCode::Capacity)High=Count-1;
+                else return Code::Invalid;
+            }
+            if(Low>0)
+            {
+                const auto Result=Mutation(P.Inventory.AddNew(Key,Low,Items),R);if(Result!=Code::Applied)return Result;
+                Total+=Low;Remaining.Items[Key]-=Low;if(Remaining.Items[Key]==0)Remaining.Items.Remove(Key);
+            }
         }
-        P.Gold+=Reward.Gold;P.PendingRewards.RemoveAll([&](const auto& V){return V.RewardId==RewardId;});P.ClaimedRewardIds.Add(RewardId);
+        if(!Total&&!Reward.Gold)return Code::Capacity;
+        P.Gold+=Reward.Gold;Remaining.Gold=0;
+        if(Remaining.Items.IsEmpty())
+        {P.PendingRewards.RemoveAll([&](const auto& V){return V.RewardId==RewardId;});P.ClaimedRewardIds.Add(RewardId);}
+        else *P.PendingRewards.FindByPredicate([&](const auto& V){return V.RewardId==RewardId;})=MoveTemp(Remaining);
         R.ActualQuantity=Total;R.AffectedDefinitionIds.Add(C.DefinitionId);R.ReasonParameters.Add(TEXT("GoldChanged"),FString::FromInt(Reward.Gold));
         return Code::Applied;
     }

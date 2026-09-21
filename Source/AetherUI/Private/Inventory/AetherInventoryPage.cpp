@@ -1,3 +1,4 @@
+#include "UI/AetherMenuRoot.h"
 #include "Inventory/AetherInventoryPage.h"
 #include "Inventory/AetherNativeInventory.h"
 #include "Inspection/AetherInspectionWidgets.h"
@@ -77,16 +78,14 @@ TSharedRef<SWidget> UAetherInventoryPage::RebuildWidget()
         Details=CreateWidget<UAetherInspectionCard>(this);Right->AddChildToVerticalBox(Details);
         Details->OnActionRequested.AddUObject(this,&UAetherInventoryPage::Action);Details->OnComparisonRequested.AddUObject(this,&UAetherInventoryPage::Compare);Details->OnDismissRequested.AddUObject(this,&UAetherInventoryPage::DismissDetails);
         Hover=CreateWidget<UAetherInspectionCard>(this);Right->AddChildToVerticalBox(Hover);Hover->SetVisibility(ESlateVisibility::Collapsed);
-        ModalShield=WidgetTree->ConstructWidget<UBorder>();ModalShield->SetBrushColor(FLinearColor(0,0,0,.8f));ModalShield->SetHorizontalAlignment(HAlign_Center);ModalShield->SetVerticalAlignment(VAlign_Center);
-        auto* Layer=Overlay->AddChildToOverlay(ModalShield);Layer->SetHorizontalAlignment(HAlign_Fill);Layer->SetVerticalAlignment(VAlign_Fill);
-        Confirmation=CreateWidget<UAetherInspectionConfirmation>(this);ModalShield->SetContent(Confirmation);
-        Confirmation->OnConfirmed.AddUObject(this,&UAetherInventoryPage::Confirm);Confirmation->OnCancelled.AddUObject(this,&UAetherInventoryPage::Cancel);
-        ModalShield->SetVisibility(ESlateVisibility::Collapsed);
+        Confirmation=CreateWidget<UAetherInspectionConfirmation>(this);
     }
     return Super::RebuildWidget();
 }
 void UAetherInventoryPage::NativeConstruct()
 {
+    if(Details){Details->OnActionRequested.RemoveAll(this);Details->OnComparisonRequested.RemoveAll(this);Details->OnDismissRequested.RemoveAll(this);
+        Details->OnActionRequested.AddUObject(this,&UAetherInventoryPage::Action);Details->OnComparisonRequested.AddUObject(this,&UAetherInventoryPage::Compare);Details->OnDismissRequested.AddUObject(this,&UAetherInventoryPage::DismissDetails);}
     Super::NativeConstruct();auto* LP=GetOwningLocalPlayer();if(!LP)return;
     Menu=LP->GetSubsystem<UAetherMenuSubsystem>();Client=LP->GetSubsystem<UAetherCommandClient>();
     Menu->OnChanged.AddUObject(this,&UAetherInventoryPage::MenuChanged);
@@ -272,7 +271,11 @@ void UAetherInventoryPage::Action(const FAetherInspectRequest& R,const FAetherIn
     if(A.bNeedsConfirmation||A.MaxQuantity>1)
     {
         if(!Menu.IsValid())return;ModalToken=Menu->PushLayer(TEXT("InventoryConfirmation"));
-        if(!ModalToken.IsValid()){Session.Back();return;}Confirmation->SetDraft(Session.GetDraft().GetValue());ModalShield->SetVisibility(ESlateVisibility::Visible);Confirmation->SetUserFocus(GetOwningPlayer());
+        if(!ModalToken.IsValid()){Session.Back();return;}auto* Root=UAetherMenuRoot::Find(*this);
+    if(!Root||!Root->PushModal(ModalToken,Confirmation)){Session.Back();HideConfirmation();return;}
+    Confirmation->OnConfirmed.RemoveAll(this);Confirmation->OnCancelled.RemoveAll(this);
+    Confirmation->OnConfirmed.AddUObject(this,&UAetherInventoryPage::Confirm);Confirmation->OnCancelled.AddUObject(this,&UAetherInventoryPage::Cancel);
+    Confirmation->SetDraft(Session.GetDraft().GetValue());Confirmation->SetUserFocus(GetOwningPlayer());
     }
     else Confirm(Token,1);
 }
@@ -297,7 +300,7 @@ void UAetherInventoryPage::Cancel(FGuid Token)
 {if(Session.GetDraft().IsSet()&&Session.GetDraft()->Token==Token){Session.Back();HideConfirmation();}}
 void UAetherInventoryPage::HideConfirmation()
 {
-    const auto Token=ModalToken;ModalToken.Invalidate();if(Confirmation)Confirmation->InvalidateDraft();if(ModalShield)ModalShield->SetVisibility(ESlateVisibility::Collapsed);
+    const auto Token=ModalToken;ModalToken.Invalidate();if(Confirmation)Confirmation->InvalidateDraft();if(auto* Root=UAetherMenuRoot::Find(*this))Root->PopModal(Token);
     if(Menu.IsValid()&&Token.IsValid())Menu->DismissLayer(Token);
 }
 void UAetherInventoryPage::DismissDetails(){Session.Close();HideConfirmation();RenderDetails();}

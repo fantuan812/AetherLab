@@ -57,14 +57,8 @@ void UAetherMenuSubsystem::Publish(bool WasOpen)
     {
         if(auto* PC=GetLocalPlayer()->GetPlayerController(GetWorld());PC&&PC->IsLocalController())
         {
-            // 过渡期唯一输入配置入口。页面切换不重复 Flush，也不在 Widget Tick 中抢焦点。
-            PC->FlushPressedKeys();PC->bShowMouseCursor=IsOpen();
-            if(IsOpen())
-            {
-                FInputModeGameAndUI Mode;Mode.SetHideCursorDuringCapture(false);
-                Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);PC->SetInputMode(Mode);
-            }
-            else PC->SetInputMode(FInputModeGameOnly());
+            // 这里只释放旧游戏输入。输入模式、鼠标与焦点由 CommonUI 激活树唯一拥有。
+            PC->FlushPressedKeys();
         }
     }
     OnChanged.Broadcast();

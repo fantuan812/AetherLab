@@ -11,6 +11,7 @@
 #include "AetherInventoryRules.h"
 #include "AetherActions.h"
 #include "AetherInputProfile.h"
+#include "Presentation/AetherPlayerPreferences.h"
 #include "Movement/AetherCharacterMovement.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
@@ -106,8 +107,8 @@ void AAetherFrontierCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 }
 void AAetherFrontierCharacter::Forward(float V){if(Alive()&&!bPanel)AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::X),V);}
 void AAetherFrontierCharacter::Right(float V){if(Alive()&&!bPanel)AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::Y),V);}
-void AAetherFrontierCharacter::Yaw(float V){if(!bPanel)AddControllerYawInput(V);}
-void AAetherFrontierCharacter::Pitch(float V){if(!bPanel)AddControllerPitchInput(-V);}
+void AAetherFrontierCharacter::Yaw(float V){if(!bPanel)AddControllerYawInput(V*GetDefault<UAetherPlayerPreferences>()->MouseSensitivity);}
+void AAetherFrontierCharacter::Pitch(float V){const auto* P=GetDefault<UAetherPlayerPreferences>();if(!bPanel)AddControllerPitchInput((P->bInvertLook?V:-V)*P->MouseSensitivity);}
 void AAetherFrontierCharacter::PressAttack(){bAttackHeld=!bPanel;if(bAttackHeld)PressedAt=GetWorld()->GetTimeSeconds();}
 void AAetherFrontierCharacter::ReleaseAttack(){const bool Attack=bAttackHeld;bAttackHeld=false;if(Attack&&!bPanel)ServerAttack(GetWorld()->GetTimeSeconds()-PressedAt>=.35f);}
 void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I)
@@ -120,6 +121,7 @@ void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I)
     auto Action=[&](FName Name,FKey Key,EInputActionValueType Type)
     {
         if(auto* Existing=InputActions.Find(Name))return Existing->Get();
+        DefaultBindings.Add(Name,Key);
         auto* A=NewObject<UInputAction>(this);A->ValueType=Type;A->bConsumeInput=false;InputActions.Add(Name,A);
         const auto* Override=GetDefault<UAetherInputProfile>()->Keys.Find(Name);GameplayContext->MapKey(A,Override?*Override:Key);return A;
     };
@@ -193,9 +195,9 @@ void AAetherFrontierCharacter::AetherBind(FName Name,FKey Key)
  ReleaseHeldInput();
  auto* Profile=GetMutableDefault<UAetherInputProfile>();
  // A single mapping per action: swap conflicts so no command is silently orphaned.
- TArray<FName> Conflicts;for(const auto& Pair:InputActions)if(Pair.Key!=Name&&BindingFor(Pair.Key)==Key)Conflicts.Add(Pair.Key);
- for(auto Other:Conflicts){auto* OtherAction=InputActions[Other].Get();GameplayContext->UnmapAllKeysFromAction(OtherAction);GameplayContext->MapKey(OtherAction,Old);Profile->Keys.Add(Other,Old);}
- GameplayContext->UnmapAllKeysFromAction(A->Get());GameplayContext->MapKey(A->Get(),Key);Profile->Keys.Add(Name,Key);Profile->SaveConfig();
+ TArray<FName> Conflicts;for(const auto& Pair:InputActions)if(Pair.Key!=Name&&BindingFor(Pair.Key)==Key&&(UAetherInputProfile::Context(Name)&UAetherInputProfile::Context(Pair.Key)))Conflicts.Add(Pair.Key);
+ for(auto Other:Conflicts){auto* OtherAction=InputActions[Other].Get();GameplayContext->UnmapKey(OtherAction,Key);GameplayContext->MapKey(OtherAction,Old);Profile->Keys.Add(Other,Old);}
+ GameplayContext->UnmapKey(A->Get(),Old);GameplayContext->MapKey(A->Get(),Key);Profile->Keys.Add(Name,Key);Profile->SaveConfig();
  Feedback=FString::Printf(TEXT("Bound %s: %s. Conflicting binding swapped."),*Name.ToString(),*Key.GetDisplayName().ToString());
  if(auto* PC=Cast<APlayerController>(Controller))if(auto* Sub=ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))Sub->RequestRebuildControlMappings();
 }

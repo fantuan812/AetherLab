@@ -84,6 +84,7 @@ public:
     FVector TravelDestination,TravelOrigin;
     float TravelStarted=0;
     void BeginSafeTravel(FVector Destination);
+    UFUNCTION(Server,Reliable) void ServerMapTravel(FName Beacon,int64 SeenProfileRevision);
     void UpdateSafeTravel();
     int32 SelectedItem = 0;
     FGuid SelectedInstance,MergeDestination;
@@ -112,6 +113,7 @@ public:
     UPROPERTY(Transient) TMap<FName,TObjectPtr<UInputAction>> InputActions;
     UFUNCTION(Exec) void AetherBind(FName Action,FKey Key);
     FKey BindingFor(FName Action) const;
+    TMap<FName,FKey> DefaultBindings;
     UPROPERTY() TObjectPtr<AAetherCharacter> LockedTarget;
     void ToggleLock();
 
@@ -138,6 +140,7 @@ public:
     void BindPersistentAbilities();
     void ApplyProfileEquipment();
     UFUNCTION(Server,Reliable) void ServerAction(FName Action,int32 Index = 0);
+    UFUNCTION(Server,Reliable) void ServerPartyAction(FName Action,AAetherPlayerState* InviteTarget,AAetherFrontierCharacter* Companion);
     UFUNCTION(Server,Reliable) void ServerWorldService(FAetherWorldServiceCommand Command,AAetherFrontierProp* Target,FName ActionId);
     // 过渡期仍调用 v9 服务，但网络目标使用原 Actor 实例 + 持久 ID + 动作 + 所见档案版本。
     // Actor 的网络引用同时区分区域卸载后用同一持久 ID 重建的新实例。

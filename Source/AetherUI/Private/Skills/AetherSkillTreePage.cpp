@@ -1,3 +1,4 @@
+#include "UI/AetherMenuRoot.h"
 #include "Skills/AetherSkillTreePage.h"
 #include "Skills/AetherSkillGraphWidget.h"
 #include "Skills/AetherSkillHotbarCell.h"
@@ -52,17 +53,15 @@ TSharedRef<SWidget> UAetherSkillTreePage::RebuildWidget()
         PageButton(TEXT("点数来源上一页"))->OnClicked.AddDynamic(this,&UAetherSkillTreePage::PreviousSources);
         PageButton(TEXT("点数来源下一页"))->OnClicked.AddDynamic(this,&UAetherSkillTreePage::NextSources);
         // 遮罩占满本页，数量确认保持独立焦点，点击不会透到下面的节点或快捷位。
-        ModalShield=WidgetTree->ConstructWidget<UBorder>();ModalShield->SetBrushColor(FLinearColor(0,0,0,.75f));
-        auto* ModalSlot=Overlay->AddChildToOverlay(ModalShield);ModalSlot->SetHorizontalAlignment(HAlign_Fill);ModalSlot->SetVerticalAlignment(VAlign_Fill);
-        ModalShield->SetHorizontalAlignment(HAlign_Center);ModalShield->SetVerticalAlignment(VAlign_Center);
-        Confirmation=CreateWidget<UAetherInspectionConfirmation>(this,UAetherInspectionConfirmation::StaticClass());ModalShield->SetContent(Confirmation);
-        Confirmation->OnConfirmed.AddUObject(this,&UAetherSkillTreePage::Confirm);Confirmation->OnCancelled.AddUObject(this,&UAetherSkillTreePage::Cancel);
-        ModalShield->SetVisibility(ESlateVisibility::Collapsed);
+        Confirmation=CreateWidget<UAetherInspectionConfirmation>(this);
     }
     Refresh();return Super::RebuildWidget();
 }
 void UAetherSkillTreePage::NativeConstruct()
 {
+    if(Details){Details->OnActionRequested.RemoveAll(this);Details->OnDismissRequested.RemoveAll(this);
+        Details->OnActionRequested.AddUObject(this,&UAetherSkillTreePage::RequestAction);Details->OnDismissRequested.AddUObject(this,&UAetherSkillTreePage::ClosePresentation);}
+    if(Graph){Graph->OnNodeSelected.RemoveAll(this);Graph->OnNodeSelected.AddUObject(this,&UAetherSkillTreePage::Select);}
     Super::NativeConstruct();
     if(auto* LP=GetOwningLocalPlayer())Menu=LP->GetSubsystem<UAetherMenuSubsystem>();
     if(Menu.IsValid()){Menu->OnChanged.RemoveAll(this);Menu->OnChanged.AddUObject(this,&UAetherSkillTreePage::HandleMenu);}
@@ -256,12 +255,16 @@ void UAetherSkillTreePage::ShowConfirmation()
     if(!Session.GetDraft().IsSet()||!Menu.IsValid())return;
     ModalToken=Menu->PushLayer(TEXT("SkillConfirmation"));
     if(!ModalToken.IsValid()){Session.Back();return;}
-    Confirmation->SetDraft(Session.GetDraft().GetValue());ModalShield->SetVisibility(ESlateVisibility::Visible);Confirmation->SetKeyboardFocus();
+    auto* Root=UAetherMenuRoot::Find(*this);
+    if(!Root||!Root->PushModal(ModalToken,Confirmation)){Session.Back();HideConfirmation();return;}
+    Confirmation->OnConfirmed.RemoveAll(this);Confirmation->OnCancelled.RemoveAll(this);
+    Confirmation->OnConfirmed.AddUObject(this,&UAetherSkillTreePage::Confirm);Confirmation->OnCancelled.AddUObject(this,&UAetherSkillTreePage::Cancel);
+    Confirmation->SetDraft(Session.GetDraft().GetValue());Confirmation->SetUserFocus(GetOwningPlayer());
 }
 void UAetherSkillTreePage::HideConfirmation()
 {
     const auto Token=ModalToken;ModalToken.Invalidate();
-    if(Confirmation)Confirmation->InvalidateDraft();if(ModalShield)ModalShield->SetVisibility(ESlateVisibility::Collapsed);
+    if(Confirmation)Confirmation->InvalidateDraft();if(auto* Root=UAetherMenuRoot::Find(*this))Root->PopModal(Token);
     if(Menu.IsValid()&&Token.IsValid())Menu->DismissLayer(Token);
 }
 void UAetherSkillTreePage::HandleMenu()
