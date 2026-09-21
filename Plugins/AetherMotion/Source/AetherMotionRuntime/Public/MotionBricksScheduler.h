@@ -6,6 +6,12 @@
 class FEvent;
 class FRunnableThread;
 
+struct FAetherMotionSchedulerMetrics
+{
+    int32 Agents=0,NativeAgents=0,Pending=0,Executing=0;
+    uint64 NativeCalls=0,NativeFailures=0;
+};
+
 // 进程共享一个模型执行线程；队列里都是值对象，不持有 Actor/UObject。
 class AETHERMOTIONRUNTIME_API FMotionBricksScheduler final : public FRunnable
 {
@@ -19,6 +25,7 @@ public:
     bool Take(uint64 Id,FAetherMotionResult& Result);
     bool IsPending(uint64 Id) const;
     FString Diagnostic() const;
+    FAetherMotionSchedulerMetrics Inspect() const;
     virtual uint32 Run() override;
     virtual void Stop() override;
 private:
@@ -31,6 +38,7 @@ private:
         double QueuedAt=0;
     };
     mutable FCriticalSection Mutex;
+    FAetherMotionSchedulerMetrics Metrics;
     TMap<uint64,FEntry> Entries;
     uint64 NextId=1,Configuration=1;
     EAetherMotionBackend Backend=EAetherMotionBackend::Traditional;

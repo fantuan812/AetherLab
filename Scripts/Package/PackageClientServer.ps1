@@ -1,7 +1,8 @@
 param(
  [Parameter(Mandatory=$true)][string]$EngineRoot,
  [ValidateSet('Client','Server','Both')][string]$Targets='Both',
- [string]$Output=''
+ [string]$Output='',
+ [switch]$SkipBuildEditor
 )
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -14,7 +15,8 @@ $taskUat=Join-Path $EngineRoot 'Engine/Build/BatchFiles/RunUAT.bat'
 $taskBuildTargets=if($Targets -eq 'Both'){@('Client','Server')}else{@($Targets)}
 foreach($taskTarget in $taskBuildTargets){
  $taskDestination=Join-Path $taskOutput $taskTarget
- $taskArguments=@('BuildCookRun',"-project=$taskProject",'-noP4','-utf8output','-unattended','-build','-cook','-stage','-pak','-iostore','-archive',"-archivedirectory=$taskDestination",'-map=/Game/AetherCore/Maps/L_Frontier')
+ $taskArguments=@('BuildCookRun',"-project=$taskProject",'-noP4','-utf8output','-unattended','-ubtargs=-NoUBA -MaxParallelActions=2','-build','-cook','-stage','-pak','-iostore','-archive',"-archivedirectory=$taskDestination",'-map=/Game/AetherCore/Maps/L_Frontier')
+ if($SkipBuildEditor){$taskArguments+='-skipbuildeditor'}
  if($taskTarget -eq 'Server'){$taskArguments+=@('-server','-noclient','-serverplatform=Win64','-serverconfig=Shipping','-servertarget=AetherLabServer')}
  else{$taskArguments+=@('-platform=Win64','-clientconfig=Shipping','-target=AetherLab','-prereqs')}
  & $taskUat @taskArguments

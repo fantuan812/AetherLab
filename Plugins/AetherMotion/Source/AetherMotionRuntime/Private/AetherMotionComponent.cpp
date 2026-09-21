@@ -68,7 +68,11 @@ void UAetherMotionComponent::TickComponent(float Dt,ELevelTick Type,FActorCompon
 {
     Super::TickComponent(Dt,Type,Function);if(!Agent)return;
     auto* C=Cast<ACharacter>(GetOwner());if(!C)return;
-    if(const auto* Mesh=C->GetMesh()->GetSkeletalMeshAsset())
+    // 只有内置双体型配置参与自动切换；作者显式指定的动作档案保持权威。
+    const FString ProfilePath=ProfileAsset.ToSoftObjectPath().ToString();
+    const bool BuiltInProfile=ProfilePath==TEXT("/Game/Animation/Motion/DA_MotionManny.DA_MotionManny")||
+        ProfilePath==TEXT("/Game/Animation/Motion/DA_MotionQuinn.DA_MotionQuinn");
+    if(const auto* Mesh=C->GetMesh()->GetSkeletalMeshAsset();Mesh&&BuiltInProfile)
     {
         const FName Body=Mesh->GetName().Contains(TEXT("Quinn"))?FName(TEXT("Quinn")):FName(TEXT("Manny"));
         if(BodyProfile!=Body)

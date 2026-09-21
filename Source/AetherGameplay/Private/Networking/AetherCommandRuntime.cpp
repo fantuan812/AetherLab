@@ -500,7 +500,8 @@ void UAetherCommandRuntime::Tick(float Dt)
     for(int32 I=0;I<Keys.Num()&&Sent<4;++I)
     {
         Impl->NextSender%=Keys.Num();auto* Found=Impl->Bindings.Find(Keys[Impl->NextSender++]);if(!Found)continue;
-        auto& B=**Found;if(!Impl->Current(B)||B.InFlightTransfer.IsValid())continue;
+        // 初始资源恢复完成前不向客户端开放可操作快照，避免首次点击必然 NotReady。
+        auto& B=**Found;if(!Impl->Current(B)||!B.bReady||B.InFlightTransfer.IsValid())continue;
         const bool Container=!B.ContainerOutgoing.IsEmpty()&&(B.Outgoing.IsEmpty()||B.bPreferContainer);
         auto& Bytes=Container?B.ContainerOutgoing:B.Outgoing;if(Bytes.IsEmpty())continue;
         auto& Offset=Container?B.ContainerOffset:B.Offset;

@@ -150,8 +150,10 @@ private:
     FView Transform(FVector2D View) const
     {
         const auto B=Bounds();const auto Size=B.GetSize()+FVector2D(40,40);
-        const double Fit=FMath::Max(.05,FMath::Min(double(View.X)/Size.X,double(View.Y)/Size.Y));
-        const double Scale=Fit*Zoom;return {View*.5-B.GetCenter()*Scale+Pan,Scale};
+        // 默认至少按设计字号显示，不能为塞下八条路线把中文缩成不可读的小点。
+        // 超出部分通过拖动与方向键居中访问，用户仍可手动缩小查看总览。
+        const double Fit=FMath::Max(1.,FMath::Min(double(View.X)/Size.X,double(View.Y)/Size.Y));
+        const double Scale=Fit*Zoom;return {FVector2D(View.X*.5-B.GetCenter().X*Scale,20-B.Min.Y*Scale)+Pan,Scale};
     }
     int32 HitNode(const FGeometry& G,FVector2D P) const
     {
@@ -167,7 +169,9 @@ private:
     }
     void CenterSelection()
     {
-        if(!Model.Nodes.IsValidIndex(Selected))return;const auto View=GetCachedGeometry().GetLocalSize();const auto T=Transform(View);
+        if(!Model.Nodes.IsValidIndex(Selected))return;const auto View=GetCachedGeometry().GetLocalSize();
+        // 首次 Slate 排版前尺寸为零，此时居中会把初始视图永久偏移。
+        if(View.X<=0||View.Y<=0)return;const auto T=Transform(View);
         const auto P=T.Offset+(Model.Nodes[Selected].Position+FVector2D(80,54))*T.Scale;
         if(P.X<80||P.X>View.X-80||P.Y<60||P.Y>View.Y-60)Pan+=View*.5-P;
         ClampPan(View);Invalidate(EInvalidateWidgetReason::Layout);
@@ -179,6 +183,8 @@ private:
 };
 TSharedRef<SWidget> UAetherSkillGraphWidget::RebuildWidget()
 {
+    // UWidget 同步属性会覆盖 Slate Construct 的裁切设置，必须在拥有者上声明边界。
+    SetClipping(EWidgetClipping::ClipToBoundsAlways);
     Graph=SNew(SAetherSkillGraph).OnSelected(FGraphSelection::CreateWeakLambda(this,[this](const auto& N,bool Detail){OnNodeSelected.Broadcast(N,Detail);}));
     Graph->SetModel(Model);RefreshNodes();return Graph.ToSharedRef();
 }

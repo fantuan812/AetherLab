@@ -51,7 +51,9 @@ UWidget* Build(UWidgetTree& Tree,const TSharedPtr<FJsonObject>& D,TSet<FName>& N
         double Size=16;D->TryGetNumberField(TEXT("FontSize"),Size);auto Font=Label->GetFont();Font.Size=FMath::Clamp(int32(Size),10,40);Label->SetFont(Font);
         Label->SetColorAndOpacity(FLinearColor(.85,.89,.95));
     }
-    if(auto* Edit=Cast<UEditableTextBox>(W))Edit->SetHintText(FText::FromString(Text));
+    if(auto* Edit=Cast<UEditableTextBox>(W)){Edit->SetHintText(FText::FromString(Text));Edit->SetForegroundColor(FLinearColor(.04f,.055f,.08f));}
+    if(auto* Button=Cast<UButton>(W))Button->SetBackgroundColor(FLinearColor(.14f,.22f,.32f));
+    if(auto* Spin=Cast<USpinBox>(W))Spin->SetForegroundColor(FSlateColor(FLinearColor(.04f,.055f,.08f)));
     const TArray<TSharedPtr<FJsonValue>>* Color=nullptr;
     if(D->TryGetArrayField(TEXT("Color"),Color)&&Color->Num()==4)
     {

@@ -1,4 +1,6 @@
 #include "Framework/AetherPlayerController.h"
+#include "Tests/AetherNativeNetworkProbe.h"
+#include "Tests/AetherNativeSoakProbe.h"
 #include "GenericPlatform/GenericPlatformInputDeviceMapper.h"
 #include "Presentation/AetherPresentation.h"
 #include "Presentation/AetherMenuSubsystem.h"
@@ -63,3 +65,6 @@ void AAetherPlayerController::EndPlay(const EEndPlayReason::Type Reason)
     if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->DetachController(this);
     Super::EndPlay(Reason);
 }
+
+void AAetherPlayerController::PlayerTick(float DeltaSeconds)
+{Super::PlayerTick(DeltaSeconds);AetherNativeNetworkProbe::Tick(this);AetherNativeSoakProbe::Tick(this,DeltaSeconds);}

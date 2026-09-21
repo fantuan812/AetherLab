@@ -105,10 +105,21 @@ void AAetherCharacterPreviewActor::RenderFrame(float Dt,float Yaw,float Pitch,fl
     const FVector Center=Bounds.GetCenter();
     const float Aspect=float(Capture->TextureTarget->SizeX)/FMath::Max(1,Capture->TextureTarget->SizeY);
     const float HalfH=FMath::DegreesToRadians(Capture->FOVAngle*.5f),HalfV=FMath::Atan(FMath::Tan(HalfH)/Aspect);
-    // 包围球涵盖头、脚及长武器末端；使用较窄视场角，初次打开默认完整入镜。
-    const float Radius=FMath::Max(10.f,float(Bounds.GetExtent().Size()));
-    const float Distance=Radius/FMath::Max(.05f,FMath::Sin(FMath::Min(HalfH,HalfV)))*1.12f*Zoom;
-    const FVector Location=Center+FRotator(Pitch,Yaw,0).Vector()*Distance;
+    // 将八个包围盒角点投到相机基底，逐点满足水平/垂直视锥。
+    // 包围球按窄横向视场拟合会把高瘦人物缩得过小；角点计算仍保留长武器和旋转后的净空。
+    const FRotator Orbit(Pitch,Yaw,0);
+    const FVector Back=Orbit.Vector(),Right=FRotationMatrix(Orbit).GetUnitAxis(EAxis::Y),Up=FRotationMatrix(Orbit).GetUnitAxis(EAxis::Z);
+    const FVector Extent=Bounds.GetExtent();float Distance=10.f;
+    for(int32 Corner=0;Corner<8;++Corner)
+    {
+        const FVector Offset(Extent.X*((Corner&1)?1:-1),Extent.Y*((Corner&2)?1:-1),Extent.Z*((Corner&4)?1:-1));
+        const float Depth=FVector::DotProduct(Offset,Back);
+        Distance=FMath::Max(Distance,Depth+FMath::Max(
+            FMath::Abs(FVector::DotProduct(Offset,Right))/FMath::Tan(HalfH),
+            FMath::Abs(FVector::DotProduct(Offset,Up))/FMath::Tan(HalfV)));
+    }
+    Distance*=1.08f*Zoom;
+    const FVector Location=Center+Back*Distance;
     Capture->SetWorldLocationAndRotation(Location,(Center-Location).Rotation());
     GetWorld()->SendAllEndOfFrameUpdates();Capture->CaptureScene();
 }

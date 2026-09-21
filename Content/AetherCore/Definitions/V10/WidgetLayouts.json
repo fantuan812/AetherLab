@@ -108,7 +108,7 @@
       "Class": "/Script/UMG.SizeBox",
       "Name": "CellSize",
       "MinWidth": 74,
-      "MinHeight": 80,
+      "MinHeight": 64,
       "Children": [
         {
           "Class": "/Script/UMG.Border",
@@ -618,7 +618,7 @@
                       "Name": "Layout25",
                       "Size": [
                         0,
-                        300
+                        400
                       ],
                       "Children": [
                         {

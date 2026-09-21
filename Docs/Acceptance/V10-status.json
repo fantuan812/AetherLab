@@ -4,105 +4,154 @@
   "packages": [
     {
       "id": "V10-01",
-      "status": "baseline_frozen",
-      "acceptance": "synthetic_v9_fixture_roundtrip_pass; platform_release_matrix_pending"
+      "status": "implemented_under_validation",
+      "implementation": "基线、旧档样本和版本锁已建立",
+      "verified": "当前旧档审计、导入校验及进程崩溃恢复通过",
+      "remainingAcceptance": "平台发布矩阵"
     },
     {
       "id": "V10-02",
-      "status": "in_progress",
-      "acceptance": "Core_Editor_UI_boundaries_extracted; Editor_nonUnity_build_pass; 14_rule_tests_pass; local_HUD_and_save_reload_pass; dedicated_UI_exclusion_and_two_client_reconnect_pass; Gameplay_and_state_ownership_refactor_pending"
+      "status": "implemented_under_validation",
+      "implementation": "模块与功能目录已拆分；显式类型重定向已提交",
+      "verified": "Editor 非 Unity 构建与内容校验通过",
+      "remainingAcceptance": "Shipping Client/Server 构建"
     },
     {
       "id": "V10-03",
-      "status": "in_progress",
-      "acceptance": "typed_requests_v1_v2_with_explicit_interaction_revision_and_backward_readable_result_v2; 22_opcode_routes_with_partial_interaction_service_coverage_and_atomic_consumable_outbox; receipt_first_async_coordinator_with_consistent_multi_aggregate_reads_session_and_Pawn_epochs; 61_rule_tests_pass_and_exact_identity_stack_metadata_checks; uncompiled_untested_owner_Controller_RPC_bounded_preallocation_rate_limits_Pawn_channels_ack_backpressure_LocalPlayer_frozen_retry_and_receipt_snapshot_barrier; production_boot_identity_binding_authoritative_context_publication_and_gameplay_cutover_pending"
+      "status": "implemented_under_validation",
+      "implementation": "原生命令 RPC、分片快照、固定字节重试与协调者已接入",
+      "verified": "四客户端正常及弱网原生命令、私有状态隔离、重复请求通过",
+      "remainingAcceptance": "完整交易/学习/动作联机组合"
     },
     {
       "id": "V10-04",
-      "status": "in_progress",
-      "acceptance": "SQLite_single_writer; bounded_v9_reader_and_complete_profile_world_conversion; atomic_empty_database_import_preserves_versions_and_provenance; 42_rule_tests_pass; normal_commit_and_import_forced_process_recovery_pass; three_process_offline_audit_import_reopen_checksum_rejection_pass; runtime_map_material_restore_and_gameplay_cutover_pending; uncompiled_untested_atomic_world_profile_creation_full_DTO_ownership_startup_audit_legacy_generation_backup_native_persistence_lifecycle_and_physics_adapter; automatic_GameMode_ASC_encounter_container_and_region_transaction_cutover_pending"
+      "status": "implemented_under_validation",
+      "implementation": "SQLite 启动、导入、恢复、检查点及效果投递已接入",
+      "verified": "新档重连、服务器重启；普通事务与导入五阶段崩溃检查通过",
+      "remainingAcceptance": "完整主线旧档继续游玩；电源故障不在进程测试证据内"
     },
     {
       "id": "V10-05",
-      "status": "in_progress",
-      "acceptance": "LocalPlayer_menu_ownership_toggle_switch_Escape_layer_tokens_page_memory_and_Pawn_cleanup; legacy_UMG_commit_replication_selection_event_refresh_without_NativeTick_and_relative_anchors; 67_rule_tests_pass_without_warnings; real_Enhanced_Input_and_focused_Slate_shortcuts_commit_refresh_unpossess_repossess_pass_with_1280x720_and_actual_3440x1440_PNGs; dedicated_two_client_merchant_regression_pass; CommonUI_formal_widget_assets_full_graphical_pages_gamepad_and_release_matrix_pending"
+      "status": "implemented_under_validation",
+      "implementation": "CommonUI 根栈、正式 Designer 页面、输入所有权已接入",
+      "verified": "五种分辨率实际输入、切页、解绑重绑和每次100次菜单开关通过",
+      "remainingAcceptance": "控制器完整流程、长中文、发布包"
     },
     {
       "id": "V10-06",
-      "status": "in_progress",
-      "acceptance": "fixed_grid_stateful_stack_rules_and_inventory_DTO; inventory_and_consumable_candidates_use_profile_SQLite_transactions; versioned_idempotent_resource_receiver_and_async_delivery_pump_with_character_session_Pawn_and_receiver_identity_checks; explicit_full_respawn_recovery_and_lost_ACK_reconciliation; 56_rule_tests_pass_and_exact_identity_stack_metadata_checks; ASC_resource_action_gate_runtime_gateway_and_UI_pending"
+      "status": "implemented_under_validation",
+      "implementation": "固定格子与全部库存事务已接入生产快照及 UI",
+      "verified": "规则回归、真实移动/收藏/重放命令通过",
+      "remainingAcceptance": "完整拾取拆分装备出售修理丢弃玩家路径"
     },
     {
       "id": "V10-07",
-      "status": "in_progress",
-      "acceptance": "ten_slot_loadout_and_durability_candidate_rules; repair_cost_and_durability_in_one_profile_transaction_with_rollback_replay_tests; runtime_GAS_wear_repair_service_and_visuals_pending"
+      "status": "implemented_under_validation",
+      "implementation": "十槽、双套基础装备、耐久/修理/属性/外观已接入",
+      "verified": "规则及内容校验通过",
+      "remainingAcceptance": "双人物穿戴与真实战斗磨损视觉"
     },
     {
       "id": "V10-08",
-      "status": "in_progress",
-      "acceptance": "uncompiled_untested_code_for_LocalPlayer_isolated_preview_scene_shared_equipment_visual_resolver_versioned_async_appearance_mouse_gamepad_orbit_and_release_lifecycle; asset_authoring_script_written_not_executed; CommonUI_assets_alpha_two_body_types_release_acceptance_pending"
+      "status": "implemented_under_validation",
+      "implementation": "独立预览世界、透明材质、异步外观及操控已接入",
+      "verified": "720p 实际预览；关闭后 RT 释放通过",
+      "remainingAcceptance": "新构图、多分辨率和 Shipping 透明度"
     },
     {
       "id": "V10-09",
-      "status": "in_progress",
-      "acceptance": "uncompiled_untested_native_five_target_inspection_with_exact_owner_session_revision_identity_shared_equip_stats_and_skill_learning_query; independent_hover_detail_confirmation_session_fixed_command_bytes_and_receipt_snapshot_barrier; reusable_scroll_detail_and_quantity_confirmation_widgets; uncompiled_untested_revision_bound_CommandId_fix_and_skill_page_native_channel_host; production_boot_CommonUI_other_hosts_visual_assets_and_end_to_end_acceptance_pending"
+      "status": "implemented_under_validation",
+      "implementation": "统一详情、比较、数量确认和版本失效保护已接入",
+      "verified": "规则回归通过",
+      "remainingAcceptance": "全部实际入口的鼠标/控制器流程"
     },
     {
       "id": "V10-10",
-      "status": "in_progress",
-      "acceptance": "native_SQLite_shop_reward_container_candidates; production_legacy_trade_uses_pinned_merchant_Pawn_PlayerState_character_lease_with_live_revalidation_and_receipt_first_retry; current_merchant_products_quantity_price_sale_confirmation_and_visible_retry_UI; 64_rule_tests_pass_without_warnings_and_four_real_UMG_captures_pass; dedicated_two_remote_clients_lease_duplicate_buy_close_receipt_replay_expired_token_and_owner_privacy_pass; v10_SQLite_instance_cutover_repair_NPC_CommonUI_and_release_acceptance_pending"
+      "status": "implemented_under_validation",
+      "implementation": "商店、修理、容器、个人仓储及共享掉落原子事务已接入",
+      "verified": "规则回归通过",
+      "remainingAcceptance": "四人争抢、交易会话失效及完整玩家路径"
     },
     {
       "id": "V10-11",
-      "status": "in_progress",
-      "acceptance": "stable_SkillId_GAS_and_real_rank_effects; independent_sources_and_paid_rank_point_ledger; cascade_refund_and_explicit_skill_DTO; v9_masks_convert_without_invented_refunds; teacher_story_grants_and_unique_quest_point_claim_candidates_use_SQLite_coordinator; 61_rule_tests_pass; dedicated_rank_replication_cast_reconnect_restart_pass; production_event_RPC_ASC_cutover_and_full_migration_pending; uncompiled_untested_committed_native_skill_to_ASC_publication_unique_specs_rank_hotbar_revoke_owner_readiness_and_respawn_rebind; automatic_runtime_activation_external_grant_view_and_full_gameplay_cutover_pending"
+      "status": "implemented_under_validation",
+      "implementation": "稳定技能身份、等级参数、外部授权、退款及 GAS 发布已接入",
+      "verified": "规则回归通过",
+      "remainingAcceptance": "真实玩家成长及重生完整流程"
     },
     {
       "id": "V10-12",
-      "status": "in_progress",
-      "acceptance": "uncompiled_untested_twelve_node_graph_layout_separated_from_prerequisite_rules_state_projection_real_Slate_nodes_arrows_placeholder_icons_mouse_pan_zoom_Dpad_navigation_detail_confirmation_hotbar_and_point_source_pages; existing_K_page_readonly_legacy_story_projection_no_invented_points; native_snapshot_command_receipt_contracts_and_Blueprint_authoring_script_written; uncompiled_untested_LocalPlayer_snapshot_command_receipt_retry_wiring; production_backend_install_ASC_CommonUI_drag_bind_reset_service_assets_and_acceptance_pending"
+      "status": "implemented_under_validation",
+      "implementation": "技能节点、连接线、详情、快捷位拖放与重置已接入正式 WBP",
+      "verified": "正式内容校验和实际页面截图已取得",
+      "remainingAcceptance": "新缩放布局复验、控制器与学习操作"
     },
     {
       "id": "V10-13",
-      "status": "in_progress",
-      "acceptance": "finite_dialogue_offer_queries_and_request_v2_target_revision; five_native_progression_services_on_SQLite; production_E_uses_weak_spatial_registry_hysteresis_and_pinned_Actor_action_profile_snapshot_revalidation; 63_rule_tests_pass_without_warnings; streamed_map_guidance_and_two_client_target_RPC_pass; v10_Offer_SQLite_ASC_CommonUI_cutover_and_remaining_services_pending"
+      "status": "implemented_under_validation",
+      "implementation": "有限服务处理器、现场交互、对话及任务引导已接入",
+      "verified": "规则和场景启动检查通过",
+      "remainingAcceptance": "完整主线、不同进度及目标卸载玩家路径"
     },
     {
       "id": "V10-14",
-      "status": "in_progress",
-      "acceptance": "production_Space_jump_Ctrl_capsule_crouch_Alt_GAS_predicted_ground_dodge_Shift_SavedMove_sprint; real_stand_headroom_server_jump_revalidation_and_held_input_cleanup; dodge_GE_cost_cooldown_invulnerability_and_cancellable_RootMotionSource_with_wall_sweeps_and_natural_edge_fall; 66_rule_tests_pass_without_warnings; dedicated_two_remote_clients_stance_sprint_jump_dodge_and_rejected_prediction_cost_position_rollback_pass; assetized_input_gamepad_dodge_distance_latency_budget_animation_full_cancel_matrix_and_release_acceptance_pending"
+      "status": "implemented_under_validation",
+      "implementation": "Enhanced Input、跳蹲闪避、受控战斗/世界动作及24动画已接入",
+      "verified": "规则与内容校验通过",
+      "remainingAcceptance": "动作接触视觉、网络取消和响应预算"
     },
     {
       "id": "V10-15",
-      "status": "in_progress",
-      "acceptance": "CPU_library_and_real_model_inference_pass; Vulkan_and_UE_integration_pending"
+      "status": "implemented_under_validation",
+      "implementation": "锁定原生库、GGML、模型及 CPU/Vulkan 制品作者链已完成",
+      "verified": "真实 UE CPU/Vulkan 各1项集成通过",
+      "remainingAcceptance": "Shipping 依赖部署与渲染竞争"
     },
     {
       "id": "V10-16",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "implemented_under_validation",
+      "implementation": "非阻塞调度、epoch、不可变姿态、G1桥接及人物重定向已接入",
+      "verified": "真实变化输入、4帧过渡、注销及双agent集成通过",
+      "remainingAcceptance": "性能百分位、迟到/长时与角色视觉"
     },
     {
       "id": "V10-17",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "implemented_under_validation",
+      "implementation": "G1、双人物重定向、8风格及来源哈希已生成",
+      "verified": "资源校验通过；蹲姿固定骨长投影误差小于5cm",
+      "remainingAcceptance": "8风格双人物接触/滑脚/视觉质量"
     },
     {
       "id": "V10-18",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "implemented_under_validation",
+      "implementation": "任务、地图、队伍和设置正式图形页面已接入",
+      "verified": "720p实际页面及快捷键检查通过",
+      "remainingAcceptance": "设置新修复、多分辨率及真实操作"
     },
     {
       "id": "V10-19",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "implemented_under_validation",
+      "implementation": "原生恢复、流送屏障、Pawn重绑与会话撤销已接入",
+      "verified": "Dedicated/Listen 各正常/弱网四人、晚加入/重连/重启通过；菜单换Pawn通过",
+      "remainingAcceptance": "50次重生/分区及60分钟混合测试"
     },
     {
       "id": "V10-20",
-      "status": "pending",
-      "acceptance": "not_run"
+      "status": "implemented_under_validation",
+      "implementation": "构建、作者、打包、证据收集脚本已交付",
+      "verified": "Editor与Win64 Shipping客户端编译通过、内容校验通过；包及长时未验收",
+      "remainingAcceptance": "安装版UE拒绝Server Target；Shipping、Linux Server、性能和完整发布验收未完成"
     }
   ],
-  "note": "状态仅随实际实现与验证更新。阶段完成不等于完整发布验收。按方案工作包表校正：V10-12 是图形技能树，NPC/交互进度归 V10-13。",
-  "verificationPolicy": "用户要求：先完成全部剩余代码及必要资产，再统一编译、测试与修复；当前新增代码未编译、未测试，既往通过记录只代表历史提交。"
+  "note": "本表是当前核查快照；历史分阶段记录保留在架构文档和 Git 历史。资源已生成不等于质量验收通过，局部通过不等于完整 v10 发布完成。",
+  "verificationPolicy": "代码和必要资源阶段已完成并进入统一编译、测试、修复阶段。新增修改须复验；测试仅针对隔离合成存档。",
+  "schema": 2,
+  "updated": "2026-09-21",
+  "releaseAccepted": false,
+  "blockers": [
+    {
+      "id": "ShippingServerEngine",
+      "detail": "当前 Epic 安装版 UE 5.8 实际拒绝 Server Target，需要支持服务器目标的引擎；已询问用户其路径。"
+    }
+  ]
 }

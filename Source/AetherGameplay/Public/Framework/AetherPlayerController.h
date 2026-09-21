@@ -27,6 +27,7 @@ public:
     virtual void SpawnDefaultHUD() override;
     virtual void FlushPressedKeys() override;
     virtual void BeginPlay() override;
+    virtual void PlayerTick(float DeltaSeconds) override;
     virtual void SetPawn(APawn* InPawn) override;
     virtual void OnRep_Pawn() override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;

@@ -56,6 +56,12 @@ bool FMotionBricksScheduler::IsPending(uint64 Id) const
 {FScopeLock Lock(&Mutex);const auto* E=Entries.Find(Id);return E&&(E->bExecuting||E->Pending.IsSet());}
 FString FMotionBricksScheduler::Diagnostic() const
 {FScopeLock Lock(&Mutex);return State;}
+FAetherMotionSchedulerMetrics FMotionBricksScheduler::Inspect() const
+{
+    FScopeLock Lock(&Mutex);auto Snapshot=Metrics;Snapshot.Agents=Entries.Num();
+    for(const auto& Pair:Entries){Snapshot.Pending+=Pair.Value.Pending.IsSet()?1:0;Snapshot.Executing+=Pair.Value.bExecuting?1:0;}
+    return Snapshot;
+}
 uint32 FMotionBricksScheduler::Run()
 {
     FMotionBricksApi Api;TUniquePtr<FMotionBricksModelOwner> Model;TSet<uint64> NativeIds;uint64 LoadedConfiguration=0;
@@ -108,12 +114,14 @@ uint32 FMotionBricksScheduler::Run()
             }
             FScopeLock Lock(&Mutex);if(Configuration==Version&&!Model)State=Failure.IsEmpty()?TEXT("传统动画"):TEXT("传统动画 · ")+Failure;
         }
+        {FScopeLock Lock(&Mutex);Metrics.NativeAgents=NativeIds.Num();}
         if(!HasWork){Wake->Wait(1000);continue;}
         FAetherMotionResult Result;Result.AgentId=Work.AgentId;Result.Stamp=Work.Stamp;
         if(Model){Result.Clip=Model->Generate(Work,Result.Reason);NativeIds.Add(Work.AgentId);}
         else Result.Reason=Failure.IsEmpty()?TEXT("传统动画"):Failure;
         {
             FScopeLock Lock(&Mutex);
+            Metrics.NativeAgents=NativeIds.Num();if(Model){++Metrics.NativeCalls;if(!Result.Clip)++Metrics.NativeFailures;}
             if(auto* E=Entries.Find(Work.AgentId))
             {
                 E->bExecuting=false;

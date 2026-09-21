@@ -52,6 +52,16 @@ TSharedRef<SWidget> UAetherSettingsPage::RebuildWidget()
         Notice=Text(*WidgetTree,*Root,TEXT(""));Confirmation->SetVisibility(ESlateVisibility::Collapsed);
     }
 
+    // Designer 蓝图只保存布局；选项和有效范围必须在两个构建路径都初始化。
+    const auto Options=[](UComboBoxString* Combo,const TArray<FString>& Values){if(!Combo)return;for(const auto& Value:Values)if(Combo->FindOptionIndex(Value)==INDEX_NONE)Combo->AddOption(Value);};
+    Options(Resolution,{TEXT("1280x720"),TEXT("1920x1080"),TEXT("2560x1440"),TEXT("3440x1440"),TEXT("3840x2160")});
+    Options(WindowMode,{TEXT("独占全屏"),TEXT("无边框全屏"),TEXT("窗口")});
+    Options(Quality,{TEXT("低"),TEXT("中"),TEXT("高"),TEXT("极高"),TEXT("影视")});
+    Options(Backend,{TEXT("自动选择"),TEXT("传统动画"),TEXT("CPU 生成"),TEXT("Vulkan 生成")});
+    const auto Bounds=[](USpinBox* Spin,float Min,float Max,float Step){if(Spin){Spin->SetMinValue(Min);Spin->SetMaxValue(Max);Spin->SetDelta(Step);}};
+    Bounds(Volume,0,1,.05f);Bounds(Mouse,.1f,3,.1f);Bounds(Controller,.1f,3,.1f);Bounds(Scale,.75f,1.5f,.05f);
+    if(BindingKey){BindingKey->SetAllowModifierKeys(false);BindingKey->SetAllowGamepadKeys(false);}
+    if(Confirmation)Confirmation->SetVisibility(ESlateVisibility::Collapsed);
     if(BindingAction)BindingAction->OnSelectionChanged.AddUniqueDynamic(this,&UAetherSettingsPage::ActionSelected);
     if(BindingKey)BindingKey->OnKeySelected.AddUniqueDynamic(this,&UAetherSettingsPage::KeySelected);
     const auto Bind=[&](const TCHAR* Name,FSimpleDelegate Action){if(auto* B=Cast<UAetherPageButton>(GetWidgetFromName(Name)))B->Bind(MoveTemp(Action));};

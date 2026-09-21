@@ -12,9 +12,11 @@
 | G1 mesh/IK/retarget 作者 | 资源生成成功，Manny/Quinn 双向 retarget、8 风格及边界已落盘 |
 | 正式 UI / 输入 / 完整装备资源 | 作者链完成；正式内容命令行检查 0 错误、0 警告 |
 | 规则回归 | 首轮 55/68；修复后 67/68；最后仓储用例针对复验通过，无遗留规则失败 |
-| 实际菜单 / 视觉 | 已发现并修复切页路由、空格白块；后续生命周期与分辨率复验进行中 |
+| 实际菜单 / 视觉 | 五种分辨率交互复验通过；修复技能节点裁切、初始偏移、设置空选项、预览构图和格子布局；已检查实际截图 |
 | Shipping Server | 实际调用 UBT 被安装引擎拒绝：Server targets are not currently supported from this engine distribution |
-| 联机、完整发布与时长验收 | 仍待执行，不作为已验收 |
+| 原生联机 | Dedicated/Listen 各正常及50ms单程延迟、3%丢包组合通过；包含四人、晚加入、重放、隐私、重连和重启 |
+| Shipping Client | Win64 Shipping 编译成功；Cook/Package及包内运行继续验证 |
+| 时长验收 | 已补生命周期探针，尚未运行，不作为已验收 |
 
 Vulkan 构建依赖 LunarG 1.4.357.0，安装包 SHA256：
 81f474711e9042f4cd22b31b2f7a8870db2e428b21586fb43dd80150be97310d。
@@ -36,3 +38,16 @@ Vulkan 构建依赖 LunarG 1.4.357.0，安装包 SHA256：
 CPU 4 次推理：63.012、83.267、81.845、81.650 ms。
 Vulkan 4 次推理：3648.879、414.919、122.522、115.562 ms。
 Vulkan 前两次包含冷启动/管线建立影响；不能排除这些数值后声称端到端 P95 达标。尚未执行渲染竞争、4 玩家并发和完整百分位采样。
+
+## 2026-09-21 统一复验
+
+- 最新完整规则：68/68 通过，报告 Rules-db85da3450a2444b87f8903491afc840。
+- 原生联机报告：V10Native_beb3bec85458（Dedicated 正常）、V10Native_b1a298216c98（Dedicated 弱网）、V10Native_daa1489d1522（Listen 正常）、V10Native_db97a1c5de2c（Listen 弱网）。各弱网客户端检查 NetDriver 实际注入配置；双端各设置50ms延迟和3%丢包。它们是 Editor Development 进程，不能替代 Shipping 专服。
+- 修复初始档案在资源恢复屏障完成前发出；探针等待 PlayerState 身份与安全传送提交，避免把尚未就绪的正确拒绝当成功路径。
+- 菜单最终交互报告：720p 8ac9c9021c7e，1080p b3d1eb6301ab，1440p 51f4599f0187，4K 4fd7b849653b，21:9 d169273a4f96（目录前缀 AetherV10Menu_）。每次包括100次开关、换Pawn解绑重绑及七张实际 PNG；脚本读取PNG尺寸，不把命令行目标尺寸当实际结果。
+- 内容复验：Content-2a14ca073ac64ef7881614e6ab322137，0错误、0警告。
+- 旧档离线审计/导入/坏CRC拒绝：V10LegacyAudit/5c1bb3ad5ea3464fb54b752da9a89a9c。原样本字节不变。
+- 普通事务强退恢复：V10Crash/f5bc565dd563462c9af1f7bb6dfd42b3；导入强退恢复：V10Crash/a3f04562984f4a3583a73494e09fd75e。五阶段全部符合预期退出码和持久状态，不代表断电/硬盘损坏测试。
+- Win64 Shipping 客户端 UBT 构建成功（V10-shipping-client-build2.log）。之后新增仅开发探针与统计接口已通过 Editor 构建，后续包构建需要包含这些最新代码。
+
+原生生命周期脚本 TestNativeSoak.ps1 默认3600秒，隔离新档，分三阶段运行传统/CPU/Vulkan、50次Pawn替换、50次跨区安全传送和至少100次菜单开关。它记录实际帧百分位和进程内存/对象/native计数，不代替完整主线、显存、纯净机器、Shipping或平台矩阵；目前未宣称运行通过。

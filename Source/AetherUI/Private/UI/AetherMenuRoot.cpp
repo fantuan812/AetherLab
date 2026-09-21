@@ -21,7 +21,7 @@ FUIInputConfig MenuInput()
     C.bIgnoreMoveInput=true;C.bIgnoreLookInput=true;return C;
 }
 }
-UAetherGameInputLayer::UAetherGameInputLayer(){bAutoActivate=true;bSupportsActivationFocus=false;}
+UAetherGameInputLayer::UAetherGameInputLayer(){bAutoActivate=true;bSupportsActivationFocus=true;}
 TOptional<FUIInputConfig> UAetherGameInputLayer::GetDesiredInputConfig() const
 {return FUIInputConfig(ECommonInputMode::Game,EMouseCaptureMode::CapturePermanently_IncludingInitialMouseDown);}
 UAetherModalLayer::UAetherModalLayer(){bIsModal=true;bIsBackHandler=true;SetIsFocusable(true);}

@@ -77,6 +77,7 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   if(!Check(C&&C->Panel==2&&Panel->IsActivated(),TEXT("Focused J switches page")))return;
   if(!Check(FocusedKey(EKeys::Escape),TEXT("Focused Escape is handled")))return;break;
  case 4:
+  UE_LOG(LogTemp,Display,TEXT("V10_MENU_CLOSED open=%d page=%d active=%d cursor=%d menu=%d"),C?C->bPanel:0,C?C->Panel:0,Panel->IsActivated(),PC->bShowMouseCursor,Menu->IsOpen());
   if(!Check(C&&!C->bPanel&&!Panel->IsActivated()&&!PC->bShowMouseCursor,TEXT("Escape closes current page and restores game input")))return;
   GameKey(EKeys::I);break;
  case 5:
