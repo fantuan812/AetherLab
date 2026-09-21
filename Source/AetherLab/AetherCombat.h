@@ -121,6 +121,7 @@ public:
     }
     UPROPERTY(Replicated) float WaterReserveKg = 3;
     UPROPERTY(Replicated) float CastLockUntil = 0;
+    UPROPERTY(Replicated) float CastStartedAt = 0;
     UPROPERTY(Replicated) float StunUntil = 0;
     int32 SelectedSpell = 0;
     FString Feedback;

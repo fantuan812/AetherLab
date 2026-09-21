@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "Journal/AetherJournalPage.h"
 #include "UI/AetherPageWidgets.h"
 #include "Characters/AetherFrontierCharacter.h"
@@ -9,6 +10,7 @@
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/ScrollBox.h"
 #include "AetherGuide.h"
+#include "World/AetherFrontierState.h"
 #include "GameFramework/GameStateBase.h"
 using namespace AetherPageWidgets;
 TSharedRef<SWidget> UAetherJournalPage::RebuildWidget()
@@ -125,7 +127,7 @@ void UAetherJournalPage::Inspect(const FString& Id)
     auto* C=Player();if(!C)return;FAetherInspectionSnapshot S;if(!AetherNativeInventory::Snapshot(*C,Profile()?Profile()->Revision:0,S))return;
     FAetherInspectTarget Target;Target.Kind=EAetherInspectTarget::ItemDefinition;Target.DefinitionId=Id;
     const auto& D=FAetherV10Definitions::Get();
-    if(!ItemCard){ItemCard=CreateWidget<UAetherInspectionCard>(GetOwningPlayer());Details->AddChildToVerticalBox(ItemCard);}
+    if(!ItemCard){ItemCard=CreateWidget<UAetherInspectionCard>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherInspectionCard>());Details->AddChildToVerticalBox(ItemCard);}
     ItemCard->SetModel(AetherInspection::Build(AetherInspection::Pin(S,Target),S,D.Items,D.Skills));
 }
 void UAetherJournalPage::LiveRefresh()
@@ -133,5 +135,12 @@ void UAetherJournalPage::LiveRefresh()
     if(!RefreshClock)return;
     // 日期口径由服务端定义；快照的 DailyDate 只展示已结算日期，客户端时钟不决定领取资格。
     const auto* P=Profile();
-    RefreshClock->SetText(FText::FromString(TEXT("每日 UTC 00:00 刷新 · 已记录日期：")+(P&&!P->DailyDate.IsEmpty()?P->DailyDate:TEXT("尚未参与"))));
+    const auto* State=GetWorld()->GetGameState<AAetherFrontierState>();
+    FString Clock=TEXT("正在同步服务器刷新时间");
+    if(State&&State->DailyResetAt>0)
+    {
+        const int32 Remaining=FMath::Max(0,FMath::CeilToInt(State->DailyResetAt-State->GetServerWorldTimeSeconds()));
+        Clock=FString::Printf(TEXT("UTC 00:00 刷新 · 剩余 %02d:%02d:%02d"),Remaining/3600,(Remaining/60)%60,Remaining%60);
+    }
+    RefreshClock->SetText(FText::FromString(Clock+TEXT(" · 已记录：")+(P&&!P->DailyDate.IsEmpty()?P->DailyDate:TEXT("尚未参与"))));
 }

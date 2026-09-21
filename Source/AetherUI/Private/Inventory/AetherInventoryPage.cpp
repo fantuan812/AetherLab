@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "UI/AetherMenuRoot.h"
 #include "Inventory/AetherInventoryPage.h"
 #include "Inventory/AetherNativeInventory.h"
@@ -69,16 +70,16 @@ TSharedRef<SWidget> UAetherInventoryPage::RebuildWidget()
         auto Column=[&](float Weight){auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();auto* Slot=Body->AddChildToHorizontalBox(Scroll);FSlateChildSize Size(ESlateSizeRule::Fill);Size.Value=Weight;Slot->SetSize(Size);Slot->SetPadding(FMargin(6,0));auto* Box=WidgetTree->ConstructWidget<UVerticalBox>();Scroll->AddChild(Box);return Box;};
         auto* Left=Column(.25f);auto* Center=Column(.5f);auto* Right=Column(.25f);
         auto* PreviewSize=WidgetTree->ConstructWidget<USizeBox>();PreviewSize->SetHeightOverride(300);Left->AddChildToVerticalBox(PreviewSize);
-        Preview=CreateWidget<UAetherCharacterPreviewWidget>(this);PreviewSize->SetContent(Preview);
+        Preview=CreateWidget<UAetherCharacterPreviewWidget>(this,AetherWidgetAssets::Class<UAetherCharacterPreviewWidget>());PreviewSize->SetContent(Preview);
         Equipment=WidgetTree->ConstructWidget<UUniformGridPanel>();Equipment->SetSlotPadding(FMargin(3));Left->AddChildToVerticalBox(Equipment);
         Grid=WidgetTree->ConstructWidget<UUniformGridPanel>();Grid->SetSlotPadding(FMargin(3));Center->AddChildToVerticalBox(Grid);
         Products=WidgetTree->ConstructWidget<UUniformGridPanel>();Products->SetSlotPadding(FMargin(3));Center->AddChildToVerticalBox(Products)->SetPadding(FMargin(0,16));
         ContainerTitle=WidgetTree->ConstructWidget<UTextBlock>();Center->AddChildToVerticalBox(ContainerTitle);
         ContainerGrid=WidgetTree->ConstructWidget<UUniformGridPanel>();ContainerGrid->SetSlotPadding(FMargin(3));Center->AddChildToVerticalBox(ContainerGrid)->SetPadding(FMargin(0,12));
-        Details=CreateWidget<UAetherInspectionCard>(this);Right->AddChildToVerticalBox(Details);
+        Details=CreateWidget<UAetherInspectionCard>(this,AetherWidgetAssets::Class<UAetherInspectionCard>());Right->AddChildToVerticalBox(Details);
         Details->OnActionRequested.AddUObject(this,&UAetherInventoryPage::Action);Details->OnComparisonRequested.AddUObject(this,&UAetherInventoryPage::Compare);Details->OnDismissRequested.AddUObject(this,&UAetherInventoryPage::DismissDetails);
-        Hover=CreateWidget<UAetherInspectionCard>(this);Right->AddChildToVerticalBox(Hover);Hover->SetVisibility(ESlateVisibility::Collapsed);
-        Confirmation=CreateWidget<UAetherInspectionConfirmation>(this);
+        Hover=CreateWidget<UAetherInspectionCard>(this,AetherWidgetAssets::Class<UAetherInspectionCard>());Right->AddChildToVerticalBox(Hover);Hover->SetVisibility(ESlateVisibility::Collapsed);
+        Confirmation=CreateWidget<UAetherInspectionConfirmation>(this,AetherWidgetAssets::Class<UAetherInspectionConfirmation>());
     }
     return Super::RebuildWidget();
 }
@@ -147,7 +148,7 @@ void UAetherInventoryPage::Refresh()
     Summary->SetText(FText::FromString(FString::Printf(TEXT("背包 %d / %d · 金币 %d%s"),Snapshot.Inventory.Items.Num(),Snapshot.Inventory.Capacity,Snapshot.Gold,Snapshot.Shop.IsSet()?TEXT(" · 商店服务已开启"):TEXT(""))));
     const auto MakeCell=[&](UUniformGridPanel* Parent,int32 Index,int32 ColumnCount)
     {
-        auto* Cell=CreateWidget<UAetherInventoryCell>(this);Parent->AddChildToUniformGrid(Cell,Index/ColumnCount,Index%ColumnCount);
+        auto* Cell=CreateWidget<UAetherInventoryCell>(this,AetherWidgetAssets::Class<UAetherInventoryCell>(Parent==Equipment?TEXT("WBP_EquipmentSlot"):nullptr));Parent->AddChildToUniformGrid(Cell,Index/ColumnCount,Index%ColumnCount);
         Cell->OnIntent.BindUObject(this,&UAetherInventoryPage::CellIntent);Cell->OnItemDrop.BindUObject(this,&UAetherInventoryPage::Drop);return Cell;
     };
     if(Cells.Num()!=Snapshot.Inventory.Capacity)

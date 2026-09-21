@@ -1,4 +1,8 @@
 #include "Inspection/AetherInspectionWidgets.h"
+#include "UI/AetherWidgetAssets.h"
+#include "UI/AetherUITheme.h"
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -31,7 +35,7 @@ TSharedRef<SWidget> UAetherInspectionCard::RebuildWidget()
     {
         auto* Size=WidgetTree->ConstructWidget<USizeBox>();Size->SetMinDesiredWidth(200);Size->SetMaxDesiredWidth(420);Size->SetMaxDesiredHeight(620);
         WidgetTree->RootWidget=Size;
-        auto* Border=WidgetTree->ConstructWidget<UBorder>();Border->SetPadding(FMargin(16));Border->SetBrushColor(FLinearColor(.025f,.035f,.05f,.98f));Size->SetContent(Border);
+        auto* Border=WidgetTree->ConstructWidget<UBorder>();Border->SetPadding(FMargin(16));Border->SetBrushColor(UAetherUITheme::Get().Panel);Size->SetContent(Border);
         auto* Root=WidgetTree->ConstructWidget<UVerticalBox>();Border->SetContent(Root);
         auto* Header=WidgetTree->ConstructWidget<UHorizontalBox>();Root->AddChildToVerticalBox(Header);
         Icon=WidgetTree->ConstructWidget<UImage>();Icon->SetDesiredSizeOverride(FVector2D(48,48));Icon->SetVisibility(ESlateVisibility::Hidden);Header->AddChildToHorizontalBox(Icon);
@@ -48,6 +52,13 @@ void UAetherInspectionCard::SetModel(const FAetherInspectionModel& InModel)
     ++Generation;Model=InModel;
     if(Icon){Icon->SetBrushFromTexture(nullptr);Icon->SetVisibility(ESlateVisibility::Hidden);}
     RenderModel();
+    const auto Path=AetherWidgetAssets::Icon(Model.IconId);
+    if(Path.IsValid())
+    {
+        const auto Expected=Generation;const TWeakObjectPtr<UAetherInspectionCard> Self=this;
+        UAssetManager::GetStreamableManager().RequestAsyncLoad(Path,[Self,Path,Expected]()
+        {if(Self.IsValid())Self->SetResolvedIcon(Expected,Cast<UTexture2D>(Path.ResolveObject()));});
+    }
 }
 void UAetherInspectionCard::SetResolvedIcon(uint64 DisplayGeneration,UTexture2D* Texture)
 {

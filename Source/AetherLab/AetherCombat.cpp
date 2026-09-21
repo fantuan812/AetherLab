@@ -275,7 +275,7 @@ void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AAetherCharacter, MaxHealth); DOREPLIFETIME(AAetherCharacter, Fighter); DOREPLIFETIME(AAetherCharacter, bBlocking);
     DOREPLIFETIME(AAetherCharacter, bWindingUp); DOREPLIFETIME(AAetherCharacter, bPacified);
-    DOREPLIFETIME(AAetherCharacter, WaterReserveKg); DOREPLIFETIME(AAetherCharacter, CastLockUntil); DOREPLIFETIME(AAetherCharacter, StunUntil);
+    DOREPLIFETIME(AAetherCharacter, WaterReserveKg); DOREPLIFETIME(AAetherCharacter, CastStartedAt); DOREPLIFETIME(AAetherCharacter, CastLockUntil); DOREPLIFETIME(AAetherCharacter, StunUntil);
     DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
 void AAetherCharacter::PossessedBy(AController* C)
@@ -414,7 +414,7 @@ bool AAetherCharacter::ExecuteSkill(const FString& SkillId,int32 Rank)
         // 只扣除模拟接受的水量。等级提升不能凭空造水，也不能在注入失败时丢失水。
         if(Accepted)WaterReserveKg-=float(E->WaterKg);
     }
-    if(Accepted)CastLockUntil=CombatTime()+float(E->Cooldown);
+    if(Accepted){CastStartedAt=CombatTime();CastLockUntil=CastStartedAt+float(E->Cooldown);}
     return Accepted;
 }
 

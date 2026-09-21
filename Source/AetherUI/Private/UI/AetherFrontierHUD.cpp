@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "UI/AetherFrontierHUD.h"
 #include "UI/AetherMenuRoot.h"
 #include "UI/AetherPlayerHUDWidget.h"
@@ -11,8 +12,8 @@ void AAetherFrontierHUD::BeginPlay()
     Super::BeginPlay();
     if(PlayerOwner&&PlayerOwner->IsLocalController())
     {
-        PlayerHUD=CreateWidget<UAetherPlayerHUDWidget>(PlayerOwner);PlayerHUD->AddToViewport(0);
-        MenuRoot=CreateWidget<UAetherMenuRoot>(PlayerOwner);MenuRoot->AddToViewport(10);PanelWidget=MenuRoot->GetPanel();
+        PlayerHUD=CreateWidget<UAetherPlayerHUDWidget>(PlayerOwner,AetherWidgetAssets::Class<UAetherPlayerHUDWidget>());PlayerHUD->AddToViewport(0);
+        MenuRoot=CreateWidget<UAetherMenuRoot>(PlayerOwner,AetherWidgetAssets::Class<UAetherMenuRoot>());MenuRoot->AddToViewport(10);PanelWidget=MenuRoot->GetPanel();
     }
 }
 void AAetherFrontierHUD::DrawHUD()

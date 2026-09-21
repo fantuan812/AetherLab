@@ -120,7 +120,7 @@ void AAetherFrontierProp::OnMaterialReaction(EReactiveReaction K,double Magnitud
 }
 void AAetherFrontierState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierState,NativeWorldRevision);DOREPLIFETIME(AAetherFrontierState,bSupplyRestored);DOREPLIFETIME(AAetherFrontierState,bWorkshopRestored);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(AAetherFrontierState,NativeWorldRevision);DOREPLIFETIME(AAetherFrontierState,DailyResetAt);DOREPLIFETIME(AAetherFrontierState,bSupplyRestored);DOREPLIFETIME(AAetherFrontierState,bWorkshopRestored);
     DOREPLIFETIME(AAetherFrontierState,bBridgeReleased);DOREPLIFETIME(AAetherFrontierState,bPowerOn);DOREPLIFETIME(AAetherFrontierState,ActivityKills);DOREPLIFETIME(AAetherFrontierState,ClosurePhase);
 }
 AAetherFrontierMode::AAetherFrontierMode()
@@ -401,6 +401,8 @@ void AAetherFrontierMode::Tick(float Dt)
     }
     if(WeatherTimer>=1)
     {
+        for(TActorIterator<AAetherPlayerState> It(GetWorld());It;++It)It->bPartyCaptain=!It->PartyLeader.IsEmpty()&&It->PartyLeader==It->Profile.CharacterId;
+        const auto Utc=FDateTime::UtcNow();S->DailyResetAt=S->GetServerWorldTimeSeconds()+(Utc.GetDate()+FTimespan::FromDays(1)-Utc).GetTotalSeconds();
         auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();const auto& E=W->GetSimulation()->GetEnvironment();
         const double Target=S->bRain?.003:0;const double Rain=FMath::FInterpConstantTo(E.RainKgPerM2Sec,Target,WeatherTimer,.001);
         if(!FMath::IsNearlyEqual(E.RainKgPerM2Sec,Rain,1.e-8))W->SetWeather(20,Rain,FVector(2,0,0));WeatherTimer=0;

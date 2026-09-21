@@ -106,3 +106,7 @@
 ## 传送与手柄输入源码工作单元
 
 新增双端目的地预加载、落点净空和有界取消、Enhanced Input 资源作者脚本、手柄完整基础绑定与断开清理。详见 ../Architecture/V10-safe-travel-input.zh-CN.md。未编译、未测试，输入资源尚未生成。
+
+## UI 正式资源接线工作单元
+
+新增统一 WBP 注册表、主题、图标作者及 Cook 标签、详情异步图标、独立 HUD 容器和服务器倒计时/队长可见状态。详见 ../Architecture/V10-ui-assets.zh-CN.md。未编译、未测试，资源脚本未执行。

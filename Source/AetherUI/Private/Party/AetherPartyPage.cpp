@@ -45,7 +45,7 @@ void UAetherPartyPage::RefreshPage()
         if(!Member&&(!Close||!State))continue;
         auto* CardRows=Card(*WidgetTree,Member?*Members:*Nearby);
         const FString Name=State?State->DisplayName:Pawn->CompanionId=="Muhe"?TEXT("沐禾"):TEXT("砾石");
-        Text(*WidgetTree,*CardRows,Name+(State?TEXT(" · 玩家"):TEXT(" · AI"))+(State&&State->PartyLeader==PS->PartyLeader&&State==PS&&Leader?TEXT(" · 队长"):TEXT("")));
+        Text(*WidgetTree,*CardRows,Name+(State?TEXT(" · 玩家"):TEXT(" · AI"))+(State&&State->bPartyCaptain?TEXT(" · 队长"):TEXT("")));
         auto* Health=Text(*WidgetTree,*CardRows,TEXT(""));HealthRows.Add({Pawn,Health});
         if(Member)
         {
@@ -75,11 +75,12 @@ void UAetherPartyPage::LiveRefresh()
     for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Fighter==EAetherFighter::Player)
     {
         const auto* S=It->ProfileState();
+        Key+=FString::Printf(TEXT("|%s:%d:%u"),S?*S->DisplayName:TEXT(""),S&&S->bPartyCaptain,It->CompanionOwner?It->CompanionOwner->GetUniqueID():0);
         Key+=FString::Printf(TEXT("|%u:%s:%d:%d"),It->GetUniqueID(),S?*S->PartyLeader:TEXT("AI"),It->bCompanionHold,FVector::DistSquared(It->GetActorLocation(),C->GetActorLocation())<=FMath::Square(500.));
     }
     if(Key!=LastRoster){LastRoster=Key;RefreshPage();}
     for(const auto& R:HealthRows)if(R.Pawn.IsValid()&&R.Text.IsValid())
         R.Text->SetText(FText::FromString(FString::Printf(TEXT("生命 %.0f / %.0f · %s"),R.Pawn->Health(),R.Pawn->MaxHealth,
             !R.Pawn->Alive()?TEXT("倒地"):R.Pawn->ReviveTarget?TEXT("正在救援"):R.Pawn->bCompanionHold?TEXT("等待中"):TEXT("行动中"))));
-    Notice->SetText(FText::FromString(C->Feedback));
+    Notice->SetText(FText::FromString(C->Feedback+(PS->InvitedBy.IsEmpty()?FString():FString::Printf(TEXT("  邀请剩余 %.0f 秒"),FMath::Max(0.f,PS->InvitationExpires-C->CombatTime())))));
 }

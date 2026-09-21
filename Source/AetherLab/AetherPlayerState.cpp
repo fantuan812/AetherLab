@@ -11,7 +11,7 @@ AAetherPlayerState::AAetherPlayerState()
     Attributes=CreateDefaultSubobject<UAetherAttributes>(TEXT("PersistentAttributes")); Attributes->Posture.SetBaseValue(100); Attributes->Posture.SetCurrentValue(100); SetNetUpdateFrequency(20);
 }
 void AAetherPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{ Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME_CONDITION(AAetherPlayerState,Profile,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,bNativeSkillsEnabled,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,SkillGrantPresentation,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,SkillGrantRevision,COND_OwnerOnly);DOREPLIFETIME(AAetherPlayerState,DisplayName);DOREPLIFETIME(AAetherPlayerState,PartyLeader);DOREPLIFETIME_CONDITION(AAetherPlayerState,InvitedBy,COND_OwnerOnly); }
+{ Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME_CONDITION(AAetherPlayerState,Profile,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,bNativeSkillsEnabled,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,SkillGrantPresentation,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,SkillGrantRevision,COND_OwnerOnly);DOREPLIFETIME(AAetherPlayerState,DisplayName);DOREPLIFETIME(AAetherPlayerState,PartyLeader);DOREPLIFETIME(AAetherPlayerState,bPartyCaptain);DOREPLIFETIME_CONDITION(AAetherPlayerState,InvitationExpires,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,InvitedBy,COND_OwnerOnly); }
 
 bool AAetherPlayerState::PublishNativeSkills(const FAetherProfileStateV10& P,const TArray<FAetherExternalSkillGrant>& Grants,FString& Reason)
 {

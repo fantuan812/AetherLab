@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "UI/AetherMenuRoot.h"
 #include "Settings/AetherSettingsPage.h"
 #include "UI/AetherFrontierHUD.h"
@@ -60,13 +61,13 @@ TSharedRef<SWidget> UAetherMenuRoot::RebuildWidget()
     if(!WidgetTree->RootWidget)
     {
         auto* Overlay=WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(),TEXT("MenuLayers"));WidgetTree->RootWidget=Overlay;
-        GameLayer=CreateWidget<UAetherGameInputLayer>(GetOwningPlayer());Overlay->AddChildToOverlay(GameLayer);
+        GameLayer=CreateWidget<UAetherGameInputLayer>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherGameInputLayer>());Overlay->AddChildToOverlay(GameLayer);
         MainStack=WidgetTree->ConstructWidget<UCommonActivatableWidgetStack>(UCommonActivatableWidgetStack::StaticClass(),TEXT("MainStack"));
         auto* Slot=Overlay->AddChildToOverlay(MainStack);Slot->SetHorizontalAlignment(HAlign_Fill);Slot->SetVerticalAlignment(VAlign_Fill);Slot->SetPadding(FMargin(32));
         ModalStack=WidgetTree->ConstructWidget<UCommonActivatableWidgetStack>(UCommonActivatableWidgetStack::StaticClass(),TEXT("ModalStack"));
         auto* ModalSlot=Overlay->AddChildToOverlay(ModalStack);ModalSlot->SetHorizontalAlignment(HAlign_Fill);ModalSlot->SetVerticalAlignment(VAlign_Fill);
         MainStack->SetTransitionDuration(0);ModalStack->SetTransitionDuration(0);ModalStack->SetVisibility(ESlateVisibility::Collapsed);
-        Panel=CreateWidget<UAetherFrontierPanel>(GetOwningPlayer());Dialogue=CreateWidget<UAetherDialoguePage>(GetOwningPlayer());
+        Panel=CreateWidget<UAetherFrontierPanel>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherFrontierPanel>());Dialogue=CreateWidget<UAetherDialoguePage>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherDialoguePage>());
     }
     return Super::RebuildWidget();
 }
@@ -92,7 +93,7 @@ void UAetherMenuRoot::Refresh()
 bool UAetherMenuRoot::PushModal(FGuid Token,UUserWidget* Body)
 {
     if(!Token.IsValid()||!Body||!Menu.IsValid()||!Menu->HasLayer(Token)||Modals.Contains(Token))return false;
-    auto* Layer=CreateWidget<UAetherModalLayer>(GetOwningPlayer());Layer->Token=Token;Layer->SetBody(Body);
+    auto* Layer=CreateWidget<UAetherModalLayer>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherModalLayer>());Layer->Token=Token;Layer->SetBody(Body);
     Modals.Add(Token,Layer);ModalStack->SetVisibility(ESlateVisibility::Visible);ModalStack->AddWidgetInstance(*Layer);return true;
 }
 void UAetherMenuRoot::PopModal(FGuid Token)

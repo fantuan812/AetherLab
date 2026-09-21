@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "UI/AetherMenuRoot.h"
 #include "Skills/AetherSkillTreePage.h"
 #include "Skills/AetherSkillGraphWidget.h"
@@ -42,7 +43,7 @@ TSharedRef<SWidget> UAetherSkillTreePage::RebuildWidget()
         auto* Body=WidgetTree->ConstructWidget<UHorizontalBox>();Root->AddChildToVerticalBox(Body)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
         Graph=WidgetTree->ConstructWidget<UAetherSkillGraphWidget>();Graph->OnNodeSelected.AddUObject(this,&UAetherSkillTreePage::Select);
         auto* GraphSlot=Body->AddChildToHorizontalBox(Graph);FSlateChildSize GraphSize(ESlateSizeRule::Fill);GraphSize.Value=.62f;GraphSlot->SetSize(GraphSize);
-        Details=CreateWidget<UAetherInspectionCard>(this,UAetherInspectionCard::StaticClass());
+        Details=CreateWidget<UAetherInspectionCard>(this,AetherWidgetAssets::Class<UAetherInspectionCard>());
         Details->OnActionRequested.AddUObject(this,&UAetherSkillTreePage::RequestAction);
         Details->OnDismissRequested.AddUObject(this,&UAetherSkillTreePage::ClosePresentation);
         auto* DetailsSlot=Body->AddChildToHorizontalBox(Details);FSlateChildSize DetailSize(ESlateSizeRule::Fill);DetailSize.Value=.38f;DetailsSlot->SetSize(DetailSize);DetailsSlot->SetPadding(FMargin(12,0,0,0));
@@ -53,7 +54,7 @@ TSharedRef<SWidget> UAetherSkillTreePage::RebuildWidget()
         PageButton(TEXT("点数来源上一页"))->OnClicked.AddDynamic(this,&UAetherSkillTreePage::PreviousSources);
         PageButton(TEXT("点数来源下一页"))->OnClicked.AddDynamic(this,&UAetherSkillTreePage::NextSources);
         // 遮罩占满本页，数量确认保持独立焦点，点击不会透到下面的节点或快捷位。
-        Confirmation=CreateWidget<UAetherInspectionConfirmation>(this);
+        Confirmation=CreateWidget<UAetherInspectionConfirmation>(this,AetherWidgetAssets::Class<UAetherInspectionConfirmation>());
     }
     Refresh();return Super::RebuildWidget();
 }

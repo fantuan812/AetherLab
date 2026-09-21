@@ -47,7 +47,8 @@ public:
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) TArray<FAetherSkillGrantPresentation> SkillGrantPresentation;
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) int64 SkillGrantRevision=-1;
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) bool bNativeSkillsEnabled=false;
-    float InvitationExpires=0;
+    UPROPERTY(ReplicatedUsing=OnRep_Presentation) bool bPartyCaptain=false;
+    UPROPERTY(ReplicatedUsing=OnRep_Presentation) float InvitationExpires=0;
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystem; }
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:

@@ -2,6 +2,7 @@
 #include "Blueprint/UserWidget.h"
 #include "AetherPlayerHUDWidget.generated.h"
 class UProgressBar;
+class UImage;
 class UTextBlock;
 class UVerticalBox;
 class UBorder;
@@ -19,6 +20,14 @@ private:
     UPROPERTY() TArray<TObjectPtr<UProgressBar>> Bars;
     UPROPERTY() TArray<TObjectPtr<UTextBlock>> Vitals;
     UPROPERTY() TArray<TObjectPtr<UTextBlock>> Skills;
+    UPROPERTY() TArray<TObjectPtr<UImage>> SkillIcons;
+    UPROPERTY() TArray<TObjectPtr<UProgressBar>> Cooldowns;
+    TArray<FString> ShownIcons;
+    UPROPERTY() TObjectPtr<UTextBlock> EquipmentText;
+    UPROPERTY() TObjectPtr<UTextBlock> TargetName;
+    UPROPERTY() TObjectPtr<UProgressBar> TargetHealth;
+    UPROPERTY() TObjectPtr<UWidget> TargetPanel;
+    UPROPERTY() TObjectPtr<UWidget> PromptPanel;
     UPROPERTY() TObjectPtr<UTextBlock> Guidance;
     UPROPERTY() TObjectPtr<UTextBlock> Interaction;
     UPROPERTY() TObjectPtr<UTextBlock> Feedback;

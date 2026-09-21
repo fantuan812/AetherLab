@@ -1,4 +1,6 @@
 #include "Inventory/AetherInventoryCell.h"
+#include "UI/AetherWidgetAssets.h"
+#include "UI/AetherUITheme.h"
 #include "Blueprint/WidgetTree.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/Border.h"
@@ -28,7 +30,7 @@ void UAetherInventoryCell::Present(const FAetherInspectRequest& In,int32 Slot,co
 {
     Request=In;PhysicalSlot=Slot;bFiltered=Filtered;TakeWidget();
     Label->SetText(FText::FromString(Filtered?TEXT("筛选外"):Text));
-    Background->SetBrushColor(Selected?FLinearColor(.23f,.18f,.07f,1):FLinearColor(.055f,.075f,.1f,1));
+    Background->SetBrushColor(Selected?UAetherUITheme::Get().Accent.CopyWithNewOpacity(.4):UAetherUITheme::Get().Card);
     SetRenderOpacity(Filtered?.3f:1.f);
     // 制作管线使用相同有限 IconId 生成图标；资源缺失时保留物品名和格子身份。
     if(ShownIcon!=IconId)
@@ -36,7 +38,7 @@ void UAetherInventoryCell::Present(const FAetherInspectRequest& In,int32 Slot,co
         ShownIcon=IconId;Icon->SetBrushFromTexture(nullptr);Icon->SetVisibility(ESlateVisibility::Collapsed);
         if(!IconId.IsEmpty())
         {
-            const FSoftObjectPath Path(TEXT("/Game/UI/Icons/T_")+IconId+TEXT(".T_")+IconId);
+            const FSoftObjectPath Path=AetherWidgetAssets::Icon(IconId);
             const TWeakObjectPtr<UAetherInventoryCell> Self=this;
             UAssetManager::GetStreamableManager().RequestAsyncLoad(Path,[Self,Path,IconId]()
             {

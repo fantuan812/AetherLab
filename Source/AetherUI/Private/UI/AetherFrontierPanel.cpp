@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "AetherFrontierPanel.h"
 #include "UI/AetherPageBase.h"
 #include "Inventory/AetherInventoryPage.h"
@@ -60,7 +61,7 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
             {EAetherMenuPage::Party,UAetherPartyPage::StaticClass()},{EAetherMenuPage::System,UAetherSettingsPage::StaticClass()}};
         for(const auto& D:Definitions)
         {
-            auto* W=CreateWidget<UUserWidget>(GetOwningPlayer(),D.Class);Pages.Add(D.Id,W);PageHost->AddChild(W);
+            auto* W=CreateWidget<UUserWidget>(GetOwningPlayer(),AetherWidgetAssets::Resolve(D.Class));Pages.Add(D.Id,W);PageHost->AddChild(W);
             auto* B=WidgetTree->ConstructWidget<UAetherPageButton>();auto* T=WidgetTree->ConstructWidget<UTextBlock>();T->SetText(FText::FromString(PageTitle(D.Id)));B->SetContent(T);
             B->Bind(FSimpleDelegate::CreateWeakLambda(this,[this,Id=D.Id](){if(Menu.IsValid()&&Menu->GetLayerCount()==0)Menu->OpenPage(Id);}));
             auto* Slot=Tabs->AddChildToHorizontalBox(B);Slot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));Slot->SetPadding(FMargin(3));

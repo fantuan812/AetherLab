@@ -41,8 +41,11 @@ for name, key in rows.items():
 if not library.save_loaded_asset(context):
     raise RuntimeError("无法保存游戏输入上下文")
 label_path = folder + "/PAL_Input"
+factory = ue.DataAssetFactory()
+factory.set_editor_property("data_asset_class", ue.PrimaryAssetLabel)
 label = library.load_asset(label_path) if library.does_asset_exist(label_path) else tools.create_asset(
-    "PAL_Input", folder, ue.PrimaryAssetLabel, ue.DataAssetFactory(data_asset_class=ue.PrimaryAssetLabel))
+    "PAL_Input", folder, ue.PrimaryAssetLabel, factory)
+label.set_editor_property("is_runtime_label", True)
 label.set_editor_property("explicit_assets", list(actions.values()) + [context])
 rules = label.get_editor_property("rules")
 rules.set_editor_property("cook_rule", ue.PrimaryAssetCookRule.ALWAYS_COOK)
