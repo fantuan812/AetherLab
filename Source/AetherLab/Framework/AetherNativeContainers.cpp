@@ -48,11 +48,16 @@ void AAetherFrontierMode::TickNativeContainers()
         FContainerCreation Job;Job.Expected=C;Job.Future=GetGameInstance()->GetSubsystem<UAetherNativePersistence>()->CreateEmptyContainer(MoveTemp(C));
         const FString Id=Job.Expected.ContainerId;NativeContainerCreates.Add(Id,MoveTemp(Job));
     };
-    FAetherContainerStateV10 Shared;Shared.ContainerId=TEXT("TownSharedChest");Shared.RegionId=TEXT("Town");Shared.Location=FVector(-350,-250,60);Ensure(Shared);
-    for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)
-        if(auto* PS=It->Get()->GetPlayerState<AAetherPlayerState>();PS&&PS->GetNativeProfile())
+    for(const auto& Definition:FAetherV10Definitions::Get().Containers.Containers)
+    {
+        const auto Create=[&](const FString& Character)
         {
-            FAetherContainerStateV10 Personal;Personal.ContainerId=TEXT("Storage_")+PS->Profile.CharacterId;Personal.OwnerCharacterId=PS->Profile.CharacterId;
-            Personal.Kind=EAetherContainerKind::PersonalStorage;Personal.RegionId=TEXT("Town");Personal.Location=FVector(-150,-250,60);Ensure(MoveTemp(Personal));
-        }
+            FAetherContainerStateV10 C;C.Kind=Definition.Kind;
+            C.ContainerId=Definition.Id+Character;C.OwnerCharacterId=Character;C.RegionId=Definition.Region;
+            C.Location=Definition.Location;C.Inventory.Capacity=Definition.Capacity;Ensure(MoveTemp(C));
+        };
+        if(Definition.Kind==EAetherContainerKind::SharedChest)Create({});
+        else for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)
+            if(auto* PS=It->Get()->GetPlayerState<AAetherPlayerState>();PS&&PS->GetNativeProfile())Create(PS->Profile.CharacterId);
+    }
 }

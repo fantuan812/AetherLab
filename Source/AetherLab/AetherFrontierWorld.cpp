@@ -284,7 +284,7 @@ void AAetherFrontierMode::Observe(AAetherCharacter* C,FName Fact,FName Source)
         }
         FString Why;
         if(!Runtime->ObserveServerFact(MoveTemp(Event),Why))
-        {UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_QUEUE_REJECTED %s"),*Why);FC->Notify(TEXT("任务记录暂不可用，请重新尝试该交互。"));}
+        {UE_LOG(LogTemp,Error,TEXT("AETHER_NATIVE_FACT_QUEUE_REJECTED %s"),*Why);FailNativeScene(TEXT("任务事实无法保留：")+Why);}
         return;
     }
     auto Next=PS->Profile;

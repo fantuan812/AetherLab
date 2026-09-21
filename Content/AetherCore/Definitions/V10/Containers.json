@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "containers": [
+    {
+      "id": "TownSharedChest",
+      "label": "城镇共享箱",
+      "region": "Town",
+      "kind": "shared",
+      "capacity": 32,
+      "position": [
+        -350,
+        -250,
+        60
+      ]
+    },
+    {
+      "id": "Storage_",
+      "label": "旅舍个人仓储",
+      "region": "Town",
+      "kind": "personal",
+      "capacity": 32,
+      "position": [
+        -150,
+        -250,
+        60
+      ]
+    }
+  ]
+}

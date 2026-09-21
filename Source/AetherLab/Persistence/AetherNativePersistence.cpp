@@ -14,6 +14,8 @@ bool UAetherNativePersistence::Prepare(const FString& InPrefix,bool NewWorld,FSt
     if(BoundScene.IsValid()&&BoundScene.Get()!=GetWorld()){StopScene();State=EAetherNativePersistencePhase::Dormant;}
     if(State!=EAetherNativePersistencePhase::Dormant||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!AetherNativeMigration::ValidPrefix(InPrefix))
     {Reason=TEXT("Invalid native startup state, server world or save prefix");return false;}
+    if(auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();Runtime&&Runtime->HasBackend())
+    {Reason=TEXT("Previous native backend is still draining accepted transactions");return false;}
     // 自此锁住旧总写入口；打开失败也保持失败状态，绝不能回退旧档继续写出分叉进度。
     BoundScene=GetWorld();Prefix=InPrefix;AllowFresh=NewWorld;State=EAetherNativePersistencePhase::Inspecting;
     FAetherSqliteOptions O;O.DatabasePath=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("V10State")/Prefix/TEXT("state.sqlite"));
@@ -161,13 +163,18 @@ UWorld* UAetherNativePersistence::GetTickableGameObjectWorld() const{return GetW
 void UAetherNativePersistence::StopScene()
 {
     State=EAetherNativePersistencePhase::Stopped;DomainCapture={};CheckpointPublished={};
-    if(auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>())Runtime->UninstallBackend();
+    auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();
+    const bool RuntimeOwnsStore=Runtime&&Runtime->HasBackend();
+    if(RuntimeOwnsStore)Runtime->UninstallBackend();
     auto Pending=MoveTemp(Logins);for(auto& Job:Pending){FAetherStoreReadResult R;R.Code=EAetherStoreCode::Unavailable;Job->Result.SetValue(MoveTemp(R));}
     if(Checkpoint)Checkpoint->Stop();Checkpoint.Reset();
     auto PendingCheckpoint=MoveTemp(CheckpointPromise);
     Probe={};if(Bootstrap)Bootstrap->Stop();Bootstrap.Reset();
-    // Runtime 同样持有 Store；关闭幂等，等待排队提交结束。不会在后台线程销毁 UObject。
-    if(Store)Store->Close();Store.Reset();
+    // 先停生产者，再收尾命令。重入/超时情况下 Runtime 继续持有并最终关闭 Store；
+    // 这里绝不能 Close，否则后续 CAS 重读/提交会得到 Unavailable，丢失已接受事实。
+    if(RuntimeOwnsStore)Runtime->DrainBackend();
+    else if(Store)Store->Close();
+    Store.Reset();
     if(PendingCheckpoint){FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Unavailable;R.Detail=TEXT("Shutdown drained writes; reload persisted world before retry");PendingCheckpoint->SetValue(MoveTemp(R));}
     State=EAetherNativePersistencePhase::Stopped;BoundScene.Reset();CheckpointElapsed=0;Prefix.Reset();Detail.Reset();
 }

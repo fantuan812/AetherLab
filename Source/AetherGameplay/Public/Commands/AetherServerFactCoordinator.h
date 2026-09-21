@@ -28,6 +28,7 @@ public:
     ~FAetherServerFactCoordinator();
     bool Enqueue(FAetherServerFact Event,FString& Reason);
     TArray<FAetherServerFactCompletion> Poll(double ServerMonotonicSeconds);
+    int32 PendingCount() const;
     bool HasPendingForCharacter(const FString& CharacterId) const;
     bool HasPendingFact(const FString& CharacterId,const FString& FactId) const;
 private:

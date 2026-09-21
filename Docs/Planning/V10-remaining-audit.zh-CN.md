@@ -118,3 +118,7 @@
 ## 动作后端与过渡源码工作单元
 
 新增自动制品后端选择/明确诊断、Manny/Quinn 异步切换、战斗侧移风格、四帧真实过渡接线与源动画 SHA256。详见 ../Architecture/V10-motion-selection-transition.zh-CN.md。未编译、未测试；资产和硬件质量仍未验收。
+
+## 事实背压和容器配置源码工作单元
+
+新增有界事实保留与跨日固定、地图退出排空、静态容器唯一配置。详见 ../Architecture/V10-fact-drain-containers.zh-CN.md。未编译、未测试；未提交内存事件的强杀恢复不在此单元内宣称完成。

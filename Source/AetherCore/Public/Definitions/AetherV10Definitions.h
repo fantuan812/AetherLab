@@ -1,5 +1,6 @@
 #pragma once
 #include "Inventory/AetherEconomyDefinitions.h"
+#include "Definitions/AetherContainerDefinitions.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Interaction/AetherInteractionDefinitions.h"
 #include "Quests/AetherQuestProgression.h"
@@ -8,6 +9,7 @@
 struct AETHERCORE_API FAetherV10Definitions
 {
     FAetherV10ItemDefinitions Items;
+    FAetherContainerDefinitions Containers;
     FAetherSkillDefinitionsV10 Skills;
     FAetherRules Rules;
     FAetherEconomyDefinitionsV10 Economy;

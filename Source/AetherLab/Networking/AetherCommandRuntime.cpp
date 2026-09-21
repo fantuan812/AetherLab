@@ -9,6 +9,7 @@
 #include "Misc/DateTime.h"
 #include "Engine/World.h"
 #include "HAL/PlatformTime.h"
+#include "HAL/PlatformProcess.h"
 #include "Misc/Crc.h"
 
 struct FAetherCommandRuntimeImpl
@@ -46,6 +47,7 @@ struct FAetherCommandRuntimeImpl
     TSharedPtr<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
     TUniquePtr<FAetherProfileCoordinator> Coordinator;
     TUniquePtr<FAetherServerFactCoordinator> Facts;
+    TArray<FAetherServerFact> DeferredFacts;
     FAetherResolveConnectedContext Resolve;
     FAetherPublishConnectedState Publish;
     TFunction<void(const FAetherWorldStateV10&)> PublishWorld;
@@ -55,6 +57,22 @@ struct FAetherCommandRuntimeImpl
     int32 NextSender=0;
     float SendElapsed=0;
     bool bPolling=false,bTicking=false,bShutdownRequested=false;
+    bool HasPendingFacts(const FString& Id) const
+    {return Facts->HasPendingForCharacter(Id)||DeferredFacts.ContainsByPredicate([&](const auto& E){return E.CharacterId.Equals(Id,ESearchCase::CaseSensitive);});}
+    void PumpFacts()
+    {
+        while(!DeferredFacts.IsEmpty())
+        {
+            FString Why;if(!Facts->Enqueue(DeferredFacts[0],Why))
+            {
+                if(Why.Contains(TEXT("queue full")))return;
+                UE_LOG(LogTemp,Error,TEXT("AETHER_DEFERRED_FACT_INVALID %s"),*Why);
+                for(auto& Pair:Bindings)if(Pair.Value->Session.CharacterId.Equals(DeferredFacts[0].CharacterId,ESearchCase::CaseSensitive))
+                    if(auto* G=Gate(*Pair.Value))G->Fault(TEXT("Retained server fact was rejected"));
+            }
+            DeferredFacts.RemoveAt(0);
+        }
+    }
     bool Current(const FBinding& B) const
     {
         const auto* C=B.Controller.Get();const auto* PS=B.PlayerState.Get();
@@ -253,12 +271,22 @@ void UAetherCommandRuntime::SetContainerPublisher(TFunction<void(const FAetherCo
 void UAetherCommandRuntime::SetWorldPublisher(TFunction<void(const FAetherWorldStateV10&)> Publisher)
 {check(IsInGameThread());if(Impl&&!Impl->bPolling&&!Impl->bTicking)Impl->PublishWorld=MoveTemp(Publisher);}
 bool UAetherCommandRuntime::HasPendingServerFact(const FString& Character,FName Fact) const
-{return IsInstalled()&&Impl->Facts&&Impl->Facts->HasPendingFact(Character,Fact.ToString());}
+{return IsInstalled()&&Impl->Facts&&(Impl->Facts->HasPendingFact(Character,Fact.ToString())||Impl->DeferredFacts.ContainsByPredicate([&](const auto& E){return E.CharacterId.Equals(Character,ESearchCase::CaseSensitive)&&E.FactId==Fact.ToString();}));}
 bool UAetherCommandRuntime::ObserveServerFact(FAetherServerFact Event,FString& Reason)
 {
     check(IsInGameThread());
     if(!IsInstalled()||Impl->bPolling||!Impl->Facts){Reason=TEXT("Native server fact service not ready");return false;}
-    return Impl->Facts->Enqueue(MoveTemp(Event),Reason);
+    // 观察时间在进入保留队列时固定，跨 UTC 零点重试不能被重新归入新日。
+    if((Event.Kind==EAetherServerFactKind::Daily||Event.Kind==EAetherServerFactKind::EncounterReward)&&Event.UtcDay.IsEmpty())
+        Event.UtcDay=FDateTime::UtcNow().ToString(TEXT("%Y%m%d"));
+    Impl->PumpFacts();
+    if(Impl->Facts->Enqueue(Event,Reason))return true;
+    if(!Reason.Contains(TEXT("queue full")))return false;
+    if(Event.Kind!=EAetherServerFactKind::EquipmentWear)
+        for(const auto& E:Impl->DeferredFacts)if(E.Kind==Event.Kind&&E.CharacterId.Equals(Event.CharacterId,ESearchCase::CaseSensitive)&&
+            E.FactId==Event.FactId&&E.SourceId==Event.SourceId&&E.InstanceId==Event.InstanceId&&E.UtcDay==Event.UtcDay){Reason.Reset();return true;}
+    if(Impl->DeferredFacts.Num()>=1024){Reason=TEXT("Retained server fact queue exhausted");return false;}
+    Impl->DeferredFacts.Add(MoveTemp(Event));Reason.Reset();return true;
 }
 bool UAetherCommandRuntime::BindVerifiedPlayer(AAetherPlayerController* C,const FString& Character)
 {
@@ -347,7 +375,18 @@ void UAetherCommandRuntime::AcknowledgeSnapshot(AAetherPlayerController* C,FGuid
 }
 void UAetherCommandRuntime::Tick(float Dt)
 {
-    if(Impl&&Impl->bShutdownRequested){UninstallBackend();return;}
+    if(Impl&&Impl->bShutdownRequested)
+    {
+        if(Impl->bPolling||Impl->bTicking)return;
+        UninstallBackend();if(!Impl)return;
+        // 地图退出停止新输入，但值对象事务仍排空；不再向旧 Pawn 发布状态。
+        Impl->PumpFacts();
+        Impl->Coordinator->Poll([](const auto&,const auto&,const auto&,auto&){return false;});
+        for(const auto& Fact:Impl->Facts->Poll(FPlatformTime::Seconds()))
+            if(!Fact.Profile.IsSet())UE_LOG(LogTemp,Error,TEXT("AETHER_SHUTDOWN_FACT_FAILED %s"),*Fact.Detail);
+        if(Impl->DeferredFacts.IsEmpty()&&Impl->Facts->PendingCount()==0&&Impl->Coordinator->PendingCount()==0)UninstallBackend();
+        return;
+    }
     if(!IsInstalled()||Impl->bTicking)return;
     TGuardValue<bool> TickGuard(Impl->bTicking,true);
     TArray<TWeakObjectPtr<AAetherPlayerController>> Keys;Impl->Bindings.GenerateKeyArray(Keys);
@@ -360,7 +399,7 @@ void UAetherCommandRuntime::Tick(float Dt)
     const auto& D=FAetherV10Definitions::Get();
     for(auto& Pair:Impl->Bindings)
     {
-        auto& B=*Pair.Value;if(!Impl->Current(B)||!B.Read.IsValid()||!B.Read.IsReady()||B.ResourceCommand.IsSet()||(Impl->Gate(B)&&Impl->Gate(B)->Reservation().IsValid())||(Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId)||Impl->Facts->HasPendingForCharacter(B.Session.CharacterId)))continue;
+        auto& B=*Pair.Value;if(!Impl->Current(B)||!B.Read.IsValid()||!B.Read.IsReady()||B.ResourceCommand.IsSet()||(Impl->Gate(B)&&Impl->Gate(B)->Reservation().IsValid())||(Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId)||Impl->HasPendingFacts(B.Session.CharacterId)))continue;
         const auto Read=B.Read.Get();B.Read={};FAetherProfileStateV10 Profile;FString Reason;
         if(Read.Code==EAetherStoreCode::Found&&Read.Value.IsSet()&&Read.Value->SchemaVersion==10&&
             AetherProfileCodec::Decode(Read.Value->Payload,D.Items,D.Skills,D.Rules,Profile,Reason)&&Read.Value->Revision==Profile.Revision)
@@ -412,6 +451,7 @@ void UAetherCommandRuntime::Tick(float Dt)
             Impl->Reply(B,Completion.Result);break;
         }
     }
+    Impl->PumpFacts();
     const auto Facts=Impl->Facts->Poll(FPlatformTime::Seconds());
     for(const auto& Fact:Facts)
     {
@@ -432,7 +472,7 @@ void UAetherCommandRuntime::Tick(float Dt)
             if(!B.Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive)||!Impl->Current(B))continue;
             if(B.ResourceCommand.IsSet()||(Impl->Gate(B)&&Impl->Gate(B)->Reservation().IsValid())||
                 Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId)||
-                (B.bNeedsRecovery&&Impl->Facts->HasPendingForCharacter(B.Session.CharacterId)))
+                (B.bNeedsRecovery&&Impl->HasPendingFacts(B.Session.CharacterId)))
                 B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});
             else Impl->Queue(B,Fact.Profile.GetValue(),Fact.World.IsSet()?&Fact.World.GetValue():nullptr);
         }
@@ -440,7 +480,7 @@ void UAetherCommandRuntime::Tick(float Dt)
             for(const auto& Pair:Impl->Bindings)if(!Pair.Value->Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive))
             {
                 FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=Pair.Value->Session.CharacterId;FString Why;
-                if(!Impl->Facts->Enqueue(MoveTemp(Settle),Why))UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_SETTLE_DEFERRED %s"),*Why);
+                if(!ObserveServerFact(MoveTemp(Settle),Why))UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_SETTLE_DEFERRED %s"),*Why);
             }
     }
     {
@@ -479,6 +519,17 @@ void UAetherCommandRuntime::UninstallBackend()
 {
     check(IsInGameThread());
     if(Impl&&(Impl->bPolling||Impl->bTicking)){Impl->bShutdownRequested=true;return;}
+    if(Impl&&(Impl->Facts->PendingCount()>0||Impl->Coordinator->PendingCount()>0||!Impl->DeferredFacts.IsEmpty()))
+    {
+        if(!Impl->Bindings.IsEmpty()||!Impl->bShutdownRequested)
+        {
+            Impl->bShutdownRequested=true;
+            for(auto& Pair:Impl->Bindings)
+            {Impl->Coordinator->EndSession(Pair.Value->Session);if(auto* C=Pair.Key.Get())C->ClientV10Channel({},{});}
+            Impl->Bindings.Reset();
+        }
+        return;
+    }
     // 先摘除根指针，Client 通知或 UObject 委托重入退出时不会重复遍历正在释放的绑定。
     auto Previous=MoveTemp(Impl);
     if(Previous)
@@ -487,4 +538,24 @@ void UAetherCommandRuntime::UninstallBackend()
         Previous->Bindings.Reset();Previous->Coordinator.Reset();Previous->Facts.Reset();if(Previous->Store)Previous->Store->Close();
     }
 }
-void UAetherCommandRuntime::Deinitialize(){UninstallBackend();Super::Deinitialize();}
+bool UAetherCommandRuntime::HasBackend() const{return Impl.IsValid();}
+bool UAetherCommandRuntime::DrainBackend(double Seconds)
+{
+    check(IsInGameThread());UninstallBackend();
+    // 回调中退出不能嵌套 Poll，也不能提前关 SQLite；留给下一帧收尾。
+    if(Impl&&(Impl->bPolling||Impl->bTicking))return false;
+    const double Deadline=FPlatformTime::Seconds()+FMath::Clamp(Seconds,0.,5.);
+    while(Impl&&FPlatformTime::Seconds()<Deadline){Tick(0);if(Impl)FPlatformProcess::Sleep(.001f);}
+    return !Impl;
+}
+void UAetherCommandRuntime::Deinitialize()
+{
+    DrainBackend();
+    if(Impl)
+    {
+        UE_LOG(LogTemp,Error,TEXT("AETHER_SHUTDOWN_INCOMPLETE pending_facts=%d deferred=%d commands=%d"),
+            Impl->Facts->PendingCount(),Impl->DeferredFacts.Num(),Impl->Coordinator->PendingCount());
+        Impl->Store->Close();Impl.Reset();
+    }
+    Super::Deinitialize();
+}

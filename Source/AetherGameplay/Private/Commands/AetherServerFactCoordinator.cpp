@@ -50,6 +50,7 @@ struct FAetherServerFactCoordinator::FImpl
 FAetherServerFactCoordinator::FAetherServerFactCoordinator(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> S)
     :Impl(MakeUnique<FImpl>(MoveTemp(S))){}
 FAetherServerFactCoordinator::~FAetherServerFactCoordinator()=default;
+int32 FAetherServerFactCoordinator::PendingCount() const{return Impl->Jobs.Num();}
 bool FAetherServerFactCoordinator::HasPendingForCharacter(const FString& Id) const
 {return Impl->Jobs.ContainsByPredicate([&](const auto& J){return J->Event.CharacterId.Equals(Id,ESearchCase::CaseSensitive);});}
 bool FAetherServerFactCoordinator::HasPendingFact(const FString& Id,const FString& Fact) const
@@ -71,14 +72,14 @@ bool FAetherServerFactCoordinator::Enqueue(FAetherServerFact E,FString& Reason)
     }
     else if(E.Kind==EAetherServerFactKind::EncounterReward)
     {
-        E.UtcDay=FDateTime::UtcNow().ToString(TEXT("%Y%m%d"));
+        if(E.UtcDay.IsEmpty())E.UtcDay=FDateTime::UtcNow().ToString(TEXT("%Y%m%d"));
         Valid&=(E.FactId==TEXT("Abbey")||E.FactId==TEXT("Relay"))&&E.SourceId.IsEmpty()&&E.InstanceId.IsValid();
     }
     else if(E.Kind==EAetherServerFactKind::LegacyLoot)
         Valid&=E.FactId==TEXT("Loot")&&E.SourceId.IsEmpty()&&E.InstanceId.IsValid();
     else if(E.Kind==EAetherServerFactKind::Daily)
     {
-        E.UtcDay=FDateTime::UtcNow().ToString(TEXT("%Y%m%d"));bool Known=false;
+        if(E.UtcDay.IsEmpty())E.UtcDay=FDateTime::UtcNow().ToString(TEXT("%Y%m%d"));bool Known=false;
         for(const auto& Daily:D.Rules.Dailies)for(FName Fact:Daily.Facts)Known|=Fact.ToString().Equals(E.FactId,ESearchCase::CaseSensitive);
         Valid&=Known&&E.SourceId.IsEmpty();
     }
@@ -94,6 +95,12 @@ bool FAetherServerFactCoordinator::Enqueue(FAetherServerFact E,FString& Reason)
             Valid&=Source;
         }
         else Valid&=E.Kind==EAetherServerFactKind::Personal&&Rule&&Rule->Scope!=EAetherObjectiveScope::World&&E.SourceId.IsEmpty();
+    }
+    if(!E.UtcDay.IsEmpty())
+    {
+        Valid&=E.UtcDay.Len()==8&&E.UtcDay<=FDateTime::UtcNow().ToString(TEXT("%Y%m%d"));
+        for(TCHAR C:E.UtcDay)Valid&=C>='0'&&C<='9';
+        if(E.UtcDay.Len()==8)Valid&=FDateTime::Validate(FCString::Atoi(*E.UtcDay.Left(4)),FCString::Atoi(*E.UtcDay.Mid(4,2)),FCString::Atoi(*E.UtcDay.Right(2)),0,0,0,0);
     }
     if(!Valid){Reason=TEXT("Invalid trusted server fact or source");return false;}
     for(const auto& J:Impl->Jobs)if(Same(J->Event,E)){Reason.Reset();return true;}

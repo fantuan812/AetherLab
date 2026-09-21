@@ -26,6 +26,9 @@ public:
     bool IsInstalled() const;
     // 地图切换撤销旧连接与回调，排空已接受的写入后才允许重新安装。
     void UninstallBackend();
+    // 含正在退出的后端；新世界必须等旧事务收尾后再打开同一数据库。
+    bool HasBackend() const;
+    bool DrainBackend(double Seconds=5);
     void SetContainerAuthorizer(TFunction<bool(AAetherPlayerController&,const FString&,bool)> Authorize);
     void QueryContainer(AAetherPlayerController* Controller,const FAetherV10ContainerQuery& Query);
     void SetContainerPublisher(TFunction<void(const FAetherContainerStateV10&)> Publisher);
