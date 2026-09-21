@@ -3,10 +3,11 @@
 #include "Profile/AetherProfileState.h"
 #include "World/AetherWorldState.h"
 
-enum class EAetherServerFactKind:uint8 {Personal,World,Settle,Daily,EncounterReward,LegacyLoot};
+enum class EAetherServerFactKind:uint8 {Personal,World,Settle,Daily,EncounterReward,LegacyLoot,EquipmentWear};
 struct FAetherServerFact
 {
     FString CharacterId,FactId,SourceId,UtcDay;
+    TArray<FGuid> WornItems; // 命中时固定的实例；同一次事件每个实例只扣一次。
     FGuid InstanceId; // 服务器遭遇/旧掉落实例，不接受客户端任意奖励 ID。
     EAetherServerFactKind Kind=EAetherServerFactKind::Personal;
 };

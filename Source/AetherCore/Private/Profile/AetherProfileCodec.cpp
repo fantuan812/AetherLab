@@ -81,6 +81,8 @@ bool AetherProfileCodec::Encode(const FAetherProfileStateV10& S,const FAetherV10
         W.UInt(P.ExpectedRevision,4);W.UInt(P.FinalRevision,4);W.UInt(uint32(P.Quantity),4);W.UInt(P.Transferred,4);
         W.Text(P.Action);W.Text(P.DefinitionId);W.Text(P.ShopId);
     }
+    // 可选尾扩展保留旧 v10 DTO 的读取能力；写出固定标记，拒绝未知尾字段。
+    W.UInt(0x31524557,4);W.UInt(S.WearSequence,8);
     if(!W.Valid||W.Bytes.Num()>MaxBytes){Reason=TEXT("Profile cannot be encoded losslessly within size limit");return false;}
     Bytes=MoveTemp(W.Bytes);return true;
 }
@@ -125,6 +127,12 @@ bool AetherProfileCodec::Decode(const TArray<uint8>& Bytes,const FAetherV10ItemD
         P.ExpectedRevision=R.Int32();P.FinalRevision=R.Int32();P.Quantity=R.Int32();P.Transferred=R.Int32();
         P.Action=R.Text(96);P.DefinitionId=R.Text(96);P.ShopId=R.Text(96);
         if(!R.Valid)return Fail(TEXT("Truncated frozen legacy receipt"));S.LegacyInventoryReceipts.Add(MoveTemp(P));
+    }
+    if(R.Valid&&R.Offset<Bytes.Num())
+    {
+        if(R.UInt(4)!=0x31524557)return Fail(TEXT("Unknown profile extension"));
+        const uint64 Sequence=R.UInt(8);if(Sequence>=uint64(MAX_int64))return Fail(TEXT("Invalid wear cursor"));
+        S.WearSequence=int64(Sequence);
     }
     if(!R.Valid||R.Offset!=Bytes.Num())return Fail(TEXT("Truncated or trailing profile DTO"));
     if(!S.Validate(Items,Skills,Rules,Reason))return false;

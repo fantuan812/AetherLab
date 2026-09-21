@@ -1,5 +1,7 @@
 #include "AetherCombat.h"
 #include "AetherMotionComponent.h"
+#include "Networking/AetherCommandRuntime.h"
+#include "Definitions/AetherV10Definitions.h"
 #include "Skills/AetherSkillAbilityBinding.h"
 #include "Combat/AetherEquipmentMath.h"
 #include "Inventory/AetherResourceGate.h"
@@ -156,6 +158,7 @@ AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):
     Motion=CreateDefaultSubobject<UAetherMotionComponent>(TEXT("GeneratedMotion"));
     Equipment = CreateDefaultSubobject<UAetherEquipmentComponent>(TEXT("Equipment"));
     Equipment->ModifyHit.BindWeakLambda(this,[this](FAetherEquipmentHit& Hit){
+        RecordEquipmentWear(true,false);
         if(!Attributes)return;
         Hit.Damage=AetherEquipmentMath::Attack(Hit.Damage,Attributes->GearDamage.GetCurrentValue());
         Hit.PostureDamage=AetherEquipmentMath::Attack(Hit.PostureDamage,Attributes->GearPosture.GetCurrentValue());
@@ -483,6 +486,7 @@ void AAetherCharacter::ReceiveHit(float Damage, float PostureDamage, AAetherChar
     const auto* Guard=Equipment->GuardDefinition();
     if (CanBlock && bBlocking && Front && Guard)
     {
+        RecordEquipmentWear(false,true);
         if (T - BlockStarted < Guard->ParryWindowSeconds) { if (Source) { Source->StunUntil = T + 1.1f; Source->CancelActions(); } return; }
         const float Cost = PostureDamage * Guard->GuardStaminaMultiplier;
         if (Stamina() >= Cost) { AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(), EGameplayModOp::Additive, -Cost); return; }
@@ -521,6 +525,7 @@ float AAetherCharacter::TakeDamage(float Amount, const FDamageEvent& Event, ACon
     else Mitigated=AetherEquipmentMath::PhysicalDamage(Amount,Attributes->GearArmor.GetCurrentValue());
     const float Applied = FMath::Min(Health(), Mitigated);
     AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetHealthAttribute(), EGameplayModOp::Additive, -Applied);
+    if(Applied>0)RecordEquipmentWear(false,false);
     LastDamager = Causer; ++DamageReceivedCount; LastDamageAt = CombatTime();
     if (!Alive()) { CancelActions(); bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); }
     return Applied;

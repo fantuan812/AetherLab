@@ -16,7 +16,7 @@ bool Stable(const FString& S)
     return true;
 }
 bool Same(const FAetherServerFact& A,const FAetherServerFact& B)
-{return A.Kind==B.Kind&&A.CharacterId.Equals(B.CharacterId,ESearchCase::CaseSensitive)&&A.FactId==B.FactId&&A.SourceId==B.SourceId&&A.UtcDay==B.UtcDay&&A.InstanceId==B.InstanceId;}
+{return A.Kind!=EAetherServerFactKind::EquipmentWear&&A.Kind==B.Kind&&A.CharacterId.Equals(B.CharacterId,ESearchCase::CaseSensitive)&&A.FactId==B.FactId&&A.SourceId==B.SourceId&&A.UtcDay==B.UtcDay&&A.InstanceId==B.InstanceId;}
 }
 struct FAetherServerFactCoordinator::FImpl
 {
@@ -29,6 +29,7 @@ struct FAetherServerFactCoordinator::FImpl
         TFuture<FAetherStoreResult> Write;
         TOptional<FAetherTransaction> Transaction;
         double RetryAt=0;
+        int64 WearSequence=0; // 首次读取时分配，重试/冲突不能重新分配。
     };
     TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
     TArray<TUniquePtr<FJob>> Jobs;
@@ -62,7 +63,13 @@ bool FAetherServerFactCoordinator::Enqueue(FAetherServerFact E,FString& Reason)
     const bool Reward=E.Kind==EAetherServerFactKind::EncounterReward||E.Kind==EAetherServerFactKind::LegacyLoot;
     if(!Reward)Valid&=!E.InstanceId.IsValid();
     if(E.Kind!=EAetherServerFactKind::Daily&&E.Kind!=EAetherServerFactKind::EncounterReward)Valid&=E.UtcDay.IsEmpty();
-    if(E.Kind==EAetherServerFactKind::EncounterReward)
+    if(E.Kind!=EAetherServerFactKind::EquipmentWear)Valid&=E.WornItems.IsEmpty();
+    if(E.Kind==EAetherServerFactKind::EquipmentWear)
+    {
+        Valid&=E.FactId==TEXT("EquipmentWear")&&E.SourceId.IsEmpty()&&!E.WornItems.IsEmpty()&&E.WornItems.Num()<=10;
+        TSet<FGuid> Unique;for(const auto& Id:E.WornItems){Valid&=Id.IsValid()&&!Unique.Contains(Id);Unique.Add(Id);}
+    }
+    else if(E.Kind==EAetherServerFactKind::EncounterReward)
     {
         E.UtcDay=FDateTime::UtcNow().ToString(TEXT("%Y%m%d"));
         Valid&=(E.FactId==TEXT("Abbey")||E.FactId==TEXT("Relay"))&&E.SourceId.IsEmpty()&&E.InstanceId.IsValid();
@@ -119,7 +126,7 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                 if(R.Code==EAetherStoreCode::Committed||R.Code==EAetherStoreCode::Replayed)Impl->Read(J,true);
                 else if(R.Code==EAetherStoreCode::Conflict||R.Code==EAetherStoreCode::Missing||R.Code==EAetherStoreCode::Expired)
                 {
-                    // 该队列只有集合事实与带 Claims 的幂等奖励；重读后重新结算，不重放裸加金币。
+                    // 集合事实、奖励 Claims 与持久磨损游标都可重读；磨损游标在 FJob 中保持不变。
                     J.Transaction.Reset();J.Stage=S::Queued;J.RetryAt=Now+.1;
                 }
                 else if(R.Code==EAetherStoreCode::Invalid||R.Code==EAetherStoreCode::Corrupt||R.Code==EAetherStoreCode::UnsupportedSchema)
@@ -150,7 +157,24 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                 {
                     auto Next=P;auto World=W;
                     bool Allowed=true;
-                    if(J.Event.Kind==EAetherServerFactKind::EncounterReward||J.Event.Kind==EAetherServerFactKind::LegacyLoot)
+                    if(J.Event.Kind==EAetherServerFactKind::EquipmentWear)
+                    {
+                        if(!J.WearSequence&&Next.WearSequence<MAX_int64-1)J.WearSequence=Next.WearSequence+1;
+                        Allowed=J.WearSequence>0;
+                        if(Allowed&&Next.WearSequence<J.WearSequence)
+                        {
+                            Allowed=Next.WearSequence==J.WearSequence-1;
+                            if(Allowed)
+                            {
+                                // 已售出/转移的旧实例不追索新装备；相同 GUID 仍在背包时照常结算。
+                                for(const auto& Id:J.Event.WornItems)
+                                    if(const auto* Item=Next.Inventory.Find(Id);Item&&Item->Durability>0)
+                                        Allowed&=Next.Inventory.Wear(Id,1,D.Items).Code==EAetherInventoryMutationCode::Applied;
+                                Next.WearSequence=J.WearSequence;
+                            }
+                        }
+                    }
+                    else if(J.Event.Kind==EAetherServerFactKind::EncounterReward||J.Event.Kind==EAetherServerFactKind::LegacyLoot)
                         Allowed=AetherServerRewards::Apply(J.Event,Next,World,D,Why);
                     else if(J.Event.Kind==EAetherServerFactKind::Personal)
                     {
@@ -190,7 +214,12 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                     {
                         ++Next.Revision;++World.Revision;auto Index=R.ProfileRevisions;Index[J.Event.CharacterId]=Next.Revision;
                         FAetherTransaction T;T.ActorId=J.Event.CharacterId;T.ExpectedProfileRevision=P.Revision;T.CommandId=AetherTransactions::NewCommandId(P.Revision);
-                        const FString Request=FString::Printf(TEXT("AETHER_SERVER_FACT_2|%d|%s|%s|%s|%s"),int32(J.Event.Kind),*J.Event.FactId,*J.Event.SourceId,*J.Event.UtcDay,*J.Event.InstanceId.ToString(EGuidFormats::Digits));
+                        FString Request=FString::Printf(TEXT("AETHER_SERVER_FACT_2|%d|%s|%s|%s|%s"),int32(J.Event.Kind),*J.Event.FactId,*J.Event.SourceId,*J.Event.UtcDay,*J.Event.InstanceId.ToString(EGuidFormats::Digits));
+                        if(J.Event.Kind==EAetherServerFactKind::EquipmentWear)
+                        {
+                            Request+=FString::Printf(TEXT("|%lld"),J.WearSequence);
+                            for(const auto& Id:J.Event.WornItems)Request+=TEXT("|")+Id.ToString(EGuidFormats::Digits);
+                        }
                         FTCHARToUTF8 Bytes(*Request);T.Request.Append(reinterpret_cast<const uint8*>(Bytes.Get()),Bytes.Length());
                         FAetherCommandResult Result;Result.CommandId=T.CommandId;Result.Code=EAetherCommandCode::Applied;
                         Result.FinalProfileRevision=Next.Revision;Result.FinalWorldRevision=World.Revision;

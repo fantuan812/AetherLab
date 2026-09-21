@@ -25,6 +25,7 @@ bool Known(const TArray<FString>& Values,int32 Limit,const TSet<FString>& Catalo
 bool FAetherProfileStateV10::Validate(const FAetherV10ItemDefinitions& I,const FAetherSkillDefinitionsV10& S,const FAetherRules& R,FString& Reason) const
 {
     const auto Fail=[&](const TCHAR* Why){Reason=Why;return false;};
+    if(WearSequence<0||WearSequence==MAX_int64)return Fail(TEXT("Invalid wear sequence"));
     if(!R.bValid)return Fail(TEXT("Invalid progression definitions"));
     if(!Inventory.Validate(I,Reason)||!Skills.Validate(S,Reason))return false;
     // 身份是服务器的角色键；允许旧合法 Unicode 键，格式编码会再验证无损 UTF-8。

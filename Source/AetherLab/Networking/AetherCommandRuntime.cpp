@@ -360,7 +360,7 @@ void UAetherCommandRuntime::Tick(float Dt)
     const auto& D=FAetherV10Definitions::Get();
     for(auto& Pair:Impl->Bindings)
     {
-        auto& B=*Pair.Value;if(!Impl->Current(B)||!B.Read.IsValid()||!B.Read.IsReady()||(Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId)||Impl->Facts->HasPendingForCharacter(B.Session.CharacterId)))continue;
+        auto& B=*Pair.Value;if(!Impl->Current(B)||!B.Read.IsValid()||!B.Read.IsReady()||B.ResourceCommand.IsSet()||(Impl->Gate(B)&&Impl->Gate(B)->Reservation().IsValid())||(Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId)||Impl->Facts->HasPendingForCharacter(B.Session.CharacterId)))continue;
         const auto Read=B.Read.Get();B.Read={};FAetherProfileStateV10 Profile;FString Reason;
         if(Read.Code==EAetherStoreCode::Found&&Read.Value.IsSet()&&Read.Value->SchemaVersion==10&&
             AetherProfileCodec::Decode(Read.Value->Payload,D.Items,D.Skills,D.Rules,Profile,Reason)&&Read.Value->Revision==Profile.Revision)
@@ -418,12 +418,20 @@ void UAetherCommandRuntime::Tick(float Dt)
         if(Fact.World.IsSet()&&Impl->PublishWorld)Impl->PublishWorld(Fact.World.GetValue());
         if(Impl->bShutdownRequested)return;
         if(!Fact.Profile.IsSet())
-        {UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_REJECTED fact=%s code=%d detail=%s"),*Fact.Event.FactId,int32(Fact.Code),*Fact.Detail);continue;}
+        {
+            UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_REJECTED fact=%s code=%d detail=%s"),*Fact.Event.FactId,int32(Fact.Code),*Fact.Detail);
+            if(Fact.Event.Kind==EAetherServerFactKind::EquipmentWear)
+                for(auto& Pair:Impl->Bindings)
+                    if(Pair.Value->Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive))
+                        if(auto* Gate=Impl->Gate(*Pair.Value))Gate->Fault(TEXT("Equipment wear transaction failed"));
+            continue;
+        }
         for(auto& Pair:Impl->Bindings)
         {
             auto& B=*Pair.Value;
             if(!B.Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive)||!Impl->Current(B))continue;
-            if(Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId)||
+            if(B.ResourceCommand.IsSet()||(Impl->Gate(B)&&Impl->Gate(B)->Reservation().IsValid())||
+                Impl->Coordinator->HasPendingForCharacter(B.Session.CharacterId)||
                 (B.bNeedsRecovery&&Impl->Facts->HasPendingForCharacter(B.Session.CharacterId)))
                 B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});
             else Impl->Queue(B,Fact.Profile.GetValue(),Fact.World.IsSet()?&Fact.World.GetValue():nullptr);

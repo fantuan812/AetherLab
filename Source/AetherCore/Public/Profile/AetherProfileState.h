@@ -21,6 +21,8 @@ struct AETHERCORE_API FAetherProfileStateV10
 {
     FString CharacterId;
     int64 Revision=0;
+    // 单个权威服务器按角色串行消费磨损；修理不重置此游标，回执淘汰后仍可判断重试。
+    int64 WearSequence=0;
     int32 Gold=0,Experience=0;
     FAetherInventoryStateV10 Inventory;
     FAetherSkillStateV10 Skills;

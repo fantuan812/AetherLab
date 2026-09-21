@@ -95,6 +95,8 @@ public:
     AAetherCharacter(const FObjectInitializer& ObjectInitializer=FObjectInitializer::Get());
     FOnAetherCharacterAppearanceChanged OnAppearanceChanged;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherResourceGate> ResourceGate;
+    // 只接收服务器战斗事实；不用客户端耐久数值或显示索引。
+    void RecordEquipmentWear(bool Weapon,bool Guard);
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherMotionComponent> Motion;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAbilitySystemComponent> AbilitySystem;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherAttributes> Attributes;

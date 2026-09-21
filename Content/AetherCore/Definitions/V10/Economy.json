@@ -24,7 +24,20 @@
         "LeatherLeggings",
         "LeatherBoots",
         "CopperNecklace",
-        "CopperRing"
+        "CopperRing",
+        "TrainingSword",
+        "TrainingShield",
+        "TrainingHammer",
+        "TideStaff",
+        "IronSword",
+        "IronShield",
+        "IronHelm",
+        "IronCuirass",
+        "IronGauntlets",
+        "IronGreaves",
+        "IronBoots",
+        "SilverNecklace",
+        "SilverRing"
       ],
       "AcceptedCategories": [
         "Weapon",

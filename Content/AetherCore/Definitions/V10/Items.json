@@ -224,7 +224,7 @@
       "EquipmentId": "TrainingSword",
       "UseId": "",
       "MaxStack": 1,
-      "BuyPrice": 0,
+      "BuyPrice": 30,
       "SellPrice": 0,
       "MaxDurability": 0,
       "Sellable": false,
@@ -245,7 +245,7 @@
       "EquipmentId": "TrainingShield",
       "UseId": "",
       "MaxStack": 1,
-      "BuyPrice": 0,
+      "BuyPrice": 30,
       "SellPrice": 0,
       "MaxDurability": 0,
       "Sellable": false,
@@ -266,7 +266,7 @@
       "EquipmentId": "TrainingHammer",
       "UseId": "",
       "MaxStack": 1,
-      "BuyPrice": 0,
+      "BuyPrice": 80,
       "SellPrice": 0,
       "MaxDurability": 0,
       "Sellable": false,
@@ -289,7 +289,7 @@
       "EquipmentId": "TideStaff",
       "UseId": "",
       "MaxStack": 1,
-      "BuyPrice": 0,
+      "BuyPrice": 80,
       "SellPrice": 0,
       "MaxDurability": 0,
       "Sellable": false,
@@ -524,6 +524,216 @@
       },
       "SkillGrants": {
         "Frost.Freeze": 1
+      }
+    },
+    {
+      "Id": "IronSword",
+      "DisplayName": "铁剑",
+      "Category": "Weapon",
+      "IconId": "Weapon",
+      "EquipmentId": "IronSword",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 120,
+      "SellPrice": 30,
+      "MaxDurability": 120,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "MainHand"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 1
+      }
+    },
+    {
+      "Id": "IronShield",
+      "DisplayName": "铁盾",
+      "Category": "Shield",
+      "IconId": "Shield",
+      "EquipmentId": "IronShield",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 100,
+      "SellPrice": 25,
+      "MaxDurability": 140,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "OffHand"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 5
+      }
+    },
+    {
+      "Id": "IronHelm",
+      "DisplayName": "铁盔",
+      "Category": "Armor",
+      "IconId": "Head",
+      "EquipmentId": "IronHelm",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 70,
+      "SellPrice": 17,
+      "MaxDurability": 120,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Head"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 4
+      }
+    },
+    {
+      "Id": "IronCuirass",
+      "DisplayName": "铁胸甲",
+      "Category": "Armor",
+      "IconId": "Chest",
+      "EquipmentId": "IronCuirass",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 100,
+      "SellPrice": 25,
+      "MaxDurability": 160,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Chest"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 8
+      }
+    },
+    {
+      "Id": "IronGauntlets",
+      "DisplayName": "铁护手",
+      "Category": "Armor",
+      "IconId": "Hands",
+      "EquipmentId": "IronGauntlets",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 65,
+      "SellPrice": 16,
+      "MaxDurability": 100,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Hands"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 3
+      }
+    },
+    {
+      "Id": "IronGreaves",
+      "DisplayName": "铁护腿",
+      "Category": "Armor",
+      "IconId": "Legs",
+      "EquipmentId": "IronGreaves",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 80,
+      "SellPrice": 20,
+      "MaxDurability": 140,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Legs"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 5
+      }
+    },
+    {
+      "Id": "IronBoots",
+      "DisplayName": "铁靴",
+      "Category": "Armor",
+      "IconId": "Feet",
+      "EquipmentId": "IronBoots",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 70,
+      "SellPrice": 17,
+      "MaxDurability": 120,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Feet"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "Armor": 4
+      }
+    },
+    {
+      "Id": "SilverNecklace",
+      "DisplayName": "银项链",
+      "Category": "Accessory",
+      "IconId": "Neck",
+      "EquipmentId": "SilverNecklace",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 100,
+      "SellPrice": 25,
+      "MaxDurability": 100,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Neck"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "MaxMana": 15,
+        "WaterResist": 0.1
+      }
+    },
+    {
+      "Id": "SilverRing",
+      "DisplayName": "银戒指",
+      "Category": "Accessory",
+      "IconId": "Ring1",
+      "EquipmentId": "SilverRing",
+      "UseId": "",
+      "MaxStack": 1,
+      "BuyPrice": 90,
+      "SellPrice": 22,
+      "MaxDurability": 100,
+      "Sellable": true,
+      "Droppable": true,
+      "QuestLocked": false,
+      "AllowedSlots": [
+        "Ring1",
+        "Ring2"
+      ],
+      "AdditionalOccupiedSlots": [],
+      "BrokenStatMultiplier": 0.25,
+      "Stats": {
+        "MaxStamina": 8,
+        "FrostResist": 0.1
       }
     }
   ]
