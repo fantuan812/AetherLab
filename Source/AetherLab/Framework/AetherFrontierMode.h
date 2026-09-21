@@ -52,6 +52,7 @@ public:
     bool bWorldRestoreFailed=false;
     bool IsNativeMode() const{return bNativeMode;}
     bool NativeSceneReady() const{return bNativeSceneReady&&bNativeBaselineReady;}
+    bool IsTravelRegionReady(FVector Destination) const;
     void ReleaseNativePawn(AAetherFrontierCharacter* Pawn);
     FString ExecuteNativeSceneService(AAetherPlayerController& Controller,const FAetherPlayerCommand& Command);
     bool AuthorizeNativeContainer(AAetherPlayerController& Controller,const FString& Id,bool bOpen);

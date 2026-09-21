@@ -1,4 +1,5 @@
 #include "AetherFrontier.h"
+#include "EngineUtils.h"
 #include "AetherWorldDefinition.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
@@ -12,12 +13,15 @@ void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
  auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();if(W->GetSimulation()->HasPendingInputs())return;
  const auto& Definitions=FAetherWorldDefinitions::Get();
  TSet<FName> Wanted;
+ TArray<FVector> Interest=Players;
+ // 保留原位置和目的地两端，等待期间不得卸载角色脚下的区域。
+ for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->bTravelPending)Interest.Add(It->TravelDestination);
  for(const auto& E:Definitions.Objects)
  {
   auto* A=Prop(E.Id);const auto* Saved=Database->World.FindByPredicate([&](const auto& R){return R.StableId==E.Id;});
   const FVector Position=A?A->GetActorLocation():Saved?Saved->Transform.GetLocation():E.Location;
   bool Near=!E.bStream||(A&&A->Carrier);
-  for(auto P:Players)Near|=FVector::DistSquared(P,Position)<FMath::Square(A?9500.:8000.);
+  for(auto P:Interest)Near|=FVector::DistSquared(P,Position)<FMath::Square(A?9500.:8000.);
   // A moving or recently disturbed object must settle before its simulation can freeze.
   if(A&&A->Mesh->IsSimulatingPhysics())Near|=A->Mesh->GetPhysicsLinearVelocity().SizeSquared()>100||A->Mesh->GetPhysicsAngularVelocityInDegrees().SizeSquared()>100;
   if(Near)Wanted.Add(E.Id);
@@ -48,4 +52,12 @@ void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
  int32 CellsLoaded=0,CellsVisible=0;for(auto* Level:GetWorld()->GetStreamingLevels())if(Level){CellsLoaded+=Level->IsLevelLoaded()?1:0;CellsVisible+=Level->IsLevelVisible()?1:0;}
  UE_LOG(LogTemp,Display,TEXT("AETHER_STREAM cells_loaded=%d cells_visible=%d contacts_ms=%.3f"),CellsLoaded,CellsVisible,W->LastContactMilliseconds);
  UE_LOG(LogTemp,Display,TEXT("AETHER_REGION loaded=%d unloaded=%d registry=%d saved=%d reactive=%u solve_ms=%.3f memory_mb=%llu"),RegionLoads,RegionUnloads,Registry.Loaded.Num(),Database->World.Num(),W->GetSimulation()->GetStats().Registered,W->LastStepMilliseconds,FPlatformMemory::GetStats().UsedPhysical/(1024*1024));
+}
+
+bool AAetherFrontierMode::IsTravelRegionReady(FVector Destination) const
+{
+ if(bNativeMode&&(!NativeSceneReady()||bNativeRegionBarrier))return false;
+ for(const auto& E:FAetherWorldDefinitions::Get().Objects)
+     if(E.bStream&&FVector::DistSquared(E.Location,Destination)<FMath::Square(8000.)&&!Prop(E.Id))return false;
+ return true;
 }

@@ -79,8 +79,8 @@ FReply UAetherMapCanvas::NativeOnKeyDown(const FGeometry& G,const FKeyEvent& E)
     else if(K==EKeys::Gamepad_DPad_Right||K==EKeys::Right)Pan.X+=1800/Zoom;
     else if(K==EKeys::Gamepad_LeftTrigger)ChangeZoom(1/1.15f);
     else if(K==EKeys::Gamepad_RightTrigger)ChangeZoom(1.15f);
-    else if((K==EKeys::Gamepad_LeftShoulder||K==EKeys::Gamepad_RightShoulder)&&!Markers.IsEmpty())
-    {SelectedIndex=(SelectedIndex+(K==EKeys::Gamepad_RightShoulder?1:Markers.Num()-1))%Markers.Num();Selected.ExecuteIfBound(Markers[SelectedIndex]);}
+    else if((K==EKeys::Gamepad_FaceButton_Left||K==EKeys::Gamepad_FaceButton_Top)&&!Markers.IsEmpty())
+    {SelectedIndex=(SelectedIndex+(K==EKeys::Gamepad_FaceButton_Top?1:Markers.Num()-1))%Markers.Num();Selected.ExecuteIfBound(Markers[SelectedIndex]);}
     else Handled=false;
     if(Handled){InvalidateLayoutAndVolatility();return FReply::Handled();}return Super::NativeOnKeyDown(G,E);
 }

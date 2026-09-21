@@ -80,7 +80,14 @@ public:
     float NextCompanionAction = 0;
     float NextServerAction = 0;
     float NextPotion = 0;
-    bool bTravelPending=false;
+    UPROPERTY(Replicated) bool bTravelPending=false;
+    UPROPERTY(Transient) TObjectPtr<AActor> TravelSourceActor;
+    FGuid TravelToken;
+    bool bTravelClientReady=false,bTravelCommitted=false;
+    void ClearTravelSource();
+    UFUNCTION(Client,Reliable) void ClientPrepareTravel(FGuid Token,FVector Destination);
+    UFUNCTION(Server,Reliable) void ServerTravelReady(FGuid Token);
+    UFUNCTION(Client,Reliable) void ClientFinishTravel(FGuid Token,bool Committed);
     FVector TravelDestination,TravelOrigin;
     float TravelStarted=0;
     void BeginSafeTravel(FVector Destination);

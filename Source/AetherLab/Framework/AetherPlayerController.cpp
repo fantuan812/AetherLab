@@ -1,4 +1,5 @@
 #include "Framework/AetherPlayerController.h"
+#include "GenericPlatform/GenericPlatformInputDeviceMapper.h"
 #include "Presentation/AetherPresentation.h"
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Engine/LocalPlayer.h"
@@ -36,7 +37,16 @@ void AAetherPlayerController::BindMenuPawn()
 {
     if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherMenuSubsystem>()->AttachPawn(Cast<AAetherFrontierCharacter>(GetPawn()));
 }
-void AAetherPlayerController::BeginPlay(){Super::BeginPlay();BindMenuPawn();}
+void AAetherPlayerController::BeginPlay()
+{
+    Super::BeginPlay();BindMenuPawn();
+    if(IsLocalController())IPlatformInputDeviceMapper::Get().GetOnInputDeviceConnectionChange().AddWeakLambda(this,
+        [this](EInputDeviceConnectionState State,FPlatformUserId User,FInputDeviceId)
+        {
+            if(State==EInputDeviceConnectionState::Disconnected&&GetLocalPlayer()&&GetLocalPlayer()->GetPlatformUserId()==User)
+                FlushPressedKeys();
+        });
+}
 void AAetherPlayerController::SetPawn(APawn* InPawn)
 {
     Super::SetPawn(InPawn);BindMenuPawn();
@@ -45,6 +55,8 @@ void AAetherPlayerController::SetPawn(APawn* InPawn)
 void AAetherPlayerController::OnRep_Pawn(){Super::OnRep_Pawn();BindMenuPawn();}
 void AAetherPlayerController::EndPlay(const EEndPlayReason::Type Reason)
 {
+    IPlatformInputDeviceMapper::Get().GetOnInputDeviceConnectionChange().RemoveAll(this);
+    FlushPressedKeys();
     if(auto* LP=GetLocalPlayer())
         if(auto* Menu=LP->GetSubsystem<UAetherMenuSubsystem>();Menu->GetBoundPawn()==GetPawn())Menu->AttachPawn(nullptr);
     if(HasAuthority())if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->UnbindPlayer(this);

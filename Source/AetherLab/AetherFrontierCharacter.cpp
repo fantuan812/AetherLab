@@ -18,6 +18,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+#include "InputModifiers.h"
+#include "InputTriggers.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -101,12 +103,12 @@ void AAetherFrontierCharacter::ApplyProfileEquipment()
 }
 void AAetherFrontierCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME(AAetherFrontierCharacter,bSprinting);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME(AAetherFrontierCharacter,bSprinting);DOREPLIFETIME(AAetherFrontierCharacter,bTravelPending);
     DOREPLIFETIME(AAetherFrontierCharacter,Carried);DOREPLIFETIME(AAetherFrontierCharacter,CompanionOwner);
     DOREPLIFETIME(AAetherFrontierCharacter,CompanionId);DOREPLIFETIME(AAetherFrontierCharacter,bCompanionHold);DOREPLIFETIME(AAetherFrontierCharacter,EncounterId);DOREPLIFETIME(AAetherFrontierCharacter,BossPhase);DOREPLIFETIME(AAetherFrontierCharacter,BossVersion);DOREPLIFETIME(AAetherFrontierCharacter,BossPhaseStarted);DOREPLIFETIME(AAetherFrontierCharacter,BossPressure);DOREPLIFETIME(AAetherFrontierCharacter,bHealer);DOREPLIFETIME(AAetherFrontierCharacter,ReviveTarget);
 }
-void AAetherFrontierCharacter::Forward(float V){if(Alive()&&!bPanel)AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::X),V);}
-void AAetherFrontierCharacter::Right(float V){if(Alive()&&!bPanel)AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::Y),V);}
+void AAetherFrontierCharacter::Forward(float V){if(Alive()&&!bPanel&&!bTravelPending)AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::X),V);}
+void AAetherFrontierCharacter::Right(float V){if(Alive()&&!bPanel&&!bTravelPending)AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::Y),V);}
 void AAetherFrontierCharacter::Yaw(float V){if(!bPanel)AddControllerYawInput(V*GetDefault<UAetherPlayerPreferences>()->MouseSensitivity);}
 void AAetherFrontierCharacter::Pitch(float V){const auto* P=GetDefault<UAetherPlayerPreferences>();if(!bPanel)AddControllerPitchInput((P->bInvertLook?V:-V)*P->MouseSensitivity);}
 void AAetherFrontierCharacter::PressAttack(){bAttackHeld=!bPanel;if(bAttackHeld)PressedAt=GetWorld()->GetTimeSeconds();}
@@ -117,13 +119,21 @@ void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I)
     auto* Sub=PC&&PC->GetLocalPlayer()?ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()):nullptr;
     if(!Enhanced||!Sub)return;
     if(GameplayContext)Sub->RemoveMappingContext(GameplayContext);
-    GameplayContext=NewObject<UInputMappingContext>(this);InputActions.Reset();
+    auto* Template=LoadObject<UInputMappingContext>(nullptr,TEXT("/Game/AetherCore/Input/IMC_Gameplay.IMC_Gameplay"));
+    GameplayContext=Template?DuplicateObject<UInputMappingContext>(Template,this):NewObject<UInputMappingContext>(this);InputActions.Reset();DefaultBindings.Reset();
     auto Action=[&](FName Name,FKey Key,EInputActionValueType Type)
     {
         if(auto* Existing=InputActions.Find(Name))return Existing->Get();
         DefaultBindings.Add(Name,Key);
-        auto* A=NewObject<UInputAction>(this);A->ValueType=Type;A->bConsumeInput=false;InputActions.Add(Name,A);
-        const auto* Override=GetDefault<UAetherInputProfile>()->Keys.Find(Name);GameplayContext->MapKey(A,Override?*Override:Key);return A;
+        const FString Path=TEXT("/Game/AetherCore/Input/IA_")+Name.ToString()+TEXT(".IA_")+Name.ToString();
+        auto* A=LoadObject<UInputAction>(nullptr,*Path);
+        if(!A){A=NewObject<UInputAction>(this);A->ValueType=Type;A->bConsumeInput=false;}
+        InputActions.Add(Name,A);
+        const auto* Override=GetDefault<UAetherInputProfile>()->Keys.Find(Name);
+        if(Override)GameplayContext->UnmapKey(A,Key);
+        const FKey Desired=Override?*Override:Key;
+        if(!GameplayContext->GetMappings().ContainsByPredicate([&](const auto& M){return M.Action==A&&M.Key==Desired;}))GameplayContext->MapKey(A,Desired);
+        return A;
     };
     auto Bind=[&](FName Name,FKey Key,ETriggerEvent Event,void(AAetherFrontierCharacter::*Fn)())
     {auto* A=Action(Name,Key,EInputActionValueType::Boolean);Enhanced->BindAction(A,Event,this,Fn);if(Event==ETriggerEvent::Completed)Enhanced->BindAction(A,ETriggerEvent::Canceled,this,Fn);};
@@ -181,16 +191,53 @@ void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I)
     }
     Enhanced->BindActionValueLambda(Action("LookX",EKeys::MouseX,EInputActionValueType::Axis1D),ETriggerEvent::Triggered,[this](const FInputActionValue& V){Yaw(V.Get<float>());});
     Enhanced->BindActionValueLambda(Action("LookY",EKeys::MouseY,EInputActionValueType::Axis1D),ETriggerEvent::Triggered,[this](const FInputActionValue& V){Pitch(V.Get<float>());});
+    // 手柄视角按秒计算，不混用鼠标每帧位移。局部死区只应用于摇杆轴。
+    auto PadAxis=[&](FName Name,FKey Key,TFunction<void(float)> Apply)
+    {
+        auto* A=Action(Name,Key,EInputActionValueType::Axis1D);
+        GameplayContext->UnmapKey(A,Key);
+        auto& CleanMapping=GameplayContext->MapKey(A,Key);
+        auto* Dead=NewObject<UInputModifierDeadZone>(GameplayContext);Dead->LowerThreshold=.15f;Dead->UpperThreshold=1;
+        CleanMapping.Modifiers.Add(Dead);
+        Enhanced->BindActionValueLambda(A,ETriggerEvent::Triggered,[Apply=MoveTemp(Apply)](const FInputActionValue& V){Apply(V.Get<float>());});
+    };
+    PadAxis("PadMoveX",EKeys::Gamepad_LeftX,[this](float V){Right(V);});
+    PadAxis("PadMoveY",EKeys::Gamepad_LeftY,[this](float V){Forward(V);});
+    PadAxis("PadLookX",EKeys::Gamepad_RightX,[this](float V)
+    {if(!bPanel)AddControllerYawInput(V*120.f*GetWorld()->GetDeltaSeconds()*GetDefault<UAetherPlayerPreferences>()->ControllerSensitivity);});
+    PadAxis("PadLookY",EKeys::Gamepad_RightY,[this](float V)
+    {const auto* P=GetDefault<UAetherPlayerPreferences>();if(!bPanel)AddControllerPitchInput(V*(P->bInvertLook?1.f:-1.f)*90.f*GetWorld()->GetDeltaSeconds()*P->ControllerSensitivity);});
+    const TPair<FName,FKey> Pad[]={
+        {"Attack",EKeys::Gamepad_RightTrigger},{"Guard",EKeys::Gamepad_LeftTrigger},
+        {"Jump",EKeys::Gamepad_FaceButton_Bottom},{"Dodge",EKeys::Gamepad_FaceButton_Right},
+        {"Interact",EKeys::Gamepad_FaceButton_Left},{"Potion",EKeys::Gamepad_FaceButton_Top},
+        {"Sprint",EKeys::Gamepad_LeftThumbstick},{"Lock",EKeys::Gamepad_RightThumbstick},
+        {"Crouch",EKeys::Gamepad_LeftShoulder},{"Cast",EKeys::Gamepad_RightShoulder},
+        {"One",EKeys::Gamepad_DPad_Up},{"Two",EKeys::Gamepad_DPad_Right},
+        {"Three",EKeys::Gamepad_DPad_Down},{"Four",EKeys::Gamepad_DPad_Left},
+        {"I",EKeys::Gamepad_Special_Left},{"Escape",EKeys::Gamepad_Special_Right}};
+    for(const auto& P:Pad)if(auto* A=InputActions.Find(P.Key))
+        if(!GameplayContext->GetMappings().ContainsByPredicate([&](const auto& M){return M.Action==A->Get()&&M.Key==P.Value;}))
+            GameplayContext->MapKey(A->Get(),P.Value);
+    // 按住左肩时十字键成为物理交互，ChordBlocker 阻止底层技能选择穿透。
+    const TPair<FName,FKey> Utility[]={{"Carry",EKeys::Gamepad_DPad_Up},{"Throw",EKeys::Gamepad_DPad_Right},
+        {"Push",EKeys::Gamepad_DPad_Down},{"Z",EKeys::Gamepad_DPad_Left}};
+    for(const auto& P:Utility)
+    {
+        GameplayContext->UnmapKey(InputActions[P.Key],P.Value);
+        auto& M=GameplayContext->MapKey(InputActions[P.Key],P.Value);
+        auto* Chord=NewObject<UInputTriggerChordAction>(GameplayContext);Chord->ChordAction=InputActions["Crouch"];M.Triggers.Add(Chord);
+    }
     Sub->AddMappingContext(GameplayContext,0);
     OnPresentationChanged.Broadcast();
 }
 FKey AAetherFrontierCharacter::BindingFor(FName Name) const
 {
- const auto* A=InputActions.Find(Name);if(A&&GameplayContext)for(const auto& M:GameplayContext->GetMappings())if(M.Action==A->Get())return M.Key;return FKey();
+ const auto* A=InputActions.Find(Name);if(A&&GameplayContext)for(const auto& M:GameplayContext->GetMappings())if(M.Action==A->Get()&&!M.Key.IsGamepadKey())return M.Key;return FKey();
 }
 void AAetherFrontierCharacter::AetherBind(FName Name,FKey Key)
 {
- if(!IsLocallyControlled()||!GameplayContext||!Key.IsValid()||Key.IsAxis1D()||Key.IsAxis2D()||Name=="LookX"||Name=="LookY"||Name=="Escape"||Key==EKeys::Escape)return;
+ if(!IsLocallyControlled()||!GameplayContext||!Key.IsValid()||Key.IsGamepadKey()||Key.IsAxis1D()||Key.IsAxis2D()||Name=="LookX"||Name=="LookY"||Name=="Escape"||Key==EKeys::Escape)return;
  auto* A=InputActions.Find(Name);if(!A)return;const FKey Old=BindingFor(Name);if(Old==Key)return;
  ReleaseHeldInput();
  auto* Profile=GetMutableDefault<UAetherInputProfile>();
@@ -264,7 +311,7 @@ void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
     InteractionFocus={};bHasInteractionFocus=false;
     if(auto* Registry=GetWorld()->GetSubsystem<UAetherNearbyRegistry>())Registry->Unregister(this);
     if(HasAuthority())if(auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>())Mode->ReleaseNativePawn(this);
-    ReleaseCarry();Super::EndPlay(Reason);
+    ClearTravelSource();ReleaseCarry();Super::EndPlay(Reason);
 }
 void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 Index)
 {

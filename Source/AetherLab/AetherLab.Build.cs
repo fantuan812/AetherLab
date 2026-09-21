@@ -11,6 +11,6 @@ public class AetherLab : ModuleRules
         PublicDependencyModuleNames.Add("AetherEquipment");
         // 生产旧档迁移复用引擎固定 OpenSSL 的 SHA256；Windows GenericPlatform 实现不能用于该摘要。
         AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
-        PrivateDependencyModuleNames.AddRange(new[] { "AIModule", "AnimGraphRuntime", "Json", "NavigationSystem", "EnhancedInput", "AetherMotionRuntime", "IKRig" });
+        PrivateDependencyModuleNames.AddRange(new[] { "ApplicationCore", "AIModule", "AnimGraphRuntime", "Json", "NavigationSystem", "EnhancedInput", "AetherMotionRuntime", "IKRig" });
     }
 }
