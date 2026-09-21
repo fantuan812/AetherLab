@@ -7,7 +7,8 @@ enum class EAetherServerFactKind:uint8 {Personal,World,Settle,Daily,EncounterRew
 struct FAetherServerFact
 {
     FString CharacterId,FactId,SourceId,UtcDay;
-    TArray<FGuid> WornItems; // 命中时固定的实例；同一次事件每个实例只扣一次。
+    TArray<FGuid> WornItems; // 命中时固定的实例，批处理不能改成提交时当前装备。
+    int32 WearCount=1; // 仅合并尚未开始事务的连续同实例事件；保留全部磨损计数。
     FGuid InstanceId; // 服务器遭遇/旧掉落实例，不接受客户端任意奖励 ID。
     EAetherServerFactKind Kind=EAetherServerFactKind::Personal;
 };

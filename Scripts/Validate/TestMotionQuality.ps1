@@ -1,6 +1,7 @@
 param(
  [string]$EngineRoot='C:\Program Files\Epic Games\UE_5.8',
- [ValidateSet('CPU','Vulkan')][string]$Backend='CPU'
+ [ValidateSet('CPU','Vulkan')][string]$Backend='CPU',
+ [switch]$Equipment
 )
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -15,6 +16,7 @@ $taskArgs=@(
  '-RenderOffscreen','-ForceRes','-windowed','-ResX=1280','-ResY=720','-unattended','-nosound',
  '-ExecCmds="t.MaxFPS 60"',('-abslog="'+$taskDir+'/Engine.log"')
 )
+if($Equipment){$taskArgs+='-AetherQualityEquipment'}
 $taskP=Start-Process (Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor.exe') -ArgumentList $taskArgs -PassThru -WindowStyle Hidden
 try{
  $taskDeadline=(Get-Date).AddSeconds(1100)

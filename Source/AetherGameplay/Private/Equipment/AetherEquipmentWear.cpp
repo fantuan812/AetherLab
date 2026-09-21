@@ -22,7 +22,7 @@ void AAetherCharacter::RecordEquipmentWear(bool Weapon,bool Guard)
         if(Weapon?Slot.Slot!=TEXT("MainHand"):Guard?Slot.Slot!=(HasOffhand?FName(TEXT("OffHand")):FName(TEXT("MainHand"))):Hand)continue;
         const auto* Item=Profile->Inventory.Find(Slot.InstanceId);
         const auto* Def=Item?Definitions.Items.Find(Item->DefinitionId):nullptr;
-        if(Def&&Def->MaxDurability>0)Event.WornItems.AddUnique(Slot.InstanceId);
+        if(Def&&Def->MaxDurability>0&&Item->Durability>0)Event.WornItems.AddUnique(Slot.InstanceId);
     }
     if(Event.WornItems.IsEmpty())return;
     auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();FString Why;

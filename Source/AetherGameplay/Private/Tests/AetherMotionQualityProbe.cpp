@@ -30,7 +30,9 @@ void AetherMotionQualityProbe::Tick(AAetherPlayerController* PC,float Dt)
   double Started=FPlatformTime::Seconds(),PhaseAt=0,StableAt=0;int32 Phase=-1,Captures=0,Backend=1;
   bool Done=false,Staged=false;FVector Origin;FString Dir;TArray<TSharedPtr<FJsonValue>> Rows;TSharedPtr<FJsonObject> Row;
   TSet<uint64> Sequences;TArray<double> Times;TArray<FTransform> Previous;int32 ChangedFrames=0,Frames=0;
-  double MinPelvis=DBL_MAX,MaxPelvis=-DBL_MAX,MaxRoot=0,MaxFoot=0;float MaxFootWeight=0;
+  double MinPelvis=DBL_MAX,MaxPelvis=-DBL_MAX,MaxRoot=0,MaxFoot=0,MinFoot=DBL_MAX,FootAt=0;
+  FVector PreviousFeet[2];bool PreviousContact[2]={false,false};TArray<double> ContactSpeeds;
+  float MaxFootWeight=0;
  };
  static FState S;if(S.Done)return;const double Now=FPlatformTime::Seconds();
  const auto Fail=[&](const FString& Why){S.Done=true;UE_LOG(LogTemp,Error,TEXT("V10_MOTION_QUALITY_FAIL phase=%d %s"),S.Phase,*Why);FPlatformMisc::RequestExitWithStatus(false,1);};
@@ -49,10 +51,13 @@ void AetherMotionQualityProbe::Tick(AAetherPlayerController* PC,float Dt)
  if(!S.Staged){S.Staged=true;C->BeginSafeTravel(FVector(-6500,-22000,120));return;}
  auto* Move=C->GetCharacterMovement();auto* Mesh=C->GetMesh();auto* Motion=C->Motion.Get();
  static const TCHAR* Styles[]={TEXT("Idle"),TEXT("Walk"),TEXT("Combat"),TEXT("StrafeLeft"),TEXT("StrafeRight"),TEXT("Injured"),TEXT("Crouch"),TEXT("CrouchIdle")};
+ const bool EquipmentFixture=FParse::Param(FCommandLine::Get(),TEXT("AetherQualityEquipment"));
+ static const TCHAR* GearNames[]={TEXT("SwordIdle"),TEXT("SwordWalk"),TEXT("ShieldIdle"),TEXT("ShieldWalk"),TEXT("HammerIdle"),TEXT("HammerWalk"),TEXT("StaffIdle"),TEXT("StaffWalk")};
+ const auto PhaseName=[&](int32 Index){return EquipmentFixture?GearNames[Index%8]:Styles[Index%8];};
  const auto BeginPhase=[&](int32 Index)
  {
   S.Phase=Index;S.PhaseAt=Now;S.StableAt=0;S.Captures=0;S.ChangedFrames=0;S.Frames=0;S.Previous.Reset();S.Times.Reset();S.Sequences.Reset();
-  S.MinPelvis=DBL_MAX;S.MaxPelvis=-DBL_MAX;S.MaxRoot=0;S.MaxFoot=0;S.MaxFootWeight=0;
+  S.MinPelvis=DBL_MAX;S.MaxPelvis=-DBL_MAX;S.MaxRoot=0;S.MaxFoot=0;S.MinFoot=DBL_MAX;S.FootAt=0;S.ContactSpeeds.Reset();S.PreviousContact[0]=S.PreviousContact[1]=false;S.MaxFootWeight=0;
   // 独立动作质量夹具暂停玩法意图写入；仍运行真实 Movement、MotionComponent、AnimBP 和渲染。
   // 不授予主线证据，不把此夹具记作完整游玩或战斗验收。
   C->SetActorTickEnabled(false);
@@ -64,13 +69,27 @@ void AetherMotionQualityProbe::Tick(AAetherPlayerController* PC,float Dt)
    auto* Quinn=LoadObject<USkeletalMesh>(nullptr,TEXT("/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple.SKM_Quinn_Simple"));
    if(!Quinn){Fail(TEXT("Quinn asset missing"));return;}Mesh->SetSkeletalMeshAsset(Quinn);Mesh->InitAnim(true);
   }
+  if(EquipmentFixture){
+   // 仅渲染资源夹具恢复公开 Loadout；不写库存/任务，不把这一检查作为装备事务通过。
+   TArray<FAetherEquippedSlot> Slots;
+   const auto Add=[&](FName Slot,FName Item){FAetherEquippedSlot Equipped;Equipped.Slot=Slot;Equipped.ItemId=Item;Slots.Add(Equipped);};
+   const int32 Kind=(Index%8)/2;
+   Add(TEXT("MainHand"),Kind==2?TEXT("TrainingHammer"):Kind==3?TEXT("TideStaff"):TEXT("IronSword"));
+   if(Kind==1)Add(TEXT("OffHand"),TEXT("IronShield"));
+   const bool Iron=(Kind%2)!=0;
+   Add(TEXT("Head"),Iron?TEXT("IronHelm"):TEXT("LeatherCap"));Add(TEXT("Chest"),Iron?TEXT("IronCuirass"):TEXT("LeatherVest"));
+   Add(TEXT("Hands"),Iron?TEXT("IronGauntlets"):TEXT("LeatherGloves"));Add(TEXT("Legs"),Iron?TEXT("IronGreaves"):TEXT("LeatherLeggings"));
+   Add(TEXT("Feet"),Iron?TEXT("IronBoots"):TEXT("LeatherBoots"));Add(TEXT("Neck"),Iron?TEXT("SilverNecklace"):TEXT("CopperNecklace"));
+   Add(TEXT("Ring1"),TEXT("CopperRing"));Add(TEXT("Ring2"),TEXT("SilverRing"));
+   if(!C->Equipment->RestoreLoadout(Slots)){Fail(TEXT("Authored equipment fixture rejected"));return;}
+  }
   Motion->InvalidateMotion();
   S.Row=MakeShared<FJsonObject>();S.Row->SetStringField(TEXT("body"),Index<8?TEXT("Manny"):TEXT("Quinn"));
-  S.Row->SetStringField(TEXT("style"),Styles[Index%8]);
-  UE_LOG(LogTemp,Display,TEXT("V10_MOTION_QUALITY_BEGIN body=%s style=%s"),Index<8?TEXT("Manny"):TEXT("Quinn"),Styles[Index%8]);
+  S.Row->SetStringField(TEXT("style"),PhaseName(Index));
+  UE_LOG(LogTemp,Display,TEXT("V10_MOTION_QUALITY_BEGIN body=%s style=%s"),Index<8?TEXT("Manny"):TEXT("Quinn"),PhaseName(Index));
  };
  if(S.Phase<0)BeginPhase(0);if(S.Done)return;
- const int32 Style=S.Phase%8;
+ const int32 Style=EquipmentFixture?S.Phase%2:S.Phase%8;
  if(Style>=6)C->Crouch();else C->UnCrouch();
  const FVector Direction=Style==3?-C->GetActorRightVector():Style==4?C->GetActorRightVector():C->GetActorForwardVector();
  if(Style!=0&&Style!=7)C->AddMovementInput(Direction,1);
@@ -93,24 +112,54 @@ void AetherMotionQualityProbe::Tick(AAetherPlayerController* PC,float Dt)
  for(int32 I=1;I<Pose.Num();++I){if(Pose[I].ContainsNaN()){Fail(TEXT("Invalid bone transform"));return;}if(S.Previous.IsValidIndex(I)&&!Pose[I].GetRotation().Equals(S.Previous[I].GetRotation(),.0001f))++Changed;}
  if(Changed>=3)++S.ChangedFrames;S.Previous=Pose;
  const double Ground=Move->CurrentFloor.HitResult.ImpactPoint.Z;
- for(const TCHAR* Foot:{TEXT("foot_l"),TEXT("foot_r")})S.MaxFoot=FMath::Max(S.MaxFoot,FMath::Abs(Mesh->GetSocketLocation(Foot).Z-Ground));
+ for(int32 I=0;I<2;++I){
+  const FVector Foot=Mesh->GetSocketLocation(I?TEXT("foot_r"):TEXT("foot_l"));const double Height=Foot.Z-Ground;
+  S.MinFoot=FMath::Min(S.MinFoot,Height);S.MaxFoot=FMath::Max(S.MaxFoot,FMath::Abs(Height));
+  const bool Contact=Height<=14;
+  if(Contact&&S.PreviousContact[I]&&S.FootAt>0&&Now>S.FootAt)
+   S.ContactSpeeds.Add(FVector::Dist2D(Foot,S.PreviousFeet[I])/(Now-S.FootAt));
+  S.PreviousFeet[I]=Foot;S.PreviousContact[I]=Contact;
+ }
+ S.FootAt=Now;
  if(auto* Anim=Cast<UAetherAnimInstance>(Mesh->GetAnimInstance()))S.MaxFootWeight=FMath::Max(S.MaxFootWeight,Anim->FootWeight);
  if(!S.Sequences.Contains(Clip->Stamp.RequestSequence)){S.Sequences.Add(Clip->Stamp.RequestSequence);S.Times.Add(Clip->InferenceSeconds*1000);}
  if(S.Captures<2&&Now-S.StableAt>S.Captures*.5)
  {
-  const FString Name=FString::Printf(TEXT("%02d-%s-%s-%d.png"),S.Phase,S.Phase<8?TEXT("Manny"):TEXT("Quinn"),Styles[Style],S.Captures);
+  const FString Name=FString::Printf(TEXT("%02d-%s-%s-%d.png"),S.Phase,S.Phase<8?TEXT("Manny"):TEXT("Quinn"),PhaseName(S.Phase),S.Captures);
   FScreenshotRequest::RequestScreenshot(S.Dir/Name,true,false);++S.Captures;
  }
  if(Now-S.StableAt<3||S.Sequences.Num()<2)return;
  if(S.ChangedFrames<5){Fail(TEXT("Final authored body graph is frozen"));return;}
+ if(EquipmentFixture){
+  const auto* Anim=Cast<UAetherAnimInstance>(Mesh->GetAnimInstance());const auto* Main=C->Equipment->InSlot(TEXT("MainHand"));
+  if(!Anim||!Main||Anim->GripWeights[1]<.95||!C->Equipment->VisualForSlot(TEXT("MainHand"))){Fail(TEXT("Weapon hand layer/visual absent"));return;}
+  int32 Curled=0;const auto& Ref=Mesh->GetSkeletalMeshAsset()->GetRefSkeleton();
+  for(const TCHAR* Finger:{TEXT("index_02_r"),TEXT("middle_02_r"),TEXT("ring_02_r"),TEXT("pinky_02_r")}){
+   const int32 Index=Mesh->GetBoneIndex(Finger);
+   if(Index!=INDEX_NONE&&Pose.IsValidIndex(Index)&&!Pose[Index].GetRotation().Equals(Ref.GetRefBonePose()[Index].GetRotation(),.03f))++Curled;
+  }
+  if(Curled<3){Fail(TEXT("Official grip pose did not close the fingers"));return;}
+  S.Row->SetNumberField(TEXT("curledFingers"),Curled);
+  if(Main->bOccupiesBothHands){
+   const FVector Grip=Mesh->GetSocketTransform(TEXT("hand_r")).TransformPosition(Main->SupportHandOffset);
+   const double Error=FVector::Dist(Grip,Mesh->GetSocketLocation(TEXT("hand_l")));
+   S.Row->SetNumberField(TEXT("supportGripErrorCm"),Error);
+   if(Error>8){Fail(FString::Printf(TEXT("Support hand misses real grip %.3f cm"),Error));return;}
+  }
+ }
  S.Row->SetNumberField(TEXT("frames"),S.Frames);S.Row->SetNumberField(TEXT("changedFrames"),S.ChangedFrames);
  S.Row->SetNumberField(TEXT("minPelvisCm"),S.MinPelvis);S.Row->SetNumberField(TEXT("maxPelvisCm"),S.MaxPelvis);
  S.Row->SetNumberField(TEXT("maxRootHeightCm"),S.MaxRoot);S.Row->SetNumberField(TEXT("maxFootHeightAboveGroundCm"),S.MaxFoot);
  S.Row->SetNumberField(TEXT("maxFootIKWeight"),S.MaxFootWeight);
+ S.Row->SetNumberField(TEXT("minFootHeightAboveGroundCm"),S.MinFoot);
+ S.ContactSpeeds.Sort();S.Row->SetNumberField(TEXT("contactSpeedSamples"),S.ContactSpeeds.Num());
+ if(!S.ContactSpeeds.IsEmpty())S.Row->SetNumberField(TEXT("p95ContactSpeedCmPerSecond"),S.ContactSpeeds[FMath::Clamp(FMath::CeilToInt(S.ContactSpeeds.Num()*.95)-1,0,S.ContactSpeeds.Num()-1)]);
  S.Row->SetStringField(TEXT("actor"),C->GetActorLocation().ToString());S.Row->SetStringField(TEXT("mesh"),Mesh->GetComponentLocation().ToString());
  S.Row->SetNumberField(TEXT("floorZ"),Ground);S.Row->SetBoolField(TEXT("recentlyRendered"),Mesh->WasRecentlyRendered(.2f));
  TArray<TSharedPtr<FJsonValue>> Times;for(double Time:S.Times)Times.Add(MakeShared<FJsonValueNumber>(Time));S.Row->SetArrayField(TEXT("inferenceMs"),Times);
  S.Rows.Add(MakeShared<FJsonValueObject>(S.Row));
+ {auto Progress=MakeShared<FJsonObject>();Progress->SetArrayField(TEXT("completedStyles"),S.Rows);Progress->SetBoolField(TEXT("complete"),false);
+  FString Json;FJsonSerializer::Serialize(Progress,TJsonWriterFactory<>::Create(&Json));FFileHelper::SaveStringToFile(Json,*(S.Dir/TEXT("progress.json")));}
  if(S.Phase<15){BeginPhase(S.Phase+1);return;}
  auto Report=MakeShared<FJsonObject>();Report->SetNumberField(TEXT("backend"),S.Backend);Report->SetArrayField(TEXT("styles"),S.Rows);
  Report->SetBoolField(TEXT("graphChecksPassed"),true);Report->SetBoolField(TEXT("visualQualityApproved"),false);

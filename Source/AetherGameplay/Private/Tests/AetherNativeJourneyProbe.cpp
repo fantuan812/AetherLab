@@ -27,7 +27,7 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
 {
 #if !UE_BUILD_SHIPPING
  if(!FParse::Param(FCommandLine::Get(),TEXT("AetherNativeJourney"))||!PC||!PC->HasAuthority()||!PC->IsLocalController()||!PC->GetLocalPlayer())return;
- struct FState{int32 Step=0,Recoveries=0,GoldBefore=0,PointsBefore=0;double DeathAt=0;double Start=FPlatformTime::Seconds(),At=Start,Next=0,LogAt=0;bool Bound=false,Sent=false,Traveled=false,Done=false;FGuid Id,Original,Split,ServiceItem;FString Drop;TOptional<FAetherCommandResult> Reply;TArray<TSharedPtr<FJsonValue>> Steps;};
+ struct FState{int32 Step=0,Recoveries=0,GoldBefore=0,PointsBefore=0,ServiceQuantity=0;float ExpectedMana=0;double DeathAt=0;double Start=FPlatformTime::Seconds(),At=Start,Next=0,LogAt=0;bool Bound=false,Sent=false,Traveled=false,Done=false;FGuid Id,Original,Split,ServiceItem;FString Drop;TOptional<FAetherCommandResult> Reply;TArray<TSharedPtr<FJsonValue>> Steps;};
  static FState S;if(S.Done)return;const double Now=FPlatformTime::Seconds();
  const auto Fail=[&](const FString& Why){S.Done=true;UE_LOG(LogTemp,Error,TEXT("V10_JOURNEY_FAIL step=%d %s"),S.Step,*Why);FPlatformMisc::RequestExitWithStatus(false,1);};
  auto* Client=PC->GetLocalPlayer()->GetSubsystem<UAetherCommandClient>();
@@ -43,7 +43,10 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
  const bool LogNow=Now>S.LogAt;
  if(LogNow){S.LogAt=Now+5;UE_LOG(LogTemp,Display,TEXT("V10_JOURNEY_WAIT step=%d ready=%d travel=%d pending=%d channel=%d profile=%d container=%d drop=%s pos=%s"),S.Step,C&&C->Ready(),C&&C->bTravelPending,Client->HasPending(),Client->GetChannel().IsValid(),Client->GetProfile().IsSet(),Client->GetContainer().IsSet(),*S.Drop,C?*C->GetActorLocation().ToString():TEXT("none"));}
  if(!C||C->bTravelPending||!Client->GetProfile().IsSet()||!Client->GetChannel().IsValid()||Now<S.Next)return;
- if(LogNow&&C&&!C->Ready())UE_LOG(LogTemp,Display,TEXT("V10_JOURNEY_BLOCK health=%.2f gate=%d block=%d equipment=%d worldAction=%d cast=%.2f stun=%.2f avatar=%d"),C->Health(),C->ResourceGate->IsBlocked(),C->bBlocking,C->Equipment->IsBusy(),C->WorldActions->IsBusy(),C->CastLockUntil-C->CombatTime(),C->StunUntil-C->CombatTime(),C->AbilitySystem->GetAvatarActor()==C);
+ if(LogNow&&C&&!C->Ready())UE_LOG(LogTemp,Display,TEXT("V10_JOURNEY_BLOCK health=%.2f gate=%d block=%d equipment=%d worldAction=%d cast=%.2f stun=%.2f avatar=%d temperature=%.1f"),C->Health(),C->ResourceGate->IsBlocked(),C->bBlocking,C->Equipment->IsBusy(),C->WorldActions->IsBusy(),C->CastLockUntil-C->CombatTime(),C->StunUntil-C->CombatTime(),C->AbilitySystem->GetAvatarActor()==C,C->Reactive->State.TemperatureC);
+ if(LogNow&&S.Step==30)for(TActorIterator<AAetherFrontierCharacter> It(PC->GetWorld());It;++It)
+  if(It->CompanionOwner==C||It->EncounterId==TEXT("Abbey"))
+   UE_LOG(LogTemp,Display,TEXT("V10_JOURNEY_PARTY name=%s companion=%s hp=%.1f mana=%.1f stamina=%.1f ready=%d revive=%s pos=%s"),*It->GetName(),*It->CompanionId.ToString(),It->Health(),It->Mana(),It->Stamina(),It->Ready(),*GetNameSafe(It->ReviveTarget.Get()),*It->GetActorLocation().ToString());
  // 正式死亡恢复创建新 Pawn/资源生命；夹具绝不直接补血或改写任务事实。
  if(!C->Alive()){
   if(S.Step==28||S.Step==29||S.Step==30){if(S.DeathAt==0)S.DeathAt=Now;if(Now-S.DeathAt>35)Fail(TEXT("Companions could not revive the player"));return;}
@@ -187,12 +190,18 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
   if(!Enemy||!Enemy->Alive())return;
   if(Client->HasPending())return;
   // 按普通玩家的正式施法和消耗品入口战斗，既不直接伤害敌人，也不注入资源。
-  if(C->Health()<50&&C->Ready()){
+  if(C->Health()<70)C->ServerBlock(false); // 松开持续格挡后才能使用药剂。
+  if(C->Health()<70&&C->Ready()){
    const auto* Potion=P.Inventory.Items.FindByPredicate([](const auto& I){return I.DefinitionId==TEXT("Potion");});
    if(Potion){FAetherPlayerCommand Cmd;Cmd.Type=EAetherCommandType::UseItem;Cmd.ItemInstanceId=Potion->InstanceId;Send(Cmd);S.Sent=false;S.Next=Now+.4;return;}
   }
   const FVector Delta=Enemy->GetActorLocation()-C->GetActorLocation();
   PC->SetControlRotation((Delta-FVector(0,0,55)).Rotation());
+  // 靠近目标再施法，避免原地向遮挡或倒地身体反复发射；走位仍经过正式移动组件。
+  if(Enemy->Fighter==EAetherFighter::FireCaster&&Delta.Size2D()>140){
+   const FVector Forward=Delta.GetSafeNormal2D(),Side=FVector::CrossProduct(Forward,FVector::UpVector);
+   C->AddMovementInput((Forward+Side*.8f).GetSafeNormal());
+  }else if(Delta.Size2D()>300)C->AddMovementInput(C->SafeMoveDirection(Enemy->GetActorLocation()));
   if(C->Ready()&&Delta.Size2D()<1400){
    if(C->SkillUnlocked(TEXT("Frost.Freeze"))&&Enemy->Reactive->State.IceFraction<.4&&C->Mana()>=20&&C->TrySkill(TEXT("Frost.Freeze")))return;
    if(C->SkillUnlocked(TEXT("Storm.Strike"))&&C->Mana()>=25&&C->TrySkill(TEXT("Storm.Strike")))return;
@@ -278,7 +287,7 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
   auto* Mode=PC->GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(!Mode||!Mode->Encounters)return;
   auto* Director=Mode->Encounters.Get();if(Director->Abbey.Phase==EAetherEncounterPhase::Failed){Fail(TEXT("Real abbey encounter failed"));return;}
   AAetherFrontierCharacter* Enemy=nullptr;double Best=DBL_MAX;
-  for(const auto& E:Director->AbbeyEnemies)if(IsValid(E)&&E->Alive()){const double D=FVector::DistSquared(C->GetActorLocation(),E->GetActorLocation());if(D<Best){Best=D;Enemy=E;}}
+  for(const auto& E:Director->AbbeyEnemies)if(IsValid(E)&&E->Alive()){const double D=FVector::DistSquared(C->GetActorLocation(),E->GetActorLocation());if(D<Best||((!Enemy||Enemy->Fighter!=EAetherFighter::FireCaster)&&E->Fighter==EAetherFighter::FireCaster)){if(Enemy&&Enemy->Fighter==EAetherFighter::FireCaster&&E->Fighter!=EAetherFighter::FireCaster)continue;Best=D;Enemy=E;}}
   if(Enemy){Fight(Enemy);return;}
   C->ServerBlock(false);
   if(Director->Abbey.Phase==EAetherEncounterPhase::Channel)
@@ -333,18 +342,23 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
  {
   if(!S.Sent){
    if(C->Mana()>80){
-    // 霜凝对真实训练木桩施放，不依赖死亡后已经耗尽的水量，也不对无目标空放计成功。
-    auto* Dummy=Find(TEXT("Dummy"));if(!Near(Dummy,FVector(850,-300,90)))return;
-    PC->SetControlRotation((Dummy->GetActorLocation()-(C->GetActorLocation()+FVector(0,0,55))).Rotation());
-    if(C->TrySkill(TEXT("Frost.Freeze")))S.Next=Now+1;
+    // 引焰允许向空中发射真实投射物，不依赖目标材质或施法储水；不直接扣减资源。
+    PC->SetControlRotation(FRotator(90,0,0));
+    if(C->TrySkill(TEXT("Fire.Ignite")))S.Next=Now+1;
+    else if(LogNow)UE_LOG(LogTemp,Display,TEXT("V10_JOURNEY_POTION_WAIT mana=%.2f fire=%d ready=%d"),C->Mana(),C->SkillUnlocked(TEXT("Fire.Ignite")),C->Ready());
     return;
    }
    if(!C->Ready())return;
    const auto* Item=P.Inventory.Items.FindByPredicate([](const auto& I){return I.DefinitionId==TEXT("ManaPotion");});
    if(!Item){Fail(TEXT("Purchased mana potion missing"));return;}
-   S.ServiceItem=Item->InstanceId;FAetherPlayerCommand Cmd;Cmd.Type=EAetherCommandType::UseItem;Cmd.ItemInstanceId=Item->InstanceId;Send(Cmd);return;
+   S.ServiceItem=Item->InstanceId;S.ServiceQuantity=Item->Quantity;S.ExpectedMana=FMath::Min(C->MaximumMana(),C->Mana()+40);FAetherPlayerCommand Cmd;Cmd.Type=EAetherCommandType::UseItem;Cmd.ItemInstanceId=Item->InstanceId;Send(Cmd);return;
   }
-  if(Applied()){if(P.Inventory.Find(S.ServiceItem)||C->Mana()<85){Fail(TEXT("Consumable inventory/resource publication"));return;}Advance(TEXT("RealManaPotionDelivery"));}return;
+  if(Applied()){
+   const auto* Remaining=P.Inventory.Find(S.ServiceItem);
+   if((Remaining?Remaining->Quantity:0)!=S.ServiceQuantity-1||C->Mana()+.01<S.ExpectedMana){
+    Fail(FString::Printf(TEXT("Consumable publication quantity=%d expected=%d mana=%.2f expected=%.2f"),Remaining?Remaining->Quantity:0,S.ServiceQuantity-1,C->Mana(),S.ExpectedMana));return;}
+   Advance(TEXT("RealManaPotionDelivery"));
+  }return;
  }
  if(S.Step==44||S.Step==45)
  {
@@ -379,7 +393,7 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
  if(S.Step==48)
  {
   auto* Inn=Find(TEXT("Inn"));if(!Near(Inn,C->GetActorLocation()))return;
-  if(S.Sent&&C->Health()>=C->MaxHealth-.01&&C->Mana()>=99){Advance(TEXT("EquippedPartyRest"));return;}
+  if(S.Sent&&C->Health()>=C->MaxHealth-.01&&C->Mana()>=99){Advance(TEXT("EquippedPlayerRest"));return;}
   Interaction(Inn,TEXT("Rest"));return;
  }
  if(S.Step==49)

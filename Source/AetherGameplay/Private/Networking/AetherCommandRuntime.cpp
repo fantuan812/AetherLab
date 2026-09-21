@@ -32,6 +32,7 @@ struct FAetherCommandRuntimeImpl
         bool bReady=false,bNeedsRecovery=true,bNeedFullRecovery=true,bDeliveryRequested=false;
         TUniquePtr<FAetherConsumableDeliveryPump> Delivery;
         TOptional<FAetherPlayerCommand> ResourceCommand;
+        TOptional<FAetherCommandResult> ResourceReply;
         TFuture<FAetherStoreResult> Proof;
         TFuture<FAetherStoreReadResult> ProofRead;
         double NextDelivery=0;
@@ -225,6 +226,7 @@ struct FAetherCommandRuntimeImpl
                 if(!G->FinishRecovery()){G->Fault(TEXT("Unable to finish full resource recovery"));return;}
                 B.bNeedsRecovery=false;B.bReady=true;
             }
+            if(B.ResourceReply.IsSet()){const auto Result=B.ResourceReply.GetValue();B.ResourceReply.Reset();Reply(B,Result);}
         }
         else if(R.Code==EAetherDeliveryPumpCode::StorageUnavailable)B.NextDelivery=Now+1;
         else if(R.Code!=EAetherDeliveryPumpCode::Pending)G->Fault(TEXT("Resource delivery failed; persisted record retained"));
@@ -232,6 +234,10 @@ struct FAetherCommandRuntimeImpl
     void Reply(FBinding& B,const FAetherCommandResult& Result)
     {
         if(!Current(B))return;
+        // SQLite 已提交只证明药品扣除持久化；完成状态须等待真实 ASC 发布及投递 ACK。
+        // 同一个保留命令最多一份回执，固定字节重试不会扩大内存或提前释放客户端等待。
+        if(B.bDeliveryRequested&&B.ResourceCommand.IsSet()&&B.ResourceCommand->CommandId==Result.CommandId)
+        {B.ResourceReply=Result;return;}
         FAetherV10ReplyPacket Packet;Packet.Channel=B.Channel;FString Reason;
         if(AetherCommands::EncodeResult(Result,Packet.Bytes,Reason))B.Controller->ClientV10Reply(Packet);
     }
@@ -299,6 +305,11 @@ bool UAetherCommandRuntime::ObserveServerFact(FAetherServerFact Event,FString& R
     if(Event.Kind!=EAetherServerFactKind::EquipmentWear)
         for(const auto& E:Impl->DeferredFacts)if(E.Kind==Event.Kind&&E.CharacterId.Equals(Event.CharacterId,ESearchCase::CaseSensitive)&&
             E.FactId==Event.FactId&&E.SourceId==Event.SourceId&&E.InstanceId==Event.InstanceId&&E.UtcDay==Event.UtcDay){Reason.Reset();return true;}
+    if(Event.Kind==EAetherServerFactKind::EquipmentWear&&!Impl->DeferredFacts.IsEmpty()){
+        auto& Last=Impl->DeferredFacts.Last();
+        if(Last.Kind==Event.Kind&&Last.CharacterId==Event.CharacterId&&Last.WornItems==Event.WornItems&&
+           Last.WearCount<=1000000-Event.WearCount){Last.WearCount+=Event.WearCount;Reason.Reset();return true;}
+    }
     if(Impl->DeferredFacts.Num()>=1024){Reason=TEXT("Retained server fact queue exhausted");return false;}
     Impl->DeferredFacts.Add(MoveTemp(Event));Reason.Reset();return true;
 }
@@ -345,7 +356,7 @@ void UAetherCommandRuntime::NotifyPawnChanged(AAetherPlayerController* C)
     B.Session=Impl->Coordinator->ReplacePawn(B.Session);
     B.Pawn=C->GetPawn();B.Channel=FGuid::NewGuid();B.SceneSequence=0;B.bReady=false;B.Outgoing.Reset();B.Read={};B.Revision=-1;B.InFlightTransfer.Invalidate();
     B.bNeedsRecovery=true;B.bNeedFullRecovery=true;B.bDeliveryRequested=false;B.Delivery.Reset();
-    B.ResourceCommand.Reset();B.Proof={};B.ProofRead={};B.NextDelivery=0;
+    B.ResourceCommand.Reset();B.ResourceReply.Reset();B.Proof={};B.ProofRead={};B.NextDelivery=0;
     if(!B.Session.SessionId.IsValid()){UnbindPlayer(C);return;}
     C->ClientV10Channel(B.Channel,B.Session.CharacterId,Impl->Realm);
     if(B.Pawn.IsValid()){if(auto* Resources=Impl->Gate(B))Resources->BlockForInitialLoad();B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});}
@@ -509,7 +520,7 @@ void UAetherCommandRuntime::Tick(float Dt)
     {
         Impl->NextSender%=Keys.Num();auto* Found=Impl->Bindings.Find(Keys[Impl->NextSender++]);if(!Found)continue;
         // 初始资源恢复完成前不向客户端开放可操作快照，避免首次点击必然 NotReady。
-        auto& B=**Found;if(!Impl->Current(B)||!B.bReady||B.InFlightTransfer.IsValid())continue;
+        auto& B=**Found;if(!Impl->Current(B)||!B.bReady||B.bDeliveryRequested||B.InFlightTransfer.IsValid())continue;
         const bool Container=!B.ContainerOutgoing.IsEmpty()&&(B.Outgoing.IsEmpty()||B.bPreferContainer);
         auto& Bytes=Container?B.ContainerOutgoing:B.Outgoing;if(Bytes.IsEmpty())continue;
         auto& Offset=Container?B.ContainerOffset:B.Offset;

@@ -64,10 +64,10 @@ bool FAetherServerFactCoordinator::Enqueue(FAetherServerFact E,FString& Reason)
     const bool Reward=E.Kind==EAetherServerFactKind::EncounterReward||E.Kind==EAetherServerFactKind::LegacyLoot;
     if(!Reward)Valid&=!E.InstanceId.IsValid();
     if(E.Kind!=EAetherServerFactKind::Daily&&E.Kind!=EAetherServerFactKind::EncounterReward)Valid&=E.UtcDay.IsEmpty();
-    if(E.Kind!=EAetherServerFactKind::EquipmentWear)Valid&=E.WornItems.IsEmpty();
+    if(E.Kind!=EAetherServerFactKind::EquipmentWear)Valid&=E.WornItems.IsEmpty()&&E.WearCount==1;
     if(E.Kind==EAetherServerFactKind::EquipmentWear)
     {
-        Valid&=E.FactId==TEXT("EquipmentWear")&&E.SourceId.IsEmpty()&&!E.WornItems.IsEmpty()&&E.WornItems.Num()<=10;
+        Valid&=E.WearCount>=1&&E.WearCount<=1000000&&E.FactId==TEXT("EquipmentWear")&&E.SourceId.IsEmpty()&&!E.WornItems.IsEmpty()&&E.WornItems.Num()<=10;
         TSet<FGuid> Unique;for(const auto& Id:E.WornItems){Valid&=Id.IsValid()&&!Unique.Contains(Id);Unique.Add(Id);}
     }
     else if(E.Kind==EAetherServerFactKind::EncounterReward)
@@ -104,6 +104,13 @@ bool FAetherServerFactCoordinator::Enqueue(FAetherServerFact E,FString& Reason)
     }
     if(!Valid){Reason=TEXT("Invalid trusted server fact or source");return false;}
     for(const auto& J:Impl->Jobs)if(Same(J->Event,E)){Reason.Reset();return true;}
+    // 只压缩队尾尚未读取的同实例事件；已读、已提交或结果不确定的事务必须保持请求字节不变。
+    if(E.Kind==EAetherServerFactKind::EquipmentWear&&!Impl->Jobs.IsEmpty()){
+        auto& Last=*Impl->Jobs.Last();
+        if(Last.Stage==FImpl::EStage::Queued&&!Last.Transaction.IsSet()&&Last.WearSequence==0&&
+           Last.Event.Kind==E.Kind&&Last.Event.CharacterId==E.CharacterId&&Last.Event.WornItems==E.WornItems&&
+           Last.Event.WearCount<=1000000-E.WearCount){Last.Event.WearCount+=E.WearCount;Reason.Reset();return true;}
+    }
     if(Impl->Jobs.Num()>=128){Reason=TEXT("Server fact queue full; producer must retain unaccepted event");return false;}
     auto J=MakeUnique<FImpl::FJob>();J->Event=MoveTemp(E);Impl->Jobs.Add(MoveTemp(J));Reason.Reset();return true;
 }
@@ -176,7 +183,7 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                                 // 已售出/转移的旧实例不追索新装备；相同 GUID 仍在背包时照常结算。
                                 for(const auto& Id:J.Event.WornItems)
                                     if(const auto* Item=Next.Inventory.Find(Id);Item&&Item->Durability>0)
-                                        Allowed&=Next.Inventory.Wear(Id,1,D.Items).Code==EAetherInventoryMutationCode::Applied;
+                                        Allowed&=Next.Inventory.Wear(Id,J.Event.WearCount,D.Items).Code==EAetherInventoryMutationCode::Applied;
                                 Next.WearSequence=J.WearSequence;
                             }
                         }
@@ -224,7 +231,7 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                         FString Request=FString::Printf(TEXT("AETHER_SERVER_FACT_2|%d|%s|%s|%s|%s"),int32(J.Event.Kind),*J.Event.FactId,*J.Event.SourceId,*J.Event.UtcDay,*J.Event.InstanceId.ToString(EGuidFormats::Digits));
                         if(J.Event.Kind==EAetherServerFactKind::EquipmentWear)
                         {
-                            Request+=FString::Printf(TEXT("|%lld"),J.WearSequence);
+                            Request+=FString::Printf(TEXT("|%lld|%d"),J.WearSequence,J.Event.WearCount);
                             for(const auto& Id:J.Event.WornItems)Request+=TEXT("|")+Id.ToString(EGuidFormats::Digits);
                         }
                         FTCHARToUTF8 Bytes(*Request);T.Request.Append(reinterpret_cast<const uint8*>(Bytes.Get()),Bytes.Length());

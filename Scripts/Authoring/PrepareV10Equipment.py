@@ -77,6 +77,12 @@ for name, source, display in [
     if not L.save_loaded_asset(item):
         raise RuntimeError("无法保存武器：" + path)
     existing = [a for a in existing if str(a.get_editor_property("item_id")) != name] + [item]
+# 双手武器的辅助握点独立于防具双侧附着，运行时由当前主手骨求解，避免上一帧反馈。
+for item in existing:
+    if item.get_editor_property("occupies_both_hands"):
+        item.set_editor_property("support_hand_offset",ue.Vector(0,0,32 if str(item.get_editor_property("item_id"))=="TideStaff" else 24))
+        if not L.save_loaded_asset(item):
+            raise RuntimeError("无法保存辅助握点")
 catalog.set_editor_property("items", existing)
 if not L.save_loaded_asset(catalog):
     raise RuntimeError("无法保存十槽目录")

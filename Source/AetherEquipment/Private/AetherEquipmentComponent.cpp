@@ -22,6 +22,7 @@ bool UAetherEquipmentDefinition::IsValidDefinition() const
     if (ItemId.IsNone() || Slot.IsNone() || (!bInvisibleAccessory&&(Socket.IsNone()||Mesh.IsNull())) || GripTransform.ContainsNaN()
         || !FMath::IsFinite(GuardStaminaMultiplier) || GuardStaminaMultiplier<0
         || !FMath::IsFinite(ParryWindowSeconds) || ParryWindowSeconds<0 || ParryWindowSeconds>1) return false;
+    if(SupportHandOffset.ContainsNaN()||SupportHandOffset.Size()>100)return false;
     if(bInvisibleAccessory&&(bOccupiesBothHands||bAllowsGuard||!Attacks.IsEmpty()||!SecondarySocket.IsNone()))return false;
     if(!SecondarySocket.IsNone()&&(SecondarySocket==Socket||SecondaryGripTransform.ContainsNaN()))return false;
     TSet<FName> SlotSet;

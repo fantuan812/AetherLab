@@ -50,6 +50,8 @@ public:
     // 细小饰品可无世界网格，仍保留真实槽位、实例和属性。
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bInvisibleAccessory = false;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bOccupiesBothHands = false;
+    // 双手武器辅助握点，以主手骨局部厘米计；不与成对防具的 SecondarySocket 混用。
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FVector SupportHandOffset = FVector(0,0,24);
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bAllowsGuard = false;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) float GuardStaminaMultiplier = .8f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) float ParryWindowSeconds = .16f;

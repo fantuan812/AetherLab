@@ -377,6 +377,10 @@ void AAetherFrontierMode::BeginPlay()
 }
 void AAetherFrontierMode::Logout(AController* C)
 {
+#if !UE_BUILD_SHIPPING
+    const auto* LeavingState=C?C->GetPlayerState<AAetherPlayerState>():nullptr;
+    const FString LeavingIdentity=LeavingState?LeavingState->Profile.CharacterId:FString();
+#endif
     if(auto* PC=Cast<AAetherPlayerController>(C)){NativeLogins.Remove(PC);NativePlayersReady.Remove(PC);NativeLoginRejected.Remove(PC);NativeContainerSessions.Remove(PC);GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->UnbindPlayer(PC);}
     auto* Pawn=C?Cast<AAetherFrontierCharacter>(C->GetPawn()):nullptr;
     if(Pawn)Pawn->ReleaseCarry();
@@ -385,6 +389,10 @@ void AAetherFrontierMode::Logout(AController* C)
     for(AAetherFrontierCharacter* Buddy:Companions)if(IsValid(Buddy)&&Buddy->CompanionOwner==Pawn)Buddy->Destroy();
     for(int32 I=Props.Num()-1;I>=0;--I)if(IsValid(Props[I])&&Props[I]->GetOwner()==Pawn&&Props[I]->Reactive->StableId.IsNone()){Props[I]->Destroy();Props.RemoveAt(I);}
     Super::Logout(C);
+#if !UE_BUILD_SHIPPING
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherV10NativeNetwork")))
+        UE_LOG(LogTemp,Display,TEXT("V10_NATIVE_DISCONNECTED owner=%s"),*LeavingIdentity);
+#endif
 }
 void AAetherFrontierMode::CreditHit(AAetherCharacter* Target,AAetherCharacter* Source)
 {

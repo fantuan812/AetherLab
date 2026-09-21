@@ -34,21 +34,21 @@
       "id": "V10-05",
       "status": "implemented_under_validation",
       "implementation": "CommonUI 根栈、正式 Designer 页面、输入所有权已接入",
-      "verified": "五种分辨率实际输入、切页、解绑重绑和每次100次菜单开关通过",
-      "remainingAcceptance": "控制器完整流程、长中文、发布包"
+      "verified": "五分辨率菜单与每次100次开关通过；最新1080p手柄View/Menu、肩键正反循环、返回游戏及换Pawn通过",
+      "remainingAcceptance": "全部详情/技能/交易控制器流程、长中文、最新发布包"
     },
     {
       "id": "V10-06",
       "status": "implemented_under_validation",
       "implementation": "固定格子与全部库存事务已接入生产快照及 UI",
-      "verified": "规则回归、真实移动/收藏/重放命令通过",
+      "verified": "真实主线已完成拆分、合并、丢弃拾取、穿脱、买卖、药剂及个人仓储存取；修理待完整实战结束",
       "remainingAcceptance": "完整拾取拆分装备出售修理丢弃玩家路径"
     },
     {
       "id": "V10-07",
       "status": "implemented_under_validation",
-      "implementation": "十槽、双套基础装备、耐久/修理/属性/外观已接入",
-      "verified": "规则及内容校验通过",
+      "implementation": "十槽、双套基础装备、耐久/修理/属性/外观；补入官方手指握持图层及双手辅助握点，最新代码验证中",
+      "verified": "70项规则通过；真实Manny/Quinn共16组装备图、官方手指闭合及双手辅助握点通过，最大误差约3.19cm；持续磨损队列溢出修复已通过真实SQLite回归",
       "remainingAcceptance": "双人物穿戴与真实战斗磨损视觉"
     },
     {
@@ -69,14 +69,14 @@
       "id": "V10-10",
       "status": "implemented_under_validation",
       "implementation": "商店、修理、容器、个人仓储及共享掉落原子事务已接入",
-      "verified": "规则回归通过",
+      "verified": "68项规则通过；发现并修复军械商世界实例缺失及旧目录权限；真实买卖、装备技能授予/撤销和金币守恒通过",
       "remainingAcceptance": "四人争抢、交易会话失效及完整玩家路径"
     },
     {
       "id": "V10-11",
       "status": "implemented_under_validation",
       "implementation": "稳定技能身份、等级参数、外部授权、退款及 GAS 发布已接入",
-      "verified": "规则回归通过",
+      "verified": "规则通过；真实主线中StoryGrant、升级、热栏绑定、铜戒授予/撤销、重置退款及重新升级通过",
       "remainingAcceptance": "真实玩家成长及重生完整流程"
     },
     {
@@ -111,14 +111,14 @@
       "id": "V10-16",
       "status": "implemented_under_validation",
       "implementation": "非阻塞调度、epoch、不可变姿态、G1桥接及人物重定向已接入",
-      "verified": "真实变化输入、4帧过渡、注销及双agent集成通过",
+      "verified": "真实CPU/Vulkan双人物16风格图检查通过，修复坐标/解剖关节/根高度及脚部IK反馈；最新握持图层复验中",
       "remainingAcceptance": "性能百分位、迟到/长时与角色视觉"
     },
     {
       "id": "V10-17",
       "status": "implemented_under_validation",
       "implementation": "G1、双人物重定向、8风格及来源哈希已生成",
-      "verified": "资源校验通过；蹲姿固定骨长投影误差小于5cm",
+      "verified": "真实模型往返通过；最新Vulkan八风格双人物图V10Quality_2d37c5047bb8通过；足部接地固定改善多数风格，Quinn Injured仍有接触速度异常，未作完整视觉验收",
       "remainingAcceptance": "8风格双人物接触/滑脚/视觉质量"
     },
     {
@@ -132,14 +132,14 @@
       "id": "V10-19",
       "status": "implemented_under_validation",
       "implementation": "原生恢复、流送屏障、Pawn重绑与会话撤销已接入",
-      "verified": "Dedicated/Listen 各正常/弱网四人、晚加入/重连/重启通过；菜单换Pawn通过；10分钟50次Pawn替换、50次跨区、497次菜单开关完成，正式时长未验收",
+      "verified": "扩展四模式四人库存命令、迟到加入、断线重连和重启恢复通过；弱网Listen最新V10Native_770e22a91735；未完成最终一小时",
       "remainingAcceptance": "50次重生/分区及60分钟混合测试"
     },
     {
       "id": "V10-20",
       "status": "implemented_under_validation",
       "implementation": "构建、作者、打包、证据收集脚本已交付",
-      "verified": "Editor、Win64 Shipping编译/Cook/IoStore/Stage/归档成功；传统/CPU/Vulkan包内真实启动、六菜单截图、透明预览与依赖哈希/加载路径检查通过",
+      "verified": "历史Win64 Shipping编译/Cook/Stage和三后端启动通过，但旧包动画有缺陷，该动画结论作废；最新代码和资源必须重新打包验收",
       "remainingAcceptance": "安装版UE拒绝Server Target；Shipping、Linux Server、性能和完整发布验收未完成"
     }
   ],

@@ -274,19 +274,50 @@ void AAetherFrontierCharacter::Tick(float Dt)
     const float T=CombatTime();
     if(!CompanionOwner->Alive())
     {
+        ServerBlock(false);
         const FVector D=CompanionOwner->GetActorLocation()-GetActorLocation();
         if(D.Size2D()>170)AddMovementInput(SafeMoveDirection(CompanionOwner->GetActorLocation()));
         else if(!ReviveTarget){ReviveTarget=CompanionOwner;ReviveStarted=T;ReviveDamageSerial=CombatRuntime->DamageReceivedCount;if(!AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass()))ReviveTarget=nullptr;}
         return;
     }
-    if(bHealer&&T>NextCompanionAction&&CompanionOwner->Health()<65&&Mana()>=15&&FVector::DistSquared(GetActorLocation(),CompanionOwner->GetActorLocation())<FMath::Square(600.0))
-    {NextCompanionAction=T+5;ExecuteCompanionHeal(CompanionOwner.Get());}
+    // 医者照顾同一招募队伍，包括自己；选取范围内生命比例最低的存活队员。
+    // 沿用既有 15 法力 / 20 生命 / 5 秒冷却，不因验证场景增加治疗强度。
+    if(bHealer&&T>NextCompanionAction&&Mana()>=15)
+    {
+        AAetherFrontierCharacter* Patient=nullptr;float Lowest=.65f;
+        for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)
+        {
+            if((*It!=this&&*It!=CompanionOwner&&It->CompanionOwner!=CompanionOwner)||!It->Alive()||
+               FVector::DistSquared(GetActorLocation(),It->GetActorLocation())>FMath::Square(600.))continue;
+            const float Fraction=It->Health()/FMath::Max(It->MaxHealth,1.f);if(Fraction>=Lowest)continue;
+            FCollisionQueryParams Q(SCENE_QUERY_STAT(CompanionHealSight),false,this);Q.AddIgnoredActor(*It);
+            if(*It!=this&&GetWorld()->LineTraceTestByChannel(GetActorLocation(),It->GetActorLocation(),ECC_Visibility,Q))continue;
+            Patient=*It;Lowest=Fraction;
+        }
+        if(Patient){
+            // 热伤害会继续消耗生命。医者先经正式引水能力给着火队员降温，消耗真实储水与法力。
+            if(Patient!=this&&Patient->Reactive->State.TemperatureC>55&&WaterReserveKg>=.5f&&Ready()&&Controller){
+                Controller->SetControlRotation((Patient->GetActorLocation()-GetActorLocation()-FVector(0,0,55)).Rotation());
+                if(TrySkill(TEXT("Water.Draw"))){NextCompanionAction=T+1;return;}
+            }
+            NextCompanionAction=T+5;ExecuteCompanionHeal(Patient);
+        }
+    }
     AAetherCharacter* Target=nullptr;double Best=FMath::Square(900.0);
     for(TActorIterator<AAetherCharacter> It(GetWorld());It;++It)if(It->Fighter!=EAetherFighter::Player&&It->Alive())
     {double D=FVector::DistSquared(GetActorLocation(),It->GetActorLocation());if(D<Best)
      {auto* FC=Cast<AAetherFrontierCharacter>(*It);auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(FC&&!FC->EncounterId.IsNone()&&M&&M->Encounters&&!M->Encounters->Participates(this,FC->EncounterId))continue;
       FCollisionQueryParams Q(SCENE_QUERY_STAT(CompanionSight),false,this);Q.AddIgnoredActor(*It);if(GetWorld()->LineTraceTestByChannel(GetActorLocation(),It->GetActorLocation(),ECC_Visibility,Q))continue;Best=D;Target=*It;}}
     const FVector D=(Target?Target->GetActorLocation():CompanionOwner->GetActorLocation())-GetActorLocation();
+    if(bHealer)
+    {
+        // 治疗同伴保持后排，不再拿着近战模板追进敌群而耗尽整个队伍的治疗资源。
+        ServerBlock(false);
+        if(Target&&D.Size2D()<400)AddMovementInput(SafeMoveDirection(GetActorLocation()-D.GetSafeNormal2D()*350));
+        else if(FVector::DistSquared2D(GetActorLocation(),CompanionOwner->GetActorLocation())>FMath::Square(350.))
+            AddMovementInput(SafeMoveDirection(CompanionOwner->GetActorLocation()));
+        return;
+    }
     if(!Target){if(D.Size2D()>400)bFollowing=true;else if(D.Size2D()<250)bFollowing=false;}
     if(Target?D.Size2D()>145:bFollowing)
     {
@@ -295,14 +326,22 @@ void AAetherFrontierCharacter::Tick(float Dt)
         if(GetWorld()->LineTraceSingleByChannel(Wall,GetActorLocation(),GetActorLocation()+Dir*160,ECC_Visibility,Q))Dir=FVector::CrossProduct(Wall.ImpactNormal,FVector::UpVector).GetSafeNormal();
         AddMovementInput(SafeMoveDirection(Target?Target->GetActorLocation():CompanionOwner->GetActorLocation()));
     }
-    if(Target){SetActorRotation(D.Rotation());if(Controller)Controller->SetControlRotation(D.Rotation());if(T>NextCompanionAction&&Ready()){PerformMelee(false);NextCompanionAction=T+1;}}
+    if(Target){
+        SetActorRotation(D.Rotation());if(Controller)Controller->SetControlRotation(D.Rotation());
+        const bool Guard=D.Size2D()<300&&(Target->bWindingUp||Target->Equipment->IsBusy());
+        ServerBlock(Guard);
+        if(!Guard&&D.Size2D()<165&&T>NextCompanionAction&&Ready()){PerformMelee(false);NextCompanionAction=T+1;}
+    }else ServerBlock(false);
 }
 
 void AAetherFrontierCharacter::ExecuteCompanionHeal(TWeakObjectPtr<AAetherFrontierCharacter> Target)
 {
     auto* Recipient=Target.Get();
-    if(!HasAuthority()||!Recipient||Recipient!=CompanionOwner||!bHealer||!Alive()||!Recipient->Alive()||
+    const bool SameParty=Recipient&&(Recipient==this||Recipient==CompanionOwner||(CompanionOwner&&Recipient->CompanionOwner==CompanionOwner));
+    if(!HasAuthority()||!SameParty||!bHealer||!Alive()||!Recipient->Alive()||
         Mana()<15||FVector::DistSquared(GetActorLocation(),Recipient->GetActorLocation())>FMath::Square(600.))return;
+    FCollisionQueryParams Sight(SCENE_QUERY_STAT(CompanionHealCommit),false,this);Sight.AddIgnoredActor(Recipient);
+    if(Recipient!=this&&GetWorld()->LineTraceTestByChannel(GetActorLocation(),Recipient->GetActorLocation(),ECC_Visibility,Sight))return;
     const TWeakObjectPtr<AAetherFrontierCharacter> Self=this;
     if(Recipient->ResourceGate->Defer([Self,Target]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target);}))return;
     if(ResourceGate->Defer([Self,Target]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target);}))return;

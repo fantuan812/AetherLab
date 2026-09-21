@@ -18,6 +18,7 @@
 #include "Animation/BlendSpace.h"
 #include "AnimNodes/AnimNode_BlendSpacePlayer.h"
 #include "AnimNodes/AnimNode_TwoWayBlend.h"
+#include "AnimNodes/AnimNode_LayeredBoneBlend.h"
 #include "AnimNodes/AnimNode_Slot.h"
 #include "BoneControllers/AnimNode_TwoBoneIK.h"
 #include "BoneControllers/AnimNode_ModifyBone.h"
@@ -28,18 +29,47 @@
 namespace
 {
 // 从本次未经 IK 的足部姿态计算目标，避免上一帧已落地的 socket 反馈把摆动脚永久压平。
-// 地形修正只改变高度；作者/生成姿态的水平步幅和抬脚量必须保留。
+// 摆动期保留作者/生成姿态；接地期只在有界范围内锁定足点，地形修正保留抬脚量。
 struct FAetherGroundFootIK : FAnimNode_TwoBoneIK
 {
  double FlatContactZ=12;
+ bool Planted=false;FVector PlantAnchor=FVector::ZeroVector,PreviousOrigin=FVector::ZeroVector;
+ FTransform BaseTransform=FTransform::Identity;TWeakObjectPtr<UPrimitiveComponent> MovementBase;
  virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output,TArray<FBoneTransform>& Out) override
  {
   const auto Index=IKBone.GetCompactPoseIndex(Output.Pose.GetPose().GetBoneContainer());
   const FVector Authored=Output.Pose.GetComponentSpaceTransform(Index).GetLocation();
   const FVector Surface=EffectorLocation;
   EffectorLocation=FVector(Authored.X,Authored.Y,FMath::Max(Surface.Z,Authored.Z+Surface.Z-FlatContactZ));
+  const FTransform Component=Output.AnimInstanceProxy->GetComponentTransform();
+  if(FVector::DistSquared(Component.GetLocation(),PreviousOrigin)>FMath::Square(100.))Planted=false;
+  PreviousOrigin=Component.GetLocation();
+  // 模型不保证刚性接触。接地期在移动基座局部锁住足点，摆腿时立即释放；
+  // 超过有界步幅则释放，不能拉伸腿去追传送前或受阻时的陈旧锚点。
+  const bool Contact=Authored.Z<=FlatContactZ+(Planted?7.:3.);
+  const FVector DesiredWorld=Component.TransformPosition(EffectorLocation);
+  if(!Contact)Planted=false;
+  else if(!Planted){PlantAnchor=BaseTransform.InverseTransformPosition(DesiredWorld);Planted=true;}
+  if(Planted){
+   const FVector AnchorWorld=BaseTransform.TransformPosition(PlantAnchor);
+   if(FVector::Dist2D(DesiredWorld,AnchorWorld)>45)Planted=false;
+   else {const FVector Anchor=Component.InverseTransformPosition(AnchorWorld);EffectorLocation.X=Anchor.X;EffectorLocation.Y=Anchor.Y;}
+  }
   FAnimNode_TwoBoneIK::EvaluateSkeletalControl_AnyThread(Output,Out);
   EffectorLocation=Surface;
+ }
+};
+struct FAetherSupportHandIK : FAnimNode_TwoBoneIK
+{
+ FBoneReference MainHand;FVector GripOffset=FVector::ZeroVector;bool UseGrip=false;
+ virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override
+ {FAnimNode_TwoBoneIK::CacheBones_AnyThread(Context);MainHand.BoneName=TEXT("hand_r");MainHand.Initialize(Context.AnimInstanceProxy->GetRequiredBones());}
+ virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output,TArray<FBoneTransform>& Out) override
+ {
+  const FVector Contact=EffectorLocation;
+  if(UseGrip&&MainHand.IsValidToEvaluate(Output.Pose.GetPose().GetBoneContainer()))
+   EffectorLocation=Output.Pose.GetComponentSpaceTransform(MainHand.GetCompactPoseIndex(Output.Pose.GetPose().GetBoneContainer())).TransformPosition(GripOffset);
+  FAnimNode_TwoBoneIK::EvaluateSkeletalControl_AnyThread(Output,Out);EffectorLocation=Contact;
  }
 };
 struct FAetherAnimProxy : FAnimInstanceProxy
@@ -52,9 +82,12 @@ struct FAetherAnimProxy : FAnimInstanceProxy
  FAnimNode_Slot Action;
  FAnimNode_SequencePlayer_Standalone Controlled;
  FAnimNode_TwoWayBlend ControlledBlend;
+ FAnimNode_SequencePlayer_Standalone GripPose[2];
+ FAnimNode_LayeredBoneBlend GripBlend[2];
  FAnimNode_ConvertLocalToComponentSpace ToComponent;
  FAetherGroundFootIK LeftFoot,RightFoot;
- FAnimNode_TwoBoneIK LeftHand,RightHand;
+ FAetherSupportHandIK LeftHand;
+ FAnimNode_TwoBoneIK RightHand;
  FAnimNode_ConvertComponentToLocalSpace ToLocal;
  EAetherMotionState Previous=EAetherMotionState::Grounded;
  explicit FAetherAnimProxy(UAnimInstance* Instance):FAnimInstanceProxy(Instance){}
@@ -66,10 +99,22 @@ struct FAetherAnimProxy : FAnimInstanceProxy
   GeneratedBlend.A.SetLinkNode(&Ground);GeneratedBlend.B.SetLinkNode(&Generated);GeneratedBlend.Alpha=0;
   Travel.A.SetLinkNode(&GeneratedBlend);Travel.B.SetLinkNode(&Air);Action.Source.SetLinkNode(&Travel);Action.SlotName="DefaultSlot";Action.bAlwaysUpdateSourcePose=true;
   ControlledBlend.A.SetLinkNode(&Action);ControlledBlend.B.SetLinkNode(&Controlled);ControlledBlend.Alpha=0;
-  ToComponent.LocalPose.SetLinkNode(&ControlledBlend);LeftFoot.ComponentPose.SetLinkNode(&ToComponent);RightFoot.ComponentPose.SetLinkNode(&LeftFoot);
-  LeftHand.ComponentPose.SetLinkNode(&RightFoot);RightHand.ComponentPose.SetLinkNode(&LeftHand);
-  ToLocal.ComponentPose.SetLinkNode(&RightHand);
-  for(FAnimNode_TwoBoneIK* Foot:{static_cast<FAnimNode_TwoBoneIK*>(&LeftFoot),static_cast<FAnimNode_TwoBoneIK*>(&RightFoot),&LeftHand,&RightHand}){Foot->EffectorLocationSpace=BCS_ComponentSpace;Foot->JointTargetLocationSpace=BCS_ComponentSpace;Foot->bAllowStretching=false;Foot->bMaintainEffectorRelRot=true;Foot->Alpha=0;}
+  // 官方徒手动作中的闭合手指姿态只覆盖十组指骨，不覆盖手腕、手臂或生成的身体动作。
+  for(int32 Side=0;Side<2;++Side){
+   GripPose[Side].SetSequence(A->LightClips.Num()?A->LightClips[0].Get():nullptr);
+   GripPose[Side].SetPlayRate(0);GripPose[Side].SetLoopAnimation(false);GripPose[Side].SetAccumulatedTime(.3f);
+   auto& Layer=GripBlend[Side];Layer=FAnimNode_LayeredBoneBlend();Layer.AddPose();Layer.BlendWeights[0]=0;
+   Layer.BasePose.SetLinkNode(Side?static_cast<FAnimNode_Base*>(&GripBlend[0]):static_cast<FAnimNode_Base*>(&ControlledBlend));
+   Layer.BlendPoses[0].SetLinkNode(&GripPose[Side]);
+   for(const TCHAR* Finger:{TEXT("thumb"),TEXT("index"),TEXT("middle"),TEXT("ring"),TEXT("pinky")}){
+    FBranchFilter Filter;Filter.BoneName=FName(*FString::Printf(TEXT("%s_01_%s"),Finger,Side?TEXT("r"):TEXT("l")));Filter.BlendDepth=0;
+    Layer.LayerSetup[0].BranchFilters.Add(Filter);
+   }
+  }
+  ToComponent.LocalPose.SetLinkNode(&GripBlend[1]);LeftFoot.ComponentPose.SetLinkNode(&ToComponent);RightFoot.ComponentPose.SetLinkNode(&LeftFoot);
+  RightHand.ComponentPose.SetLinkNode(&RightFoot);LeftHand.ComponentPose.SetLinkNode(&RightHand);
+  ToLocal.ComponentPose.SetLinkNode(&LeftHand);
+  for(FAnimNode_TwoBoneIK* Foot:{static_cast<FAnimNode_TwoBoneIK*>(&LeftFoot),static_cast<FAnimNode_TwoBoneIK*>(&RightFoot),static_cast<FAnimNode_TwoBoneIK*>(&LeftHand),&RightHand}){Foot->EffectorLocationSpace=BCS_ComponentSpace;Foot->JointTargetLocationSpace=BCS_ComponentSpace;Foot->bAllowStretching=false;Foot->bMaintainEffectorRelRot=true;Foot->Alpha=0;}
   LeftFoot.IKBone.BoneName="foot_l";RightFoot.IKBone.BoneName="foot_r";
   LeftHand.IKBone.BoneName="hand_l";RightHand.IKBone.BoneName="hand_r";
   FAnimInstanceProxy::Initialize(Instance);
@@ -95,11 +140,21 @@ struct FAetherAnimProxy : FAnimInstanceProxy
   if(C){
    const FVector FlatWorld=C->GetActorLocation()-FVector(0,0,C->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()-12);
    LeftFoot.FlatContactZ=RightFoot.FlatContactZ=C->GetMesh()->GetComponentTransform().InverseTransformPosition(FlatWorld).Z;
+   auto* Base=C->GetMovementBase();
+   for(auto* Foot:{&LeftFoot,&RightFoot}){
+    if(Foot->MovementBase.Get()!=Base||A->FootWeight<.05f)Foot->Planted=false;
+    Foot->MovementBase=Base;Foot->BaseTransform=Base?Base->GetComponentTransform():FTransform::Identity;
+   }
   }
   LeftFoot.Alpha=RightFoot.Alpha=A->FootWeight;LeftFoot.EffectorLocation=A->FootTargets[0];RightFoot.EffectorLocation=A->FootTargets[1];LeftFoot.JointTargetLocation=A->KneeTargets[0];RightFoot.JointTargetLocation=A->KneeTargets[1];
-  LeftHand.Alpha=RightHand.Alpha=A->HandWeight;
+  for(int32 I=0;I<2;++I)GripBlend[I].BlendWeights[0]=A->GripWeights[I];
+  LeftHand.UseGrip=A->HandWeight<.01f&&A->SupportHandWeight>.01f;LeftHand.GripOffset=A->SupportHandOffset;
+  LeftHand.Alpha=LeftHand.UseGrip?A->SupportHandWeight:A->HandWeight;RightHand.Alpha=A->HandWeight;
   LeftHand.EffectorLocation=A->HandTargets[0];RightHand.EffectorLocation=A->HandTargets[1];
   LeftHand.JointTargetLocation=A->ElbowTargets[0];RightHand.JointTargetLocation=A->ElbowTargets[1];
+  if(A->HandWeight<.01f&&A->WeaponHoldWeight>.01f){
+   RightHand.Alpha=A->WeaponHoldWeight;RightHand.EffectorLocation=A->WeaponHoldTarget;RightHand.JointTargetLocation=A->WeaponElbowTarget;
+  }
  }
 };
 }

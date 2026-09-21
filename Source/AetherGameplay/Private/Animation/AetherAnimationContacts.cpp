@@ -65,4 +65,17 @@ void UAetherAnimInstance::UpdateContacts(AAetherCharacter& Character,const FAeth
    }
  }
  HandWeight=FMath::FInterpTo(HandWeight,ContactValid?1.f:0.f,Dt,12);
+ const auto* Main=C->Equipment?C->Equipment->InSlot(TEXT("MainHand")):nullptr;
+ const auto* Off=C->Equipment?C->Equipment->InSlot(TEXT("OffHand")):nullptr;
+ // 世界接触优先于武器握持；失去装备、死亡或受击时平滑释放，姿态不修改玩法资源。
+ const bool CanGrip=Frame.bAlive&&!Frame.bStunned&&!ContactValid&&!Frame.bCarrying&&!Frame.bRescuing;
+ const bool Support=CanGrip&&Main&&Main->bOccupiesBothHands;
+ if(Support){SupportHandOffset=Main->SupportHandOffset;ElbowTargets[0]=Mesh->GetComponentTransform().InverseTransformPosition(C->GetActorLocation()+C->GetActorForwardVector()*30-C->GetActorRightVector()*80+FVector(0,0,25));}
+ SupportHandWeight=FMath::FInterpTo(SupportHandWeight,Support?1.f:0.f,Dt,12);
+ // 双手闲置持握将主手放在胸前；攻击仍让正式 Montage 决定主手轨迹，副手跟随其当帧握点。
+ WeaponHoldWeight=FMath::FInterpTo(WeaponHoldWeight,Support&&!Frame.bAttacking?1.f:0.f,Dt,16);
+ WeaponHoldTarget=Mesh->GetComponentTransform().InverseTransformPosition(C->GetActorLocation()+C->GetActorForwardVector()*28+C->GetActorRightVector()*4+FVector(0,0,8));
+ WeaponElbowTarget=Mesh->GetComponentTransform().InverseTransformPosition(C->GetActorLocation()+C->GetActorRightVector()*80+FVector(0,0,12));
+ GripWeights[0]=FMath::FInterpTo(GripWeights[0],CanGrip&&(Off||Support)?1.f:0.f,Dt,12);
+ GripWeights[1]=FMath::FInterpTo(GripWeights[1],CanGrip&&Main?1.f:0.f,Dt,12);
 }
