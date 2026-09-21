@@ -1,0 +1,1374 @@
+{
+  "from": "AetherLab",
+  "to": "AetherGameplay",
+  "files": [
+    {
+      "old": "Source/AetherLab/Abilities/AetherSpellAbility.cpp",
+      "dest": "Source/AetherGameplay/Private/Abilities/AetherSpellAbility.cpp",
+      "relative": "Abilities/AetherSpellAbility.cpp",
+      "sub": "Abilities/AetherSpellAbility.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Abilities/AetherSpellAbility.h",
+      "dest": "Source/AetherGameplay/Public/Abilities/AetherSpellAbility.h",
+      "relative": "Abilities/AetherSpellAbility.h",
+      "sub": "Abilities/AetherSpellAbility.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherActions.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/AetherActions.cpp",
+      "relative": "AetherActions.cpp",
+      "sub": "Interaction/AetherActions.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherActions.h",
+      "dest": "Source/AetherGameplay/Public/Interaction/AetherActions.h",
+      "relative": "AetherActions.h",
+      "sub": "Interaction/AetherActions.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherAdventure.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherAdventure.cpp",
+      "relative": "AetherAdventure.cpp",
+      "sub": "Framework/AetherAdventure.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherAdventure.h",
+      "dest": "Source/AetherGameplay/Public/Framework/AetherAdventure.h",
+      "relative": "AetherAdventure.h",
+      "sub": "Framework/AetherAdventure.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherAnimation.cpp",
+      "dest": "Source/AetherGameplay/Private/Animation/AetherAnimation.cpp",
+      "relative": "AetherAnimation.cpp",
+      "sub": "Animation/AetherAnimation.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherAnimation.h",
+      "dest": "Source/AetherGameplay/Public/Animation/AetherAnimation.h",
+      "relative": "AetherAnimation.h",
+      "sub": "Animation/AetherAnimation.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherAssetPreload.cpp",
+      "dest": "Source/AetherGameplay/Private/Assets/AetherAssetPreload.cpp",
+      "relative": "AetherAssetPreload.cpp",
+      "sub": "Assets/AetherAssetPreload.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherAssetPreload.h",
+      "dest": "Source/AetherGameplay/Public/Assets/AetherAssetPreload.h",
+      "relative": "AetherAssetPreload.h",
+      "sub": "Assets/AetherAssetPreload.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherCombat.cpp",
+      "dest": "Source/AetherGameplay/Private/Combat/AetherCombat.cpp",
+      "relative": "AetherCombat.cpp",
+      "sub": "Combat/AetherCombat.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherCombat.h",
+      "dest": "Source/AetherGameplay/Public/Combat/AetherCombat.h",
+      "relative": "AetherCombat.h",
+      "sub": "Combat/AetherCombat.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherContent.cpp",
+      "dest": "Source/AetherGameplay/Private/Assets/AetherContent.cpp",
+      "relative": "AetherContent.cpp",
+      "sub": "Assets/AetherContent.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherContent.h",
+      "dest": "Source/AetherGameplay/Public/Assets/AetherContent.h",
+      "relative": "AetherContent.h",
+      "sub": "Assets/AetherContent.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherEncounters.cpp",
+      "dest": "Source/AetherGameplay/Private/World/AetherEncounters.cpp",
+      "relative": "AetherEncounters.cpp",
+      "sub": "World/AetherEncounters.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherEncounters.h",
+      "dest": "Source/AetherGameplay/Public/World/AetherEncounters.h",
+      "relative": "AetherEncounters.h",
+      "sub": "World/AetherEncounters.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherEquipmentSmoke.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherEquipmentSmoke.cpp",
+      "relative": "AetherEquipmentSmoke.cpp",
+      "sub": "Tests/AetherEquipmentSmoke.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherFrontier.h",
+      "dest": "Source/AetherGameplay/Public/Framework/AetherFrontier.h",
+      "relative": "AetherFrontier.h",
+      "sub": "Framework/AetherFrontier.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherFrontierCharacter.cpp",
+      "dest": "Source/AetherGameplay/Private/Characters/AetherFrontierCharacter.cpp",
+      "relative": "AetherFrontierCharacter.cpp",
+      "sub": "Characters/AetherFrontierCharacter.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherFrontierInteraction.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/AetherFrontierInteraction.cpp",
+      "relative": "AetherFrontierInteraction.cpp",
+      "sub": "Interaction/AetherFrontierInteraction.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherFrontierWorld.cpp",
+      "dest": "Source/AetherGameplay/Private/World/AetherFrontierWorld.cpp",
+      "relative": "AetherFrontierWorld.cpp",
+      "sub": "World/AetherFrontierWorld.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherGuide.cpp",
+      "dest": "Source/AetherGameplay/Private/Quests/AetherGuide.cpp",
+      "relative": "AetherGuide.cpp",
+      "sub": "Quests/AetherGuide.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherGuide.h",
+      "dest": "Source/AetherGameplay/Public/Quests/AetherGuide.h",
+      "relative": "AetherGuide.h",
+      "sub": "Quests/AetherGuide.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherInputProfile.h",
+      "dest": "Source/AetherGameplay/Public/Input/AetherInputProfile.h",
+      "relative": "AetherInputProfile.h",
+      "sub": "Input/AetherInputProfile.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherInventoryCommand.cpp",
+      "dest": "Source/AetherGameplay/Private/Inventory/AetherInventoryCommand.cpp",
+      "relative": "AetherInventoryCommand.cpp",
+      "sub": "Inventory/AetherInventoryCommand.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherInventoryCommand.h",
+      "dest": "Source/AetherGameplay/Public/Inventory/AetherInventoryCommand.h",
+      "relative": "AetherInventoryCommand.h",
+      "sub": "Inventory/AetherInventoryCommand.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherInventoryData.cpp",
+      "dest": "Source/AetherGameplay/Private/Inventory/AetherInventoryData.cpp",
+      "relative": "AetherInventoryData.cpp",
+      "sub": "Inventory/AetherInventoryData.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherInventoryRules.cpp",
+      "dest": "Source/AetherGameplay/Private/Inventory/AetherInventoryRules.cpp",
+      "relative": "AetherInventoryRules.cpp",
+      "sub": "Inventory/AetherInventoryRules.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherInventoryRules.h",
+      "dest": "Source/AetherGameplay/Public/Inventory/AetherInventoryRules.h",
+      "relative": "AetherInventoryRules.h",
+      "sub": "Inventory/AetherInventoryRules.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherInventoryService.cpp",
+      "dest": "Source/AetherGameplay/Private/Inventory/AetherInventoryService.cpp",
+      "relative": "AetherInventoryService.cpp",
+      "sub": "Inventory/AetherInventoryService.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherPartyService.cpp",
+      "dest": "Source/AetherGameplay/Private/Party/AetherPartyService.cpp",
+      "relative": "AetherPartyService.cpp",
+      "sub": "Party/AetherPartyService.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherPersistence.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherPersistence.cpp",
+      "relative": "AetherPersistence.cpp",
+      "sub": "Persistence/AetherPersistence.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherPersistence.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherPersistence.h",
+      "relative": "AetherPersistence.h",
+      "sub": "Persistence/AetherPersistence.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherPhysicsDamage.cpp",
+      "dest": "Source/AetherGameplay/Private/Combat/AetherPhysicsDamage.cpp",
+      "relative": "AetherPhysicsDamage.cpp",
+      "sub": "Combat/AetherPhysicsDamage.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherPhysicsDamage.h",
+      "dest": "Source/AetherGameplay/Public/Combat/AetherPhysicsDamage.h",
+      "relative": "AetherPhysicsDamage.h",
+      "sub": "Combat/AetherPhysicsDamage.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherPlayerState.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherPlayerState.cpp",
+      "relative": "AetherPlayerState.cpp",
+      "sub": "Framework/AetherPlayerState.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherProfile.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherProfile.cpp",
+      "relative": "AetherProfile.cpp",
+      "sub": "Persistence/AetherProfile.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherProfile.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherProfile.h",
+      "relative": "AetherProfile.h",
+      "sub": "Persistence/AetherProfile.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherProgression.h",
+      "dest": "Source/AetherGameplay/Public/Framework/AetherProgression.h",
+      "relative": "AetherProgression.h",
+      "sub": "Framework/AetherProgression.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherQuestRuntime.cpp",
+      "dest": "Source/AetherGameplay/Private/Quests/AetherQuestRuntime.cpp",
+      "relative": "AetherQuestRuntime.cpp",
+      "sub": "Quests/AetherQuestRuntime.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherQuestRuntime.h",
+      "dest": "Source/AetherGameplay/Public/Quests/AetherQuestRuntime.h",
+      "relative": "AetherQuestRuntime.h",
+      "sub": "Quests/AetherQuestRuntime.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherRegions.cpp",
+      "dest": "Source/AetherGameplay/Private/World/AetherRegions.cpp",
+      "relative": "AetherRegions.cpp",
+      "sub": "World/AetherRegions.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherRules.h",
+      "dest": "Source/AetherGameplay/Public/Framework/AetherRules.h",
+      "relative": "AetherRules.h",
+      "sub": "Framework/AetherRules.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherServices.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/AetherServices.cpp",
+      "relative": "AetherServices.cpp",
+      "sub": "Interaction/AetherServices.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherServices.h",
+      "dest": "Source/AetherGameplay/Public/Interaction/AetherServices.h",
+      "relative": "AetherServices.h",
+      "sub": "Interaction/AetherServices.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherTravel.cpp",
+      "dest": "Source/AetherGameplay/Private/World/AetherTravel.cpp",
+      "relative": "AetherTravel.cpp",
+      "sub": "World/AetherTravel.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherTraversal.cpp",
+      "dest": "Source/AetherGameplay/Private/Movement/AetherTraversal.cpp",
+      "relative": "AetherTraversal.cpp",
+      "sub": "Movement/AetherTraversal.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherTraversal.h",
+      "dest": "Source/AetherGameplay/Public/Movement/AetherTraversal.h",
+      "relative": "AetherTraversal.h",
+      "sub": "Movement/AetherTraversal.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherV9Check.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV9Check.cpp",
+      "relative": "AetherV9Check.cpp",
+      "sub": "Tests/AetherV9Check.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherWorkshop.cpp",
+      "dest": "Source/AetherGameplay/Private/World/AetherWorkshop.cpp",
+      "relative": "AetherWorkshop.cpp",
+      "sub": "World/AetherWorkshop.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherWorldAssembly.cpp",
+      "dest": "Source/AetherGameplay/Private/World/AetherWorldAssembly.cpp",
+      "relative": "AetherWorldAssembly.cpp",
+      "sub": "World/AetherWorldAssembly.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherWorldCapability.cpp",
+      "dest": "Source/AetherGameplay/Private/World/AetherWorldCapability.cpp",
+      "relative": "AetherWorldCapability.cpp",
+      "sub": "World/AetherWorldCapability.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherWorldCapability.h",
+      "dest": "Source/AetherGameplay/Public/World/AetherWorldCapability.h",
+      "relative": "AetherWorldCapability.h",
+      "sub": "World/AetherWorldCapability.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherWorldDefinition.h",
+      "dest": "Source/AetherGameplay/Public/World/AetherWorldDefinition.h",
+      "relative": "AetherWorldDefinition.h",
+      "sub": "World/AetherWorldDefinition.h"
+    },
+    {
+      "old": "Source/AetherLab/AetherWorldState.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherWorldState.cpp",
+      "relative": "AetherWorldState.cpp",
+      "sub": "Persistence/AetherWorldState.cpp"
+    },
+    {
+      "old": "Source/AetherLab/AetherWorldState.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherWorldState.h",
+      "relative": "AetherWorldState.h",
+      "sub": "Persistence/AetherWorldState.h"
+    },
+    {
+      "old": "Source/AetherLab/Animation/AetherActionPresentation.cpp",
+      "dest": "Source/AetherGameplay/Private/Animation/AetherActionPresentation.cpp",
+      "relative": "Animation/AetherActionPresentation.cpp",
+      "sub": "Animation/AetherActionPresentation.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Animation/AetherActionPresentation.h",
+      "dest": "Source/AetherGameplay/Public/Animation/AetherActionPresentation.h",
+      "relative": "Animation/AetherActionPresentation.h",
+      "sub": "Animation/AetherActionPresentation.h"
+    },
+    {
+      "old": "Source/AetherLab/Characters/AetherFrontierCharacter.h",
+      "dest": "Source/AetherGameplay/Public/Characters/AetherFrontierCharacter.h",
+      "relative": "Characters/AetherFrontierCharacter.h",
+      "sub": "Characters/AetherFrontierCharacter.h"
+    },
+    {
+      "old": "Source/AetherLab/Combat/AetherAttributes.cpp",
+      "dest": "Source/AetherGameplay/Private/Combat/AetherAttributes.cpp",
+      "relative": "Combat/AetherAttributes.cpp",
+      "sub": "Combat/AetherAttributes.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Combat/AetherAttributes.h",
+      "dest": "Source/AetherGameplay/Public/Combat/AetherAttributes.h",
+      "relative": "Combat/AetherAttributes.h",
+      "sub": "Combat/AetherAttributes.h"
+    },
+    {
+      "old": "Source/AetherLab/Combat/AetherCombatComponent.cpp",
+      "dest": "Source/AetherGameplay/Private/Combat/AetherCombatComponent.cpp",
+      "relative": "Combat/AetherCombatComponent.cpp",
+      "sub": "Combat/AetherCombatComponent.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Combat/AetherCombatComponent.h",
+      "dest": "Source/AetherGameplay/Public/Combat/AetherCombatComponent.h",
+      "relative": "Combat/AetherCombatComponent.h",
+      "sub": "Combat/AetherCombatComponent.h"
+    },
+    {
+      "old": "Source/AetherLab/Combat/AetherProjectile.cpp",
+      "dest": "Source/AetherGameplay/Private/Combat/AetherProjectile.cpp",
+      "relative": "Combat/AetherProjectile.cpp",
+      "sub": "Combat/AetherProjectile.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Combat/AetherProjectile.h",
+      "dest": "Source/AetherGameplay/Public/Combat/AetherProjectile.h",
+      "relative": "Combat/AetherProjectile.h",
+      "sub": "Combat/AetherProjectile.h"
+    },
+    {
+      "old": "Source/AetherLab/Equipment/AetherElementDamage.h",
+      "dest": "Source/AetherGameplay/Public/Equipment/AetherElementDamage.h",
+      "relative": "Equipment/AetherElementDamage.h",
+      "sub": "Equipment/AetherElementDamage.h"
+    },
+    {
+      "old": "Source/AetherLab/Equipment/AetherEquipmentEffect.cpp",
+      "dest": "Source/AetherGameplay/Private/Equipment/AetherEquipmentEffect.cpp",
+      "relative": "Equipment/AetherEquipmentEffect.cpp",
+      "sub": "Equipment/AetherEquipmentEffect.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Equipment/AetherEquipmentEffect.h",
+      "dest": "Source/AetherGameplay/Public/Equipment/AetherEquipmentEffect.h",
+      "relative": "Equipment/AetherEquipmentEffect.h",
+      "sub": "Equipment/AetherEquipmentEffect.h"
+    },
+    {
+      "old": "Source/AetherLab/Equipment/AetherEquipmentWear.cpp",
+      "dest": "Source/AetherGameplay/Private/Equipment/AetherEquipmentWear.cpp",
+      "relative": "Equipment/AetherEquipmentWear.cpp",
+      "sub": "Equipment/AetherEquipmentWear.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Equipment/AetherNativeEquipmentPublication.cpp",
+      "dest": "Source/AetherGameplay/Private/Equipment/AetherNativeEquipmentPublication.cpp",
+      "relative": "Equipment/AetherNativeEquipmentPublication.cpp",
+      "sub": "Equipment/AetherNativeEquipmentPublication.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherFrontierMode.h",
+      "dest": "Source/AetherGameplay/Public/Framework/AetherFrontierMode.h",
+      "relative": "Framework/AetherFrontierMode.h",
+      "sub": "Framework/AetherFrontierMode.h"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherNativeCheckpoint.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherNativeCheckpoint.cpp",
+      "relative": "Framework/AetherNativeCheckpoint.cpp",
+      "sub": "Framework/AetherNativeCheckpoint.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherNativeContainers.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherNativeContainers.cpp",
+      "relative": "Framework/AetherNativeContainers.cpp",
+      "sub": "Framework/AetherNativeContainers.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherNativeContext.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherNativeContext.cpp",
+      "relative": "Framework/AetherNativeContext.cpp",
+      "sub": "Framework/AetherNativeContext.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherNativeRecovery.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherNativeRecovery.cpp",
+      "relative": "Framework/AetherNativeRecovery.cpp",
+      "sub": "Framework/AetherNativeRecovery.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherNativeRegions.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherNativeRegions.cpp",
+      "relative": "Framework/AetherNativeRegions.cpp",
+      "sub": "Framework/AetherNativeRegions.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherNativeRewards.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherNativeRewards.cpp",
+      "relative": "Framework/AetherNativeRewards.cpp",
+      "sub": "Framework/AetherNativeRewards.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherNativeScene.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherNativeScene.cpp",
+      "relative": "Framework/AetherNativeScene.cpp",
+      "sub": "Framework/AetherNativeScene.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherNativeSceneServices.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherNativeSceneServices.cpp",
+      "relative": "Framework/AetherNativeSceneServices.cpp",
+      "sub": "Framework/AetherNativeSceneServices.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherPlayerController.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherPlayerController.cpp",
+      "relative": "Framework/AetherPlayerController.cpp",
+      "sub": "Framework/AetherPlayerController.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherPlayerController.h",
+      "dest": "Source/AetherGameplay/Public/Framework/AetherPlayerController.h",
+      "relative": "Framework/AetherPlayerController.h",
+      "sub": "Framework/AetherPlayerController.h"
+    },
+    {
+      "old": "Source/AetherLab/Framework/AetherPlayerControllerV10.cpp",
+      "dest": "Source/AetherGameplay/Private/Framework/AetherPlayerControllerV10.cpp",
+      "relative": "Framework/AetherPlayerControllerV10.cpp",
+      "sub": "Framework/AetherPlayerControllerV10.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Input/AetherPlayerInputComponent.cpp",
+      "dest": "Source/AetherGameplay/Private/Input/AetherPlayerInputComponent.cpp",
+      "relative": "Input/AetherPlayerInputComponent.cpp",
+      "sub": "Input/AetherPlayerInputComponent.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Input/AetherPlayerInputComponent.h",
+      "dest": "Source/AetherGameplay/Public/Input/AetherPlayerInputComponent.h",
+      "relative": "Input/AetherPlayerInputComponent.h",
+      "sub": "Input/AetherPlayerInputComponent.h"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherDialogueSession.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/AetherDialogueSession.cpp",
+      "relative": "Interaction/AetherDialogueSession.cpp",
+      "sub": "Interaction/AetherDialogueSession.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherDialogueSession.h",
+      "dest": "Source/AetherGameplay/Public/Interaction/AetherDialogueSession.h",
+      "relative": "Interaction/AetherDialogueSession.h",
+      "sub": "Interaction/AetherDialogueSession.h"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherLiveTradeSession.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/AetherLiveTradeSession.cpp",
+      "relative": "Interaction/AetherLiveTradeSession.cpp",
+      "sub": "Interaction/AetherLiveTradeSession.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherLiveTradeSession.h",
+      "dest": "Source/AetherGameplay/Public/Interaction/AetherLiveTradeSession.h",
+      "relative": "Interaction/AetherLiveTradeSession.h",
+      "sub": "Interaction/AetherLiveTradeSession.h"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherNativeInteraction.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/AetherNativeInteraction.cpp",
+      "relative": "Interaction/AetherNativeInteraction.cpp",
+      "sub": "Interaction/AetherNativeInteraction.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherNativeInteraction.h",
+      "dest": "Source/AetherGameplay/Public/Interaction/AetherNativeInteraction.h",
+      "relative": "Interaction/AetherNativeInteraction.h",
+      "sub": "Interaction/AetherNativeInteraction.h"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherNearbyRegistry.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/AetherNearbyRegistry.cpp",
+      "relative": "Interaction/AetherNearbyRegistry.cpp",
+      "sub": "Interaction/AetherNearbyRegistry.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherNearbyRegistry.h",
+      "dest": "Source/AetherGameplay/Public/Interaction/AetherNearbyRegistry.h",
+      "relative": "Interaction/AetherNearbyRegistry.h",
+      "sub": "Interaction/AetherNearbyRegistry.h"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherSceneServiceHandlers.h",
+      "dest": "Source/AetherGameplay/Public/Interaction/AetherSceneServiceHandlers.h",
+      "relative": "Interaction/AetherSceneServiceHandlers.h",
+      "sub": "Interaction/AetherSceneServiceHandlers.h"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherWorldActionComponent.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/AetherWorldActionComponent.cpp",
+      "relative": "Interaction/AetherWorldActionComponent.cpp",
+      "sub": "Interaction/AetherWorldActionComponent.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/AetherWorldActionComponent.h",
+      "dest": "Source/AetherGameplay/Public/Interaction/AetherWorldActionComponent.h",
+      "relative": "Interaction/AetherWorldActionComponent.h",
+      "sub": "Interaction/AetherWorldActionComponent.h"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/Services/AetherSceneEncounter.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/Services/AetherSceneEncounter.cpp",
+      "relative": "Interaction/Services/AetherSceneEncounter.cpp",
+      "sub": "Interaction/Services/AetherSceneEncounter.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/Services/AetherSceneMechanism.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/Services/AetherSceneMechanism.cpp",
+      "relative": "Interaction/Services/AetherSceneMechanism.cpp",
+      "sub": "Interaction/Services/AetherSceneMechanism.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/Services/AetherSceneServiceRegistry.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/Services/AetherSceneServiceRegistry.cpp",
+      "relative": "Interaction/Services/AetherSceneServiceRegistry.cpp",
+      "sub": "Interaction/Services/AetherSceneServiceRegistry.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/Services/AetherSceneSocial.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/Services/AetherSceneSocial.cpp",
+      "relative": "Interaction/Services/AetherSceneSocial.cpp",
+      "sub": "Interaction/Services/AetherSceneSocial.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Interaction/Services/AetherSceneTraining.cpp",
+      "dest": "Source/AetherGameplay/Private/Interaction/Services/AetherSceneTraining.cpp",
+      "relative": "Interaction/Services/AetherSceneTraining.cpp",
+      "sub": "Interaction/Services/AetherSceneTraining.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Inventory/AetherNativeInventory.cpp",
+      "dest": "Source/AetherGameplay/Private/Inventory/AetherNativeInventory.cpp",
+      "relative": "Inventory/AetherNativeInventory.cpp",
+      "sub": "Inventory/AetherNativeInventory.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Inventory/AetherNativeInventory.h",
+      "dest": "Source/AetherGameplay/Public/Inventory/AetherNativeInventory.h",
+      "relative": "Inventory/AetherNativeInventory.h",
+      "sub": "Inventory/AetherNativeInventory.h"
+    },
+    {
+      "old": "Source/AetherLab/Inventory/AetherResourceGate.cpp",
+      "dest": "Source/AetherGameplay/Private/Inventory/AetherResourceGate.cpp",
+      "relative": "Inventory/AetherResourceGate.cpp",
+      "sub": "Inventory/AetherResourceGate.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Inventory/AetherResourceGate.h",
+      "dest": "Source/AetherGameplay/Public/Inventory/AetherResourceGate.h",
+      "relative": "Inventory/AetherResourceGate.h",
+      "sub": "Inventory/AetherResourceGate.h"
+    },
+    {
+      "old": "Source/AetherLab/Movement/AetherCharacterMovement.cpp",
+      "dest": "Source/AetherGameplay/Private/Movement/AetherCharacterMovement.cpp",
+      "relative": "Movement/AetherCharacterMovement.cpp",
+      "sub": "Movement/AetherCharacterMovement.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Movement/AetherCharacterMovement.h",
+      "dest": "Source/AetherGameplay/Public/Movement/AetherCharacterMovement.h",
+      "relative": "Movement/AetherCharacterMovement.h",
+      "sub": "Movement/AetherCharacterMovement.h"
+    },
+    {
+      "old": "Source/AetherLab/Movement/AetherDodgeAbility.cpp",
+      "dest": "Source/AetherGameplay/Private/Movement/AetherDodgeAbility.cpp",
+      "relative": "Movement/AetherDodgeAbility.cpp",
+      "sub": "Movement/AetherDodgeAbility.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Movement/AetherDodgeAbility.h",
+      "dest": "Source/AetherGameplay/Public/Movement/AetherDodgeAbility.h",
+      "relative": "Movement/AetherDodgeAbility.h",
+      "sub": "Movement/AetherDodgeAbility.h"
+    },
+    {
+      "old": "Source/AetherLab/Movement/AetherVaultAbility.cpp",
+      "dest": "Source/AetherGameplay/Private/Movement/AetherVaultAbility.cpp",
+      "relative": "Movement/AetherVaultAbility.cpp",
+      "sub": "Movement/AetherVaultAbility.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Movement/AetherVaultAbility.h",
+      "dest": "Source/AetherGameplay/Public/Movement/AetherVaultAbility.h",
+      "relative": "Movement/AetherVaultAbility.h",
+      "sub": "Movement/AetherVaultAbility.h"
+    },
+    {
+      "old": "Source/AetherLab/Networking/AetherCommandClient.cpp",
+      "dest": "Source/AetherGameplay/Private/Networking/AetherCommandClient.cpp",
+      "relative": "Networking/AetherCommandClient.cpp",
+      "sub": "Networking/AetherCommandClient.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Networking/AetherCommandClient.h",
+      "dest": "Source/AetherGameplay/Public/Networking/AetherCommandClient.h",
+      "relative": "Networking/AetherCommandClient.h",
+      "sub": "Networking/AetherCommandClient.h"
+    },
+    {
+      "old": "Source/AetherLab/Networking/AetherCommandRuntime.cpp",
+      "dest": "Source/AetherGameplay/Private/Networking/AetherCommandRuntime.cpp",
+      "relative": "Networking/AetherCommandRuntime.cpp",
+      "sub": "Networking/AetherCommandRuntime.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Networking/AetherCommandRuntime.h",
+      "dest": "Source/AetherGameplay/Public/Networking/AetherCommandRuntime.h",
+      "relative": "Networking/AetherCommandRuntime.h",
+      "sub": "Networking/AetherCommandRuntime.h"
+    },
+    {
+      "old": "Source/AetherLab/Networking/AetherV10Packets.cpp",
+      "dest": "Source/AetherGameplay/Private/Networking/AetherV10Packets.cpp",
+      "relative": "Networking/AetherV10Packets.cpp",
+      "sub": "Networking/AetherV10Packets.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Networking/AetherV10Packets.h",
+      "dest": "Source/AetherGameplay/Public/Networking/AetherV10Packets.h",
+      "relative": "Networking/AetherV10Packets.h",
+      "sub": "Networking/AetherV10Packets.h"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherFrontierSave.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherFrontierSave.h",
+      "relative": "Persistence/AetherFrontierSave.h",
+      "sub": "Persistence/AetherFrontierSave.h"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherLegacyProfileConverter.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherLegacyProfileConverter.cpp",
+      "relative": "Persistence/AetherLegacyProfileConverter.cpp",
+      "sub": "Persistence/AetherLegacyProfileConverter.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherLegacyProfileConverter.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherLegacyProfileConverter.h",
+      "relative": "Persistence/AetherLegacyProfileConverter.h",
+      "sub": "Persistence/AetherLegacyProfileConverter.h"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherLegacyV9Reader.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherLegacyV9Reader.cpp",
+      "relative": "Persistence/AetherLegacyV9Reader.cpp",
+      "sub": "Persistence/AetherLegacyV9Reader.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherLegacyV9Reader.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherLegacyV9Reader.h",
+      "relative": "Persistence/AetherLegacyV9Reader.h",
+      "sub": "Persistence/AetherLegacyV9Reader.h"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherLegacyWorldConverter.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherLegacyWorldConverter.cpp",
+      "relative": "Persistence/AetherLegacyWorldConverter.cpp",
+      "sub": "Persistence/AetherLegacyWorldConverter.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherLegacyWorldConverter.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherLegacyWorldConverter.h",
+      "relative": "Persistence/AetherLegacyWorldConverter.h",
+      "sub": "Persistence/AetherLegacyWorldConverter.h"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherNativeEncounterRestore.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherNativeEncounterRestore.cpp",
+      "relative": "Persistence/AetherNativeEncounterRestore.cpp",
+      "sub": "Persistence/AetherNativeEncounterRestore.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherNativeMigrationSource.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherNativeMigrationSource.cpp",
+      "relative": "Persistence/AetherNativeMigrationSource.cpp",
+      "sub": "Persistence/AetherNativeMigrationSource.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherNativeMigrationSource.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherNativeMigrationSource.h",
+      "relative": "Persistence/AetherNativeMigrationSource.h",
+      "sub": "Persistence/AetherNativeMigrationSource.h"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherNativePersistence.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherNativePersistence.cpp",
+      "relative": "Persistence/AetherNativePersistence.cpp",
+      "sub": "Persistence/AetherNativePersistence.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherNativePersistence.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherNativePersistence.h",
+      "relative": "Persistence/AetherNativePersistence.h",
+      "sub": "Persistence/AetherNativePersistence.h"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherNativeProfilePublication.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherNativeProfilePublication.cpp",
+      "relative": "Persistence/AetherNativeProfilePublication.cpp",
+      "sub": "Persistence/AetherNativeProfilePublication.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherNativeWorldPhysics.cpp",
+      "dest": "Source/AetherGameplay/Private/Persistence/AetherNativeWorldPhysics.cpp",
+      "relative": "Persistence/AetherNativeWorldPhysics.cpp",
+      "sub": "Persistence/AetherNativeWorldPhysics.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Persistence/AetherNativeWorldPhysics.h",
+      "dest": "Source/AetherGameplay/Public/Persistence/AetherNativeWorldPhysics.h",
+      "relative": "Persistence/AetherNativeWorldPhysics.h",
+      "sub": "Persistence/AetherNativeWorldPhysics.h"
+    },
+    {
+      "old": "Source/AetherLab/Presentation/AetherCharacterMenu.cpp",
+      "dest": "Source/AetherGameplay/Private/Presentation/AetherCharacterMenu.cpp",
+      "relative": "Presentation/AetherCharacterMenu.cpp",
+      "sub": "Presentation/AetherCharacterMenu.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Presentation/AetherMapTravel.cpp",
+      "dest": "Source/AetherGameplay/Private/Presentation/AetherMapTravel.cpp",
+      "relative": "Presentation/AetherMapTravel.cpp",
+      "sub": "Presentation/AetherMapTravel.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Presentation/AetherMenuSubsystem.cpp",
+      "dest": "Source/AetherGameplay/Private/Presentation/AetherMenuSubsystem.cpp",
+      "relative": "Presentation/AetherMenuSubsystem.cpp",
+      "sub": "Presentation/AetherMenuSubsystem.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Presentation/AetherMenuSubsystem.h",
+      "dest": "Source/AetherGameplay/Public/Presentation/AetherMenuSubsystem.h",
+      "relative": "Presentation/AetherMenuSubsystem.h",
+      "sub": "Presentation/AetherMenuSubsystem.h"
+    },
+    {
+      "old": "Source/AetherLab/Presentation/AetherPlayerPreferences.h",
+      "dest": "Source/AetherGameplay/Public/Presentation/AetherPlayerPreferences.h",
+      "relative": "Presentation/AetherPlayerPreferences.h",
+      "sub": "Presentation/AetherPlayerPreferences.h"
+    },
+    {
+      "old": "Source/AetherLab/Skills/AetherNativeSkillAvatar.cpp",
+      "dest": "Source/AetherGameplay/Private/Skills/AetherNativeSkillAvatar.cpp",
+      "relative": "Skills/AetherNativeSkillAvatar.cpp",
+      "sub": "Skills/AetherNativeSkillAvatar.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Skills/AetherSkillAbilityBinding.cpp",
+      "dest": "Source/AetherGameplay/Private/Skills/AetherSkillAbilityBinding.cpp",
+      "relative": "Skills/AetherSkillAbilityBinding.cpp",
+      "sub": "Skills/AetherSkillAbilityBinding.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Skills/AetherSkillAbilityBinding.h",
+      "dest": "Source/AetherGameplay/Public/Skills/AetherSkillAbilityBinding.h",
+      "relative": "Skills/AetherSkillAbilityBinding.h",
+      "sub": "Skills/AetherSkillAbilityBinding.h"
+    },
+    {
+      "old": "Source/AetherLab/Skills/AetherSkillGrantSnapshot.cpp",
+      "dest": "Source/AetherGameplay/Private/Skills/AetherSkillGrantSnapshot.cpp",
+      "relative": "Skills/AetherSkillGrantSnapshot.cpp",
+      "sub": "Skills/AetherSkillGrantSnapshot.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Skills/AetherTemporarySkills.cpp",
+      "dest": "Source/AetherGameplay/Private/Skills/AetherTemporarySkills.cpp",
+      "relative": "Skills/AetherTemporarySkills.cpp",
+      "sub": "Skills/AetherTemporarySkills.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherAnimationCheck.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherAnimationCheck.cpp",
+      "relative": "Tests/AetherAnimationCheck.cpp",
+      "sub": "Tests/AetherAnimationCheck.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherClosureCheck.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherClosureCheck.cpp",
+      "relative": "Tests/AetherClosureCheck.cpp",
+      "sub": "Tests/AetherClosureCheck.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherDataCheck.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherDataCheck.cpp",
+      "relative": "Tests/AetherDataCheck.cpp",
+      "sub": "Tests/AetherDataCheck.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherDataRulesTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherDataRulesTests.cpp",
+      "relative": "Tests/AetherDataRulesTests.cpp",
+      "sub": "Tests/AetherDataRulesTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherFrontierSmoke.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherFrontierSmoke.cpp",
+      "relative": "Tests/AetherFrontierSmoke.cpp",
+      "sub": "Tests/AetherFrontierSmoke.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherFrontierTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherFrontierTests.cpp",
+      "relative": "Tests/AetherFrontierTests.cpp",
+      "sub": "Tests/AetherFrontierTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherGuidanceCheck.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherGuidanceCheck.cpp",
+      "relative": "Tests/AetherGuidanceCheck.cpp",
+      "sub": "Tests/AetherGuidanceCheck.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherLegacyFixture.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherLegacyFixture.cpp",
+      "relative": "Tests/AetherLegacyFixture.cpp",
+      "sub": "Tests/AetherLegacyFixture.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherLegacyFixture.h",
+      "dest": "Source/AetherGameplay/Public/Tests/AetherLegacyFixture.h",
+      "relative": "Tests/AetherLegacyFixture.h",
+      "sub": "Tests/AetherLegacyFixture.h"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherReactionCheck.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherReactionCheck.cpp",
+      "relative": "Tests/AetherReactionCheck.cpp",
+      "sub": "Tests/AetherReactionCheck.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherServiceCheck.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherServiceCheck.cpp",
+      "relative": "Tests/AetherServiceCheck.cpp",
+      "sub": "Tests/AetherServiceCheck.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherTests.cpp",
+      "relative": "Tests/AetherTests.cpp",
+      "sub": "Tests/AetherTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherTradeNetworkProbe.h",
+      "dest": "Source/AetherGameplay/Public/Tests/AetherTradeNetworkProbe.h",
+      "relative": "Tests/AetherTradeNetworkProbe.h",
+      "sub": "Tests/AetherTradeNetworkProbe.h"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV10BaselineTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV10BaselineTests.cpp",
+      "relative": "Tests/AetherV10BaselineTests.cpp",
+      "sub": "Tests/AetherV10BaselineTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV10DodgeTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV10DodgeTests.cpp",
+      "relative": "Tests/AetherV10DodgeTests.cpp",
+      "sub": "Tests/AetherV10DodgeTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV10LegacyReaderTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV10LegacyReaderTests.cpp",
+      "relative": "Tests/AetherV10LegacyReaderTests.cpp",
+      "sub": "Tests/AetherV10LegacyReaderTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV10LiveInteractionTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV10LiveInteractionTests.cpp",
+      "relative": "Tests/AetherV10LiveInteractionTests.cpp",
+      "sub": "Tests/AetherV10LiveInteractionTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV10LocomotionTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV10LocomotionTests.cpp",
+      "relative": "Tests/AetherV10LocomotionTests.cpp",
+      "sub": "Tests/AetherV10LocomotionTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV10MenuTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV10MenuTests.cpp",
+      "relative": "Tests/AetherV10MenuTests.cpp",
+      "sub": "Tests/AetherV10MenuTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV10ProfileConversionTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV10ProfileConversionTests.cpp",
+      "relative": "Tests/AetherV10ProfileConversionTests.cpp",
+      "sub": "Tests/AetherV10ProfileConversionTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV10SkillAbilityTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV10SkillAbilityTests.cpp",
+      "relative": "Tests/AetherV10SkillAbilityTests.cpp",
+      "sub": "Tests/AetherV10SkillAbilityTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV10WorldConversionTests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV10WorldConversionTests.cpp",
+      "relative": "Tests/AetherV10WorldConversionTests.cpp",
+      "sub": "Tests/AetherV10WorldConversionTests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV5Tests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV5Tests.cpp",
+      "relative": "Tests/AetherV5Tests.cpp",
+      "sub": "Tests/AetherV5Tests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/Tests/AetherV9Tests.cpp",
+      "dest": "Source/AetherGameplay/Private/Tests/AetherV9Tests.cpp",
+      "relative": "Tests/AetherV9Tests.cpp",
+      "sub": "Tests/AetherV9Tests.cpp"
+    },
+    {
+      "old": "Source/AetherLab/World/AetherFrontierProp.h",
+      "dest": "Source/AetherGameplay/Public/World/AetherFrontierProp.h",
+      "relative": "World/AetherFrontierProp.h",
+      "sub": "World/AetherFrontierProp.h"
+    },
+    {
+      "old": "Source/AetherLab/World/AetherFrontierState.h",
+      "dest": "Source/AetherGameplay/Public/World/AetherFrontierState.h",
+      "relative": "World/AetherFrontierState.h",
+      "sub": "World/AetherFrontierState.h"
+    },
+    {
+      "old": "Source/AetherLab/World/AetherNativeContainer.cpp",
+      "dest": "Source/AetherGameplay/Private/World/AetherNativeContainer.cpp",
+      "relative": "World/AetherNativeContainer.cpp",
+      "sub": "World/AetherNativeContainer.cpp"
+    },
+    {
+      "old": "Source/AetherLab/World/AetherNativeContainer.h",
+      "dest": "Source/AetherGameplay/Public/World/AetherNativeContainer.h",
+      "relative": "World/AetherNativeContainer.h",
+      "sub": "World/AetherNativeContainer.h"
+    }
+  ],
+  "redirects": [
+    {
+      "kind": "CLASS",
+      "name": "AetherSpellAbility"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherMeleeAbility"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherReviveAbility"
+    },
+    {
+      "kind": "ENUM",
+      "name": "EAetherObjectKind"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherObjectSpec"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherWorldObject"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherQuest"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherAdventureState"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherCharacterSave"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherAdventureSave"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherAdventureMode"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherModularAdventureMode"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherAdventureHUD"
+    },
+    {
+      "kind": "ENUM",
+      "name": "EAetherMotionState"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherAnimInstance"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherAssetPreload"
+    },
+    {
+      "kind": "ENUM",
+      "name": "EAetherFighter"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherCharacter"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherCharacterDefinition"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherLevelObject"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherLevelEnemy"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherLevelDefinition"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherGameContent"
+    },
+    {
+      "kind": "ENUM",
+      "name": "EAetherEncounterPhase"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherEncounterRun"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherCamp"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherEncounterDirector"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherInputProfile"
+    },
+    {
+      "kind": "ENUM",
+      "name": "EAetherInventoryResult"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherInventoryCommand"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherInventoryReceipt"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherImpactDamagePolicy"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherPhysicsDamageComponent"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherItemStack"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherInventoryData"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherProfile"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherSkillGrantPresentation"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherSkillGrantSnapshot"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherPlayerState"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherWorldFacts"
+    },
+    {
+      "kind": "ENUM",
+      "name": "EAetherServiceResult"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherWorldServiceCommand"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherWorldServiceReceipt"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherTraversalComponent"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherActionPresentation"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherActionSet"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherFrontierCharacter"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherAttributes"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherBodyStatusPresentation"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherCombatComponent"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherProjectile"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherFireDamage"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherWaterDamage"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherFrostDamage"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherStormDamage"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherEquipmentEffect"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherFrontierMode"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherPlayerController"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherPlayerInputComponent"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherDialogueSession"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherNearbyRegistry"
+    },
+    {
+      "kind": "ENUM",
+      "name": "EAetherWorldActionPhase"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherWorldActionComponent"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherResourceGate"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherCharacterMovement"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherDodgeCost"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherDodgeCooldown"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherDodgeInvulnerability"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherDodgeAbility"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherVaultAbility"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherCommandClient"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherCommandRuntime"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherV10CommandPacket"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherV10ReplyPacket"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherV10SnapshotChunk"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherV10ContainerQuery"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherWorldLoot"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherCampReceipt"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherFrontierSave"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherNativePersistence"
+    },
+    {
+      "kind": "ENUM",
+      "name": "EAetherMenuPage"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherMenuPageMemory"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherMenuSubsystem"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherPlayerPreferences"
+    },
+    {
+      "kind": "STRUCT",
+      "name": "AetherLegacyRecordV6"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherFrontierProp"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherFrontierState"
+    },
+    {
+      "kind": "CLASS",
+      "name": "AetherNativeContainer"
+    }
+  ]
+}

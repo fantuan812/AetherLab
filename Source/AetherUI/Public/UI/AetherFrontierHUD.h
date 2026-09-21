@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
-#include "AetherGuide.h"
+#include "Quests/AetherGuide.h"
 #include "AetherFrontierHUD.generated.h"
 
 class AAetherFrontierProp;

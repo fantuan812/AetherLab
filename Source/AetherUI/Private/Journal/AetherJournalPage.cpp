@@ -9,7 +9,7 @@
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/ScrollBox.h"
-#include "AetherGuide.h"
+#include "Quests/AetherGuide.h"
 #include "World/AetherFrontierState.h"
 #include "GameFramework/GameStateBase.h"
 using namespace AetherPageWidgets;

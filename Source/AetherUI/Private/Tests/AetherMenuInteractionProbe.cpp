@@ -1,7 +1,7 @@
 #include "Tests/AetherMenuInteractionProbe.h"
 #include "UI/AetherFrontierHUD.h"
 #include "AetherFrontierPanel.h"
-#include "AetherFrontier.h"
+#include "Framework/AetherFrontier.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Widget.h"
 #include "Engine/Engine.h"

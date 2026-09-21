@@ -4,7 +4,7 @@ import re
 import unreal as ue
 
 root = pathlib.Path(ue.Paths.project_dir())
-source = (root / "Source/AetherLab/Input/AetherPlayerInputComponent.cpp").read_text(encoding="utf-8-sig")
+source = (root / "Source/AetherGameplay/Private/Input/AetherPlayerInputComponent.cpp").read_text(encoding="utf-8-sig")
 # 绑定声明是动作标识和默认键的唯一作者来源；相同动作的 Started/Completed 合并为一项。
 rows = dict(re.findall(r'Bind\("([^"]+)",EKeys::([A-Za-z0-9_]+),', source))
 rows.update(Forward="W", Backward="S", Left="A", Right="D",

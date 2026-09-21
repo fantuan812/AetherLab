@@ -1,7 +1,7 @@
 #include "Settings/AetherSettingsPage.h"
 #include "UI/AetherPageWidgets.h"
 #include "Presentation/AetherPlayerPreferences.h"
-#include "AetherInputProfile.h"
+#include "Input/AetherInputProfile.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "AetherMotionComponent.h"
 #include "Components/SpinBox.h"

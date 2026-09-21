@@ -134,3 +134,6 @@
 
 ### 身体状态与技能节点
 实际 WBP 技能节点、服务器状态实例和统一详情/HUD 已接入；临时授权撤销支持失败重试及新身体完整恢复。未编译、未测试，详见 ../Architecture/V10-status-skill-widgets.zh-CN.md。
+
+### Gameplay 编译边界与职责收口
+玩法迁入独立 Public/Private 目录，UI 不再依赖装配根；现场服务注册表和动画快照/图/接触职责已拆分，增加逐类型重定向。未编译、未测试；详见 ../Architecture/V10-gameplay-boundary.zh-CN.md。

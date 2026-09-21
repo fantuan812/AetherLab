@@ -1,6 +1,6 @@
 #include "Party/AetherPartyPage.h"
 #include "UI/AetherPageWidgets.h"
-#include "AetherFrontier.h"
+#include "Framework/AetherFrontier.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/ScrollBox.h"

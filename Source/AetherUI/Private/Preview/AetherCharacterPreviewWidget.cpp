@@ -1,6 +1,6 @@
 #include "Preview/AetherCharacterPreviewWidget.h"
 #include "Preview/AetherCharacterPreviewSubsystem.h"
-#include "AetherCombat.h"
+#include "Combat/AetherCombat.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"

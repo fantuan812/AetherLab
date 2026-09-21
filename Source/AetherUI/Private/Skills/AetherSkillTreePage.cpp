@@ -6,7 +6,7 @@
 #include "Inspection/AetherInspectionWidgets.h"
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Characters/AetherFrontierCharacter.h"
-#include "AetherFrontier.h"
+#include "Framework/AetherFrontier.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -21,7 +21,7 @@
 #include "Definitions/AetherV10Definitions.h"
 #include "InputCoreTypes.h"
 #include "Interaction/AetherNearbyRegistry.h"
-#include "AetherGuide.h"
+#include "Quests/AetherGuide.h"
 #include "TimerManager.h"
 
 TSharedRef<SWidget> UAetherSkillTreePage::RebuildWidget()

@@ -7,7 +7,7 @@
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "UI/AetherPageWidgets.h"
-#include "AetherFrontier.h"
+#include "Framework/AetherFrontier.h"
 #include "Networking/AetherCommandClient.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "Presentation/AetherMenuSubsystem.h"
