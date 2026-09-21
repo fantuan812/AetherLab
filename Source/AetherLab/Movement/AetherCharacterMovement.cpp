@@ -2,6 +2,7 @@
 #include "Characters/AetherFrontierCharacter.h"
 #include "Combat/AetherEquipmentMath.h"
 #include "Inventory/AetherResourceGate.h"
+#include "Interaction/AetherWorldActionComponent.h"
 
 namespace
 {
@@ -27,6 +28,7 @@ float UAetherCharacterMovement::GetMaxSpeed() const
 {
     const auto* C=Cast<AAetherFrontierCharacter>(CharacterOwner);
     if(!C)return Super::GetMaxSpeed();
+    if(C->WorldActions&&C->WorldActions->IsBusy())return 0;
     if(C->ResourceGate->IsBlocked()||!C->Alive()||C->bTravelPending||C->CombatTime()<C->StunUntil)return 0;
     if(MovementMode!=MOVE_Walking&&MovementMode!=MOVE_NavWalking)return Super::GetMaxSpeed();
     // 唯一的行走速度决策点，基类战斗 Tick 的旧 MaxWalkSpeed 不再覆盖玩家姿态。

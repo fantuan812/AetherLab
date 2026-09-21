@@ -2,6 +2,8 @@
 #include "AetherMotionComponent.h"
 #include "AnimNodes/AnimNode_RetargetPoseFromMesh.h"
 #include "AetherCombat.h"
+#include "Characters/AetherFrontierCharacter.h"
+#include "Interaction/AetherWorldActionComponent.h"
 #include "AetherContent.h"
 #include "Animation/AnimInstanceProxy.h"
 #include "Animation/AnimNodeSpaceConversions.h"
@@ -28,8 +30,10 @@ struct FAetherAnimProxy : FAnimInstanceProxy
  FAnimNode_TwoWayBlend GeneratedBlend;
  FAnimNode_TwoWayBlend Travel;
  FAnimNode_Slot Action;
+ FAnimNode_SequencePlayer_Standalone Controlled;
+ FAnimNode_TwoWayBlend ControlledBlend;
  FAnimNode_ConvertLocalToComponentSpace ToComponent;
- FAnimNode_TwoBoneIK LeftFoot,RightFoot;
+ FAnimNode_TwoBoneIK LeftFoot,RightFoot,LeftHand,RightHand;
  FAnimNode_ModifyBone GuardArm;
  FAnimNode_ConvertComponentToLocalSpace ToLocal;
  EAetherMotionState Previous=EAetherMotionState::Grounded;
@@ -41,11 +45,14 @@ struct FAetherAnimProxy : FAnimInstanceProxy
   Generated.RetargetFrom=ERetargetSourceMode::CustomSkeletalMeshComponent;
   GeneratedBlend.A.SetLinkNode(&Ground);GeneratedBlend.B.SetLinkNode(&Generated);GeneratedBlend.Alpha=0;
   Travel.A.SetLinkNode(&GeneratedBlend);Travel.B.SetLinkNode(&Air);Action.Source.SetLinkNode(&Travel);Action.SlotName="DefaultSlot";Action.bAlwaysUpdateSourcePose=true;
-  ToComponent.LocalPose.SetLinkNode(&Action);LeftFoot.ComponentPose.SetLinkNode(&ToComponent);RightFoot.ComponentPose.SetLinkNode(&LeftFoot);
-  GuardArm.ComponentPose.SetLinkNode(&RightFoot);GuardArm.BoneToModify.BoneName="lowerarm_l";GuardArm.RotationMode=BMM_Additive;GuardArm.RotationSpace=BCS_BoneSpace;GuardArm.Rotation=FRotator(-55,0,20);
+  ControlledBlend.A.SetLinkNode(&Action);ControlledBlend.B.SetLinkNode(&Controlled);ControlledBlend.Alpha=0;
+  ToComponent.LocalPose.SetLinkNode(&ControlledBlend);LeftFoot.ComponentPose.SetLinkNode(&ToComponent);RightFoot.ComponentPose.SetLinkNode(&LeftFoot);
+  LeftHand.ComponentPose.SetLinkNode(&RightFoot);RightHand.ComponentPose.SetLinkNode(&LeftHand);
+  GuardArm.ComponentPose.SetLinkNode(&RightHand);GuardArm.BoneToModify.BoneName="lowerarm_l";GuardArm.RotationMode=BMM_Additive;GuardArm.RotationSpace=BCS_BoneSpace;GuardArm.Rotation=FRotator(-55,0,20);
   ToLocal.ComponentPose.SetLinkNode(&GuardArm);
-  for(auto* Foot:{&LeftFoot,&RightFoot}){Foot->EffectorLocationSpace=BCS_ComponentSpace;Foot->JointTargetLocationSpace=BCS_ComponentSpace;Foot->bAllowStretching=false;Foot->bMaintainEffectorRelRot=true;Foot->Alpha=0;}
+  for(auto* Foot:{&LeftFoot,&RightFoot,&LeftHand,&RightHand}){Foot->EffectorLocationSpace=BCS_ComponentSpace;Foot->JointTargetLocationSpace=BCS_ComponentSpace;Foot->bAllowStretching=false;Foot->bMaintainEffectorRelRot=true;Foot->Alpha=0;}
   LeftFoot.IKBone.BoneName="foot_l";RightFoot.IKBone.BoneName="foot_r";
+  LeftHand.IKBone.BoneName="hand_l";RightHand.IKBone.BoneName="hand_r";
   FAnimInstanceProxy::Initialize(Instance);
  }
  virtual void PreUpdate(UAnimInstance* Instance,float Dt) override
@@ -60,16 +67,21 @@ struct FAetherAnimProxy : FAnimInstanceProxy
   Ground.SetPosition(Position);Ground.SetPlayRate(FMath::Clamp(A->GroundSpeed/450.f,1.f,1.4f));Travel.Alpha=A->AirWeight;
   UAnimSequence* Clip=A->MotionState==EAetherMotionState::Rising?A->JumpClip.Get():A->MotionState==EAetherMotionState::Falling?A->FallClip.Get():A->LandClip.Get();
   if(Air.GetSequence()!=Clip||Previous!=A->MotionState){Air.SetSequence(Clip);Air.SetAccumulatedTime(0);}
-  const bool Hold=A->MotionState==EAetherMotionState::Downed||A->MotionState==EAetherMotionState::Stunned;
-  Air.SetPlayRate(Hold?0.f:1.f);Air.SetLoopAnimation(A->MotionState==EAetherMotionState::Falling);if(Hold)Air.SetAccumulatedTime(.13f);
+  Air.SetPlayRate(1.f);Air.SetLoopAnimation(A->MotionState==EAetherMotionState::Falling);
+  Controlled.SetSequence(A->ControlledClip);Controlled.SetPlayRate(0);Controlled.SetLoopAnimation(false);
+  Controlled.SetAccumulatedTime(A->ControlledTime);ControlledBlend.Alpha=A->ControlledClip?A->ControlledWeight:0;
   Previous=A->MotionState;
   LeftFoot.Alpha=RightFoot.Alpha=A->FootWeight;LeftFoot.EffectorLocation=A->FootTargets[0];RightFoot.EffectorLocation=A->FootTargets[1];LeftFoot.JointTargetLocation=A->KneeTargets[0];RightFoot.JointTargetLocation=A->KneeTargets[1];
   GuardArm.Alpha=A->GuardWeight;
+  LeftHand.Alpha=RightHand.Alpha=A->HandWeight;
+  LeftHand.EffectorLocation=A->HandTargets[0];RightHand.EffectorLocation=A->HandTargets[1];
+  LeftHand.JointTargetLocation=A->ElbowTargets[0];RightHand.JointTargetLocation=A->ElbowTargets[1];
  }
 };
 }
 UAetherAnimInstance::UAetherAnimInstance()
 {
+ static ConstructorHelpers::FObjectFinder<UAetherActionSet> Actions(TEXT("/Game/Animation/Controlled/DA_Actions.DA_Actions"));ActionSet=Actions.Object;
  static ConstructorHelpers::FObjectFinder<UBlendSpace> Move(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/BS_Idle_Walk_Run.BS_Idle_Walk_Run"));Locomotion=Move.Object;
  static ConstructorHelpers::FObjectFinder<UAnimSequence> Jump(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Jump.MM_Jump"));JumpClip=Jump.Object;
  static ConstructorHelpers::FObjectFinder<UAnimSequence> Fall(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Fall_Loop.MM_Fall_Loop"));FallClip=Fall.Object;
@@ -98,11 +110,46 @@ float UAetherAnimInstance::AttackPosition(const FAetherAttackDefinition& A,float
 void UAetherAnimInstance::NativeUpdateAnimation(float Dt)
 {
  Super::NativeUpdateAnimation(Dt);auto* C=Cast<AAetherCharacter>(TryGetPawnOwner());if(!C||C->GetNetMode()==NM_DedicatedServer)return;
- const float Now=C->CombatTime();const bool Falling=C->GetCharacterMovement()->IsFalling();if(WasFalling&&!Falling)LandUntil=Now+.18f;WasFalling=Falling;
+ const float Now=C->CombatTime();const bool Falling=C->GetCharacterMovement()->IsFalling();
+ if(WasFalling&&!Falling){LandingId=LastVerticalSpeed<-700?TEXT("LandHeavy"):TEXT("Land");LandUntil=Now+(LastVerticalSpeed<-700?.45f:.18f);}
+ LastVerticalSpeed=C->GetVelocity().Z;WasFalling=Falling;
+ if(WasAlive&&!C->Alive())DownedAt=Now;
+ if(!WasAlive&&C->Alive())RevivedAt=Now;
+ WasAlive=C->Alive();
  GroundSpeed=C->GetVelocity().Size2D();const FVector V=C->GetActorTransform().InverseTransformVectorNoScale(C->GetVelocity());Direction=FMath::RadiansToDegrees(FMath::Atan2(V.Y,V.X));
  MotionState=SelectState(C->Alive(),Now<C->StunUntil,Falling,C->GetVelocity().Z,Now<LandUntil,C->bBlocking);
- const bool Air=MotionState==EAetherMotionState::Rising||MotionState==EAetherMotionState::Falling||MotionState==EAetherMotionState::Landing||MotionState==EAetherMotionState::Stunned||MotionState==EAetherMotionState::Downed;
- AirWeight=FMath::FInterpTo(AirWeight,Air?1.f:0.f,Dt,14);GuardWeight=FMath::FInterpTo(GuardWeight,C->bBlocking&&C->Alive()?1.f:0.f,Dt,10);
+ const bool Air=MotionState==EAetherMotionState::Rising||MotionState==EAetherMotionState::Falling;
+ AirWeight=FMath::FInterpTo(AirWeight,Air?1.f:0.f,Dt,14);
+ // 控制动作按服务器时钟取样，晚加入/短暂不可见不会从动画第一帧重新播放。
+ FName Id;float Elapsed=0,Duration=0;bool Loop=false;
+ const auto* Player=Cast<AAetherFrontierCharacter>(C);
+ if(!C->Alive()){Id=TEXT("Death");Elapsed=Now-DownedAt;}
+ else if(Now<C->StunUntil){Id=TEXT("Stun");Elapsed=Now;Loop=true;}
+ else if(Now<RevivedAt+1.2f){Id=TEXT("GetUp");Elapsed=Now-RevivedAt;Duration=1.2f;}
+ else if(C->PresentedAction.Duration>0&&Now<C->PresentedAction.StartedAt+C->PresentedAction.Duration)
+ {Id=C->PresentedAction.Id;Elapsed=Now-C->PresentedAction.StartedAt;Duration=C->PresentedAction.Duration;}
+ else if(Player&&Player->ReviveTarget){Id=TEXT("Rescue");Elapsed=Now;Loop=true;}
+ else if(Player&&Player->Carried){Id=GroundSpeed>10?TEXT("CarryWalk"):TEXT("CarryIdle");Elapsed=Now;Loop=true;}
+ else if(Now<C->CastLockUntil){Id=TEXT("Cast");Elapsed=Now-C->CastStartedAt;Duration=FMath::Max(.1f,C->CastLockUntil-C->CastStartedAt);}
+ else if(C->bBlocking){Id=TEXT("Guard");Elapsed=Now;Loop=true;}
+ else if(Now<LandUntil){Id=LandingId;Elapsed=Now-(LandUntil-(LandingId==TEXT("LandHeavy")?.45f:.18f));}
+ else if(C->IsCrouched())
+ {
+   Id=GroundSpeed<10?TEXT("CrouchIdle"):FMath::Abs(Direction)>135?TEXT("CrouchBack"):
+       Direction>45?TEXT("CrouchRight"):Direction<-45?TEXT("CrouchLeft"):TEXT("CrouchWalk");
+   Elapsed=Now;Loop=true;
+ }
+ UAnimSequence* Selected=nullptr;if(ActionSet)if(const auto* Found=ActionSet->Clips.Find(Id))Selected=Found->Get();
+ if(Selected)
+ {
+   ControlledClip=Selected;const float Length=Selected->GetPlayLength();
+   ControlledTime=Loop?FMath::Fmod(FMath::Max(0.f,Elapsed),FMath::Max(.01f,Length)):
+       FMath::Clamp(Duration>0?Elapsed/Duration*Length:Elapsed,0.f,Length);
+ }
+ ControlledWeight=FMath::FInterpTo(ControlledWeight,Selected?1.f:0.f,Dt,18);
+ if(!Selected&&ControlledWeight<.001f)ControlledClip=nullptr;
+ // 格挡使用完整受控动画，取消旧的单骨骼抬臂替代。
+ GuardWeight=0;
  const bool Busy=C->Equipment->IsBusy()&&C->Alive()&&Now>=C->StunUntil;
  if(Busy)
  {
@@ -117,7 +164,9 @@ void UAetherAnimInstance::NativeUpdateAnimation(float Dt)
   if(Attack&&AttackMontage)Montage_SetPosition(AttackMontage,AttackPosition(*Attack,C->Equipment->Clock()-C->Equipment->Attack.StartedAt,AttackMontage->GetPlayLength()));
  }
  else if(AttackMontage){Montage_Stop(.12f,AttackMontage);AttackMontage=nullptr;}
- const bool SolveFeet=!Air&&!Busy&&GroundSpeed<180&&C->GetMesh()->WasRecentlyRendered(.2f);
+ const bool SolveFeet=!Air&&!Busy&&C->Alive()&&Now>=C->StunUntil&&
+   (Id.IsNone()||Id.ToString().StartsWith(TEXT("Crouch"))||Id==TEXT("Guard")||Id.ToString().StartsWith(TEXT("Carry")))&&
+   GroundSpeed<230&&C->GetMesh()->WasRecentlyRendered(.2f);
  if(SolveFeet&&Now>=TraceAt)
  {
   TraceAt=Now+.05f;bool Both=true;auto* Mesh=C->GetMesh();FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherFootIK),false,C);
@@ -131,4 +180,29 @@ void UAetherAnimInstance::NativeUpdateAnimation(float Dt)
   bFeetValid=Both;
  }
  FootWeight=FMath::FInterpTo(FootWeight,SolveFeet&&bFeetValid?1.f:0.f,Dt,10);
+ // 手部接触来自当前服务器占用目标；只解双臂，不移动胶囊或世界物体。
+ bool ContactValid=false;FVector Contact=FVector::ZeroVector;float HalfWidth=22;
+ if(Player&&C->Alive()&&Now>=C->StunUntil)
+ {
+   if(AActor* Target=Player->WorldActions?Player->WorldActions->ContactActor():nullptr)
+   {
+     FVector Extent;Target->GetActorBounds(true,Contact,Extent);
+     HalfWidth=FMath::Clamp(float(Extent.Size2D()*.5),12.f,35.f);ContactValid=true;
+   }
+   else if(Player->ReviveTarget){Contact=Player->ReviveTarget->GetActorLocation()+FVector(0,0,15);ContactValid=true;HalfWidth=16;}
+ }
+ if(C->PresentedAction.bHasContact&&C->PresentedAction.Id==TEXT("Vault")&&Now<C->PresentedAction.StartedAt+.6f)
+ {Contact=C->PresentedAction.Contact;ContactValid=true;HalfWidth=22;}
+ auto* Mesh=C->GetMesh();
+ ContactValid=ContactValid&&FVector::DistSquared(Contact,Mesh->GetSocketLocation(TEXT("spine_03")))<FMath::Square(140.);
+ if(ContactValid)
+ {
+   for(int32 I=0;I<2;++I)
+   {
+     const float Sign=I==0?-1.f:1.f;
+     HandTargets[I]=Mesh->GetComponentTransform().InverseTransformPosition(Contact+C->GetActorRightVector()*(Sign*HalfWidth));
+     ElbowTargets[I]=Mesh->GetComponentTransform().InverseTransformPosition(C->GetActorLocation()+C->GetActorForwardVector()*30+C->GetActorRightVector()*(Sign*80)+FVector(0,0,25));
+   }
+ }
+ HandWeight=FMath::FInterpTo(HandWeight,ContactValid?1.f:0.f,Dt,12);
 }

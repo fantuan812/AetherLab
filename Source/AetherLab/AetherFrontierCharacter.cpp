@@ -2,6 +2,7 @@
 #include "AetherGuide.h"
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Interaction/AetherNearbyRegistry.h"
+#include "Interaction/AetherWorldActionComponent.h"
 #include "AetherFrontier.h"
 #include "Inventory/AetherNativeInventory.h"
 #include "Inventory/AetherResourceGate.h"
@@ -13,6 +14,7 @@
 #include "AetherInputProfile.h"
 #include "Presentation/AetherPlayerPreferences.h"
 #include "Movement/AetherCharacterMovement.h"
+#include "Movement/AetherVaultAbility.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -36,7 +38,7 @@
 
 AAetherFrontierCharacter::AAetherFrontierCharacter(const FObjectInitializer& ObjectInitializer)
     :Super(ObjectInitializer.SetDefaultSubobjectClass<UAetherCharacterMovement>(ACharacter::CharacterMovementComponentName))
-{ bUseBasicAssets=true;JumpMaxCount=1;JumpMaxHoldTime=.18f;CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle")); }
+{ bUseBasicAssets=true;JumpMaxCount=1;JumpMaxHoldTime=.18f;CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle"));WorldActions=CreateDefaultSubobject<UAetherWorldActionComponent>(TEXT("WorldActions")); }
 AAetherPlayerState* AAetherFrontierCharacter::ProfileState() const {return GetPlayerState<AAetherPlayerState>();}
 void AAetherFrontierCharacter::BindPersistentAbilities()
 {
@@ -264,7 +266,11 @@ void AAetherFrontierCharacter::StartJumpInput()
 {
     if(bPanel||!CanStartLocomotion())return;
     auto* Move=CastChecked<UAetherCharacterMovement>(GetCharacterMovement());
-    if(Move->TryStand()&&Move->IsMovingOnGround())Jump();
+    if(Move->TryStand()&&Move->IsMovingOnGround())
+    {
+        if(AbilitySystem->TryActivateAbilityByClass(UAetherVaultAbility::StaticClass()))return;
+        Jump();
+    }
 }
 void AAetherFrontierCharacter::SetCrouchInput(bool Pressed)
 {
@@ -301,11 +307,7 @@ void AAetherFrontierCharacter::OnEndCrouch(float H,float Scaled)
 }
 void AAetherFrontierCharacter::Notify_Implementation(const FString& Message){Feedback=Message;OnPresentationChanged.Broadcast();}
 void AAetherFrontierCharacter::ReleaseCarry()
-{
-    if(!HasAuthority())return; CarryHandle->ReleaseComponent();
-    if(Carried){Carried->Mechanism->RecordImpactSource(this);Carried->Carrier=nullptr; Carried->Mesh->IgnoreActorWhenMoving(this,false);GetCapsuleComponent()->IgnoreActorWhenMoving(Carried,false); Carried->ForceNetUpdate();}
-    Carried=nullptr;
-}
+{if(WorldActions)WorldActions->Release();}
 void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
     TradeSession={};SaleConfirmation={};PendingTradeAuthorization.Invalidate();
@@ -339,22 +341,9 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
     // 客户端必须提交所见目标；旧的无目标字符串入口不能重新选择邻近对象。
     if(Action=="Interact"){Notify(TEXT("请重新选择交互目标。"));return;}
     if(Mode->ExecutePartyAction(this,Action))return;
-    if(Action=="Throw")
-    {if(Carried){auto* P=Carried.Get();ReleaseCarry();P->Mesh->AddImpulse(GetControlRotation().Vector()*P->Mesh->GetMass()*500);P->Mechanism->RecordImpactSource(this);}return;}
+    if(Action=="Throw"||Action=="Carry"||Action=="Push"){WorldActions->Begin(Action);return;}
     if(Action=="Claim")
     {auto Next=PS->Profile;bool Changed=Next.CollectPending();Changed|=AetherQuests::Settle(Next,Mode->Database->WorldFacts,true);if(Changed)Notify(Mode->Commit(PS,Next)?TEXT("Pending rewards received."):TEXT("Reward save failed; retry."));return;}
-    if(Action=="Carry"||Action=="Push")
-    {
-        if(Carried){ReleaseCarry();return;}
-        if(!Ready())return;
-        FHitResult H;FCollisionQueryParams Q(SCENE_QUERY_STAT(Carry),false,this);
-        GetWorld()->LineTraceSingleByChannel(H,GetActorLocation()+FVector(0,0,25),GetActorLocation()+FVector(0,0,25)+GetControlRotation().Vector()*220,ECC_Visibility,Q);
-        auto* P=Cast<AAetherFrontierProp>(H.GetActor());
-        if(!P||!P->bCarryable||P->Carrier||P->Reactive->State.bBroken||!P->Mesh->IsSimulatingPhysics()||P->Mesh->GetMass()>80)return;
-        P->Mechanism->RecordImpactSource(this);if(Action=="Push"){P->Mesh->AddImpulse(GetActorForwardVector()*15000);return;}
-        P->Carrier=this;Carried=P;P->Mesh->IgnoreActorWhenMoving(this,true);GetCapsuleComponent()->IgnoreActorWhenMoving(P,true);
-        CarryHandle->GrabComponentAtLocationWithRotation(P->Mesh,NAME_None,P->GetActorLocation(),P->GetActorRotation());return;
-    }
     // Inventory mutations use ServerInventory with stable client-selected identity.
 
 }
@@ -408,17 +397,6 @@ void AAetherFrontierCharacter::Tick(float Dt)
     }
     if(!HasAuthority())return;
     if(auto* PS=ProfileState())MaxHealth=100+5*FMath::Clamp(PS->Profile.Experience/200,0,4);
-    if(Carried)
-    {
-        if(!Ready()||FVector::DistSquared(GetActorLocation(),Carried->GetActorLocation())>FMath::Square(350.0))ReleaseCarry();
-        else
-        {
-            const FVector From=GetActorLocation()+FVector(0,0,25);FVector Target=From+GetControlRotation().Vector()*160;
-            FHitResult Block;FCollisionQueryParams Q(SCENE_QUERY_STAT(CarrySweep),false,this);Q.AddIgnoredActor(Carried);
-            if(GetWorld()->SweepSingleByChannel(Block,From,Target,FQuat::Identity,ECC_WorldStatic,FCollisionShape::MakeSphere(35),Q))Target=Block.Location;
-            CarryHandle->SetTargetLocationAndRotation(Target,GetActorRotation());
-        }
-    }
     if(ReviveTarget)
     {
         if(!IsValid(ReviveTarget)||!Alive()||ReviveTarget->Alive()||DamageReceivedCount!=ReviveDamageSerial||CombatTime()<StunUntil||FVector::DistSquared(GetActorLocation(),ReviveTarget->GetActorLocation())>FMath::Square(220.0))ReviveTarget=nullptr;

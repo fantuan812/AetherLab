@@ -76,9 +76,12 @@ void UAetherDodgeAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
         Invulnerability=ApplyGameplayEffectToOwner(H,Info,Activation,GetDefault<UAetherDodgeInvulnerability>(),1);
     }
     if(auto* Player=Cast<AAetherFrontierCharacter>(C))Player->SetSprintInput(false);
-    // 固定朝当前角色朝向闪避，速度 700 cm/s、移动 0.35 秒、恢复至 0.55 秒。
+    // 输入方向来自 CharacterMovement 已传输的加速度；没有输入时朝角色前方。
     // IgnoreZ 保留重力；不调用 LaunchCharacter，也不强制保持 Walking，越过边缘自然下落。
-    const FVector Direction=C->GetActorForwardVector().GetSafeNormal2D();
+    FVector Direction=C->GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal2D();
+    if(Direction.IsNearlyZero())Direction=C->GetActorForwardVector().GetSafeNormal2D();
+    const FVector Local=C->GetActorTransform().InverseTransformVectorNoScale(Direction);
+    C->PresentAction(FMath::Abs(Local.X)>=FMath::Abs(Local.Y)?(Local.X>=0?TEXT("DodgeForward"):TEXT("DodgeBack")):(Local.Y>=0?TEXT("DodgeRight"):TEXT("DodgeLeft")),.55f);
     auto* Motion=UAbilityTask_ApplyRootMotionConstantForce::ApplyRootMotionConstantForce(this,TEXT("Aether.Dodge"),
         Direction,700,.35f,false,nullptr,ERootMotionFinishVelocityMode::ClampVelocity,FVector::ZeroVector,0,true);
     Motion->ReadyForActivation();
@@ -95,6 +98,7 @@ void UAetherDodgeAbility::EndAbility(FGameplayAbilitySpecHandle H,const FGamepla
     {WaitingToExecute.Add(FPostLockDelegate::CreateUObject(this,&UAetherDodgeAbility::EndAbility,H,Info,Activation,Replicate,Cancelled));return;}
     // 使用激活时的 ASC，避免换 Pawn 后的迟到取消触碰新角色。取消不返还已提交成本或冷却。
     if(ActiveSystem.IsValid()&&Invulnerability.IsValid())ActiveSystem->RemoveActiveGameplayEffect(Invulnerability);
+    if(auto* C=ActiveCharacter.Get();C&&C->PresentedAction.Id.ToString().StartsWith(TEXT("Dodge")))C->PresentedAction.Duration=0;
     Invulnerability.Invalidate();ActiveCharacter.Reset();ActiveSystem.Reset();
     // 基类结束所有任务；RootMotion task 的 OnDestroy 移除对应 source。
     Super::EndAbility(H,Info,Activation,Replicate,Cancelled);

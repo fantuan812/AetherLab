@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "AetherEquipmentComponent.h"
+#include "Animation/AetherActionPresentation.h"
 #include "AetherAnimation.generated.h"
 class UBlendSpace;
 class UAnimSequence;
@@ -22,12 +23,18 @@ public:
  UPROPERTY(BlueprintReadOnly,Transient) float AirWeight=0;
  UPROPERTY(BlueprintReadOnly,Transient) float FootWeight=0;
  UPROPERTY(BlueprintReadOnly,Transient) float GuardWeight=0;
+ UPROPERTY(Transient) TObjectPtr<UAetherActionSet> ActionSet;
+ UPROPERTY(Transient) TObjectPtr<UAnimSequence> ControlledClip;
+ float ControlledTime=0,ControlledWeight=0;
  UPROPERTY(Transient) TObjectPtr<UBlendSpace> Locomotion;
  UPROPERTY(Transient) TObjectPtr<UAnimSequence> JumpClip;
  UPROPERTY(Transient) TObjectPtr<UAnimSequence> FallClip;
  UPROPERTY(Transient) TObjectPtr<UAnimSequence> LandClip;
  UPROPERTY(Transient) TObjectPtr<UAnimSequence> HeavyClip;
  UPROPERTY(Transient) TArray<TObjectPtr<UAnimSequence>> LightClips;
+ FVector HandTargets[2]={FVector::ZeroVector,FVector::ZeroVector};
+ FVector ElbowTargets[2]={FVector::ZeroVector,FVector::ZeroVector};
+ float HandWeight=0;
  FVector FootTargets[2]={FVector::ZeroVector,FVector::ZeroVector};
  FVector KneeTargets[2]={FVector::ZeroVector,FVector::ZeroVector};
  static float AttackPosition(const FAetherAttackDefinition& Attack,float Elapsed,float Length);
@@ -39,5 +46,7 @@ private:
  UPROPERTY(Transient) TObjectPtr<UAnimMontage> AttackMontage;
  uint32 LastAttack=0;
  float LandUntil=0,TraceAt=0;
- bool WasFalling=false,bFeetValid=false;
+ bool WasFalling=false,bFeetValid=false,WasAlive=true;
+ float LastVerticalSpeed=0,RevivedAt=-100,DownedAt=0;
+ FName LandingId=TEXT("Land");
 };

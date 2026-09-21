@@ -11,6 +11,7 @@
 class AAetherFrontierProp;
 class AAetherFrontierCharacter;
 class UAetherPhysicsDamageComponent;
+class UAetherWorldActionComponent;
 class UAetherTraversalComponent;
 class UPhysicsHandleComponent;
 class UInputMappingContext;
@@ -54,6 +55,7 @@ public:
     virtual void ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UPhysicsHandleComponent> CarryHandle;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherWorldActionComponent> WorldActions;
     UPROPERTY(Replicated) bool bSprinting = false;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierProp> Carried;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> CompanionOwner;

@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "ReactiveBodyComponent.h"
 #include "AetherEquipmentComponent.h"
+#include "Animation/AetherActionPresentation.h"
 #include "AetherCombat.generated.h"
 class UAetherMotionComponent;
 
@@ -123,6 +124,8 @@ public:
     UPROPERTY(Replicated) float CastLockUntil = 0;
     UPROPERTY(Replicated) float CastStartedAt = 0;
     UPROPERTY(Replicated) float StunUntil = 0;
+    UPROPERTY(Replicated) FAetherActionPresentation PresentedAction;
+    void PresentAction(FName Id,float Duration);
     int32 SelectedSpell = 0;
     FString Feedback;
     FVector Home = FVector::ZeroVector;

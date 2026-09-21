@@ -11,6 +11,8 @@
 #include "AetherFrontier.h"
 #include "AetherActions.h"
 #include "Movement/AetherDodgeAbility.h"
+#include "Movement/AetherVaultAbility.h"
+#include "Interaction/AetherWorldActionComponent.h"
 #include "AetherTraversal.h"
 #include "AetherAnimation.h"
 #include "AetherContent.h"
@@ -275,6 +277,7 @@ void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(AAetherCharacter, MaxHealth); DOREPLIFETIME(AAetherCharacter, Fighter); DOREPLIFETIME(AAetherCharacter, bBlocking);
     DOREPLIFETIME(AAetherCharacter, bWindingUp); DOREPLIFETIME(AAetherCharacter, bPacified);
+    DOREPLIFETIME(AAetherCharacter, PresentedAction);
     DOREPLIFETIME(AAetherCharacter, WaterReserveKg); DOREPLIFETIME(AAetherCharacter, CastStartedAt); DOREPLIFETIME(AAetherCharacter, CastLockUntil); DOREPLIFETIME(AAetherCharacter, StunUntil);
     DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
@@ -305,6 +308,7 @@ void AAetherCharacter::GrantSpells()
 {
     if(HasAuthority())
     {
+        if(!AbilitySystem->FindAbilitySpecFromClass(UAetherVaultAbility::StaticClass()))AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherVaultAbility::StaticClass(),1,10,this));
         if(!AbilitySystem->FindAbilitySpecFromClass(UAetherDodgeAbility::StaticClass()))AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherDodgeAbility::StaticClass(),1,9,this));
         if(!AbilitySystem->FindAbilitySpecFromClass(UAetherReviveAbility::StaticClass()))AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherReviveAbility::StaticClass(),1,8,this));
         for(int32 Level=1;Level<=2;++Level)
@@ -344,7 +348,9 @@ bool AAetherCharacter::TrySpell(int32 Spell)
 }
 
 bool AAetherCharacter::Ready() const
-{ const float T = CombatTime(); return !ResourceGate->IsBlocked() && AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy() && !AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag()); }
+{ const auto* Player=Cast<AAetherFrontierCharacter>(this);
+  if(Player&&Player->WorldActions&&Player->WorldActions->IsBusy())return false;
+  const float T = CombatTime(); return !ResourceGate->IsBlocked() && AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy() && !AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag())&&!AbilitySystem->HasMatchingGameplayTag(AetherVault::ActiveTag()); }
 float AAetherCharacter::CombatTime() const
 { const auto* GS = GetWorld()->GetGameState(); return GS ? GS->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds(); }
 void AAetherCharacter::SetVitals(float HP, float MP, float SP)
@@ -527,6 +533,7 @@ float AAetherCharacter::TakeDamage(float Amount, const FDamageEvent& Event, ACon
     AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetHealthAttribute(), EGameplayModOp::Additive, -Applied);
     if(Applied>0)RecordEquipmentWear(false,false);
     LastDamager = Causer; ++DamageReceivedCount; LastDamageAt = CombatTime();
+    if(Applied>0&&Alive())PresentAction(TEXT("Hit"),.35f);
     if (!Alive()) { CancelActions(); bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); }
     return Applied;
 }
@@ -796,6 +803,6 @@ FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
 bool AAetherCharacter::AllowsGeneratedMotion() const
 {
     const float T=CombatTime();
-    return Alive()&&T>=StunUntil&&T>=CastLockUntil&&T>=ActionUntil&&!Equipment->IsBusy()&&!bBlocking&&!AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag())&&
+    return Alive()&&T>=StunUntil&&T>=CastLockUntil&&T>=ActionUntil&&!Equipment->IsBusy()&&!bBlocking&&!AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag())&&!AbilitySystem->HasMatchingGameplayTag(AetherVault::ActiveTag())&&
            !GetCharacterMovement()->IsFalling()&&!ResourceGate->IsBlocked();
 }
