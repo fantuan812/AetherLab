@@ -68,6 +68,8 @@ bool FAetherV10ItemDefinitions::Validate(FString& Reason) const
             if(!FindSlot(S)||Allowed.Contains(S)||Extra.Contains(S)||Allowed.IsEmpty())return Reject(TEXT("Invalid additional slot occupancy"));
             Extra.Add(S);
         }
+        if(I.SkillGrants.Num()>16||(!I.SkillGrants.IsEmpty()&&I.AllowedSlots.IsEmpty()))return Reject(TEXT("Invalid equipment skill grants"));
+        for(const auto& G:I.SkillGrants)if(!Id(G.Key)||G.Value<1||G.Value>3)return Reject(TEXT("Invalid equipment skill rank"));
         for(const auto& Stat:I.Stats)
             if(!Stats.Contains(Stat.Key)||!FMath::IsFinite(Stat.Value)||Stat.Value<0||Stat.Value>10000)
                 return Reject(TEXT("Unknown or invalid equipment statistic"));
@@ -113,6 +115,12 @@ FAetherV10ItemDefinitions FAetherV10ItemDefinitions::Parse(const FString& Json,F
         const TSharedPtr<FJsonObject>* Stats=nullptr;
         if(!(*O)->TryGetObjectField(TEXT("Stats"),Stats)||(*Stats)->Values.Num()>10)return Reject(TEXT("Invalid equipment stats object"));
         for(const auto& Pair:(*Stats)->Values){double N=0;if(!Pair.Value->TryGetNumber(N))return Reject(TEXT("Invalid stat value"));I.Stats.Add(FString(*Pair.Key),N);}
+        if((*O)->HasField(TEXT("SkillGrants")))
+        {
+            const TSharedPtr<FJsonObject>* Grants=nullptr;
+            if(!(*O)->TryGetObjectField(TEXT("SkillGrants"),Grants)||(*Grants)->Values.Num()>16)return Reject(TEXT("Invalid skill grant object"));
+            for(const auto& G:(*Grants)->Values){double N;if(!G.Value->TryGetNumber(N)||!FMath::IsFinite(N)||N<1||N>3||N!=FMath::FloorToDouble(N))return Reject(TEXT("Invalid skill grant rank"));I.SkillGrants.Add(G.Key,int32(N));}
+        }
         const FString ItemId=I.Id;D.Items.Add(ItemId,MoveTemp(I));
     }
     if(!D.Validate(Reason))return FAetherV10ItemDefinitions();

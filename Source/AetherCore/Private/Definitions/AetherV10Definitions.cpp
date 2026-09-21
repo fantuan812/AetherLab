@@ -15,6 +15,8 @@ const FAetherV10Definitions& FAetherV10Definitions::Get()
         };
         FString Text;if(!Read(TEXT("Items.json"),Text))return D;
         D.Items=FAetherV10ItemDefinitions::Parse(Text,D.Error);if(!D.Items.Validate(D.Error))return D;
+        for(const auto& Pair:D.Items.Items)for(const auto& Grant:Pair.Value.SkillGrants)
+            if(!D.Skills.Effect(Grant.Key,Grant.Value)){D.Error=TEXT("Equipment references unknown skill rank");return D;}
         if(!Read(TEXT("Economy.json"),Text))return D;
         D.Economy=FAetherEconomyDefinitionsV10::Parse(Text,D.Items,D.Error);if(!D.Economy.Validate(D.Items,D.Error))return D;
         if(!Read(TEXT("Interactions.json"),Text))return D;

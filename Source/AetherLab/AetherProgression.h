@@ -7,6 +7,16 @@
 #include "Profile/AetherProfileState.h"
 #include "AetherProgression.generated.h"
 
+// 拥有者只读授权，不把临时来源写进永久技能账本。
+USTRUCT()
+struct FAetherSkillGrantPresentation
+{
+    GENERATED_BODY()
+    UPROPERTY() FString SourceId;
+    UPROPERTY() FString SkillId;
+    UPROPERTY() int32 Rank=1;
+    UPROPERTY() uint8 Source=0;
+};
 DECLARE_MULTICAST_DELEGATE(FOnAetherProfilePublished);
 
 // Player-owned persistent gameplay state and ASC survive avatar replacement.
@@ -33,7 +43,9 @@ public:
     bool PublishNativeProfile(const FAetherProfileStateV10& Committed,FString& Reason);
     const FAetherProfileStateV10* GetNativeProfile() const{return NativeProfile.IsSet()?&NativeProfile.GetValue():nullptr;}
     const FAetherSkillStateV10* GetNativeSkills() const{return bNativeSkillReady&&NativeSkills.IsSet()?&NativeSkills.GetValue():nullptr;}
-    const TArray<FAetherExternalSkillGrant>& GetNativeSkillGrants() const{return NativeSkillGrants;}
+    TArray<FAetherExternalSkillGrant> GetNativeSkillGrants() const;
+    UPROPERTY(ReplicatedUsing=OnRep_Presentation) TArray<FAetherSkillGrantPresentation> SkillGrantPresentation;
+    UPROPERTY(ReplicatedUsing=OnRep_Presentation) int64 SkillGrantRevision=-1;
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) bool bNativeSkillsEnabled=false;
     float InvitationExpires=0;
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystem; }

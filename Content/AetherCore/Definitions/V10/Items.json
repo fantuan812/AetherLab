@@ -521,6 +521,9 @@
       "BrokenStatMultiplier": 0.25,
       "Stats": {
         "MaxStamina": 5
+      },
+      "SkillGrants": {
+        "Frost.Freeze": 1
       }
     }
   ]

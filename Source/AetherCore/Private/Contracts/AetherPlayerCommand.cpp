@@ -114,7 +114,7 @@ bool AetherCommands::Validate(const FAetherPlayerCommand& C, FString& Reason)
         ((Mask&Other)!=0 && C.ItemInstanceId==C.OtherInstanceId))return Reject(TEXT("Invalid or unexpected instance identity"));
     const auto IdField=[&](uint32 Bit,const FString& S){return (Mask&Bit)!=0 ? IsId(S) : S.IsEmpty();};
     if(!IdField(Target,C.TargetStableId)||!IdField(Container,C.ContainerId)||!IdField(Definition,C.DefinitionId)||
-        !IdField(Skill,C.SkillId)||!IdField(Slot,C.SlotId)||!IdField(Action,C.ActionId))
+        !(C.ProtocolVersion>=3&&C.Type==EAetherCommandType::ResetSkills?(C.SkillId.IsEmpty()||IsId(C.SkillId)):IdField(Skill,C.SkillId))||!IdField(Slot,C.SlotId)||!IdField(Action,C.ActionId))
         return Reject(TEXT("Invalid or unexpected definition/target field"));
     if((Mask&Quantity)!=0 ? (C.Quantity<1||C.Quantity>1000) : C.Quantity!=0)
         return Reject(TEXT("Invalid or unexpected quantity"));

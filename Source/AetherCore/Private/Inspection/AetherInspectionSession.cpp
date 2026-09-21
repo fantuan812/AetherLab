@@ -89,6 +89,7 @@ bool FAetherInspectionSession::Confirm(FGuid Token,int32 Quantity,const FAetherI
         case E::Drop:C.Type=EAetherCommandType::DropItem;C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.ExpectedWorldRevision=S.WorldRevision;break;
         case E::Lock:case E::Unlock:C.Type=EAetherCommandType::SetItemLock;C.ItemInstanceId=Target.InstanceId;C.Enabled=A->Kind==E::Lock;break;
         case E::Favorite:case E::Unfavorite:C.Type=EAetherCommandType::SetItemFavorite;C.ItemInstanceId=Target.InstanceId;C.Enabled=A->Kind==E::Favorite;break;
+        case E::ResetSkills:C.Type=EAetherCommandType::ResetSkills;C.SkillId=A->Argument;break;
         case E::Learn:C.Type=Current.PermanentSkillRank>0?EAetherCommandType::UpgradeSkill:EAetherCommandType::LearnSkill;C.SkillId=Target.DefinitionId;break;
         case E::BindHotbar:C.Type=EAetherCommandType::BindSkill;C.SkillId=Target.DefinitionId;C.SlotId=A->Argument;break;
         default:return Fail(TEXT("动作未连接到统一命令协议。"));

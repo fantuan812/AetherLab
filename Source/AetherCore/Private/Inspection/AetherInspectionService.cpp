@@ -142,6 +142,28 @@ void Skill(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FA
     const bool NextNode=T.SkillRank==0||T.SkillRank==M.PermanentSkillRank+1;
     M.Message=NextNode?AetherInspection::SkillReason(Allowed):TEXT("仅能依次学习下一级；当前选择保持只读。");
     Action(M,EAetherInspectAction::Learn,Def->SkillId,TEXT("学习 / 升级"),NextNode&&Allowed==EAetherSkillMutationCode::Applied,M.Message,1,true);
+    for(const FString& Root:TArray<FString>{Def->SkillId,FString()})
+    {
+        auto Candidate=S.Skills;const auto Result=Candidate.Reset(Root,S.SkillContext,D,S.ExternalGrants);
+        if(Result.Code==EAetherSkillMutationCode::Applied)
+        {
+            TArray<FString> Names;for(const auto& Id:Result.AffectedSkills)
+            {
+                const auto* Affected=D.Skills.Find(Id);
+                Names.Add(FString::Printf(TEXT("%s %d → %d"),Affected?*Affected->DisplayName:*Id,S.Skills.PermanentRank(Id),Candidate.PermanentRank(Id)));
+            }
+            Field(M,Root.IsEmpty()?TEXT("resetAll"):TEXT("resetBranch"),Root.IsEmpty()?TEXT("重置全部预览"):TEXT("当前分支重置预览"),FString::Join(Names,TEXT("；")));
+            Field(M,TEXT("refund"),TEXT("按实际支付账本退还"),FString::Printf(TEXT("%d 点；故事基础与外部授权保留"),Result.PointsChanged));
+        }
+        Action(M,EAetherInspectAction::ResetSkills,Root,Root.IsEmpty()?TEXT("重置全部自由学习"):TEXT("重置当前分支"),
+            Result.Code==EAetherSkillMutationCode::Applied,AetherInspection::SkillReason(Result.Code),1,true);
+        if(Result.Code==EAetherSkillMutationCode::Applied)
+        {
+            M.Actions.Last().ConfirmationSummary=FString::Printf(TEXT("退还实际支付的 %d 技能点。"),Result.PointsChanged);
+            for(const auto& Id:Result.AffectedSkills)M.Actions.Last().ConfirmationSummary+=LINE_TERMINATOR+Id+FString::Printf(TEXT("：%d → %d"),S.Skills.PermanentRank(Id),Candidate.PermanentRank(Id));
+            M.Actions.Last().ConfirmationSummary+=LINE_TERMINATOR+TEXT("故事基础与装备/临时授权保留。");
+        }
+    }
     const bool CanBind=Def->bActive&&M.EffectiveSkillRank>0&&(T.SkillRank==0||T.SkillRank<=M.EffectiveSkillRank);
     for(int32 Slot=0;Slot<FAetherSkillStateV10::HotbarCapacity;++Slot)
         Action(M,EAetherInspectAction::BindHotbar,FString::Printf(TEXT("Hotbar.%d"),Slot+1),TEXT("绑定快捷位"),CanBind,CanBind?FString():TEXT("当前节点尚未获得可用授权。"));

@@ -1,5 +1,6 @@
 #include "Skills/AetherSkillTreePage.h"
 #include "Skills/AetherSkillGraphWidget.h"
+#include "Skills/AetherSkillHotbarCell.h"
 #include "Inspection/AetherInspectionWidgets.h"
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Characters/AetherFrontierCharacter.h"
@@ -17,6 +18,9 @@
 #include "Networking/AetherCommandClient.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "InputCoreTypes.h"
+#include "Interaction/AetherNearbyRegistry.h"
+#include "AetherGuide.h"
+#include "TimerManager.h"
 
 TSharedRef<SWidget> UAetherSkillTreePage::RebuildWidget()
 {
@@ -71,11 +75,13 @@ void UAetherSkillTreePage::NativeConstruct()
         OnCommandReady.RemoveAll(this);OnCommandReady.AddUObject(this,&UAetherSkillTreePage::DispatchNativeCommand);
         HandleNativeProfile();
     }
+    HandleMenu();
 }
 void UAetherSkillTreePage::NativeDestruct()
 {
     if(Menu.IsValid())Menu->OnChanged.RemoveAll(this);
     if(CommandClient.IsValid()){CommandClient->OnChanged.RemoveAll(this);CommandClient->OnResult.RemoveAll(this);}
+    if(GetWorld())GetWorld()->GetTimerManager().ClearTimer(ViewTimer);
     CommandClient.Reset();ClosePresentation();Menu.Reset();OnCommandReady.Clear();OnTrackQuest.Clear();Super::NativeDestruct();
 }
 void UAetherSkillTreePage::HandleNativeProfile()
@@ -93,10 +99,23 @@ void UAetherSkillTreePage::HandleNativeProfile()
     }
     FAetherInspectionSnapshot S;
     S.Context.OwnerIdentity=P->CharacterId;S.Context.SessionId=CommandClient->GetChannel();
-    S.Context.SnapshotRevision=P->Revision;S.ProfileRevision=P->Revision;S.Inventory=P->Inventory;S.Skills=P->Skills;
+    S.ProfileRevision=P->Revision;S.Inventory=P->Inventory;S.Skills=P->Skills;
     S.SkillContext.CharacterLevel=FMath::Clamp(1+P->Experience/200,1,100);
     for(const auto& Claim:P->Claims)S.SkillContext.CompletedQuests.Add(Claim);
-    // 这里只推导公开的永久成长条件；不伪造 NPC 距离、重置许可或临时 ASC 来源。
+    auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());auto* PS=C?C->ProfileState():nullptr;
+    if(C)
+    {
+        S.SkillContext.bInCombat=C->HasRecentCombat(8);S.SkillContext.bCasting=C->CastLockUntil>C->CombatTime();S.SkillContext.bCoolingDown=S.SkillContext.bCasting;
+        S.bCanAct=C->Ready()&&!CommandClient->HasPending();
+        if(auto* Registry=C->GetWorld()->GetSubsystem<UAetherNearbyRegistry>())
+            for(const auto& Weak:Registry->Nearby(C->GetActorLocation(),250))
+                if(auto* Teacher=Cast<AAetherFrontierProp>(Weak.Get());Teacher&&Teacher->Service=="Teacher"&&Teacher->bEnabled)
+                    if(AetherGuide::QueryTarget(C,Teacher).Prop==Teacher){S.SkillContext.bAtResetService=true;break;}
+        if(PS&&PS->SkillGrantRevision==P->Revision)S.ExternalGrants=PS->GetNativeSkillGrants();
+    }
+    FString Key=S.Context.SessionId.ToString()+FString::Printf(TEXT("|%lld|%d%d%d%d|%lld"),P->Revision,S.SkillContext.bAtResetService,S.SkillContext.bInCombat,S.SkillContext.bCasting,CommandClient->HasPending(),PS?PS->SkillGrantRevision:-1);
+    for(const auto& G:S.ExternalGrants)Key+=TEXT("|")+G.SourceId+TEXT(":")+G.SkillId+FString::FromInt(G.Rank);
+    if(Key==NativeSnapshotKey)return;NativeSnapshotKey=Key;S.Context.SnapshotRevision=++ViewGeneration;
     PublishSnapshot(S);
 }
 void UAetherSkillTreePage::DispatchNativeCommand(const FAetherInspectionDispatch& D)
@@ -174,13 +193,11 @@ void UAetherSkillTreePage::Refresh()
     Hotbar->ClearChildren();
     for(const auto& H:TreeModel.Hotbar)
     {
-        auto* B=WidgetTree->ConstructWidget<UAetherInspectionActionButton>();
+        auto* B=WidgetTree->ConstructWidget<UAetherSkillHotbarCell>();
         FAetherInspectTarget T;T.Kind=EAetherInspectTarget::SkillNode;T.DefinitionId=H.SkillId;T.SkillRank=FMath::Max(1,H.EffectiveRank);
-        FAetherInspectionAction A;A.Kind=EAetherInspectAction::FocusSkill;A.Argument=H.SkillId;A.bEnabled=!H.SkillId.IsEmpty();
-        B->InitializeAction(AetherInspection::Pin(Snapshot,T),A);B->OnRequested.AddUObject(this,&UAetherSkillTreePage::SelectHotbar);
-        auto* Label=WidgetTree->ConstructWidget<UTextBlock>();Label->SetAutoWrapText(true);
-        Label->SetText(FText::FromString(FString::Printf(TEXT("%d · %s%s"),H.Slot+1,H.Title.IsEmpty()?TEXT("空位"):*H.Title,H.SkillId.IsEmpty()?TEXT(""):H.bAvailable?TEXT(" · 可用"):TEXT(" · 未授权"))));
-        B->SetContent(Label);Hotbar->AddChildToHorizontalBox(B)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        B->Present(AetherInspection::Pin(Snapshot,T),H.Slot,FString::Printf(TEXT("%d · %s%s"),H.Slot+1,H.Title.IsEmpty()?TEXT("拖入主动技能"):*H.Title,H.SkillId.IsEmpty()?TEXT(""):H.bAvailable?TEXT(" · 可用"):TEXT(" · 未授权")));
+        B->OnBind.BindUObject(this,&UAetherSkillTreePage::DropSkill);B->OnInspect.BindUObject(this,&UAetherSkillTreePage::InspectHotbar);
+        Hotbar->AddChildToHorizontalBox(B)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
     RenderSources();
 }
@@ -204,6 +221,7 @@ void UAetherSkillTreePage::RequestAction(const FAetherInspectRequest& R,const FA
 }
 void UAetherSkillTreePage::Confirm(FGuid Token,int32 Count)
 {
+    HandleNativeProfile();
     // 旧确认回调不能关闭后来打开的新弹窗；先检查令牌再执行或拆除任何控件。
     if(!Session.GetDraft().IsSet()||Session.GetDraft()->Token!=Token)return;
     const auto Kind=Session.GetDraft()->Action.Kind;
@@ -224,7 +242,7 @@ void UAetherSkillTreePage::Confirm(FGuid Token,int32 Count)
         }
         else if(Dispatch.Action==EAetherInspectAction::TrackQuest)
         {
-            if(auto* C=LegacySource.Get())C->TrackedQuest=FName(*Dispatch.NavigationTarget);
+            if(auto* C=bNativeSnapshot?NativePawn.Get():LegacySource.Get())C->TrackedQuest=FName(*Dispatch.NavigationTarget);
             OnTrackQuest.Broadcast(Dispatch.NavigationTarget);
         }
         else if(Dispatch.Action==EAetherInspectAction::FocusSkill)Select({Dispatch.NavigationTarget,1},true);
@@ -253,7 +271,9 @@ void UAetherSkillTreePage::HandleMenu()
         // 命令服务已经收到按值复制的请求；换 Pawn 只丢弃本页展示，禁止继续显示旧拥有者数据。
         HideConfirmation();Session=FAetherInspectionSession();Snapshot={};NativePawn.Reset();Selected.Reset();PendingNode.Reset();Refresh();
     }
-    if(!Menu.IsValid()||Menu->GetPage()!=EAetherMenuPage::Skills){ClosePresentation();return;}
+    if(!Menu.IsValid()||Menu->GetPage()!=EAetherMenuPage::Skills){if(GetWorld())GetWorld()->GetTimerManager().ClearTimer(ViewTimer);ClosePresentation();return;}
+    if(GetWorld()&&!GetWorld()->GetTimerManager().IsTimerActive(ViewTimer))GetWorld()->GetTimerManager().SetTimer(ViewTimer,this,&UAetherSkillTreePage::HandleNativeProfile,.25f,true);
+    HandleNativeProfile();
     if(ModalToken.IsValid()&&!Menu->HasLayer(ModalToken)){if(Session.GetDraft().IsSet())Session.Back();HideConfirmation();}
 }
 void UAetherSkillTreePage::ClosePresentation()
@@ -283,4 +303,18 @@ FReply UAetherSkillTreePage::NativeOnMouseButtonDown(const FGeometry& Geometry,c
 {
     if(Session.GetDraft().IsSet()||Event.GetEffectingButton()==EKeys::RightMouseButton)return FReply::Handled();
     return Super::NativeOnMouseButtonDown(Geometry,Event);
+}
+
+void UAetherSkillTreePage::InspectHotbar(const FAetherInspectRequest& R)
+{if(R.Context.Same(Snapshot.Context)&&!R.Target.DefinitionId.IsEmpty())Select({R.Target.DefinitionId,R.Target.SkillRank},true);}
+void UAetherSkillTreePage::DropSkill(const FAetherInspectRequest& R,int32 Slot)
+{
+    if(!R.Context.Same(Snapshot.Context)||Slot<0||Slot>=FAetherSkillStateV10::HotbarCapacity||ModalToken.IsValid()||
+        !CommandClient.IsValid()||CommandClient->HasPending())return;
+    const auto& D=FAetherSkillDefinitionsV10::Get();const auto* Def=D.Skills.Find(R.Target.DefinitionId);
+    if(!Def||!Def->bActive||Snapshot.Skills.EffectiveRank(Def->SkillId,Snapshot.ExternalGrants)<R.Target.SkillRank)return;
+    Select({R.Target.DefinitionId,R.Target.SkillRank},false);
+    const FString Argument=FString::Printf(TEXT("Hotbar.%d"),Slot+1);
+    const auto Token=Session.BeginAction(EAetherInspectAction::BindHotbar,Argument);
+    if(Token.IsValid())Confirm(Token,1);
 }

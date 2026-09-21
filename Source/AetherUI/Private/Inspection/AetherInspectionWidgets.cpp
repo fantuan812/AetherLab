@@ -181,6 +181,7 @@ void UAetherInspectionConfirmation::QuantityChanged(float Value)
     if(!Draft.IsSet()||!Prompt||!FMath::IsFinite(Value))return;
     const int32 Count=FMath::Clamp(FMath::RoundToInt(Value),1,Draft->Action.MaxQuantity);
     FString Text=TEXT("确认")+Draft->Action.Label+TEXT("？");
+    if(!Draft->Action.ConfirmationSummary.IsEmpty())Text+=LINE_TERMINATOR+Draft->Action.ConfirmationSummary;
     if(Draft->Action.UnitPrice>0)Text+=LINE_TERMINATOR+FString::Printf(TEXT("%d 件 · 合计 %lld 金币"),Count,Draft->Action.UnitPrice*Count);
     Prompt->SetText(FText::FromString(Text));
 }

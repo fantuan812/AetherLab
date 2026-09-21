@@ -70,7 +70,7 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
             if((C.Type==E::LearnSkill&&Rank!=0)||(C.Type==E::UpgradeSkill&&Rank==0))return Fail(EAetherCommandCode::NotAllowed);
             Skill=Next.Skills.LearnNext(C.SkillId,C.CommandId,SkillContext,Skills);
         }
-        else if(C.Type==E::ResetSkills)Skill=Next.Skills.Reset({},SkillContext,Skills,Context.ExternalSkillGrants);
+        else if(C.Type==E::ResetSkills)Skill=Next.Skills.Reset(C.SkillId,SkillContext,Skills,Context.ExternalSkillGrants);
         else
         {
             int32 Slot=INDEX_NONE;

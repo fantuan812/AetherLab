@@ -1,4 +1,5 @@
 #include "Skills/AetherSkillGraphWidget.h"
+#include "Skills/AetherSkillDragDrop.h"
 #include "Widgets/SLeafWidget.h"
 #include "Rendering/DrawElements.h"
 #include "Styling/CoreStyle.h"
@@ -81,10 +82,19 @@ public:
     {
         const FVector2D P=G.AbsoluteToLocal(E.GetScreenSpacePosition());const int32 Hit=HitNode(G,P);
         if((E.GetEffectingButton()==EKeys::LeftMouseButton||E.GetEffectingButton()==EKeys::RightMouseButton)&&Hit!=INDEX_NONE)
-        {const bool Detail=E.GetEffectingButton()==EKeys::RightMouseButton;Selected=Hit;OnSelected.ExecuteIfBound(Model.Nodes[Hit].Identity,Detail);Invalidate(EInvalidateWidgetReason::Paint);return Detail?FReply::Handled():FReply::Handled().SetUserFocus(SharedThis(this));}
+        {const bool Detail=E.GetEffectingButton()==EKeys::RightMouseButton;Selected=Hit;OnSelected.ExecuteIfBound(Model.Nodes[Hit].Identity,Detail);Invalidate(EInvalidateWidgetReason::Paint);if(!Detail){DragContext=Model.Context;DragNode=Model.Nodes[Hit].Identity;}return Detail?FReply::Handled():FReply::Handled().SetUserFocus(SharedThis(this)).DetectDrag(SharedThis(this),EKeys::LeftMouseButton);}
         if(E.GetEffectingButton()==EKeys::MiddleMouseButton||E.GetEffectingButton()==EKeys::LeftMouseButton)
         {bPanning=true;return FReply::Handled().CaptureMouse(SharedThis(this)).SetUserFocus(SharedThis(this));}
         return E.GetEffectingButton()==EKeys::RightMouseButton?FReply::Handled():FReply::Unhandled();
+    }
+    virtual FReply OnDragDetected(const FGeometry&,const FPointerEvent&) override
+    {
+        if(!DragNode.IsSet()||!DragContext.Same(Model.Context))return FReply::Handled();
+        const auto* Node=Model.Nodes.FindByPredicate([&](const auto& N){return N.Identity==DragNode.GetValue();});
+        const auto* D=Node?FAetherSkillDefinitionsV10::Get().Skills.Find(Node->Identity.SkillId):nullptr;
+        if(!Node||!Node->bAuthorized||!D||!D->bActive)return FReply::Handled();
+        FAetherInspectTarget T;T.Kind=EAetherInspectTarget::SkillNode;T.DefinitionId=Node->Identity.SkillId;T.SkillRank=Node->Identity.Rank;
+        return FReply::Handled().BeginDragDrop(FAetherSkillDragDrop::New({DragContext,T}));
     }
     virtual FReply OnMouseButtonUp(const FGeometry&,const FPointerEvent& E) override
     {
@@ -161,6 +171,7 @@ private:
         if(P.X<80||P.X>View.X-80||P.Y<60||P.Y>View.Y-60)Pan+=View*.5-P;
         ClampPan(View);Invalidate(EInvalidateWidgetReason::Paint);
     }
+    FAetherInspectContext DragContext;TOptional<FAetherSkillNodeIdentity> DragNode;
     FAetherSkillTreeModel Model;FGraphSelection OnSelected;int32 Selected=INDEX_NONE;
     FVector2D Pan=FVector2D::ZeroVector;float Zoom=1;bool bPanning=false;
 };

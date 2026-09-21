@@ -11,6 +11,7 @@ struct FAetherV10ItemDefinition
     // 装备附加属性由适配器白名单消费；武器动作基础值仍由 EquipmentId 指向的配置定义。
     // 这些值不得直接写反应模拟器，也不能与基础值各自覆盖同一条权威配置。
     TMap<FString,double> Stats;
+    TMap<FString,int32> SkillGrants; // 装备来源授权；卸装/损坏时移除，不写永久学习。
     double BrokenStatMultiplier=0.25;
 };
 struct FAetherEquipmentSlotDefinition

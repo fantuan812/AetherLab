@@ -54,13 +54,14 @@ struct FAetherInspectionSnapshot
     double ServerTimeSeconds=0;
 };
 enum class EAetherInspectionState:uint8 {Ready,Changed,Missing,Invalid};
-enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill,Use,Split,Sell,Buy,Repair,Deposit,Withdraw};
+enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill,Use,Split,Sell,Buy,Repair,Deposit,Withdraw,ResetSkills};
 struct FAetherInspectionAction
 {
     EAetherInspectAction Kind=EAetherInspectAction::Equip;
     FString Argument,Label,DisabledReason;
     int32 MaxQuantity=1;
     bool bEnabled=false,bNeedsConfirmation=false;
+    FString ConfirmationSummary;
     int64 UnitPrice=0; // 仅展示；执行价格由服务器当前定义重新解析。
 };
 struct FAetherInspectionStatDifference

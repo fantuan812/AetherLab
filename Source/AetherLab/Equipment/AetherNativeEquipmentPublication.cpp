@@ -37,5 +37,15 @@ bool AAetherPlayerState::PublishNativeEquipment(const FAetherProfileStateV10& P,
     Pawn->Equipment->bProfileManaged=true;
     if(!Pawn->Equipment->RestoreLoadout(Loadout)){Reason=TEXT("Native loadout publication failed");return false;}
     if(GetPawn()!=Pawn||AbilitySystem->GetAvatarActor()!=Pawn){Reason=TEXT("Avatar changed while publishing loadout");return false;}
+    // 从已提交装备重建来源，同一实例占多个槽也只能授予一次。
+    NativeSkillGrants.RemoveAll([](const auto& G){return G.Source==EAetherSkillGrantSource::Equipment;});
+    TSet<FGuid> Granted;
+    for(const auto& Binding:P.Inventory.Equipment)
+    {
+        const auto* Item=P.Inventory.Find(Binding.Value);if(!Item||Granted.Contains(Item->InstanceId))continue;
+        Granted.Add(Item->InstanceId);const auto& Def=D.Items.Items.FindChecked(Item->DefinitionId);
+        if(Def.MaxDurability>0&&Item->Durability==0)continue;
+        for(const auto& G:Def.SkillGrants)NativeSkillGrants.Add({TEXT("Equipment.")+Item->InstanceId.ToString(EGuidFormats::Digits),G.Key,G.Value,EAetherSkillGrantSource::Equipment});
+    }
     Pawn->OnAppearanceChanged.Broadcast();Pawn->ForceNetUpdate();Reason.Reset();return true;
 }

@@ -11,7 +11,7 @@ AAetherPlayerState::AAetherPlayerState()
     Attributes=CreateDefaultSubobject<UAetherAttributes>(TEXT("PersistentAttributes")); Attributes->Posture.SetBaseValue(100); Attributes->Posture.SetCurrentValue(100); SetNetUpdateFrequency(20);
 }
 void AAetherPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{ Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME_CONDITION(AAetherPlayerState,Profile,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,bNativeSkillsEnabled,COND_OwnerOnly);DOREPLIFETIME(AAetherPlayerState,DisplayName);DOREPLIFETIME(AAetherPlayerState,PartyLeader);DOREPLIFETIME_CONDITION(AAetherPlayerState,InvitedBy,COND_OwnerOnly); }
+{ Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME_CONDITION(AAetherPlayerState,Profile,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,bNativeSkillsEnabled,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,SkillGrantPresentation,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,SkillGrantRevision,COND_OwnerOnly);DOREPLIFETIME(AAetherPlayerState,DisplayName);DOREPLIFETIME(AAetherPlayerState,PartyLeader);DOREPLIFETIME_CONDITION(AAetherPlayerState,InvitedBy,COND_OwnerOnly); }
 
 bool AAetherPlayerState::PublishNativeSkills(const FAetherProfileStateV10& P,const TArray<FAetherExternalSkillGrant>& Grants,FString& Reason)
 {
@@ -24,7 +24,9 @@ bool AAetherPlayerState::PublishNativeSkills(const FAetherProfileStateV10& P,con
     // 先记已见提交版本，失败后拒绝旧回读；同版本允许修复重试，不能退回旧等级。
     NativeSkillRevision=P.Revision;NativeSkills=P.Skills;NativeSkillGrants=Grants;
     if(!AetherSkillBinding::Publish(*AbilitySystem,P.Skills,Grants,Reason))return false;
-    bNativeSkillReady=true;ForceNetUpdate();return true;
+    SkillGrantPresentation.Reset();
+    for(const auto& G:Grants){FAetherSkillGrantPresentation V;V.SourceId=G.SourceId;V.SkillId=G.SkillId;V.Rank=G.Rank;V.Source=uint8(G.Source);SkillGrantPresentation.Add(MoveTemp(V));}
+    SkillGrantRevision=P.Revision;bNativeSkillReady=true;ForceNetUpdate();OnProfilePublished.Broadcast();return true;
 }
 bool AAetherPlayerState::RebindNativeSkills(FString& Reason)
 {
@@ -33,4 +35,14 @@ bool AAetherPlayerState::RebindNativeSkills(FString& Reason)
     TGuardValue<bool> Guard(bPublishingNativeSkills,true);bNativeSkillReady=false;
     if(!AetherSkillBinding::Publish(*AbilitySystem,NativeSkills.GetValue(),NativeSkillGrants,Reason))return false;
     bNativeSkillReady=true;return true;
+}
+
+TArray<FAetherExternalSkillGrant> AAetherPlayerState::GetNativeSkillGrants() const
+{
+    if(HasAuthority())return NativeSkillGrants;
+    TArray<FAetherExternalSkillGrant> Grants;
+    if(SkillGrantPresentation.Num()>256)return Grants;
+    for(const auto& V:SkillGrantPresentation)Grants.Add({V.SourceId,V.SkillId,V.Rank,EAetherSkillGrantSource(V.Source)});
+    if(!FAetherSkillStateV10::ValidateExternalGrants(Grants,FAetherV10Definitions::Get().Skills))Grants.Reset();
+    return Grants;
 }

@@ -46,6 +46,8 @@ private:
     void DispatchNativeCommand(const FAetherInspectionDispatch& Dispatch);
     UFUNCTION() void RetryNativeCommand();
     void ApplyCommandAvailability(FAetherInspectionModel& Model) const;
+    void DropSkill(const FAetherInspectRequest& Request,int32 Slot);
+    void InspectHotbar(const FAetherInspectRequest& Request);
     void SelectHotbar(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action,bool Comparison);
     UFUNCTION() void PreviousSources();
     UFUNCTION() void NextSources();
@@ -59,6 +61,9 @@ private:
     TWeakObjectPtr<UAetherMenuSubsystem> Menu;
     TWeakObjectPtr<UAetherCommandClient> CommandClient;
     bool bNativeSnapshot=false;
+    FString NativeSnapshotKey;
+    int64 ViewGeneration=0;
+    FTimerHandle ViewTimer;
     int32 LegacyRevision=-1,SourcePage=0;
     FGuid ModalToken;
     UPROPERTY(Transient) TObjectPtr<UAetherSkillGraphWidget> Graph;

@@ -33,8 +33,8 @@ bool AAetherFrontierCharacter::SkillUnlocked(const FString& Id) const
         const auto* PS=ProfileState();
         return PS&&State->EffectiveRank(Id,PS->GetNativeSkillGrants())>0;
     }
-    // 拥有者的临时来源 DTO 尚未接入之前，不凭界面或 Spec 索引猜测临时授权。
-    const int32 Rank=State->PermanentRank(Id);
+    const auto* PS=ProfileState();if(!PS)return false;
+    const int32 Rank=State->EffectiveRank(Id,PS->GetNativeSkillGrants());
     const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,Id):nullptr;
     // 快照 RPC 与 GAS 复制没有跨通道先后保证；等级尚未追上时不按旧等级预测新技能。
     return Rank>0&&Spec&&Spec->Level==Rank;
