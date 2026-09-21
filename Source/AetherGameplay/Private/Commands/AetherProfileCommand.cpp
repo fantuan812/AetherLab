@@ -91,7 +91,7 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
     case E::BuyItem:case E::SellItem:case E::RepairItem:case E::ClaimReward:
         Result.Code=AetherProfileEconomy::Apply(C,Next,Context,Items,Economy,Result);
         break;
-    // 掉落/容器由跨域处理器处理；交互尚未实现，不能按成功空操作提交。
+    // 掉落、容器和交互分别由协调者路由到跨域处理器；本处理器不接受成功空操作。
     default:return Fail(EAetherCommandCode::UnsupportedAction);
     }
     if(IsInventory)

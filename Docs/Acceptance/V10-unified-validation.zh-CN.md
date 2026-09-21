@@ -85,3 +85,9 @@ Shipping Server仍被安装版UE拒绝；Linux服务器工具链/构建亦未完
 TestMotionStyles.py 使用真实 CPU 模型，对 idle/crouch/crouch_idle 各三个种子连续生成六秒，并执行原生 idle → 作者风格 → 真实生成的往返检查。全部通过有限变换、四元数范数和骨盆高度门槛，报告 Saved/Automation/V10-style-regression/result.json。这项检查不会修整输出，也不替代视觉质量审批。
 
 实际 Editor 16 组 Manny/Quinn 动画图检查 V10Quality_bce957e43edb、V10Quality_a119d870e41c 已确认每种风格实际更新且不再出现骨盆发散。截图进一步揭示蹲起后人物 Mesh 默认偏移错误；该问题正在另一个工作单元修复，因此此处仍不将双人物视觉、接地和发布包标记通过。
+
+## 蹲起 Mesh 偏移回归
+
+UE 的蹲起回调使用类默认 Mesh 偏移，而本项目人物定义在运行时设置偏移；现按实际站立胶囊高度恢复偏移，并先同步父类直接修改后的世界变换缓存。回归同时断言相对位置和世界位置，Rules-ced281a0f9f64c4fa7b309ba27263788 通过。Editor 增量构建通过（V10-crouch-mesh-build2.log）。
+
+真实 CPU 双人物16风格检查 V10Quality_8a45883b8767 通过，人物 Mesh 恢复至地面，足骨离地最大约12–15.24cm（目标包含12cm足骨偏移）。这些测量不代表滑脚或生成蹲姿幅度已经验收；生成蹲姿视觉仍需改进，完整质量和发布包继续验证。

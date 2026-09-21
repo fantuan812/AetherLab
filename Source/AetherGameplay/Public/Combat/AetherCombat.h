@@ -68,6 +68,8 @@ public:
     FVector Home = FVector::ZeroVector;
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystem; }
     virtual void BeginPlay() override;
+    virtual void OnStartCrouch(float HeightAdjust,float ScaledHeightAdjust) override;
+    virtual void OnEndCrouch(float HeightAdjust,float ScaledHeightAdjust) override;
     virtual void PossessedBy(AController* NewController) override;
     virtual void UnPossessed() override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;

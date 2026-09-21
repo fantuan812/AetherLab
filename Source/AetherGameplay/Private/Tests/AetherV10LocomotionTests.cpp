@@ -3,6 +3,7 @@
 #include "Framework/AetherFrontier.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Engine/Engine.h"
 #include "Misc/ScopeExit.h"
 
@@ -39,7 +40,13 @@ bool FAetherLocomotionTest::RunTest(const FString&)
     C->Reactive->State.IceFraction=.8;
     TestEqual(TEXT("Sprint respects frozen movement penalty"),M->GetMaxSpeed(),312.5f);
     C->Reactive->State.IceFraction=0;
+    // 生产角色在 BeginPlay 才绑定外观位置；CDO 的默认 Mesh 高度不能替代这个运行时偏移。
+    C->GetMesh()->SetRelativeLocation(FVector(0,0,-Standing));
     C->SetCrouchInput(true);M->UpdateCharacterStateBeforeMovement(.016f);
+    TestEqual(TEXT("Crouch keeps authored mesh at capsule floor"),C->GetMesh()->GetRelativeLocation().Z,-48.);
+    C->GetMesh()->UpdateComponentToWorld();
+    TestEqual(TEXT("Registered crouch mesh world height matches capsule floor"),C->GetMesh()->GetComponentLocation().Z-C->GetActorLocation().Z,-48.);
+
     TestTrue(TEXT("Real capsule crouches"),C->IsCrouched());
     TestEqual(TEXT("Crouch capsule half-height"),C->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight(),48.f);
     TestFalse(TEXT("Crouch cancels sprint intent"),M->bWantsSprint);
@@ -57,6 +64,7 @@ bool FAetherLocomotionTest::RunTest(const FString&)
     C->StartJumpInput();
     TestFalse(TEXT("Jump first stands when clear"),C->IsCrouched());
     TestEqual(TEXT("Stand restores capsule"),C->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight(),Standing);
+    TestEqual(TEXT("Stand restores runtime mesh floor offset"),C->GetMesh()->GetRelativeLocation().Z,-double(Standing));
     C->CheckJumpInput(.016f);
     TestTrue(TEXT("Single real CharacterMovement jump enters falling"),M->IsFalling());
     C->StopJumping();C->StartJumpInput();

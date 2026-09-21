@@ -147,6 +147,27 @@ void AAetherCharacter::ApplyCharacterDefinition()
         OnAppearanceChanged.Broadcast();
     }
 }
+void AAetherCharacter::OnStartCrouch(float HeightAdjust,float ScaledHeightAdjust)
+{
+    Super::OnStartCrouch(HeightAdjust,ScaledHeightAdjust);
+    // Super 直接改写 RelativeLocation，需先同步缓存；否则世界位置恰好相同时 SetRelativeLocation 会提前返回。
+    GetMesh()->UpdateComponentToWorld();
+    // 引擎默认回调从 CDO 读取 Mesh 高度，本项目外观却在 BeginPlay 从角色定义加载。
+    // 按本角色的站立胶囊高度恢复偏移，否则蹲下会把 Mesh 抬高 88 cm，起身后仍然悬空。
+    const float StandingHalf=CharacterDefinition?CharacterDefinition->CapsuleHalfHeight:88.f;
+    FVector Offset=GetMesh()->GetRelativeLocation();Offset.Z=-StandingHalf+HeightAdjust;
+    GetMesh()->SetRelativeLocation(Offset);
+    CacheInitialMeshOffset(Offset,GetMesh()->GetRelativeRotation());
+}
+void AAetherCharacter::OnEndCrouch(float HeightAdjust,float ScaledHeightAdjust)
+{
+    Super::OnEndCrouch(HeightAdjust,ScaledHeightAdjust);
+    GetMesh()->UpdateComponentToWorld();
+    const float StandingHalf=CharacterDefinition?CharacterDefinition->CapsuleHalfHeight:88.f;
+    FVector Offset=GetMesh()->GetRelativeLocation();Offset.Z=-StandingHalf;
+    GetMesh()->SetRelativeLocation(Offset);
+    CacheInitialMeshOffset(Offset,GetMesh()->GetRelativeRotation());
+}
 void AAetherCharacter::CycleEquipment()
 {
     if (!CharacterDefinition || CharacterDefinition->QuickEquipItems.IsEmpty()) return;
