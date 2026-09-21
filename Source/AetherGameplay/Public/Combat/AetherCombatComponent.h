@@ -31,4 +31,6 @@ public:
     UPROPERTY(Replicated) uint64 DamageReceivedCount=0;
     TWeakObjectPtr<AActor> LastDamager;
     float BlockStarted=-100,NextParryAllowed=0,InvulnerableUntil=0;
+private:
+    double HeatWearRemainder=0;
 };

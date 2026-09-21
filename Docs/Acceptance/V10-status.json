@@ -48,7 +48,7 @@
       "id": "V10-07",
       "status": "implemented_under_validation",
       "implementation": "十槽、双套基础装备、耐久/修理/属性/外观；补入官方手指握持图层及双手辅助握点，最新代码验证中",
-      "verified": "70项规则通过；真实Manny/Quinn共16组装备图、官方手指闭合及双手辅助握点通过，最大误差约3.19cm；持续磨损队列溢出修复已通过真实SQLite回归",
+      "verified": "71 项规则通过；最新 CPU 双人物 16 组装备图 V10Quality_0d348bda6d80 通过，辅助握点最大误差 1.212cm；连续热伤害磨损与帧率无关",
       "remainingAcceptance": "双人物穿戴与真实战斗磨损视觉"
     },
     {
@@ -118,7 +118,7 @@
       "id": "V10-17",
       "status": "implemented_under_validation",
       "implementation": "G1、双人物重定向、8风格及来源哈希已生成",
-      "verified": "真实模型往返通过；最新Vulkan八风格双人物图V10Quality_2d37c5047bb8通过；足部接地固定改善多数风格，Quinn Injured仍有接触速度异常，未作完整视觉验收",
+      "verified": "最新肩肘腕校准及自制蹲姿资产已生成；Vulkan 双人物八风格 V10Quality_fd97311c1dc3 图检查与截图复核通过，Manny Combat 接触样本不足，接触质量尚未全项验收；真实风格往返10例通过",
       "remainingAcceptance": "8风格双人物接触/滑脚/视觉质量"
     },
     {

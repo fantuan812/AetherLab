@@ -376,6 +376,16 @@ bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkelet
   for(const TCHAR* SideName:{TEXT("Left"),TEXT("Right")})
   {
    const bool Left=FString(SideName)==TEXT("Left");const FString Prefix=Left?TEXT("left"):TEXT("right"),Suffix=Left?TEXT("l"):TEXT("r");
+   // 肩 pitch/roll/yaw、肘、腕分别对应人体上臂/前臂/手。
+   // 整条七关节臂插值到三关节会把肘屈曲分摊到上臂，产生持续抬肩的鸡翅姿态。
+   for(int32 Segment=0;Segment<3;++Segment){
+    const FName Chain(*(FString(SideName)+(Segment==0?TEXT("Arm"):Segment==1?TEXT("Elbow"):TEXT("Wrist"))));
+    const FName Start(*(Robot?Prefix+(Segment==0?TEXT("_shoulder_pitch_skel"):Segment==1?TEXT("_elbow_skel"):TEXT("_wrist_roll_skel")):
+        (Segment==0?TEXT("upperarm_"):Segment==1?TEXT("lowerarm_"):TEXT("hand_"))+Suffix));
+    const FName End(*(Robot&&Segment!=1?Prefix+(Segment==0?TEXT("_shoulder_yaw_skel"):TEXT("_wrist_yaw_skel")):Start.ToString()));
+    if(!RC->GetRetargetChains().ContainsByPredicate([&](const FBoneChain& C){return C.ChainName==Chain;}))RC->AddRetargetChain(Chain,Start,End,NAME_None);
+    else {RC->SetRetargetChainStartBone(Chain,Start);RC->SetRetargetChainEndBone(Chain,End);}
+   }
    const FName HipChain(*(FString(SideName)+TEXT("Leg")));
    RC->SetRetargetChainStartBone(HipChain,FName(*(Robot?Prefix+TEXT("_hip_pitch_skel"):TEXT("thigh_")+Suffix)));
    RC->SetRetargetChainEndBone(HipChain,FName(*(Robot?Prefix+TEXT("_hip_yaw_skel"):TEXT("thigh_")+Suffix)));
@@ -392,7 +402,7 @@ bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkelet
   if(!Save(Rig,Why))return false;
  }
  Controller->SetIKRig(ERetargetSourceOrTarget::Source,Controller->GetIKRigWriteable(ERetargetSourceOrTarget::Source));
- for(const TCHAR* Name:{TEXT("LeftLeg"),TEXT("RightLeg"),TEXT("LeftKnee"),TEXT("RightKnee"),TEXT("LeftAnkle"),TEXT("RightAnkle")})
+ for(const TCHAR* Name:{TEXT("LeftLeg"),TEXT("RightLeg"),TEXT("LeftKnee"),TEXT("RightKnee"),TEXT("LeftAnkle"),TEXT("RightAnkle"),TEXT("LeftArm"),TEXT("RightArm"),TEXT("LeftElbow"),TEXT("RightElbow"),TEXT("LeftWrist"),TEXT("RightWrist")})
   if(!Controller->SetSourceChain(Name,Name)){Why=TEXT("Cannot map anatomical leg chain");return false;}
  // 锁定模型的 +X 位于左髋，必须镜像到 UE 角色的 -Y；
  // 参考人物网格朝 +Y，而 G1 源朝 +X。校准参考朝向后再对齐关节，不能把90度偏差烘进膝轴。
@@ -412,6 +422,35 @@ bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkelet
   {const FName Name=TargetRef.GetBoneName(Bone);if(Name!=TEXT("pelvis")&&Name!=TEXT("pelvis_skel")&&Name!=TEXT("root"))AlignBones.AddUnique(Name);if(Bone==Start)break;}
  }
  Controller->AutoAlignBones(AlignBones,ERetargetAutoAlignMethod::ChainToChain,ERetargetSourceOrTarget::Target);
+ // 单骨人体链没有链内方向供 AutoAlign 推断；显式对齐肩到肘、肘到腕。
+ // 使用真实参考关节方向而非固定角度，正反向与 Manny/Quinn 共用，保留父空间旋转。
+ const auto BuildPose=[&](ERetargetSourceOrTarget Which){
+  const auto& Bones=Controller->GetIKRigWriteable(Which)->GetPreviewMesh()->GetRefSkeleton();
+  const auto& Pose=Controller->GetCurrentRetargetPose(Which);TArray<FTransform> Result;Result.SetNum(Bones.GetNum());
+  for(int32 I=0;I<Bones.GetNum();++I){FTransform Local=Bones.GetRefBonePose()[I];
+   Local.SetRotation((Local.GetRotation()*Pose.GetDeltaRotationForBone(Bones.GetBoneName(I))).GetNormalized());
+   const int32 Parent=Bones.GetParentIndex(I);Result[I]=Parent<0?Local:Local*Result[Parent];}
+  return Result;
+ };
+ const auto& SourceRef=Controller->GetIKRigWriteable(ERetargetSourceOrTarget::Source)->GetPreviewMesh()->GetRefSkeleton();
+ for(const bool Left:{true,false})for(const bool Elbow:{false,true}){
+  const FString Prefix=Left?TEXT("left"):TEXT("right"),Suffix=Left?TEXT("l"):TEXT("r");
+  const FName RobotBone(*(Prefix+(Elbow?TEXT("_elbow_skel"):TEXT("_shoulder_yaw_skel"))));
+  const FName RobotChild(*(Prefix+(Elbow?TEXT("_wrist_roll_skel"):TEXT("_elbow_skel"))));
+  const FName HumanBone(*((Elbow?FString(TEXT("lowerarm_")):FString(TEXT("upperarm_")))+Suffix));
+  const FName HumanChild(*((Elbow?FString(TEXT("hand_")):FString(TEXT("lowerarm_")))+Suffix));
+  const int32 SourceBone=SourceRef.FindBoneIndex(Reverse?HumanBone:RobotBone),SourceChild=SourceRef.FindBoneIndex(Reverse?HumanChild:RobotChild);
+  const FName BoneName=Reverse?RobotBone:HumanBone;
+  const int32 Bone=TargetRef.FindBoneIndex(BoneName),Child=TargetRef.FindBoneIndex(Reverse?RobotChild:HumanChild);
+  if(SourceBone==INDEX_NONE||SourceChild==INDEX_NONE||Bone==INDEX_NONE||Child==INDEX_NONE){Why=TEXT("Arm alignment bones missing");return false;}
+  const auto SourcePose=BuildPose(ERetargetSourceOrTarget::Source),TargetPose=BuildPose(ERetargetSourceOrTarget::Target);
+  const FVector Desired=(SourcePose[SourceChild].GetLocation()-SourcePose[SourceBone].GetLocation()).GetSafeNormal();
+  const FVector Before=(TargetPose[Child].GetLocation()-TargetPose[Bone].GetLocation()).GetSafeNormal();
+  const FQuat WorldRotation=FQuat::FindBetweenNormals(Before,Desired)*TargetPose[Bone].GetRotation();
+  const int32 Parent=TargetRef.GetParentIndex(Bone);
+  const FQuat LocalRotation=Parent<0?WorldRotation:TargetPose[Parent].GetRotation().Inverse()*WorldRotation;
+  Controller->SetRotationOffsetForRetargetPoseBone(BoneName,(TargetRef.GetRefBonePose()[Bone].GetRotation().Inverse()*LocalRotation).GetNormalized(),ERetargetSourceOrTarget::Target);
+ }
  // 模型中立坐标原点在骨盆，UE pelvis op 却按离地高度求体型比例。
  // 只校准 retarget pose 到足底地面，不改锁定的 34 骨模型或推理结果单位。
  const auto Side=Reverse?ERetargetSourceOrTarget::Target:ERetargetSourceOrTarget::Source;

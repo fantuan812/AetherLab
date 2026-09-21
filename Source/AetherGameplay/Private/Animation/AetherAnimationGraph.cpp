@@ -34,6 +34,7 @@ struct FAetherGroundFootIK : FAnimNode_TwoBoneIK
 {
  double FlatContactZ=12;
  bool Planted=false;FVector PlantAnchor=FVector::ZeroVector,PreviousOrigin=FVector::ZeroVector;
+ double CorrectiveStepAge=-1;FVector StepStart=FVector::ZeroVector;
  FTransform BaseTransform=FTransform::Identity;TWeakObjectPtr<UPrimitiveComponent> MovementBase;
  virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output,TArray<FBoneTransform>& Out) override
  {
@@ -42,18 +43,25 @@ struct FAetherGroundFootIK : FAnimNode_TwoBoneIK
   const FVector Surface=EffectorLocation;
   EffectorLocation=FVector(Authored.X,Authored.Y,FMath::Max(Surface.Z,Authored.Z+Surface.Z-FlatContactZ));
   const FTransform Component=Output.AnimInstanceProxy->GetComponentTransform();
-  if(FVector::DistSquared(Component.GetLocation(),PreviousOrigin)>FMath::Square(100.))Planted=false;
+  if(FVector::DistSquared(Component.GetLocation(),PreviousOrigin)>FMath::Square(100.)){Planted=false;CorrectiveStepAge=-1;}
   PreviousOrigin=Component.GetLocation();
   // 模型不保证刚性接触。接地期在移动基座局部锁住足点，摆腿时立即释放；
   // 超过有界步幅则释放，不能拉伸腿去追传送前或受阻时的陈旧锚点。
   const bool Contact=Authored.Z<=FlatContactZ+(Planted?7.:3.);
   const FVector DesiredWorld=Component.TransformPosition(EffectorLocation);
-  if(!Contact)Planted=false;
+  if(!Contact){Planted=false;CorrectiveStepAge=-1;}
   else if(!Planted){PlantAnchor=BaseTransform.InverseTransformPosition(DesiredWorld);Planted=true;}
   if(Planted){
    const FVector AnchorWorld=BaseTransform.TransformPosition(PlantAnchor);
-   if(FVector::Dist2D(DesiredWorld,AnchorWorld)>45)Planted=false;
-   else {const FVector Anchor=Component.InverseTransformPosition(AnchorWorld);EffectorLocation.X=Anchor.X;EffectorLocation.Y=Anchor.Y;}
+   if(FVector::Dist2D(DesiredWorld,AnchorWorld)>45&&CorrectiveStepAge<0){CorrectiveStepAge=0;StepStart=PlantAnchor;}
+   if(CorrectiveStepAge>=0){
+    // 超步幅时补一个有抬脚和落脚的短步，禁止接地状态瞬移锚点产生可见滑步。
+    CorrectiveStepAge+=Output.AnimInstanceProxy->GetDeltaSeconds();
+    const double T=FMath::Clamp(CorrectiveStepAge/.18,0.,1.);
+    FVector StepWorld=FMath::Lerp(BaseTransform.TransformPosition(StepStart),DesiredWorld,T);
+    StepWorld.Z+=16*FMath::Sin(PI*T);EffectorLocation=Component.InverseTransformPosition(StepWorld);
+    if(T>=1){PlantAnchor=BaseTransform.InverseTransformPosition(DesiredWorld);CorrectiveStepAge=-1;}
+   }else {const FVector Anchor=Component.InverseTransformPosition(AnchorWorld);EffectorLocation.X=Anchor.X;EffectorLocation.Y=Anchor.Y;}
   }
   FAnimNode_TwoBoneIK::EvaluateSkeletalControl_AnyThread(Output,Out);
   EffectorLocation=Surface;

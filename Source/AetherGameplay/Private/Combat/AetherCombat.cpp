@@ -554,7 +554,7 @@ void AAetherCharacter::AdvanceCombatResources(float Dt,double Temperature,TWeakO
     SetVitals(Health(),Mana()+Dt*5,Stamina()+Dt*Regen);
     if(T-CombatRuntime->LastDamageAt>2)AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),
         bUseBasicAssets?FMath::Min(100.f,Attributes->Posture.GetCurrentValue()+Dt*12):FMath::Max(0.f,Attributes->Posture.GetCurrentValue()-Dt*12));
-    if(Temperature>55){FDamageEvent E(UAetherFireDamage::StaticClass());TakeDamage(float(FMath::Min(25.0,(Temperature-55)*.12)*Dt),E,nullptr,HeatSource.Get());}
+    if(Temperature>55){FDamageEvent E(UAetherHeatExposureDamage::StaticClass());TakeDamage(float(FMath::Min(25.0,(Temperature-55)*.12)*Dt),E,nullptr,HeatSource.Get());}
 }
 bool AAetherCharacter::DeferEquipmentHit(const FAetherEquipmentHit& Hit)
 {

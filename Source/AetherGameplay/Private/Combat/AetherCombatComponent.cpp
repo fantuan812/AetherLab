@@ -79,7 +79,11 @@ float UAetherCombatComponent::ApplyDamage(float Amount,const FDamageEvent& Event
     else Applied=AetherEquipmentMath::PhysicalDamage(Amount,C->Attributes->GearArmor.GetCurrentValue());
     Applied=FMath::Min(C->Health(),Applied);
     C->AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetHealthAttribute(),EGameplayModOp::Additive,-Applied);
-    if(Applied>0)C->RecordEquipmentWear(false,false);
+    if(Applied>0){
+        // 一次武器命中仍磨损一次；持续热暴露每累计一点有效伤害磨损一次，30/60/120 FPS 一致。
+        const int32 Wear=Type&&Type->IsChildOf(UAetherHeatExposureDamage::StaticClass())?AetherEquipmentMath::ContinuousWear(Applied,HeatWearRemainder):1;
+        for(int32 I=0;I<Wear;++I)C->RecordEquipmentWear(false,false);
+    }
     LastDamager=Causer;++DamageReceivedCount;LastDamageAt=C->CombatTime();
     if(Applied>0&&C->Alive())C->PresentAction(TEXT("Hit"),.35f);
     if(!C->Alive()){C->CancelActions();C->bBlocking=C->bWindingUp=false;C->GetCharacterMovement()->StopMovementImmediately();}

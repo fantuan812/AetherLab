@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "sourceAsset": "/Game/Animation/Motion/Authored/G1_A_CrouchIdle.G1_A_CrouchIdle",
-  "sourceSha256": "6ace6794d668964b2c4ef9f05f16834e6de89808fc65e2df0852b687b059256a",
-  "sourceFileSha256": "788730f5f4c71188a5b19c1999029b92bd7de3262a533fc435e49b96652f9704",
+  "sourceSha256": "8fd3c008edc4bb31b062d0ae324cfe5b52f023c23f1b8846fe31df63f662f7ad",
+  "sourceFileSha256": "a68da2ef9266efdd4d9d404c2dae8ac0d027b763155101efb7951eb3e8898507",
   "skeleton": {
     "schema": 1,
     "nativeRevision": "ee0cf5d9035f639ed0787f390fb1ce05d6a4c463",
@@ -320,7 +320,7 @@
       }
     ]
   },
-  "styleSha256": "9a1f638f36e266192719bc928cb177121ecbf1b44332551861a61e305af56955",
+  "styleSha256": "a6449ca4924eeae12b30bad2adc32fbec4b4283121509bcc8fbec27dacfbf156",
   "frames": 31,
   "fps": 30,
   "qualityApproved": false
