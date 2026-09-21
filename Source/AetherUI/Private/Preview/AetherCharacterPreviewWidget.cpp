@@ -1,5 +1,5 @@
-#include "UI/AetherWidgetAssets.h"
 #include "Preview/AetherCharacterPreviewWidget.h"
+#include "UI/AetherWidgetAssets.h"
 #include "Preview/AetherCharacterPreviewSubsystem.h"
 #include "Combat/AetherCombat.h"
 #include "Blueprint/WidgetTree.h"

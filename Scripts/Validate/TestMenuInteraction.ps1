@@ -13,7 +13,7 @@ $taskProcess=$null
 try {
  $taskArgs=@(
   ('"'+(Join-Path $taskRoot 'AetherLab.uproject')+'"'),
-  '/Engine/Maps/Entry?game=/Script/AetherLab.AetherFrontierMode',
+  '/Game/AetherCore/Maps/L_Frontier?game=/Script/AetherGameplay.AetherFrontierMode',
   '-game','-AetherV10MenuCapture',"-AetherSavePrefix=$taskPrefix",
   ('-AetherMenuCaptureDir="'+$taskImages+'"'),
   '-RenderOffscreen','-ForceRes','-windowed',"-ResX=$Width","-ResY=$Height",
@@ -30,7 +30,7 @@ try {
   throw "Menu interaction failed: $taskLog"
  }
  if(Select-String -LiteralPath $taskLog -Pattern 'V10_MENU_INTERACTION_FAIL|Fatal error:' -Quiet){throw "Menu interaction failed: $taskLog"}
- foreach($taskImage in @('Inventory.png','Journal.png','Map.png','NewPawn.png')){
+ foreach($taskImage in @('Inventory.png','Journal.png','Map.png','NewPawn.png','Skills.png','Party.png','Settings.png')){
   $taskPath=Join-Path $taskImages $taskImage
   if(!(Test-Path -LiteralPath $taskPath) -or (Get-Item -LiteralPath $taskPath).LastWriteTime -lt $taskProcess.StartTime){throw "Missing fresh capture: $taskPath"}
   # Windows 远程桌面可能把大窗口限制为桌面可用尺寸；验 PNG 实际尺寸，不能只信 -ResX/-ResY。

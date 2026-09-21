@@ -402,8 +402,8 @@ void AAetherCharacter::ServerDodge_Implementation(){TryDodge();}
 void AAetherCharacter::ReceiveHit(float Damage,float PostureDamage,AAetherCharacter* Source,bool CanBlock)
 {CombatRuntime->ReceiveHit(Damage,PostureDamage,Source,CanBlock);}
 void AAetherCharacter::ApplyPostureDamage(float Amount){CombatRuntime->ApplyPostureDamage(Amount);}
-float AAetherCharacter::TakeDamage(float Amount,const FDamageEvent& Event,AController* Instigator,AActor* Causer)
-{return CombatRuntime->ApplyDamage(Amount,Event,Instigator,Causer);}
+float AAetherCharacter::TakeDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer)
+{return CombatRuntime->ApplyDamage(Amount,Event,EventInstigator,Causer);}
 void AAetherCharacter::Reaction(EReactiveReaction Kind, double Magnitude, FVector Vector)
 {
     // Legacy reaction events are presentation-only. Shock gameplay uses the typed window below.
@@ -544,10 +544,10 @@ bool AAetherCharacter::DeferEquipmentHit(const FAetherEquipmentHit& Hit)
         if(!Self.IsValid())return;Copy.Source=Source.Get();Self->ReceiveEquipmentHit_Implementation(Copy);
     });
 }
-bool AAetherCharacter::DeferDamage(float Amount,const FDamageEvent& Event,AController* Instigator,AActor* Causer)
+bool AAetherCharacter::DeferDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer)
 {
     if(!ResourceGate->IsBlocked())return false;
-    const TWeakObjectPtr<AAetherCharacter> Self=this;const TWeakObjectPtr<AController> SourceController=Instigator;
+    const TWeakObjectPtr<AAetherCharacter> Self=this;const TWeakObjectPtr<AController> SourceController=EventInstigator;
     const TWeakObjectPtr<AActor> Source=Causer;const auto DamageClass=Event.DamageTypeClass;
     // 当前项目的伤害消费仅使用 DamageType 与标量 Amount；位置冲击在物理事件入口整体排队。
     return ResourceGate->Defer([Self,SourceController,Source,DamageClass,Amount]{

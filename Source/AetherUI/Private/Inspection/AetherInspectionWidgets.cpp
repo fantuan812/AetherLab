@@ -116,8 +116,8 @@ void UAetherInspectionCard::RenderModel()
     };
     if(Model.CanInteract())
     {
-        for(const auto& Slot:Model.ComparisonSlots)
-            AddButton({EAetherInspectAction::Equip,Slot,TEXT("比较此槽"),{},1,true,false},true);
+        for(const auto& SlotValue:Model.ComparisonSlots)
+            AddButton({EAetherInspectAction::Equip,SlotValue,TEXT("比较此槽"),{},1,true,false},true);
         for(const auto& Action:Model.Actions)AddButton(Action,false);
     }
 }

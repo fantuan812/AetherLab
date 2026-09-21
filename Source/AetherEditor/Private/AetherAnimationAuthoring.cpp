@@ -12,7 +12,7 @@
 #include "Editor.h"
 namespace
 {
-struct FKey {double Time=0;FVector Translation=FVector::ZeroVector;FQuat Rotation=FQuat::Identity;};
+struct FControlledPoseKey {double Time=0;FVector Translation=FVector::ZeroVector;FQuat Rotation=FQuat::Identity;};
 bool Vector(const TSharedPtr<FJsonValue>& Value,FVector& V)
 {
     const TArray<TSharedPtr<FJsonValue>>* A=nullptr;if(!Value->TryGetArray(A)||A->Num()!=3)return false;
@@ -29,7 +29,7 @@ UAnimSequence* UAetherAnimationAuthoring::BakeControlledClip(UAnimSequence* Sour
     if(!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Recipe),O)||!O||
        !O->TryGetNumberField(TEXT("schema"),Schema)||Schema!=1||!O->TryGetNumberField(TEXT("duration"),Duration)||!FMath::IsFinite(Duration)||Duration<.1||Duration>5||
        !O->TryGetBoolField(TEXT("animateSource"),Animate)||!O->TryGetBoolField(TEXT("reverseSource"),Reverse)||!O->TryGetObjectField(TEXT("tracks"),Tracks)||(*Tracks)->Values.Num()>64)return nullptr;
-    const auto& Ref=Source->GetSkeleton()->GetReferenceSkeleton();TMap<FName,TArray<FKey>> Curves;
+    const auto& Ref=Source->GetSkeleton()->GetReferenceSkeleton();TMap<FName,TArray<FControlledPoseKey>> Curves;
     for(const auto& Pair:(*Tracks)->Values)
     {
         const FName Bone(*Pair.Key);if(Ref.FindBoneIndex(Bone)==INDEX_NONE)return nullptr;
@@ -37,7 +37,7 @@ UAnimSequence* UAetherAnimationAuthoring::BakeControlledClip(UAnimSequence* Sour
         auto& Keys=Curves.Add(Bone);double Last=-1;
         for(const auto& Row:*Rows)
         {
-            const TArray<TSharedPtr<FJsonValue>>* K=nullptr;FKey Key;FVector Rotation;
+            const TArray<TSharedPtr<FJsonValue>>* K=nullptr;FControlledPoseKey Key;FVector Rotation;
             if(!Row->TryGetArray(K)||K->Num()!=3||!(*K)[0]->TryGetNumber(Key.Time)||!FMath::IsFinite(Key.Time)||
                Key.Time<0||Key.Time>1||Key.Time<=Last||!Vector((*K)[1],Rotation)||!Vector((*K)[2],Key.Translation))return nullptr;
             Key.Rotation=FRotator(Rotation.X,Rotation.Y,Rotation.Z).Quaternion();Last=Key.Time;Keys.Add(Key);

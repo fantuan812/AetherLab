@@ -1,5 +1,5 @@
-#include "UI/AetherWidgetAssets.h"
 #include "AetherFrontierPanel.h"
+#include "UI/AetherWidgetAssets.h"
 #include "UI/AetherPageBase.h"
 #include "Inventory/AetherInventoryPage.h"
 #include "Skills/AetherSkillTreePage.h"
@@ -64,7 +64,7 @@ TSharedRef<SWidget> UAetherFrontierPanel::RebuildWidget()
             auto* W=CreateWidget<UUserWidget>(GetOwningPlayer(),AetherWidgetAssets::Resolve(D.Class));Pages.Add(D.Id,W);PageHost->AddChild(W);
             auto* B=WidgetTree->ConstructWidget<UAetherPageButton>();auto* T=WidgetTree->ConstructWidget<UTextBlock>();T->SetText(FText::FromString(PageTitle(D.Id)));B->SetContent(T);
             B->Bind(FSimpleDelegate::CreateWeakLambda(this,[this,Id=D.Id](){if(Menu.IsValid()&&Menu->GetLayerCount()==0)Menu->OpenPage(Id);}));
-            auto* Slot=Tabs->AddChildToHorizontalBox(B);Slot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));Slot->SetPadding(FMargin(3));
+            auto* SlotValue=Tabs->AddChildToHorizontalBox(B);SlotValue->SetSize(FSlateChildSize(ESlateSizeRule::Fill));SlotValue->SetPadding(FMargin(3));
         }
         auto* Close=WidgetTree->ConstructWidget<UAetherPageButton>();auto* T=WidgetTree->ConstructWidget<UTextBlock>();T->SetText(FText::FromString(TEXT("关闭")));Close->SetContent(T);
         Close->Bind(FSimpleDelegate::CreateWeakLambda(this,[this](){if(Menu.IsValid())Menu->Back();}));Tabs->AddChildToHorizontalBox(Close);

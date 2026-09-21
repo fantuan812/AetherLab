@@ -4,6 +4,11 @@
 """
 import unreal as ue
 
+def load_optional(path):
+    # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
+    return ue.EditorAssetLibrary.load_asset(path) if ue.EditorAssetLibrary.does_asset_exist(path) else None
+
+
 library = ue.EditorAssetLibrary
 tools = ue.AssetToolsHelpers.get_asset_tools()
 TAG = "AetherPreviewGenerated"
@@ -11,7 +16,7 @@ VERSION = "v10-alpha-1"
 
 
 def require(path):
-    asset = library.load_asset(path)
+    asset = load_optional(path)
     if not asset:
         raise RuntimeError("缺少预览资源：" + path)
     return asset

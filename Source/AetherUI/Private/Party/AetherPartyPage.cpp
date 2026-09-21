@@ -1,5 +1,5 @@
-#include "UI/AetherWidgetAssets.h"
 #include "Party/AetherPartyPage.h"
+#include "UI/AetherWidgetAssets.h"
 #include "UI/AetherPageWidgets.h"
 #include "Framework/AetherFrontier.h"
 #include "Components/HorizontalBox.h"

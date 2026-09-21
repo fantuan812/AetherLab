@@ -1,12 +1,14 @@
+#include "AetherMotionAuthoring.h"
 #include "Misc/PackageName.h"
 THIRD_PARTY_INCLUDES_START
 #include <openssl/sha.h>
 THIRD_PARTY_INCLUDES_END
-#include "AetherMotionAuthoring.h"
 #include "AetherMotionProfile.h"
 #include "AetherMotionTypes.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/Skeleton.h"
+#include "Rendering/SkeletalMeshModel.h"
+#include "Rendering/SkeletalMeshLODModel.h"
 #include "Animation/AnimData/IAnimationDataModel.h"
 #include "Animation/AnimData/IAnimationDataController.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -124,11 +126,14 @@ USkeletalMesh* UAetherMotionAuthoring::CreateSource(const FString& Json,FString&
     Why.Reset();FAetherMotionSkeleton S;if(!Skeleton(Load(Json,Why),S,Why))return nullptr;
     auto* Mesh=Asset<USkeletalMesh>(TEXT("/Game/Animation/Motion/SK_G1MotionSource"),Why);if(!Mesh)return nullptr;
     auto* Rig=Asset<USkeleton>(TEXT("/Game/Animation/Motion/SKEL_G1MotionSource"),Why);if(!Rig)return nullptr;
-    Mesh->SetSkeleton(Rig);FReferenceSkeletonModifier Ref(Mesh->GetRefSkeleton(),Rig);
+    Mesh->SetSkeleton(Rig);
     FMeshDescription Description;FSkeletalMeshAttributes Attributes(Description);Attributes.Register();
     Attributes.GetVertexInstanceUVs().SetNumChannels(1);
     const FPolygonGroupID Group=Description.CreatePolygonGroup();Attributes.GetPolygonGroupMaterialSlotNames()[Group]=TEXT("Source");
     FBox Bounds(ForceInit);
+    {
+    // modifier 析构会重建最终骨架数组；必须先完成再让 Skeleton 读取父链。
+    FReferenceSkeletonModifier Ref(Mesh->GetRefSkeleton(),Rig);
     for(int32 I=0;I<34;++I)
     {
         const FVector Global=Basis().TransformVector(FVector(S.NeutralMeters[I]))*100.;
@@ -150,7 +155,9 @@ USkeletalMesh* UAetherMotionAuthoring::CreateSource(const FString& Json,FString&
         }
         Description.CreatePolygon(Group,Corners);
     }
+    }
     Mesh->GetMaterials().Add(FSkeletalMaterial(UMaterial::GetDefaultMaterial(MD_Surface),true,false,TEXT("Source")));
+    Mesh->GetImportedModel()->LODModels.Add(new FSkeletalMeshLODModel());
     Mesh->AddLODInfo();Mesh->CreateMeshDescription(0,MoveTemp(Description));
     if(!Mesh->CommitMeshDescription(0)){Why=TEXT("源 LOD 提交失败");return nullptr;}
     Mesh->SetImportedBounds(FBoxSphereBounds(Bounds));Rig->MergeAllBonesToBoneTree(Mesh);
@@ -209,7 +216,7 @@ UAnimSequence* UAetherMotionAuthoring::ImportClip(const FString& Json,USkeletalM
     Why.Reset();FAetherMotionClip C;if(!Clip(Load(Json,Why),C,Why)||!Match(*C.Skeleton,Source,Why))return nullptr;
     auto* Animation=Asset<UAnimSequence>(Path,Why);if(!Animation)return nullptr;Animation->SetSkeleton(Source->GetSkeleton());
     auto& Controller=Animation->GetController();Controller.InitializeModel();Controller.OpenBracket(FText::FromString(TEXT("导入 G1 真实推理姿态")),false);
-    Controller.SetFrameRate(FFrameRate(30,1),false);Controller.SetNumberOfFrames(FFrameNumber(C.Frames-1),false);
+    Controller.SetFrameRate(FFrameRate(30,1),false);Controller.SetNumberOfFrames(FFrameNumber(int32(C.Frames)-1),false);
     TArray<TArray<FVector3f>> Positions;TArray<TArray<FQuat4f>> Rotations;Positions.SetNum(34);Rotations.SetNum(34);
     TArray<FTransform> Pose;
     for(uint32 F=0;F<C.Frames;++F)

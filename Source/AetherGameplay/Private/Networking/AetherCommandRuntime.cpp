@@ -244,7 +244,7 @@ bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,
     if(Impl||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!Resolve||!Publish)
     {Reason=TEXT("Native backend already installed or server context unavailable");return false;}
     const auto& D=FAetherV10Definitions::Get();if(!D.bValid){Reason=D.Error;return false;}
-    Impl=MakeUnique<FAetherCommandRuntimeImpl>();Impl->Store=Store;Impl->Resolve=MoveTemp(Resolve);Impl->Publish=MoveTemp(Publish);
+    Impl.Reset(new FAetherCommandRuntimeImpl());Impl->Store=Store;Impl->Resolve=MoveTemp(Resolve);Impl->Publish=MoveTemp(Publish);
     Impl->Coordinator=MakeUnique<FAetherProfileCoordinator>(Store,D.Items,D.Skills,D.Rules,D.Economy,D.Interactions,D.Progression);
     Impl->Facts=MakeUnique<FAetherServerFactCoordinator>(Store);
     Reason.Reset();return true;
@@ -565,3 +565,5 @@ void UAetherCommandRuntime::Deinitialize()
     }
     Super::Deinitialize();
 }
+
+void FAetherCommandRuntimeImplDeleter::operator()(FAetherCommandRuntimeImpl* Value) const { delete Value; }

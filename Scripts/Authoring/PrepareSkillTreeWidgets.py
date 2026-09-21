@@ -4,6 +4,11 @@
 """
 import unreal as ue
 
+def load_optional(path):
+    # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
+    return ue.EditorAssetLibrary.load_asset(path) if ue.EditorAssetLibrary.does_asset_exist(path) else None
+
+
 LIB = ue.EditorAssetLibrary
 TOOLS = ue.AssetToolsHelpers.get_asset_tools()
 
@@ -14,7 +19,7 @@ def create_widget(name, folder, parent_name):
     if parent is None:
         raise RuntimeError("原生控件尚不可用：" + parent_name)
     if LIB.does_asset_exist(path):
-        asset = LIB.load_asset(path)
+        asset = load_optional(path)
         if not asset:
             raise RuntimeError("现有控件无法载入：" + path)
         return asset
@@ -35,7 +40,7 @@ def main():
     ]
     path = "/Game/UI/DA_SkillTreeCook"
     if LIB.does_asset_exist(path):
-        label = LIB.load_asset(path)
+        label = load_optional(path)
     else:
         factory = ue.DataAssetFactory()
         factory.set_editor_property("data_asset_class", ue.PrimaryAssetLabel)

@@ -1,6 +1,6 @@
 using UnrealBuildTool;
 using System.IO;
-using System.Text.Json;
+using EpicGames.Core;
 public class MotionBricksNative : ModuleRules
 {
     public MotionBricksNative(ReadOnlyTargetRules Target) : base(Target)
@@ -17,13 +17,13 @@ public class MotionBricksNative : ModuleRules
                 throw new BuildException("Motion bundle is missing; run StageMotionRuntime.ps1 before a Shipping build.");
             return; // 编辑器仍能编译作者工具；运行时明确报告资源缺失。
         }
-        using var Doc=JsonDocument.Parse(File.ReadAllText(Manifest));
-        if(Doc.RootElement.GetProperty("nativeRevision").GetString()!="ee0cf5d9035f639ed0787f390fb1ce05d6a4c463")
+        var Doc=JsonObject.Read(new FileReference(Manifest));
+        if(Doc.GetStringField("nativeRevision")!="ee0cf5d9035f639ed0787f390fb1ce05d6a4c463")
             throw new BuildException("Motion native revision differs from the lock.");
         RuntimeDependencies.Add(Manifest,StagedFileType.NonUFS);
-        foreach(var Entry in Doc.RootElement.GetProperty("files").EnumerateArray())
+        foreach(var Entry in Doc.GetObjectArrayField("files"))
         {
-            string Relative=Entry.GetProperty("path").GetString()!;
+            string Relative=Entry.GetStringField("path");
             string PathName=Path.GetFullPath(Path.Combine(Runtime,Relative));
             if(!PathName.StartsWith(Runtime+Path.DirectorySeparatorChar,System.StringComparison.OrdinalIgnoreCase)||!File.Exists(PathName))
                 throw new BuildException("Invalid/missing Motion stage entry: "+Relative);

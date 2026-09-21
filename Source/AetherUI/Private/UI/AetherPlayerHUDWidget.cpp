@@ -31,7 +31,7 @@ TSharedRef<SWidget> UAetherPlayerHUDWidget::RebuildWidget()
         const auto Panel=[&](const TCHAR* Name,const TCHAR* Asset,FVector2D Anchor,FVector2D Position,FVector2D Size)
         {
             auto* W=CreateWidget<UAetherHUDSection>(this,AetherWidgetAssets::Class<UAetherHUDSection>(Asset),FName(Name));
-            auto* Slot=Root->AddChildToCanvas(W);Slot->SetAnchors(FAnchors(Anchor.X,Anchor.Y));Slot->SetAlignment(Anchor);Slot->SetPosition(Position);Slot->SetSize(Size);
+            auto* SlotValue=Root->AddChildToCanvas(W);SlotValue->SetAnchors(FAnchors(Anchor.X,Anchor.Y));SlotValue->SetAlignment(Anchor);SlotValue->SetPosition(Position);SlotValue->SetSize(Size);
         };
         Panel(TEXT("VitalsSection"),TEXT("WBP_Vitals"),{0,0},{20,20},{320,225});
         Panel(TEXT("QuestSection"),TEXT("WBP_QuestTracker"),{1,0},{-20,20},{280,190});
@@ -138,9 +138,9 @@ void UAetherPlayerHUDWidget::Refresh()
         Skills[I]->SetText(FText::FromString(FString::Printf(TEXT("%s%d %s%s"),C->SelectedSpell==I?TEXT("▸ "):TEXT(""),I+1,D?*D->DisplayName:TEXT("未绑定"),D&&!C->SkillUnlocked(*Id)?TEXT(" · 未授权"):TEXT(""))));
     }
     FString Gear;
-    if(Profile.IsSet())for(const TCHAR* Slot:{TEXT("MainHand"),TEXT("OffHand")})
+    if(Profile.IsSet())for(const TCHAR* SlotValue:{TEXT("MainHand"),TEXT("OffHand")})
     {
-        const auto* Bound=Profile->Inventory.Equipment.Find(Slot);
+        const auto* Bound=Profile->Inventory.Equipment.Find(SlotValue);
         const auto* Item=Bound?Profile->Inventory.Find(*Bound):nullptr;
         const auto* D=Item?FAetherV10Definitions::Get().Items.Items.Find(Item->DefinitionId):nullptr;
         Gear+=(D?D->DisplayName:TEXT("空手"))+TEXT("  ");

@@ -27,9 +27,9 @@ TSharedRef<SWidget> UAetherInventoryCell::RebuildWidget()
     }
     return Super::RebuildWidget();
 }
-void UAetherInventoryCell::Present(const FAetherInspectRequest& In,int32 Slot,const FString& Text,const FString& IconId,bool Filtered,bool Selected)
+void UAetherInventoryCell::Present(const FAetherInspectRequest& In,int32 SlotValue,const FString& Text,const FString& IconId,bool Filtered,bool Selected)
 {
-    Request=In;PhysicalSlot=Slot;bFiltered=Filtered;TakeWidget();
+    Request=In;PhysicalSlot=SlotValue;bFiltered=Filtered;TakeWidget();
     Label->SetText(FText::FromString(Filtered?TEXT("筛选外"):Text));
     Background->SetBrushColor(Selected?UAetherUITheme::Get().Accent.CopyWithNewOpacity(.4):UAetherUITheme::Get().Card);
     SetRenderOpacity(Filtered?.3f:1.f);

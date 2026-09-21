@@ -161,7 +161,7 @@ void Skill(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FA
         {
             M.Actions.Last().ConfirmationSummary=FString::Printf(TEXT("退还实际支付的 %d 技能点。"),Result.PointsChanged);
             for(const auto& Id:Result.AffectedSkills)M.Actions.Last().ConfirmationSummary+=LINE_TERMINATOR+Id+FString::Printf(TEXT("：%d → %d"),S.Skills.PermanentRank(Id),Candidate.PermanentRank(Id));
-            M.Actions.Last().ConfirmationSummary+=LINE_TERMINATOR+TEXT("故事基础与装备/临时授权保留。");
+            M.Actions.Last().ConfirmationSummary+=FString(LINE_TERMINATOR)+TEXT("故事基础与装备/临时授权保留。");
         }
     }
     const bool CanBind=Def->bActive&&M.EffectiveSkillRank>0&&(T.SkillRank==0||T.SkillRank<=M.EffectiveSkillRank);

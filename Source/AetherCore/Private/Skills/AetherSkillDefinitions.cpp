@@ -124,7 +124,7 @@ FAetherSkillDefinitionsV10 FAetherSkillDefinitionsV10::Parse(const FString& Json
                 const TSharedPtr<FJsonObject>* Stats=nullptr;
                 if(!(*R)->TryGetObjectField(TEXT("PassiveStats"),Stats)||!Stats||!Stats->IsValid())return Fail(TEXT("Invalid passive statistics"));
                 for(const auto& Pair:(*Stats)->Values)
-                {double Value=0;if(!Pair.Value->TryGetNumber(Value)||!FMath::IsFinite(Value))return Fail(TEXT("Invalid passive value"));E.PassiveStats.Add(Pair.Key,Value);}
+                {double StatValue=0;if(!Pair.Value->TryGetNumber(StatValue)||!FMath::IsFinite(StatValue))return Fail(TEXT("Invalid passive value"));E.PassiveStats.Add(FString(Pair.Key),StatValue);}
             }
             S.Ranks.Add(E);
         }

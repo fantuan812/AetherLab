@@ -1,5 +1,5 @@
-#include "UI/AetherWidgetAssets.h"
 #include "UI/AetherMenuRoot.h"
+#include "UI/AetherWidgetAssets.h"
 #include "Settings/AetherSettingsPage.h"
 #include "UI/AetherFrontierHUD.h"
 #include "AetherFrontierPanel.h"
@@ -64,7 +64,7 @@ TSharedRef<SWidget> UAetherMenuRoot::RebuildWidget()
         auto* Overlay=WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(),TEXT("MenuLayers"));WidgetTree->RootWidget=Overlay;
         GameLayer=CreateWidget<UAetherGameInputLayer>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherGameInputLayer>());Overlay->AddChildToOverlay(GameLayer);
         MainStack=WidgetTree->ConstructWidget<UCommonActivatableWidgetStack>(UCommonActivatableWidgetStack::StaticClass(),TEXT("MainStack"));
-        auto* Slot=Overlay->AddChildToOverlay(MainStack);Slot->SetHorizontalAlignment(HAlign_Fill);Slot->SetVerticalAlignment(VAlign_Fill);Slot->SetPadding(FMargin(32));
+        auto* SlotValue=Overlay->AddChildToOverlay(MainStack);SlotValue->SetHorizontalAlignment(HAlign_Fill);SlotValue->SetVerticalAlignment(VAlign_Fill);SlotValue->SetPadding(FMargin(32));
         ModalStack=WidgetTree->ConstructWidget<UCommonActivatableWidgetStack>(UCommonActivatableWidgetStack::StaticClass(),TEXT("ModalStack"));
         auto* ModalSlot=Overlay->AddChildToOverlay(ModalStack);ModalSlot->SetHorizontalAlignment(HAlign_Fill);ModalSlot->SetVerticalAlignment(VAlign_Fill);
         MainStack->SetTransitionDuration(0);ModalStack->SetTransitionDuration(0);ModalStack->SetVisibility(ESlateVisibility::Collapsed);

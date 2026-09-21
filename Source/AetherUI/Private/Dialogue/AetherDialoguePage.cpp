@@ -1,5 +1,5 @@
-#include "UI/AetherWidgetAssets.h"
 #include "Dialogue/AetherDialoguePage.h"
+#include "UI/AetherWidgetAssets.h"
 #include "CommonInputBaseTypes.h"
 #include "Interaction/AetherDialogueSession.h"
 #include "Characters/AetherFrontierCharacter.h"

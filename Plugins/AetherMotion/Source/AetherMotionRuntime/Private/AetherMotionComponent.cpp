@@ -116,7 +116,7 @@ void UAetherMotionComponent::TickComponent(float Dt,ELevelTick Type,FActorCompon
         const FString* Style=Profile->Styles.Find(DesiredStyle);if(!Style){Message=TEXT("当前动作使用传统动画");return;}
         FAetherMotionInput I;I.AgentId=Agent;I.Stamp=Stamp;I.Stamp.RequestSequence=++Stamp.RequestSequence;I.SimulationTime=Now;
         const FMatrix Inverse=Profile->Basis().InverseFast();
-        I.Movement=FVector3f(Inverse.TransformVector(Velocity.GetSafeNormal()));I.Facing=FVector3f(Inverse.TransformVector(Facing));
+        I.Movement=FVector3f(FVector(Inverse.TransformVector(Velocity.GetSafeNormal())));I.Facing=FVector3f(FVector(Inverse.TransformVector(Facing)));
         I.SpeedMeters=Velocity.Size2D()/100.f;I.Priority=C->IsLocallyControlled()?100.f:20.f;I.Style=*Style;
         I.AcceptedSequence=AcceptedSequence;I.ConsumedFrameIndex=uint32(FMath::FloorToInt(Frame));I.Seed=Stamp.RequestSequence;
         if(Clip&&Clip->Stamp.SameLifetime(Stamp))

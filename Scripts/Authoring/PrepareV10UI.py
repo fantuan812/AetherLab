@@ -6,6 +6,11 @@ import re
 import struct
 import unreal as ue
 
+def load_optional(path):
+    # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
+    return ue.EditorAssetLibrary.load_asset(path) if ue.EditorAssetLibrary.does_asset_exist(path) else None
+
+
 root = pathlib.Path(ue.Paths.project_dir())
 library = ue.EditorAssetLibrary
 tools = ue.AssetToolsHelpers.get_asset_tools()
@@ -23,7 +28,7 @@ for parent_name, name in rows:
     if parent is None:
         raise RuntimeError("尚未编译原生控件：" + parent_name)
     path = "/Game/UI/Widgets/" + name
-    asset = library.load_asset(path) if library.does_asset_exist(path) else None
+    asset = load_optional(path) if library.does_asset_exist(path) else None
     if not asset:
         factory = ue.WidgetBlueprintFactory()
         factory.set_editor_property("parent_class", parent)
@@ -57,7 +62,7 @@ def author_layout(name):
         for child in node.get("Children", []):
             dependencies(child)
     dependencies(spec)
-    asset = library.load_asset("/Game/UI/Widgets/" + name)
+    asset = load_optional("/Game/UI/Widgets/" + name)
     result = ue.AetherWidgetAuthoring.apply_layout(asset, json.dumps(spec, ensure_ascii=False))
     success, reason = result if isinstance(result, tuple) else (bool(result), "")
     if not success:
@@ -68,7 +73,7 @@ for layout_name in layouts:
     author_layout(layout_name)
 
 theme_path = "/Game/UI/DA_UITheme"
-theme = library.load_asset(theme_path) if library.does_asset_exist(theme_path) else None
+theme = load_optional(theme_path) if library.does_asset_exist(theme_path) else None
 if not theme:
     factory = ue.DataAssetFactory()
     factory.set_editor_property("data_asset_class", ue.AetherUITheme)
@@ -127,7 +132,7 @@ library.make_directory("/Game/UI/Icons")
 for icon in ids:
     name="T_"+icon.replace(".","_")
     path="/Game/UI/Icons/"+name
-    asset=library.load_asset(path) if library.does_asset_exist(path) else None
+    asset=load_optional(path) if library.does_asset_exist(path) else None
     if not asset:
         filename=scratch/(name+".tga")
         filename.write_bytes(image(icon))
@@ -138,7 +143,7 @@ for icon in ids:
         task.set_editor_property("automated",True)
         task.set_editor_property("save",True)
         tools.import_asset_tasks([task])
-        asset=library.load_asset(path)
+        asset=load_optional(path)
     if not isinstance(asset,ue.Texture2D):
         raise RuntimeError("图标导入失败："+path)
     asset.set_editor_property("lod_group",ue.TextureGroup.TEXTUREGROUP_UI)
@@ -148,7 +153,7 @@ for icon in ids:
     assets.append(asset)
 factory=ue.DataAssetFactory()
 factory.set_editor_property("data_asset_class",ue.PrimaryAssetLabel)
-label=library.load_asset("/Game/UI/PAL_UI") or tools.create_asset("PAL_UI","/Game/UI",ue.PrimaryAssetLabel,factory)
+label=load_optional("/Game/UI/PAL_UI") or tools.create_asset("PAL_UI","/Game/UI",ue.PrimaryAssetLabel,factory)
 rules=label.get_editor_property("rules")
 rules.set_editor_property("cook_rule",ue.PrimaryAssetCookRule.ALWAYS_COOK)
 label.set_editor_property("rules",rules)

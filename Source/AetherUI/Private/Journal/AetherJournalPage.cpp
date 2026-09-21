@@ -1,5 +1,5 @@
-#include "UI/AetherWidgetAssets.h"
 #include "Journal/AetherJournalPage.h"
+#include "UI/AetherWidgetAssets.h"
 #include "UI/AetherPageWidgets.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "Networking/AetherCommandClient.h"

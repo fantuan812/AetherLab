@@ -1,11 +1,16 @@
 """十槽官方基础几何体装备。全部代码完成并具备新 UClass 后才运行；脚本不等于已制作资产。"""
 import unreal as ue
 
+def load_optional(path):
+    # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
+    return ue.EditorAssetLibrary.load_asset(path) if ue.EditorAssetLibrary.does_asset_exist(path) else None
+
+
 L = ue.EditorAssetLibrary
 tools = ue.AssetToolsHelpers.get_asset_tools()
 folder = "/Game/AetherCore/Data"
-catalog = L.load_asset(folder + "/DA_EquipmentCatalog")
-cube = L.load_asset("/Engine/BasicShapes/Cube")
+catalog = load_optional(folder + "/DA_EquipmentCatalog")
+cube = load_optional("/Engine/BasicShapes/Cube")
 if not catalog or not cube:
     raise RuntimeError("缺少官方基础装备目录或 Cube")
 # Grip 数据以厘米为单位；小饰品无世界网格，避免为了可见性放大戒指。
@@ -31,7 +36,7 @@ rows += [
 existing = list(catalog.get_editor_property("items"))
 for name, slots, socket, position, scale, invisible in rows:
     path = folder + "/DA_" + name
-    item = L.load_asset(path) if L.does_asset_exist(path) else None
+    item = load_optional(path) if L.does_asset_exist(path) else None
     if item and not isinstance(item, ue.AetherEquipmentDefinition):
         raise RuntimeError("资产类型冲突：" + path)
     if not item:
@@ -60,7 +65,7 @@ for name, source, display in [
     if not source_asset:
         raise RuntimeError("缺少武器模板：" + source)
     path = folder + "/DA_" + name
-    item = L.load_asset(path) if L.does_asset_exist(path) else L.duplicate_asset(source_asset.get_path_name(), path)
+    item = load_optional(path) if L.does_asset_exist(path) else L.duplicate_asset(source_asset.get_path_name(), path)
     if not isinstance(item, ue.AetherEquipmentDefinition):
         raise RuntimeError("武器资产类型冲突：" + path)
     for key in ("slot", "allowed_slots", "socket", "mesh", "grip_transform", "secondary_socket",

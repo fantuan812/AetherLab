@@ -119,7 +119,7 @@ FAetherV10ItemDefinitions FAetherV10ItemDefinitions::Parse(const FString& Json,F
         {
             const TSharedPtr<FJsonObject>* Grants=nullptr;
             if(!(*O)->TryGetObjectField(TEXT("SkillGrants"),Grants)||(*Grants)->Values.Num()>16)return Reject(TEXT("Invalid skill grant object"));
-            for(const auto& G:(*Grants)->Values){double N;if(!G.Value->TryGetNumber(N)||!FMath::IsFinite(N)||N<1||N>3||N!=FMath::FloorToDouble(N))return Reject(TEXT("Invalid skill grant rank"));I.SkillGrants.Add(G.Key,int32(N));}
+            for(const auto& G:(*Grants)->Values){double N;if(!G.Value->TryGetNumber(N)||!FMath::IsFinite(N)||N<1||N>3||N!=FMath::FloorToDouble(N))return Reject(TEXT("Invalid skill grant rank"));I.SkillGrants.Add(FString(G.Key),int32(N));}
         }
         const FString ItemId=I.Id;D.Items.Add(ItemId,MoveTemp(I));
     }

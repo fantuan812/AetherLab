@@ -58,7 +58,7 @@ void UAetherCharacterPreviewSubsystem::HandleMenuContext()
 }
 bool UAetherCharacterPreviewSubsystem::EnsureScene()
 {
-    if(!Scene)Scene=MakeUnique<FAetherPreviewSceneOwner>();
+    if(!Scene)Scene.Reset(new FAetherPreviewSceneOwner());
     if(!Scene->Value.IsInitialized())return false;
     if(!IsValid(PreviewActor))
     {
@@ -108,7 +108,7 @@ void UAetherCharacterPreviewSubsystem::RefreshAppearance()
     const uint64 Request=++RequestVersion;
     if(LoadHandle){LoadHandle->CancelHandle();LoadHandle.Reset();}
     FAetherPreviewAppearance Appearance;Appearance.Material=PreviewMaterial;
-    if(const auto* D=C->CharacterDefinition)
+    if(const auto* D=C->CharacterDefinition.Get())
     {Appearance.Body=D->BodyMesh;Appearance.Idle=D->PreviewIdleAnimation;Appearance.Rotation=D->MeshRotation;}
     if(C->Equipment)Appearance.Equipment=AetherEquipmentVisuals::Resolve(C->Equipment->Catalog,C->Equipment->Slots);
     TArray<FSoftObjectPath> Paths;
@@ -186,3 +186,5 @@ void UAetherCharacterPreviewSubsystem::Zoom(float Delta)
 {if(bActive&&FMath::IsFinite(Delta)){ZoomFactor=FMath::Clamp(ZoomFactor+Delta,.8f,2.f);SinceCapture=1.f/30.f;}}
 void UAetherCharacterPreviewSubsystem::ResetView()
 {OrbitYaw=0;OrbitPitch=0;ZoomFactor=1;SinceCapture=1.f/30.f;}
+
+void FAetherPreviewSceneOwnerDeleter::operator()(FAetherPreviewSceneOwner* Value) const { delete Value; }

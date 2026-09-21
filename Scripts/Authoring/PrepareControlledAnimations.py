@@ -6,6 +6,11 @@ import json
 from pathlib import Path
 import unreal as ue
 
+def load_optional(path):
+    # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
+    return ue.EditorAssetLibrary.load_asset(path) if ue.EditorAssetLibrary.does_asset_exist(path) else None
+
+
 L = ue.EditorAssetLibrary
 T = ue.AssetToolsHelpers.get_asset_tools()
 ROOT = "/Game/Animation/Controlled"
@@ -121,7 +126,7 @@ clips = {}
 manifest = []
 for name, definition in RECIPES.items():
     source_path = definition["source"]
-    source = L.load_asset(source_path)
+    source = load_optional(source_path)
     if not isinstance(source, ue.AnimSequence):
         raise RuntimeError("缺少官方源动画：" + source_path)
     payload = json.dumps(definition, ensure_ascii=False, sort_keys=True)
@@ -134,7 +139,7 @@ for name, definition in RECIPES.items():
                          target=clip.get_path_name(), visualAcceptance="pending"))
 factory = ue.DataAssetFactory()
 factory.set_editor_property("data_asset_class", ue.AetherActionSet)
-asset = L.load_asset(ROOT + "/DA_Actions") or T.create_asset("DA_Actions", ROOT, ue.AetherActionSet, factory)
+asset = load_optional(ROOT + "/DA_Actions") or T.create_asset("DA_Actions", ROOT, ue.AetherActionSet, factory)
 asset.set_editor_property("clips", clips)
 if not L.save_loaded_asset(asset):
     raise RuntimeError("无法保存动作集合")

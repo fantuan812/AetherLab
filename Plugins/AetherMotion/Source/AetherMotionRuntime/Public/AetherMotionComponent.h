@@ -5,7 +5,7 @@
 class UAetherMotionProfile;
 class USkeletalMeshComponent;
 class UIKRetargeter;
-class FStreamableHandle;
+struct FStreamableHandle;
 UCLASS(ClassGroup=Animation,meta=(BlueprintSpawnableComponent))
 class AETHERMOTIONRUNTIME_API UAetherMotionComponent : public UActorComponent
 {

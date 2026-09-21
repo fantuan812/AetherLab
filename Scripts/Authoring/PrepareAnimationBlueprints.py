@@ -1,5 +1,10 @@
 """制作正式人物/G1 动画蓝图；原生代理提供图逻辑，资产记录骨架和可编辑继承边界。"""
 import unreal as ue
+
+def load_optional(path):
+    # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
+    return ue.EditorAssetLibrary.load_asset(path) if ue.EditorAssetLibrary.does_asset_exist(path) else None
+
 lib = ue.EditorAssetLibrary
 tools = ue.AssetToolsHelpers.get_asset_tools()
 definitions = [
@@ -10,10 +15,10 @@ definitions = [
 ]
 assets = []
 for path, parent, mesh_path in definitions:
-    mesh = lib.load_asset(mesh_path)
+    mesh = load_optional(mesh_path)
     if not mesh:
         raise RuntimeError("缺少骨架源：" + mesh_path)
-    asset = lib.load_asset(path)
+    asset = load_optional(path)
     if not asset:
         factory = ue.AnimBlueprintFactory()
         factory.set_editor_property("parent_class", parent)
@@ -28,7 +33,7 @@ for path, parent, mesh_path in definitions:
     assets.append(asset)
 factory = ue.DataAssetFactory()
 factory.set_editor_property("data_asset_class", ue.PrimaryAssetLabel)
-label = lib.load_asset("/Game/Animation/PAL_Animation") or tools.create_asset("PAL_Animation", "/Game/Animation", ue.PrimaryAssetLabel, factory)
+label = load_optional("/Game/Animation/PAL_Animation") or tools.create_asset("PAL_Animation", "/Game/Animation", ue.PrimaryAssetLabel, factory)
 rules = label.get_editor_property("rules")
 rules.set_editor_property("cook_rule", ue.PrimaryAssetCookRule.ALWAYS_COOK)
 label.set_editor_property("rules", rules)

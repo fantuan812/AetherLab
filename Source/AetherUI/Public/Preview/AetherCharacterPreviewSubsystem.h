@@ -14,6 +14,8 @@ class UMaterialInstanceDynamic;
 struct FStreamableHandle;
 struct FAetherPreviewAppearance;
 struct FAetherPreviewSceneOwner;
+// UHT 热重载构造器也可能触发成员销毁；删除操作在完整类型所在 .cpp 中执行。
+struct AETHERUI_API FAetherPreviewSceneOwnerDeleter { void operator()(FAetherPreviewSceneOwner* Value) const; };
 DECLARE_MULTICAST_DELEGATE(FOnAetherPreviewChanged);
 
 // 每个 LocalPlayer 最多一个独立场景和一个渲染目标；不让每个格子/弹层创建第二套预览世界。
@@ -48,7 +50,7 @@ private:
     void HandleMenuContext();
     void ApplyLoaded(const FAetherPreviewAppearance& Appearance,uint64 Request);
     bool EnsureScene();
-    TUniquePtr<FAetherPreviewSceneOwner> Scene;
+    TUniquePtr<FAetherPreviewSceneOwner,FAetherPreviewSceneOwnerDeleter> Scene;
     TSharedPtr<FStreamableHandle> LoadHandle;
     TWeakObjectPtr<AAetherCharacter> Source;
     TWeakObjectPtr<UObject> ViewOwner;

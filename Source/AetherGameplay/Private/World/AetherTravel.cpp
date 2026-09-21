@@ -19,7 +19,7 @@ AActor* Source(UWorld* World,FVector Destination)
     Actor->AddInstanceComponent(Streaming);Streaming->TargetState=EStreamingSourceTargetState::Activated;
     Streaming->RegisterComponent();Streaming->EnableStreamingSource();return Actor;
 }
-bool Ready(AActor* SourceActor)
+bool TravelSourceReady(AActor* SourceActor)
 {
     const auto* S=SourceActor?SourceActor->FindComponentByClass<UWorldPartitionStreamingSourceComponent>():nullptr;
     return S&&S->IsStreamingCompleted();
@@ -83,7 +83,7 @@ void AAetherFrontierCharacter::UpdateSafeTravel()
         {ClearTravelSource();TravelToken.Invalidate();return;}
         if(!bTravelPending||bTravelClientReady)return;
         auto* Assets=GetWorld()->GetSubsystem<UAetherAssetPreload>();FVector Spot;
-        if(Assets&&Assets->Ready()&&Ready(TravelSourceActor)&&Landing(*this,TravelDestination,Spot))
+        if(Assets&&Assets->Ready()&&TravelSourceReady(TravelSourceActor)&&Landing(*this,TravelDestination,Spot))
         {bTravelClientReady=true;ServerTravelReady(TravelToken);}
         return;
     }
@@ -99,7 +99,7 @@ void AAetherFrontierCharacter::UpdateSafeTravel()
     {Finish(false);Notify(TEXT("传送已取消，仍留在原位置。"));return;}
     auto* Assets=GetWorld()->GetSubsystem<UAetherAssetPreload>();
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();FVector Spot;
-    if(!bTravelClientReady||!Assets||!Assets->Ready()||!Ready(TravelSourceActor)||
+    if(!bTravelClientReady||!Assets||!Assets->Ready()||!TravelSourceReady(TravelSourceActor)||
        !Mode||!Mode->IsTravelRegionReady(TravelDestination)||!Landing(*this,TravelDestination,Spot))return;
     SetBase(static_cast<UPrimitiveComponent*>(nullptr));
     if(!TeleportTo(Spot,GetActorRotation(),false,false))return;

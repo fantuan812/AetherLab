@@ -10,6 +10,10 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
+#include "Networking/AetherCommandClient.h"
+#include "Presentation/AetherMenuSubsystem.h"
+#include "Preview/AetherCharacterPreviewSubsystem.h"
+#include "Engine/LocalPlayer.h"
 
 void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* Panel)
 {
@@ -30,6 +34,8 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
  };
  auto* PC=HUD->GetOwningPlayerController();if(!PC)return;
  auto* C=Cast<AAetherFrontierCharacter>(PC->GetPawn());
+ auto* LP=PC->GetLocalPlayer();if(!LP)return;
+ auto* Client=LP->GetSubsystem<UAetherCommandClient>();auto* Menu=LP->GetSubsystem<UAetherMenuSubsystem>();
  const float Now=HUD->GetWorld()->GetTimeSeconds();
  if(PendingRelease.IsValid()){PC->InputKey(FInputKeyEventArgs::CreateSimulated(PendingRelease,IE_Released,0.f));PendingRelease=FKey();}
  if(Now<NextAt)return;
@@ -50,7 +56,7 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
  switch(Stage)
  {
  case 0:
-  if(!C||!C->ProfileState()||!Panel->Model)return;
+  if(!C||!C->ProfileState()||!C->Ready()||!C->HasGameplayBindings()||!Client->GetProfile().IsSet())return;
   GameKey(EKeys::I);break;
  case 1:
   if(!Check(C&&C->bPanel&&C->Panel==1&&Panel->IsVisible()&&PC->bShowMouseCursor&&!PC->IsPaused(),TEXT("Enhanced I opens visible inventory without pausing world")))return;
@@ -58,9 +64,11 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
  case 2:
   if(!Check(Panel->Model->RefreshCount==IdleRefreshes,TEXT("Idle inventory does not rebuild snapshot every frame")))return;
   {
-   auto P=C->ProfileState()->Profile;P.Add("ManaPotion",1);
-   auto* Mode=HUD->GetWorld()->GetAuthGameMode<AAetherFrontierMode>();
-   if(!Check(Mode&&Mode->Commit(C->ProfileState(),P)&&Panel->Model->Body.ToString().Contains(TEXT("ManaPotion")),TEXT("Real successful commit immediately publishes inventory snapshot")))return;
+   const auto* Server=C->ProfileState()->GetNativeProfile();const auto& Published=Client->GetProfile();
+   if(!Check(Server&&Published.IsSet()&&Server->Revision==Published->Revision&&
+       Server->CharacterId==Published->CharacterId,TEXT("Native durable profile and owner snapshot agree")))return;
+   if(!Check(Panel->GetClass()->GetPathName().StartsWith(TEXT("/Game/UI/Widgets/WBP_PlayerMenu")),
+       TEXT("Formal authored Designer widget is active")))return;
   }
   if(!Check(FocusedKey(EKeys::J),TEXT("Focused button forwards journal shortcut through Slate")))return;
   Capture(TEXT("Journal.png"));
@@ -81,7 +89,7 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   if(!Check(C&&C->Panel==6&&Panel->IsVisible(),TEXT("Escape from gameplay opens system page")))return;
   if(!Check(FocusedKey(EKeys::M),TEXT("Focused map shortcut accepted")))return;break;
  case 8:
-  if(!Check(C&&C->bPanel&&C->Panel==4&&PC->bShowMouseCursor&&!Panel->IsVisible(),TEXT("Legacy map shares menu input ownership")))return;
+  if(!Check(C&&C->bPanel&&C->Panel==4&&PC->bShowMouseCursor&&Panel->IsVisible(),TEXT("Formal map shares menu input ownership")))return;
   C->StartJumpInput();C->SetSprintInput(true);
   if(!Check(!C->bPressedJump&&!C->bSprinting,TEXT("Map blocks local jump and sprint")))return;
   Capture(TEXT("Map.png"));GameKey(EKeys::Escape);break;
@@ -110,11 +118,29 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
       C&&C->ProfileState()?C->ProfileState()->OnProfilePublished.IsBoundToObject(Panel):0,
       OldPawn.IsValid()?OldPawn->OnPresentationChanged.IsBoundToObject(Panel):0);
   if(!Check(C&&C!=OldPawn.Get()&&C->bPanel&&Panel->IsVisible()&&
-      C->OnPresentationChanged.IsBoundToObject(Panel)&&C->ProfileState()->OnProfilePublished.IsBoundToObject(Panel)&&
+      Menu->GetBoundPawn()==C&&C->ProfileState()->OnProfilePublished.IsBoundToObject(Panel)&&
       !OldPawn->OnPresentationChanged.IsBoundToObject(Panel),TEXT("Replacement Pawn binds fresh UI context and can reopen inventory")))return;
   Capture(TEXT("NewPawn.png"));break;
- case 13:
-  UE_LOG(LogTemp,Display,TEXT("V10_MENU_INTERACTION_PASS"));FPlatformMisc::RequestExit(false);return;
+ case 13: C->OpenPanel(3);break;
+ case 14: Capture(TEXT("Skills.png"));break;
+ case 15: C->OpenPanel(5);break;
+ case 16: Capture(TEXT("Party.png"));break;
+ case 17: C->OpenPanel(6);break;
+ case 18: Capture(TEXT("Settings.png"));break;
+ case 19: Menu->Close();break;
+ default:
+  {
+   // 每一轮跨真实 Slate 帧开/关一次，验证 LocalPlayer 所有权和预览释放；没有新建测试 Widget。
+   static int32 MenuCycles=0;
+   if(MenuCycles>=200){
+    auto* Preview=LP->GetSubsystem<UAetherCharacterPreviewSubsystem>();
+    if(!Check(!Menu->IsOpen()&&!Preview->IsPreviewActive()&&!Preview->GetRenderTarget(),
+        TEXT("100 menu cycles return preview and input ownership to closed state")))return;
+    UE_LOG(LogTemp,Display,TEXT("V10_MENU_INTERACTION_PASS cycles=100 native=1"));FPlatformMisc::RequestExit(false);return;
+   }
+   if(MenuCycles%2==0)Menu->OpenPage(EAetherMenuPage::Inventory);else Menu->Close();
+   ++MenuCycles;NextAt=Now+.05f;return;
+  }
  }
  ++Stage;NextAt=Now+.8f;
 #endif

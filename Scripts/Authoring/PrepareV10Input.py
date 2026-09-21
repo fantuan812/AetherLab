@@ -3,6 +3,11 @@ import pathlib
 import re
 import unreal as ue
 
+def load_optional(path):
+    # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
+    return ue.EditorAssetLibrary.load_asset(path) if ue.EditorAssetLibrary.does_asset_exist(path) else None
+
+
 root = pathlib.Path(ue.Paths.project_dir())
 source = (root / "Source/AetherGameplay/Private/Input/AetherPlayerInputComponent.cpp").read_text(encoding="utf-8-sig")
 # 绑定声明是动作标识和默认键的唯一作者来源；相同动作的 Started/Completed 合并为一项。
@@ -19,7 +24,7 @@ library.make_directory(folder)
 actions = {}
 for name, key in rows.items():
     path = folder + "/IA_" + name
-    action = library.load_asset(path) if library.does_asset_exist(path) else tools.create_asset(
+    action = load_optional(path) if library.does_asset_exist(path) else tools.create_asset(
         "IA_" + name, folder, ue.InputAction, ue.InputActionFactory())
     if not isinstance(action, ue.InputAction):
         raise RuntimeError("InputAction 类型冲突：" + path)
@@ -30,7 +35,7 @@ for name, key in rows.items():
         raise RuntimeError("无法保存：" + path)
     actions[name] = action
 path = folder + "/IMC_Gameplay"
-context = library.load_asset(path) if library.does_asset_exist(path) else tools.create_asset(
+context = load_optional(path) if library.does_asset_exist(path) else tools.create_asset(
     "IMC_Gameplay", folder, ue.InputMappingContext, ue.InputMappingContextFactory())
 if not isinstance(context, ue.InputMappingContext):
     raise RuntimeError("MappingContext 类型冲突")
@@ -43,7 +48,7 @@ if not library.save_loaded_asset(context):
 label_path = folder + "/PAL_Input"
 factory = ue.DataAssetFactory()
 factory.set_editor_property("data_asset_class", ue.PrimaryAssetLabel)
-label = library.load_asset(label_path) if library.does_asset_exist(label_path) else tools.create_asset(
+label = load_optional(label_path) if library.does_asset_exist(label_path) else tools.create_asset(
     "PAL_Input", folder, ue.PrimaryAssetLabel, factory)
 label.set_editor_property("is_runtime_label", True)
 label.set_editor_property("explicit_assets", list(actions.values()) + [context])

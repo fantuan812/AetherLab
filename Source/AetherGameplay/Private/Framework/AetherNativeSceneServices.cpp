@@ -42,6 +42,6 @@ void AAetherFrontierMode::ReleaseNativePawn(AAetherFrontierCharacter* Pawn)
     for(int32 I=Props.Num()-1;I>=0;--I)
         if(IsValid(Props[I])&&Props[I]->GetOwner()==Pawn&&Props[I]->Reactive->StableId.IsNone())
         {Registry.Remove(Props[I]->Spec.Id);Props[I]->Destroy();Props.RemoveAt(I);}
-    for(auto* Buddy:Companions)if(IsValid(Buddy)&&Buddy->CompanionOwner==Pawn)Buddy->Destroy();
+    for(const auto& Buddy:Companions)if(IsValid(Buddy)&&Buddy->CompanionOwner==Pawn)Buddy->Destroy();
     Companions.RemoveAll([](const auto& B){return !IsValid(B);});
 }

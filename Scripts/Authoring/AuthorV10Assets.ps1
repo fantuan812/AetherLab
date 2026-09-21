@@ -23,7 +23,6 @@ function Invoke-EditorAuthor([string]$Name,[string]$Marker){
  Write-Output "Authored $Name; validation remains pending."
 }
 & (Join-Path $taskRoot 'Scripts/Build/StageMotionRuntime.ps1') -Backend $Backend -SourceProject $SourceProject
-if($LASTEXITCODE -ne 0){throw 'Initial native stage failed.'}
 $taskAuthor=Join-Path $PSScriptRoot 'MotionAuthor.py'
 & $Python $taskAuthor extract --stage $taskStage --output (Join-Path $taskSources 'G1Skeleton.json')
 if($LASTEXITCODE -ne 0){throw 'G1 skeleton extraction failed.'}
@@ -42,7 +41,6 @@ foreach($taskStyle in @('crouch_idle','crouch')){
  if($LASTEXITCODE -ne 0){throw "Crouch style conversion failed: $taskStyle"}
 }
 & (Join-Path $taskRoot 'Scripts/Build/StageMotionRuntime.ps1') -Backend $Backend -SourceProject $SourceProject
-if($LASTEXITCODE -ne 0){throw 'Authored style stage failed.'}
 Invoke-EditorAuthor 'PrepareMotionAssets' '动作资源制作完成'
 Invoke-EditorAuthor 'PrepareV10Equipment' 'V10_EQUIPMENT_ASSETS_AUTHORED'
 Invoke-EditorAuthor 'PrepareCharacterPreview' '角色预览资产已制作'

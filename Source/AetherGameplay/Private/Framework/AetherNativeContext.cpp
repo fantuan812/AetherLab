@@ -39,10 +39,10 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
     X.Skill.bCasting=C->CastLockUntil>Now;X.Skill.bCoolingDown=X.Skill.bCasting;
     for(const auto& Claim:Profile.Claims)X.Skill.CompletedQuests.Add(Claim);
     X.ExternalSkillGrants=PS->GetNativeSkillGrants();
-    const auto* Registry=GetWorld()->GetSubsystem<UAetherNearbyRegistry>();
+    const auto* NearbyRegistry=GetWorld()->GetSubsystem<UAetherNearbyRegistry>();
     auto* Target=Command.TargetStableId.IsEmpty()?nullptr:Prop(FName(*Command.TargetStableId));
     // FName 查询不区分大小写；协议的稳定身份仍须逐字匹配，不能接受大小写别名。
-    if(Target&&(!Target->Spec.Id.ToString().Equals(Command.TargetStableId,ESearchCase::CaseSensitive)||!Registry||!Registry->Contains(Target)))Target=nullptr;
+    if(Target&&(!Target->Spec.Id.ToString().Equals(Command.TargetStableId,ESearchCase::CaseSensitive)||!NearbyRegistry||!NearbyRegistry->Contains(Target)))Target=nullptr;
     auto& I=X.Interaction;I.CharacterId=Profile.CharacterId;I.ProfileRevision=Profile.Revision;
     I.WorldRevision=NativeWorld.IsSet()?NativeWorld->Revision:-1;I.bActorCanAct=X.bCanManageInventory;
     I.bBusy=Busy;I.bDowned=!C->Alive();I.bInCombat=Combat;I.bThreatened=Threatened;
@@ -76,12 +76,12 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
         I.bInRange=FVector::DistSquared(C->GetActorLocation(),Target->GetActorLocation())<=FMath::Square(250.);
         I.bLineOfSight=Reachable(*C,*Target,250.);
         if(Target->Reactive->bOwnerOnlyStimuli)
-        {auto* Owner=Cast<AAetherFrontierCharacter>(Target->GetOwner());I.OwnerCharacterId=Owner&&Owner->ProfileState()?Owner->ProfileState()->Profile.CharacterId:TEXT("UnavailableOwner");}
+        {auto* TargetOwner=Cast<AAetherFrontierCharacter>(Target->GetOwner());I.OwnerCharacterId=TargetOwner&&TargetOwner->ProfileState()?TargetOwner->ProfileState()->Profile.CharacterId:TEXT("UnavailableOwner");}
     }
     for(const auto& Id:Profile.Claims)I.Claims.Add(Id);for(const auto& Id:Profile.Evidence)I.Evidence.Add(Id);
     // 重置不从客户端声明服务资格；只在服务器实际存在、可达的导师附近开放。
     if(!Combat&&!Threatened)
-        for(const auto& P:Props)if(IsValid(P)&&P->Service=="Teacher"&&P->bEnabled&&Registry&&Registry->Contains(P)&&Reachable(*C,*P,250.))
+        for(const auto& P:Props)if(IsValid(P)&&P->Service=="Teacher"&&P->bEnabled&&NearbyRegistry&&NearbyRegistry->Contains(P)&&Reachable(*C,*P,250.))
         {X.Skill.bAtResetService=true;break;}
     const FName Shop=C->ActiveShop();
     if(!Shop.IsNone()&&C->TradeSession.Target.IsValid()&&C->TradeSession.Target.Get()==Target&&!Combat&&!Threatened)

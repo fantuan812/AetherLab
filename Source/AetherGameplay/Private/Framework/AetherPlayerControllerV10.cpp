@@ -12,8 +12,8 @@ void AAetherPlayerController::ServerV10RequestSnapshot_Implementation(FGuid Chan
 {if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->RequestSnapshot(this,Channel);}
 void AAetherPlayerController::ServerV10SnapshotAck_Implementation(FGuid Channel,FGuid Transfer,uint32 NextOffset)
 {if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->AcknowledgeSnapshot(this,Channel,Transfer,NextOffset);}
-void AAetherPlayerController::ClientV10Channel_Implementation(FGuid Channel,const FString& Owner,FGuid Realm)
-{if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveChannel(this,Channel,Owner,Realm);}
+void AAetherPlayerController::ClientV10Channel_Implementation(FGuid Channel,const FString& CanonicalOwner,FGuid Realm)
+{if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveChannel(this,Channel,CanonicalOwner,Realm);}
 void AAetherPlayerController::ClientV10Reply_Implementation(const FAetherV10ReplyPacket& P)
 {if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveReply(this,P);}
 void AAetherPlayerController::ClientV10Snapshot_Implementation(const FAetherV10SnapshotChunk& P)
@@ -33,7 +33,7 @@ void AAetherPlayerController::ServerV10SceneInput_Implementation(const FAetherV1
     auto* GI=GetGameInstance();auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();FAetherPlayerCommand C;
     if(!GI||!M||!GI->GetSubsystem<UAetherCommandRuntime>()->AuthorizeSceneInput(this,P,Sequence,C))return;
     const FString Result=M->ExecuteNativeSceneService(*this,C);
-    if(auto* Pawn=Cast<AAetherFrontierCharacter>(GetPawn()))Pawn->Notify(Result);
+    if(auto* CharacterPawn=Cast<AAetherFrontierCharacter>(GetPawn()))CharacterPawn->Notify(Result);
 }
 
 void AAetherPlayerController::ServerV10ContainerQuery_Implementation(const FAetherV10ContainerQuery& Q)

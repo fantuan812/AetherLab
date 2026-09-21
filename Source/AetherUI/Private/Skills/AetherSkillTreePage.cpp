@@ -1,6 +1,6 @@
+#include "Skills/AetherSkillTreePage.h"
 #include "UI/AetherWidgetAssets.h"
 #include "UI/AetherMenuRoot.h"
-#include "Skills/AetherSkillTreePage.h"
 #include "Skills/AetherSkillGraphWidget.h"
 #include "Skills/AetherSkillHotbarCell.h"
 #include "Inspection/AetherInspectionWidgets.h"
@@ -222,8 +222,8 @@ void UAetherSkillTreePage::RequestAction(const FAetherInspectRequest& R,const FA
     if(!R.Context.Same(Snapshot.Context)||!Session.GetDetails().IsSet()||
         !R.Target.DefinitionId.Equals(Session.GetDetails()->Request.Target.DefinitionId,ESearchCase::CaseSensitive)||
         R.Target.SkillRank!=Session.GetDetails()->Request.Target.SkillRank)return;
-    const bool Navigation=A.Kind==EAetherInspectAction::FocusSkill||A.Kind==EAetherInspectAction::TrackQuest;
-    if(!Navigation&&(!bNativeSnapshot||!OnCommandReady.IsBound()||(CommandClient.IsValid()&&CommandClient->HasPending())))return;
+    const bool bNavigationAction=A.Kind==EAetherInspectAction::FocusSkill||A.Kind==EAetherInspectAction::TrackQuest;
+    if(!bNavigationAction&&(!bNativeSnapshot||!OnCommandReady.IsBound()||(CommandClient.IsValid()&&CommandClient->HasPending())))return;
     const FGuid Token=Session.BeginAction(A.Kind,A.Argument);if(!Token.IsValid())return;
     if(A.bNeedsConfirmation||A.MaxQuantity>1)ShowConfirmation();else Confirm(Token,1);
 }
@@ -319,14 +319,14 @@ FReply UAetherSkillTreePage::NativeOnMouseButtonDown(const FGeometry& Geometry,c
 
 void UAetherSkillTreePage::InspectHotbar(const FAetherInspectRequest& R)
 {if(R.Context.Same(Snapshot.Context)&&!R.Target.DefinitionId.IsEmpty())Select({R.Target.DefinitionId,R.Target.SkillRank},true);}
-void UAetherSkillTreePage::DropSkill(const FAetherInspectRequest& R,int32 Slot)
+void UAetherSkillTreePage::DropSkill(const FAetherInspectRequest& R,int32 SlotValue)
 {
-    if(!R.Context.Same(Snapshot.Context)||Slot<0||Slot>=FAetherSkillStateV10::HotbarCapacity||ModalToken.IsValid()||
+    if(!R.Context.Same(Snapshot.Context)||SlotValue<0||SlotValue>=FAetherSkillStateV10::HotbarCapacity||ModalToken.IsValid()||
         !CommandClient.IsValid()||CommandClient->HasPending())return;
     const auto& D=FAetherSkillDefinitionsV10::Get();const auto* Def=D.Skills.Find(R.Target.DefinitionId);
     if(!Def||!Def->bActive||Snapshot.Skills.EffectiveRank(Def->SkillId,Snapshot.ExternalGrants)<R.Target.SkillRank)return;
     Select({R.Target.DefinitionId,R.Target.SkillRank},false);
-    const FString Argument=FString::Printf(TEXT("Hotbar.%d"),Slot+1);
+    const FString Argument=FString::Printf(TEXT("Hotbar.%d"),SlotValue+1);
     const auto Token=Session.BeginAction(EAetherInspectAction::BindHotbar,Argument);
     if(Token.IsValid())Confirm(Token,1);
 }

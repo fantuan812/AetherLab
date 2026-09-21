@@ -204,4 +204,4 @@ void UAetherSkillGraphWidget::CancelInteraction()
     if(!Graph)return;Graph->CancelInteraction();
     if(Graph->HasMouseCapture()&&FSlateApplication::IsInitialized())FSlateApplication::Get().ReleaseAllPointerCapture();
 }
-void UAetherSkillGraphWidget::ReleaseSlateResources(bool Children){CancelInteraction();Super::ReleaseSlateResources(Children);Graph.Reset();for(auto* Node:Nodes)if(Node)Node->ReleaseSlateResources(Children);Nodes.Reset();}
+void UAetherSkillGraphWidget::ReleaseSlateResources(bool Children){CancelInteraction();Super::ReleaseSlateResources(Children);Graph.Reset();for(const auto& Node:Nodes)if(Node)Node->ReleaseSlateResources(Children);Nodes.Reset();}

@@ -28,7 +28,7 @@ bool AetherReadActivityRules(FAetherRules& R,const TSharedPtr<FJsonObject>& Root
         {
             const auto O=Pair.Value->AsObject();const TSharedPtr<FJsonObject>* Items=nullptr;
             FString Claim,Objective;double Gold=0;FAetherActivityRewardRule A;
-            if(!Stable(Pair.Key)||R.ActivityRewards.Contains(FName(*Pair.Key))||!O||!O->TryGetStringField(TEXT("DailyClaim"),Claim)||!Stable(Claim)||Claims.Contains(FName(*Claim))||
+            if(!Stable(FString(Pair.Key))||R.ActivityRewards.Contains(FName(*Pair.Key))||!O||!O->TryGetStringField(TEXT("DailyClaim"),Claim)||!Stable(Claim)||Claims.Contains(FName(*Claim))||
                 !O->TryGetStringField(TEXT("Objective"),Objective)||(!Objective.IsEmpty()&&!R.Objectives.Contains(FName(*Objective)))||
                 !O->TryGetNumberField(TEXT("Gold"),Gold)||!FMath::IsFinite(Gold)||Gold<0||Gold>10000000||Gold!=FMath::FloorToDouble(Gold)||
                 !O->TryGetObjectField(TEXT("Items"),Items)||(*Items)->Values.Num()>32)return Fail(TEXT("Invalid activity reward entry"));

@@ -1,11 +1,16 @@
 """官方动画派生蹲姿 -> Manny 到 G1 离线重定向 -> 有来源摘要的 30 FPS 姿态文件。"""
 import pathlib
 import unreal as ue
+
+def load_optional(path):
+    # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
+    return ue.EditorAssetLibrary.load_asset(path) if ue.EditorAssetLibrary.does_asset_exist(path) else None
+
 root = pathlib.Path(ue.Paths.project_dir())
 lib = ue.EditorAssetLibrary
-source = lib.load_asset("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple")
-target = lib.load_asset("/Game/Animation/Motion/SK_G1MotionSource")
-retargeter = lib.load_asset("/Game/Animation/Motion/RTG_Manny_G1")
+source = load_optional("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple")
+target = load_optional("/Game/Animation/Motion/SK_G1MotionSource")
+retargeter = load_optional("/Game/Animation/Motion/RTG_Manny_G1")
 if not source or not target or not retargeter:
     raise RuntimeError("先完成 ControlledAnimations 和 MotionAssets 作者步骤")
 folder = root / "ContentSource/Motion/Clips"

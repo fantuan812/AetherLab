@@ -26,7 +26,7 @@ int32 UAetherValidateV10ContentCommandlet::Main(const FString&)
           FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Layouts)&&Layouts.IsValid(),TEXT("Widget layout definitions"));
     if(Layouts.IsValid())for(const auto& Entry:Layouts->GetObjectField(TEXT("Layouts"))->Values)
     {
-        const FString Path=TEXT("/Game/UI/Widgets/")+Entry.Key+TEXT(".")+Entry.Key;
+        const FString Path=FString(TEXT("/Game/UI/Widgets/"))+FString(Entry.Key)+TEXT(".")+FString(Entry.Key);
         auto* Blueprint=LoadObject<UWidgetBlueprint>(nullptr,*Path);
         Check(Blueprint&&Blueprint->Status!=BS_Error&&Blueprint->GeneratedClass&&Blueprint->WidgetTree&&Blueprint->WidgetTree->RootWidget,Path);
         if(!Blueprint||!Blueprint->WidgetTree)continue;

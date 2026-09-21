@@ -3,12 +3,17 @@ import pathlib
 import json
 import unreal as ue
 
+def load_optional(path):
+    # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
+    return ue.EditorAssetLibrary.load_asset(path) if ue.EditorAssetLibrary.does_asset_exist(path) else None
+
+
 ROOT = pathlib.Path(ue.Paths.project_dir()).resolve()
 OUTPUT = "/Game/Animation/Motion"
 LIBRARY = ue.EditorAssetLibrary
 
 def require(path):
-    value = LIBRARY.load_asset(path)
+    value = load_optional(path)
     if not value:
         raise RuntimeError("缺失动作资源：" + path)
     return value
@@ -17,7 +22,7 @@ def main():
     skeleton = ROOT / "ContentSource/Motion/G1Skeleton.json"
     if not skeleton.is_file():
         raise RuntimeError("先用 MotionAuthor.py extract 从锁定模型生成骨架描述")
-    source = LIBRARY.load_asset(OUTPUT + "/SK_G1MotionSource")
+    source = load_optional(OUTPUT + "/SK_G1MotionSource")
     if not source:
         source, reason = ue.AetherMotionAuthoring.create_source(str(skeleton))
         if not source:
@@ -39,7 +44,7 @@ def main():
     resources.append(require(OUTPUT + "/IK_G1"))
     for clip in sorted((ROOT / "ContentSource/Motion/Clips").glob("*.json")):
         path = OUTPUT + "/Baked/AN_" + clip.stem
-        animation = LIBRARY.load_asset(path)
+        animation = load_optional(path)
         if not animation:
             animation, reason = ue.AetherMotionAuthoring.import_clip(str(clip), source, path)
             if not animation:
@@ -54,7 +59,7 @@ def main():
             if data.get("skeletonSha256") != skeleton_data["skeletonSha256"] or len(data["roots"]) < 4:
                 raise RuntimeError("边界骨架/帧数无效：" + str(clip))
             name = "DA_Boundary_" + style
-            asset = LIBRARY.load_asset(OUTPUT + "/" + name)
+            asset = load_optional(OUTPUT + "/" + name)
             if not asset:
                 factory = ue.DataAssetFactory()
                 factory.set_editor_property("data_asset_class", ue.AetherMotionBoundaryAsset)
@@ -78,7 +83,7 @@ def main():
         if not LIBRARY.save_loaded_asset(profile):
             raise RuntimeError("动作配置保存失败")
     path = OUTPUT + "/DA_MotionCook"
-    label = LIBRARY.load_asset(path)
+    label = load_optional(path)
     if not label:
         factory = ue.DataAssetFactory()
         factory.set_editor_property("data_asset_class", ue.PrimaryAssetLabel)

@@ -8,6 +8,8 @@
 
 class AAetherPlayerController;
 struct FAetherCommandRuntimeImpl;
+// UHT 热重载构造器也可能触发成员销毁；删除操作在完整类型所在 .cpp 中执行。
+struct AETHERGAMEPLAY_API FAetherCommandRuntimeImplDeleter { void operator()(FAetherCommandRuntimeImpl* Value) const; };
 using FAetherResolveConnectedContext=TFunction<bool(AAetherPlayerController&,const FAetherPlayerCommand&,const FAetherProfileStateV10&,FAetherProfileCommandContext&)>;
 
 // 返回 true 之前，启动适配器必须已幂等发布当前 Pawn/ASC 以及涉及的世界、容器事实。
@@ -51,5 +53,5 @@ public:
     virtual UWorld* GetTickableGameObjectWorld() const override;
     virtual void Deinitialize() override;
 private:
-    TUniquePtr<FAetherCommandRuntimeImpl> Impl;
+    TUniquePtr<FAetherCommandRuntimeImpl,FAetherCommandRuntimeImplDeleter> Impl;
 };
