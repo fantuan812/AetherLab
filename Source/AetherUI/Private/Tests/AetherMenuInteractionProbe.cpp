@@ -101,7 +101,7 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   break;
  case 11:
   // ClientRestart 会刷新按键并重建 Enhanced Input；等新输入上下文就绪再注入用户按键。
-  if(!C||!C->ProfileState()||C->InputActions.IsEmpty())return;
+  if(!C||!C->ProfileState()||!C->HasGameplayBindings())return;
   GameKey(EKeys::I);break;
  case 12:
   UE_LOG(LogTemp,Display,TEXT("V10_MENU_REBIND pawn=%s open=%d page=%d visible=%d pawn_sub=%d profile_sub=%d old_sub=%d"),

@@ -45,7 +45,7 @@ bool UAetherWorldActionComponent::Begin(FName Action)
         // 前摇期间只占用目标，物理抓取在接触提交点执行；第二位玩家无法抢同一物体。
         P->Carrier=C;Pending=P;Phase=EAetherWorldActionPhase::Pickup;C->PresentAction(TEXT("Pickup"),.7f);
     }
-    StartedAt=C->CombatTime();DamageSerial=C->DamageReceivedCount;bCommitted=false;
+    StartedAt=C->CombatTime();DamageSerial=C->CombatRuntime->DamageReceivedCount;bCommitted=false;
     C->SetSprintInput(false);C->GetCharacterMovement()->StopMovementImmediately();C->ForceNetUpdate();return true;
 }
 void UAetherWorldActionComponent::Cancel()
@@ -70,7 +70,7 @@ void UAetherWorldActionComponent::TickComponent(float Dt,ELevelTick Type,FActorC
 {
     Super::TickComponent(Dt,Type,Tick);auto* C=Cast<AAetherFrontierCharacter>(GetOwner());if(!C||!C->HasAuthority())return;
     if(!C->Alive()||C->bTravelPending||C->CombatTime()<C->StunUntil||C->ResourceGate->IsBlocked()||
-       ((IsBusy()||C->Carried)&&C->DamageReceivedCount!=DamageSerial)){Release();return;}
+       ((IsBusy()||C->Carried)&&C->CombatRuntime->DamageReceivedCount!=DamageSerial)){Release();return;}
     if(IsBusy())
     {
         if(!Pending||(!bCommitted&&!Reachable(*C,*Pending))){Release();return;}

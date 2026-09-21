@@ -11,17 +11,11 @@
 #include "AetherRules.h"
 #include "AetherInventoryRules.h"
 #include "AetherActions.h"
-#include "AetherInputProfile.h"
+#include "Input/AetherPlayerInputComponent.h"
 #include "Presentation/AetherPlayerPreferences.h"
 #include "Movement/AetherCharacterMovement.h"
 #include "Movement/AetherVaultAbility.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "InputAction.h"
-#include "InputMappingContext.h"
-#include "InputModifiers.h"
-#include "InputTriggers.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -38,7 +32,7 @@
 
 AAetherFrontierCharacter::AAetherFrontierCharacter(const FObjectInitializer& ObjectInitializer)
     :Super(ObjectInitializer.SetDefaultSubobjectClass<UAetherCharacterMovement>(ACharacter::CharacterMovementComponentName))
-{ bUseBasicAssets=true;JumpMaxCount=1;JumpMaxHoldTime=.18f;CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle"));WorldActions=CreateDefaultSubobject<UAetherWorldActionComponent>(TEXT("WorldActions")); }
+{ bUseBasicAssets=true;JumpMaxCount=1;JumpMaxHoldTime=.18f;CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle"));WorldActions=CreateDefaultSubobject<UAetherWorldActionComponent>(TEXT("WorldActions"));PlayerInput=CreateDefaultSubobject<UAetherPlayerInputComponent>(TEXT("PlayerInput")); }
 AAetherPlayerState* AAetherFrontierCharacter::ProfileState() const {return GetPlayerState<AAetherPlayerState>();}
 void AAetherFrontierCharacter::BindPersistentAbilities()
 {
@@ -116,141 +110,11 @@ void AAetherFrontierCharacter::Yaw(float V){if(!bPanel)AddControllerYawInput(V*G
 void AAetherFrontierCharacter::Pitch(float V){const auto* P=GetDefault<UAetherPlayerPreferences>();if(!bPanel)AddControllerPitchInput((P->bInvertLook?V:-V)*P->MouseSensitivity);}
 void AAetherFrontierCharacter::PressAttack(){bAttackHeld=!bPanel;if(bAttackHeld)PressedAt=GetWorld()->GetTimeSeconds();}
 void AAetherFrontierCharacter::ReleaseAttack(){const bool Attack=bAttackHeld;bAttackHeld=false;if(Attack&&!bPanel)ServerAttack(GetWorld()->GetTimeSeconds()-PressedAt>=.35f);}
-void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I)
-{
-    auto* Enhanced=Cast<UEnhancedInputComponent>(I);auto* PC=Cast<APlayerController>(Controller);
-    auto* Sub=PC&&PC->GetLocalPlayer()?ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()):nullptr;
-    if(!Enhanced||!Sub)return;
-    if(GameplayContext)Sub->RemoveMappingContext(GameplayContext);
-    auto* Template=LoadObject<UInputMappingContext>(nullptr,TEXT("/Game/AetherCore/Input/IMC_Gameplay.IMC_Gameplay"));
-    GameplayContext=Template?DuplicateObject<UInputMappingContext>(Template,this):NewObject<UInputMappingContext>(this);InputActions.Reset();DefaultBindings.Reset();
-    auto Action=[&](FName Name,FKey Key,EInputActionValueType Type)
-    {
-        if(auto* Existing=InputActions.Find(Name))return Existing->Get();
-        DefaultBindings.Add(Name,Key);
-        const FString Path=TEXT("/Game/AetherCore/Input/IA_")+Name.ToString()+TEXT(".IA_")+Name.ToString();
-        auto* A=LoadObject<UInputAction>(nullptr,*Path);
-        if(!A){A=NewObject<UInputAction>(this);A->ValueType=Type;A->bConsumeInput=false;}
-        InputActions.Add(Name,A);
-        const auto* Override=GetDefault<UAetherInputProfile>()->Keys.Find(Name);
-        if(Override)GameplayContext->UnmapKey(A,Key);
-        const FKey Desired=Override?*Override:Key;
-        if(!GameplayContext->GetMappings().ContainsByPredicate([&](const auto& M){return M.Action==A&&M.Key==Desired;}))GameplayContext->MapKey(A,Desired);
-        return A;
-    };
-    auto Bind=[&](FName Name,FKey Key,ETriggerEvent Event,void(AAetherFrontierCharacter::*Fn)())
-    {auto* A=Action(Name,Key,EInputActionValueType::Boolean);Enhanced->BindAction(A,Event,this,Fn);if(Event==ETriggerEvent::Completed)Enhanced->BindAction(A,ETriggerEvent::Canceled,this,Fn);};
-    Bind("Tab",EKeys::Tab,ETriggerEvent::Started,&AAetherFrontierCharacter::CycleItem);
-    Bind("Delete",EKeys::Delete,ETriggerEvent::Started,&AAetherFrontierCharacter::SellItem);
-    Bind("Seven",EKeys::Seven,ETriggerEvent::Started,&AAetherFrontierCharacter::BuyMana);
-    Bind("Eight",EKeys::Eight,ETriggerEvent::Started,&AAetherFrontierCharacter::BuyRation);
-    Bind("Z",EKeys::Z,ETriggerEvent::Started,&AAetherFrontierCharacter::UseMana);
-    Bind("F8",EKeys::F8,ETriggerEvent::Started,&AAetherFrontierCharacter::Recover);
-    Bind("H",EKeys::H,ETriggerEvent::Started,&AAetherFrontierCharacter::PartyCommand);
-    Bind("Delete",EKeys::Delete,ETriggerEvent::Started,&AAetherFrontierCharacter::Dismiss);
-    Bind("Attack",EKeys::LeftMouseButton,ETriggerEvent::Started,&AAetherFrontierCharacter::PressAttack);
-    Bind("Attack",EKeys::LeftMouseButton,ETriggerEvent::Completed,&AAetherFrontierCharacter::ReleaseAttack);
-    Bind("Guard",EKeys::RightMouseButton,ETriggerEvent::Started,&AAetherFrontierCharacter::GuardOn);
-    Bind("Guard",EKeys::RightMouseButton,ETriggerEvent::Completed,&AAetherFrontierCharacter::GuardOff);
-    Bind("Sprint",EKeys::LeftShift,ETriggerEvent::Started,&AAetherFrontierCharacter::SprintOn);
-    Bind("Sprint",EKeys::LeftShift,ETriggerEvent::Completed,&AAetherFrontierCharacter::SprintOff);
-    Bind("Dodge",EKeys::LeftAlt,ETriggerEvent::Started,&AAetherFrontierCharacter::Dodge);
-    Bind("Jump",EKeys::SpaceBar,ETriggerEvent::Started,&AAetherFrontierCharacter::JumpV4);
-    Bind("Jump",EKeys::SpaceBar,ETriggerEvent::Completed,&AAetherFrontierCharacter::StopJumping);
-    Bind("Crouch",EKeys::LeftControl,ETriggerEvent::Started,&AAetherFrontierCharacter::CrouchOn);
-    Bind("Crouch",EKeys::LeftControl,ETriggerEvent::Completed,&AAetherFrontierCharacter::CrouchOff);
-    Bind("One",EKeys::One,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell0);
-    Bind("Two",EKeys::Two,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell1);
-    Bind("Three",EKeys::Three,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell2);
-    Bind("Four",EKeys::Four,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell3);
-    Bind("Cast",EKeys::MiddleMouseButton,ETriggerEvent::Started,&AAetherFrontierCharacter::CastSelectedV4);
-    Bind("Interact",EKeys::E,ETriggerEvent::Started,&AAetherFrontierCharacter::InteractV4);
-    Bind("Potion",EKeys::Q,ETriggerEvent::Started,&AAetherFrontierCharacter::UsePotion);
-    Bind("Carry",EKeys::G,ETriggerEvent::Started,&AAetherFrontierCharacter::Carry);
-    Bind("Push",EKeys::V,ETriggerEvent::Started,&AAetherFrontierCharacter::Push);
-    Bind("R",EKeys::R,ETriggerEvent::Started,&AAetherFrontierCharacter::EquipNext);
-    Bind("T",EKeys::T,ETriggerEvent::Started,&AAetherFrontierCharacter::Shield);
-    Bind("F5",EKeys::F5,ETriggerEvent::Started,&AAetherFrontierCharacter::SaveV4);
-    Bind("B",EKeys::B,ETriggerEvent::Started,&AAetherFrontierCharacter::SplitStack);
-    Bind("N",EKeys::N,ETriggerEvent::Started,&AAetherFrontierCharacter::MergeStacks);
-    Bind("I",EKeys::I,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleInventory);
-    Bind("J",EKeys::J,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleQuests);
-    Bind("K",EKeys::K,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleSkills);
-    Bind("M",EKeys::M,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleMap);
-    Bind("P",EKeys::P,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleParty);
-    Bind("Escape",EKeys::Escape,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleMenu);
-    Bind("Debug",EKeys::F10,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleDebug);
-    Bind("Weather",EKeys::F11,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleWeather);
-    Bind("Throw",EKeys::C,ETriggerEvent::Started,&AAetherFrontierCharacter::Throw);
-    Bind("Claim",EKeys::Enter,ETriggerEvent::Started,&AAetherFrontierCharacter::ClaimRewards);
-    Bind("Invite",EKeys::Y,ETriggerEvent::Started,&AAetherFrontierCharacter::Invite);
-    Bind("AcceptInvite",EKeys::U,ETriggerEvent::Started,&AAetherFrontierCharacter::AcceptInvite);
-    Bind("LeaveParty",EKeys::O,ETriggerEvent::Started,&AAetherFrontierCharacter::LeaveParty);
-    Bind("Lock",EKeys::F,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleLock);
-    for(auto Pair:{TPair<FName,FKey>("Forward",EKeys::W),TPair<FName,FKey>("Backward",EKeys::S),TPair<FName,FKey>("Left",EKeys::A),TPair<FName,FKey>("Right",EKeys::D)})
-    {
-        auto* A=Action(Pair.Key,Pair.Value,EInputActionValueType::Boolean);const FName Name=Pair.Key;
-        Enhanced->BindActionValueLambda(A,ETriggerEvent::Triggered,[this,Name](const FInputActionValue&){if(Name=="Forward")Forward(1);else if(Name=="Backward")Forward(-1);else Right(Name=="Left"?-1:1);});
-    }
-    Enhanced->BindActionValueLambda(Action("LookX",EKeys::MouseX,EInputActionValueType::Axis1D),ETriggerEvent::Triggered,[this](const FInputActionValue& V){Yaw(V.Get<float>());});
-    Enhanced->BindActionValueLambda(Action("LookY",EKeys::MouseY,EInputActionValueType::Axis1D),ETriggerEvent::Triggered,[this](const FInputActionValue& V){Pitch(V.Get<float>());});
-    // 手柄视角按秒计算，不混用鼠标每帧位移。局部死区只应用于摇杆轴。
-    auto PadAxis=[&](FName Name,FKey Key,TFunction<void(float)> Apply)
-    {
-        auto* A=Action(Name,Key,EInputActionValueType::Axis1D);
-        GameplayContext->UnmapKey(A,Key);
-        auto& CleanMapping=GameplayContext->MapKey(A,Key);
-        auto* Dead=NewObject<UInputModifierDeadZone>(GameplayContext);Dead->LowerThreshold=.15f;Dead->UpperThreshold=1;
-        CleanMapping.Modifiers.Add(Dead);
-        Enhanced->BindActionValueLambda(A,ETriggerEvent::Triggered,[Apply=MoveTemp(Apply)](const FInputActionValue& V){Apply(V.Get<float>());});
-    };
-    PadAxis("PadMoveX",EKeys::Gamepad_LeftX,[this](float V){Right(V);});
-    PadAxis("PadMoveY",EKeys::Gamepad_LeftY,[this](float V){Forward(V);});
-    PadAxis("PadLookX",EKeys::Gamepad_RightX,[this](float V)
-    {if(!bPanel)AddControllerYawInput(V*120.f*GetWorld()->GetDeltaSeconds()*GetDefault<UAetherPlayerPreferences>()->ControllerSensitivity);});
-    PadAxis("PadLookY",EKeys::Gamepad_RightY,[this](float V)
-    {const auto* P=GetDefault<UAetherPlayerPreferences>();if(!bPanel)AddControllerPitchInput(V*(P->bInvertLook?1.f:-1.f)*90.f*GetWorld()->GetDeltaSeconds()*P->ControllerSensitivity);});
-    const TPair<FName,FKey> Pad[]={
-        {"Attack",EKeys::Gamepad_RightTrigger},{"Guard",EKeys::Gamepad_LeftTrigger},
-        {"Jump",EKeys::Gamepad_FaceButton_Bottom},{"Dodge",EKeys::Gamepad_FaceButton_Right},
-        {"Interact",EKeys::Gamepad_FaceButton_Left},{"Potion",EKeys::Gamepad_FaceButton_Top},
-        {"Sprint",EKeys::Gamepad_LeftThumbstick},{"Lock",EKeys::Gamepad_RightThumbstick},
-        {"Crouch",EKeys::Gamepad_LeftShoulder},{"Cast",EKeys::Gamepad_RightShoulder},
-        {"One",EKeys::Gamepad_DPad_Up},{"Two",EKeys::Gamepad_DPad_Right},
-        {"Three",EKeys::Gamepad_DPad_Down},{"Four",EKeys::Gamepad_DPad_Left},
-        {"I",EKeys::Gamepad_Special_Left},{"Escape",EKeys::Gamepad_Special_Right}};
-    for(const auto& P:Pad)if(auto* A=InputActions.Find(P.Key))
-        if(!GameplayContext->GetMappings().ContainsByPredicate([&](const auto& M){return M.Action==A->Get()&&M.Key==P.Value;}))
-            GameplayContext->MapKey(A->Get(),P.Value);
-    // 按住左肩时十字键成为物理交互，ChordBlocker 阻止底层技能选择穿透。
-    const TPair<FName,FKey> Utility[]={{"Carry",EKeys::Gamepad_DPad_Up},{"Throw",EKeys::Gamepad_DPad_Right},
-        {"Push",EKeys::Gamepad_DPad_Down},{"Z",EKeys::Gamepad_DPad_Left}};
-    for(const auto& P:Utility)
-    {
-        GameplayContext->UnmapKey(InputActions[P.Key],P.Value);
-        auto& M=GameplayContext->MapKey(InputActions[P.Key],P.Value);
-        auto* Chord=NewObject<UInputTriggerChordAction>(GameplayContext);Chord->ChordAction=InputActions["Crouch"];M.Triggers.Add(Chord);
-    }
-    Sub->AddMappingContext(GameplayContext,0);
-    OnPresentationChanged.Broadcast();
-}
-FKey AAetherFrontierCharacter::BindingFor(FName Name) const
-{
- const auto* A=InputActions.Find(Name);if(A&&GameplayContext)for(const auto& M:GameplayContext->GetMappings())if(M.Action==A->Get()&&!M.Key.IsGamepadKey())return M.Key;return FKey();
-}
-void AAetherFrontierCharacter::AetherBind(FName Name,FKey Key)
-{
- if(!IsLocallyControlled()||!GameplayContext||!Key.IsValid()||Key.IsGamepadKey()||Key.IsAxis1D()||Key.IsAxis2D()||Name=="LookX"||Name=="LookY"||Name=="Escape"||Key==EKeys::Escape)return;
- auto* A=InputActions.Find(Name);if(!A)return;const FKey Old=BindingFor(Name);if(Old==Key)return;
- ReleaseHeldInput();
- auto* Profile=GetMutableDefault<UAetherInputProfile>();
- // A single mapping per action: swap conflicts so no command is silently orphaned.
- TArray<FName> Conflicts;for(const auto& Pair:InputActions)if(Pair.Key!=Name&&BindingFor(Pair.Key)==Key&&(UAetherInputProfile::Context(Name)&UAetherInputProfile::Context(Pair.Key)))Conflicts.Add(Pair.Key);
- for(auto Other:Conflicts){auto* OtherAction=InputActions[Other].Get();GameplayContext->UnmapKey(OtherAction,Key);GameplayContext->MapKey(OtherAction,Old);Profile->Keys.Add(Other,Old);}
- GameplayContext->UnmapKey(A->Get(),Old);GameplayContext->MapKey(A->Get(),Key);Profile->Keys.Add(Name,Key);Profile->SaveConfig();
- Feedback=FString::Printf(TEXT("Bound %s: %s. Conflicting binding swapped."),*Name.ToString(),*Key.GetDisplayName().ToString());
- if(auto* PC=Cast<APlayerController>(Controller))if(auto* Sub=ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))Sub->RequestRebuildControlMappings();
-}
+void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I){PlayerInput->Setup(I);}
+FKey AAetherFrontierCharacter::BindingFor(FName Name) const{return PlayerInput->BindingFor(Name);}
+void AAetherFrontierCharacter::AetherBind(FName Name,FKey Key){PlayerInput->SetBinding(Name,Key);}
+const TMap<FName,FKey>& AAetherFrontierCharacter::InputDefaults() const{return PlayerInput->Defaults();}
+bool AAetherFrontierCharacter::HasGameplayBindings() const{return PlayerInput->HasBindings();}
 void AAetherFrontierCharacter::ToggleLock()
 {
     if(bPanel)return;if(LockedTarget){LockedTarget=nullptr;return;}
@@ -401,7 +265,7 @@ void AAetherFrontierCharacter::Tick(float Dt)
     if(auto* PS=ProfileState())MaxHealth=100+5*FMath::Clamp(PS->Profile.Experience/200,0,4);
     if(ReviveTarget)
     {
-        if(!IsValid(ReviveTarget)||!Alive()||ReviveTarget->Alive()||DamageReceivedCount!=ReviveDamageSerial||CombatTime()<StunUntil||FVector::DistSquared(GetActorLocation(),ReviveTarget->GetActorLocation())>FMath::Square(220.0))ReviveTarget=nullptr;
+        if(!IsValid(ReviveTarget)||!Alive()||ReviveTarget->Alive()||CombatRuntime->DamageReceivedCount!=ReviveDamageSerial||CombatTime()<StunUntil||FVector::DistSquared(GetActorLocation(),ReviveTarget->GetActorLocation())>FMath::Square(220.0))ReviveTarget=nullptr;
         if(ReviveTarget){FCollisionQueryParams Q(SCENE_QUERY_STAT(RescueLOS),false,this);Q.AddIgnoredActor(ReviveTarget);if(GetWorld()->LineTraceTestByChannel(GetActorLocation(),ReviveTarget->GetActorLocation(),ECC_Visibility,Q))ReviveTarget=nullptr;}
         if(!ReviveTarget)if(auto* Spec=AbilitySystem->FindAbilitySpecFromClass(UAetherReviveAbility::StaticClass()))AbilitySystem->CancelAbilityHandle(Spec->Handle);
     }
@@ -412,7 +276,7 @@ void AAetherFrontierCharacter::Tick(float Dt)
     {
         const FVector D=CompanionOwner->GetActorLocation()-GetActorLocation();
         if(D.Size2D()>170)AddMovementInput(SafeMoveDirection(CompanionOwner->GetActorLocation()));
-        else if(!ReviveTarget){ReviveTarget=CompanionOwner;ReviveStarted=T;ReviveDamageSerial=DamageReceivedCount;if(!AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass()))ReviveTarget=nullptr;}
+        else if(!ReviveTarget){ReviveTarget=CompanionOwner;ReviveStarted=T;ReviveDamageSerial=CombatRuntime->DamageReceivedCount;if(!AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass()))ReviveTarget=nullptr;}
         return;
     }
     if(bHealer&&T>NextCompanionAction&&CompanionOwner->Health()<65&&Mana()>=15&&FVector::DistSquared(GetActorLocation(),CompanionOwner->GetActorLocation())<FMath::Square(600.0))

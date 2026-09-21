@@ -12,6 +12,7 @@ class AAetherFrontierProp;
 class AAetherFrontierCharacter;
 class UAetherPhysicsDamageComponent;
 class UAetherWorldActionComponent;
+class UAetherPlayerInputComponent;
 class UAetherTraversalComponent;
 class UPhysicsHandleComponent;
 class UInputMappingContext;
@@ -56,6 +57,7 @@ public:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UPhysicsHandleComponent> CarryHandle;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherWorldActionComponent> WorldActions;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherPlayerInputComponent> PlayerInput;
     UPROPERTY(Replicated) bool bSprinting = false;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierProp> Carried;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> CompanionOwner;
@@ -118,11 +120,11 @@ public:
     FAetherSaleConfirmation SaleConfirmation;
     UFUNCTION(Client,Reliable) void InventoryResult(FGuid Id,EAetherInventoryResult Result,int32 Revision,int32 Transferred);
     FName TrackedQuest;
-    UPROPERTY(Transient) TObjectPtr<UInputMappingContext> GameplayContext;
-    UPROPERTY(Transient) TMap<FName,TObjectPtr<UInputAction>> InputActions;
+    const TMap<FName,FKey>& InputDefaults() const;
+    bool HasGameplayBindings() const;
     UFUNCTION(Exec) void AetherBind(FName Action,FKey Key);
     FKey BindingFor(FName Action) const;
-    TMap<FName,FKey> DefaultBindings;
+    friend class UAetherPlayerInputComponent;
     UPROPERTY() TObjectPtr<AAetherCharacter> LockedTarget;
     void ToggleLock();
 
@@ -169,6 +171,7 @@ public:
     int32 ClosureSeenPhase=0;
 private:
     void PressAttack(); void ReleaseAttack();
+    void CancelAttackInput(){bAttackHeld=false;}
     void SprintOn(){SetSprintInput(true);} void SprintOff(){SetSprintInput(false);}
     void CrouchOn(){SetCrouchInput(true);} void CrouchOff(){SetCrouchInput(false);}
     void UsePotion(){if(!bPanel)SubmitInventory("Use","Potion");} void InteractV4();

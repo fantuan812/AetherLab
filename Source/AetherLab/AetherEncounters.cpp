@@ -82,7 +82,7 @@ FString AAetherEncounterDirector::Channel(AAetherFrontierCharacter* C,bool UseCo
         if(!Channeler)return TEXT("No available companion.");
     }
     else Channeler=C;
-    Channeler->EncounterId=R.Definition;ChannelDamageSerial=Channeler->DamageReceivedCount;
+    Channeler->EncounterId=R.Definition;ChannelDamageSerial=Channeler->CombatRuntime->DamageReceivedCount;
     return TEXT("Channeling: remain beside valve and avoid damage. Three seconds per wave.");
 }
 void AAetherEncounterDirector::Settle(FAetherEncounterRun& R)
@@ -142,7 +142,7 @@ void AAetherEncounterDirector::UpdateRun(FAetherEncounterRun& R,TArray<TObjectPt
         if(Channeler&&Channeler->EncounterId==R.Definition&&Valve)
         {
             const FVector D=Valve->GetActorLocation()-Channeler->GetActorLocation();
-            if(!Channeler->Alive()||Channeler->DamageReceivedCount!=ChannelDamageSerial||Channeler->CombatTime()<Channeler->StunUntil){Channeler=nullptr;}
+            if(!Channeler->Alive()||Channeler->CombatRuntime->DamageReceivedCount!=ChannelDamageSerial||Channeler->CombatTime()<Channeler->StunUntil){Channeler=nullptr;}
             else if(D.Size()>250){if(Channeler->CompanionOwner)Channeler->AddMovementInput(Channeler->SafeMoveDirection(Valve->GetActorLocation()));else Channeler=nullptr;}
             else
             {

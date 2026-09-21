@@ -2,8 +2,10 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
-#include "AttributeSet.h"
-#include "Abilities/GameplayAbility.h"
+#include "Combat/AetherAttributes.h"
+#include "Combat/AetherCombatComponent.h"
+#include "Abilities/AetherSpellAbility.h"
+#include "Combat/AetherProjectile.h"
 #include "GameFramework/Character.h"
 #include "ReactiveBodyComponent.h"
 #include "AetherEquipmentComponent.h"
@@ -19,72 +21,6 @@ class UStaticMeshComponent;
 class UAetherCharacterDefinition;
 DECLARE_MULTICAST_DELEGATE(FOnAetherCharacterAppearanceChanged);
 
-UCLASS()
-class AETHERLAB_API UAetherAttributes : public UAttributeSet
-{
-    GENERATED_BODY()
-public:
-    UAetherAttributes();
-    UPROPERTY(ReplicatedUsing=OnRep_Health) FGameplayAttributeData Health;
-    UPROPERTY(ReplicatedUsing=OnRep_Mana) FGameplayAttributeData Mana;
-    UPROPERTY(ReplicatedUsing=OnRep_Stamina) FGameplayAttributeData Stamina;
-    UPROPERTY(ReplicatedUsing=OnRep_Posture) FGameplayAttributeData Posture;
-    UPROPERTY(ReplicatedUsing=OnRep_GearDamage) FGameplayAttributeData GearDamage;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearDamage)
-    UPROPERTY(ReplicatedUsing=OnRep_GearPosture) FGameplayAttributeData GearPosture;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearPosture)
-    UPROPERTY(ReplicatedUsing=OnRep_GearArmor) FGameplayAttributeData GearArmor;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearArmor)
-    UPROPERTY(ReplicatedUsing=OnRep_GearFireResist) FGameplayAttributeData GearFireResist;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearFireResist)
-    UPROPERTY(ReplicatedUsing=OnRep_GearWaterResist) FGameplayAttributeData GearWaterResist;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearWaterResist)
-    UPROPERTY(ReplicatedUsing=OnRep_GearFrostResist) FGameplayAttributeData GearFrostResist;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearFrostResist)
-    UPROPERTY(ReplicatedUsing=OnRep_GearStormResist) FGameplayAttributeData GearStormResist;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearStormResist)
-    UPROPERTY(ReplicatedUsing=OnRep_GearMaxHealth) FGameplayAttributeData GearMaxHealth;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearMaxHealth)
-    UPROPERTY(ReplicatedUsing=OnRep_GearMaxMana) FGameplayAttributeData GearMaxMana;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearMaxMana)
-    UPROPERTY(ReplicatedUsing=OnRep_GearMaxStamina) FGameplayAttributeData GearMaxStamina;
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, GearMaxStamina)
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, Health)
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, Mana)
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, Stamina)
-    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, Posture)
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-private:
-    UFUNCTION() void OnRep_GearDamage(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_GearPosture(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_GearArmor(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_GearFireResist(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_GearWaterResist(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_GearFrostResist(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_GearStormResist(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_GearMaxHealth(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_GearMaxMana(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_GearMaxStamina(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_Health(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_Mana(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_Stamina(const FGameplayAttributeData& Old);
-    UFUNCTION() void OnRep_Posture(const FGameplayAttributeData& Old);
-};
-
-// 同一个 GA 可承载多个技能：Spec 标签决定 SkillId，Level 只表示实际等级。
-UCLASS()
-class AETHERLAB_API UAetherSpellAbility : public UGameplayAbility
-{
-    GENERATED_BODY()
-public:
-    UAetherSpellAbility();
-    virtual bool CheckCost(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* Info, FGameplayTagContainer* Tags = nullptr) const override;
-    virtual void ApplyCost(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* Info, FGameplayAbilityActivationInfo Activation) const override;
-    virtual void ActivateAbility(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* Info,
-        FGameplayAbilityActivationInfo Activation, const FGameplayEventData* Event) override;
-    static float Cost(int32 Spell);
-};
-
 UENUM()
 enum class EAetherFighter : uint8 { Player, ShieldGuard, FireCaster, BellKnight, Wolf, Golem };
 
@@ -96,6 +32,7 @@ public:
     AAetherCharacter(const FObjectInitializer& ObjectInitializer=FObjectInitializer::Get());
     FOnAetherCharacterAppearanceChanged OnAppearanceChanged;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherResourceGate> ResourceGate;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherCombatComponent> CombatRuntime;
     // 只接收服务器战斗事实；不用客户端耐久数值或显示索引。
     void RecordEquipmentWear(bool Weapon,bool Guard);
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherMotionComponent> Motion;
@@ -113,7 +50,7 @@ public:
     UPROPERTY(Replicated) bool bWindingUp = false;
     UPROPERTY(Replicated) bool bPacified = false;
     UPROPERTY(Replicated) float MaxHealth = 100;
-    float TimeSinceDamage() const {return CombatTime()-LastDamageAt;}
+    float TimeSinceDamage() const {return CombatTime()-CombatRuntime->LastDamageAt;}
     // 交易等安全动作不能在刚完成攻击/施法后立即开放；初始零期限表示尚无战斗动作。
     bool HasRecentCombat(float Seconds) const
     {
@@ -129,8 +66,6 @@ public:
     int32 SelectedSpell = 0;
     FString Feedback;
     FVector Home = FVector::ZeroVector;
-    uint64 DamageReceivedCount = 0;
-    TWeakObjectPtr<AActor> LastDamager;
     virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return AbilitySystem; }
     virtual void BeginPlay() override;
     virtual void PossessedBy(AController* NewController) override;
@@ -220,11 +155,7 @@ private:
     UFUNCTION(Client, Reliable) void ClientFeedback(const FString& Message);
     TArray<FGameplayAbilitySpecHandle> SpellHandles;
     float ActionUntil = 0;
-    float BlockStarted = -100;
-    float NextParryAllowed = 0;
-    float InvulnerableUntil = 0;
     float NextAI = 0;
-    float LastDamageAt = -100;
     float NextShockStun = 0;
     uint32 PresentedAttackSerial = 0;
     bool bWalkingAnimation = false;
@@ -236,20 +167,4 @@ private:
     bool bNetEquipRequested = false;
     bool bNetProbeFinished = false;
     void NetworkProbe(float Dt);
-};
-
-UCLASS()
-class AETHERLAB_API AAetherProjectile : public AActor
-{
-    GENERATED_BODY()
-public:
-    AAetherProjectile();
-    UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Visual;
-    UPROPERTY(Replicated) double HeatJ = 60000;
-    FVector VelocityCm = FVector::ZeroVector;
-    float Age = 0;
-    virtual void BeginPlay() override;
-    virtual void Tick(float Dt) override;
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-    static void IntegrateWeather(double& Heat, FVector& Velocity, const Reactive::FEnvironment& Weather, float Dt);
 };

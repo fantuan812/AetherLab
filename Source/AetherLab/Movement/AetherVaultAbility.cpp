@@ -65,7 +65,7 @@ void UAetherVaultAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
     FVector Contact;
     if(!C||!FindPath(*C,Path,&Contact)||!CommitAbility(H,Info,A)){EndAbility(H,Info,A,true,true);return;}
     C->PresentAction(TEXT("Vault"),.82f);C->PresentedAction.bHasContact=true;C->PresentedAction.Contact=Contact;
-    Character=C;DamageAtStart=C->LastDamageAt;Phase=0;C->SetSprintInput(false);C->StopJumping();
+    Character=C;DamageAtStart=C->CombatRuntime->LastDamageAt;Phase=0;C->SetSprintInput(false);C->StopJumping();
     C->GetCharacterMovement()->StopMovementImmediately();C->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
     // Flying 仅是受控 root source 的运动阶段，仍由 CharacterMovement 扫掠碰撞；结束必恢复重力。
     C->GetWorldTimerManager().SetTimer(Watch,this,&UAetherVaultAbility::CheckInterruption,.025f,true);
@@ -86,7 +86,7 @@ void UAetherVaultAbility::CheckInterruption()
 {
     auto* C=Character.Get();
     if(!C||!C->Alive()||C->bTravelPending||C->ResourceGate->IsBlocked()||C->CombatTime()<C->StunUntil||
-       C->LastDamageAt>DamageAtStart||!CurrentActorInfo||CurrentActorInfo->AvatarActor.Get()!=C)Abort();
+       C->CombatRuntime->LastDamageAt>DamageAtStart||!CurrentActorInfo||CurrentActorInfo->AvatarActor.Get()!=C)Abort();
 }
 void UAetherVaultAbility::Abort(){if(IsActive())EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,true);}
 void UAetherVaultAbility::EndAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,bool Replicate,bool Cancelled)

@@ -128,3 +128,6 @@
 
 ### 世界身份和原生恢复一致性
 新增持久 RealmId 与跨世界重试隔离、原子技能授权快照、原生新 Pawn 资源恢复入口。后端排空期间禁止重装。未编译、未测试，见 Architecture/V10-recovery-identity-grants.zh-CN.md。
+
+### 输入与战斗职责拆分
+输入状态和绑定生命周期迁至 PlayerInputComponent；伤害/格挡/韧性结算与生命内伤害状态迁至 CombatComponent；Attributes、SpellAbility、Projectile 独立编译。未编译、未测试。详见 Architecture/V10-character-responsibilities.zh-CN.md。

@@ -34,7 +34,7 @@ FString AAetherFrontierMode::InteractTarget(AAetherFrontierCharacter* C,const FA
     if(!HasAuthority()||!PS||C->ResourceGate->IsBlocked()||C->GetWorld()!=GetWorld()||!AetherGuide::ValidateSelection(C,Target))
         return TEXT("目标、动作或角色进度已变化，请重新交互。");
     if(auto* Downed=Target.Rescue.Get())
-    {C->ReviveTarget=Downed;C->ReviveStarted=C->CombatTime();C->ReviveDamageSerial=C->DamageReceivedCount;if(!C->AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass())){C->ReviveTarget=nullptr;return TEXT("无法开始救援，请靠近队友并保持安全。");}return TEXT("正在救援：保持靠近 3 秒，受伤会打断。");}
+    {C->ReviveTarget=Downed;C->ReviveStarted=C->CombatTime();C->ReviveDamageSerial=C->CombatRuntime->DamageReceivedCount;if(!C->AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass())){C->ReviveTarget=nullptr;return TEXT("无法开始救援，请靠近队友并保持安全。");}return TEXT("正在救援：保持靠近 3 秒，受伤会打断。");}
     auto* Nearest=Target.Prop.Get();
     if(!Nearest)return TEXT("Move within 2.5m of an interaction marker.");
     const FName Service=Nearest->Service;auto Next=PS->Profile;Next.RefreshDaily(FDateTime::UtcNow().ToString(TEXT("%Y%m%d")));auto* State=GetGameState<AAetherFrontierState>();

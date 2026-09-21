@@ -404,8 +404,8 @@ void AAetherAdventureMode::SmokeStep()
         Check(P->TrySpell(3),TEXT("GAS accepts targeted lightning")); SmokeWait=Elapsed+.3f; break;
     case 3:
     {
-        Check(Enemies[0]->DamageReceivedCount>0,TEXT("Conduction reaches character damage"));
-        Check(Enemies[0]->LastDamager.Get()==P,TEXT("Electrical damage retains source actor"));
+        Check(Enemies[0]->CombatRuntime->DamageReceivedCount>0,TEXT("Conduction reaches character damage"));
+        Check(Enemies[0]->CombatRuntime->LastDamager.Get()==P,TEXT("Electrical damage retains source actor"));
         Check(!GS->Quest.bApprentice,TEXT("Quest starts without rescue")); Interact(P,false); Check(!GS->Quest.bApprentice,TEXT("Remote interaction cannot rescue"));
         Near(FindObject(TEXT("Apprentice"))); Interact(P,false); Check(GS->Quest.bApprentice&&GS->Quest.bTestimony,TEXT("Rescue grants testimony"));
         Near(FindObject(TEXT("Record"))); Interact(P,false); Check(GS->Quest.bRecord,TEXT("Record interaction grants evidence"));

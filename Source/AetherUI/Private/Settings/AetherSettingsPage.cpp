@@ -65,7 +65,7 @@ void UAetherSettingsPage::RefreshPage()
     DraftKeys.Reset();BindingAction->ClearOptions();
     if(auto* C=Player())
     {
-        TArray<FName> Names;C->DefaultBindings.GetKeys(Names);Names.Sort(FNameLexicalLess());
+        TArray<FName> Names;C->InputDefaults().GetKeys(Names);Names.Sort(FNameLexicalLess());
         for(FName Name:Names)if(Name!="LookX"&&Name!="LookY"&&Name!="Escape"&&!Name.ToString().StartsWith(TEXT("Pad")))
         {DraftKeys.Add(Name,C->BindingFor(Name));BindingAction->AddOption(Name.ToString());}
     }
@@ -86,7 +86,7 @@ void UAetherSettingsPage::Defaults()
 {
     RevertVideo();Volume->SetValue(.8);Mouse->SetValue(1);Controller->SetValue(1);Scale->SetValue(1);Invert->SetIsChecked(false);Backend->SetSelectedIndex(0);Quality->SetSelectedIndex(2);Vsync->SetIsChecked(false);
     WindowMode->SetSelectedIndex(1);Resolution->SetSelectedOption(TEXT("1920x1080"));
-    if(auto* C=Player())for(auto& Pair:DraftKeys)Pair.Value=C->DefaultBindings.FindRef(Pair.Key);
+    if(auto* C=Player())for(auto& Pair:DraftKeys)Pair.Value=C->InputDefaults().FindRef(Pair.Key);
     ActionSelected(BindingAction->GetSelectedOption(),ESelectInfo::Direct);Notice->SetText(FText::FromString(TEXT("默认值已填入，保存后生效。")));
 }
 void UAetherSettingsPage::Apply()

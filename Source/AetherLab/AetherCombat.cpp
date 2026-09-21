@@ -54,92 +54,6 @@ void Tint(UStaticMeshComponent* Mesh, FLinearColor Color)
     if (Mat) Mat->SetVectorParameterValue(TEXT("Color"), Color);
 }
 }
-UAetherAttributes::UAetherAttributes()
-{ Health.SetBaseValue(100); Health.SetCurrentValue(100); Mana.SetBaseValue(100); Mana.SetCurrentValue(100);
-  Stamina.SetBaseValue(100); Stamina.SetCurrentValue(100); Posture.SetBaseValue(0); Posture.SetCurrentValue(0); }
-void UAetherAttributes::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearDamage, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearPosture, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearArmor, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearFireResist, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearWaterResist, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearFrostResist, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearStormResist, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearMaxHealth, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearMaxMana, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, GearMaxStamina, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, Health, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, Mana, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, Stamina, COND_None, REPNOTIFY_Always);
-    DOREPLIFETIME_CONDITION_NOTIFY(UAetherAttributes, Posture, COND_None, REPNOTIFY_Always);
-}
-void UAetherAttributes::OnRep_Health(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, Health, Old); }
-void UAetherAttributes::OnRep_Mana(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, Mana, Old); }
-void UAetherAttributes::OnRep_Stamina(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, Stamina, Old); }
-void UAetherAttributes::OnRep_Posture(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, Posture, Old); }
-
-void UAetherAttributes::OnRep_GearDamage(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearDamage, Old); }
-void UAetherAttributes::OnRep_GearPosture(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearPosture, Old); }
-void UAetherAttributes::OnRep_GearArmor(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearArmor, Old); }
-void UAetherAttributes::OnRep_GearFireResist(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearFireResist, Old); }
-void UAetherAttributes::OnRep_GearWaterResist(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearWaterResist, Old); }
-void UAetherAttributes::OnRep_GearFrostResist(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearFrostResist, Old); }
-void UAetherAttributes::OnRep_GearStormResist(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearStormResist, Old); }
-void UAetherAttributes::OnRep_GearMaxHealth(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearMaxHealth, Old); }
-void UAetherAttributes::OnRep_GearMaxMana(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearMaxMana, Old); }
-void UAetherAttributes::OnRep_GearMaxStamina(const FGameplayAttributeData& Old) { GAMEPLAYATTRIBUTE_REPNOTIFY(UAetherAttributes, GearMaxStamina, Old); }
-
-UAetherSpellAbility::UAetherSpellAbility()
-{ InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor; NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly; }
-namespace
-{
-// 每次都由权威 ASC 的 Spec 解析，绝不接受客户端传入的 Rank 或效果数值。
-bool ResolveSkill(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FString& Id,int32& Rank)
-{
-    const auto* ASC=Info?Info->AbilitySystemComponent.Get():nullptr;
-    const auto* Spec=ASC?ASC->FindAbilitySpecFromHandle(H):nullptr;
-    if(!Spec)return false;
-    Id=AetherSkillBinding::Identify(*Spec);Rank=Spec->Level;
-    return FAetherSkillDefinitionsV10::Get().Effect(Id,Rank)!=nullptr;
-}
-}
-float UAetherSpellAbility::Cost(int32 Spell)
-{
-    const auto& D=FAetherSkillDefinitionsV10::Get();const auto* S=D.Legacy(Spell);
-    const auto* E=S?D.Effect(S->SkillId,1):nullptr;
-    return E?float(E->ManaCost):0.f;
-}
-bool UAetherSpellAbility::CheckCost(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayTagContainer* Tags) const
-{
-    FString Id;int32 Rank=0;if(!ResolveSkill(H,Info,Id,Rank))return false;
-    const auto* C=Info?Cast<AAetherCharacter>(Info->AvatarActor.Get()):nullptr;
-    const auto& E=*FAetherSkillDefinitionsV10::Get().Effect(Id,Rank);
-    return C&&C->Ready()&&C->SkillUnlocked(Id)&&C->Mana()>=E.ManaCost
-        &&C->WaterReserveKg>=E.WaterKg&&Super::CheckCost(H,Info,Tags);
-}
-void UAetherSpellAbility::ApplyCost(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A) const
-{
-    FString Id;int32 Rank=0;if(!ResolveSkill(H,Info,Id,Rank))return;
-    const auto& E=*FAetherSkillDefinitionsV10::Get().Effect(Id,Rank);
-    Info->AbilitySystemComponent->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(),EGameplayModOp::Additive,-float(E.ManaCost));
-}
-void UAetherSpellAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,const FGameplayEventData* Event)
-{
-    FString Id;int32 Rank=0;
-    auto* C=Info?Cast<AAetherCharacter>(Info->AvatarActor.Get()):nullptr;
-    FHitResult Hit;FVector Origin,Direction;
-    if(!C||!C->HasAuthority()||!ResolveSkill(H,Info,Id,Rank)||!C->FindSkillTarget(Id,Rank,Hit,Origin,Direction))
-    {EndAbility(H,Info,A,true,true);return;}
-    // 复制身份/等级/成本再 Commit，属性通知可能改变 ASC 列表，不能跨回调持有 Spec 指针。
-    const float ManaCost=float(FAetherSkillDefinitionsV10::Get().Effect(Id,Rank)->ManaCost);
-    if(!CommitAbility(H,Info,A)){EndAbility(H,Info,A,true,true);return;}
-    const bool Executed=C->ExecuteSkill(Id,Rank);
-    if(!Executed)Info->AbilitySystemComponent->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(),EGameplayModOp::Additive,ManaCost);
-    EndAbility(H,Info,A,true,!Executed);
-}
-
 AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):Super(ObjectInitializer)
 {
     PrimaryActorTick.bCanEverTick = true; bReplicates = true; SetReplicateMovement(true);
@@ -157,6 +71,7 @@ AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):
     BodyVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surcoat")); BodyVisual->SetupAttachment(RootComponent);
     BodyVisual->SetStaticMesh(Cube.Object); BodyVisual->SetRelativeScale3D(FVector(.5,.6,1.45)); BodyVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ResourceGate=CreateDefaultSubobject<UAetherResourceGate>(TEXT("ResourceGate"));
+    CombatRuntime=CreateDefaultSubobject<UAetherCombatComponent>(TEXT("CombatRuntime"));
     Motion=CreateDefaultSubobject<UAetherMotionComponent>(TEXT("GeneratedMotion"));
     Equipment = CreateDefaultSubobject<UAetherEquipmentComponent>(TEXT("Equipment"));
     Equipment->ModifyHit.BindWeakLambda(this,[this](FAetherEquipmentHit& Hit){
@@ -209,7 +124,7 @@ void AAetherCharacter::BeginPlay()
         GrantSpells(); if(!ResourceGate->IsRecovering())SetVitals(MaxHealth, 100, 100);
         if (Fighter != EAetherFighter::Player && !Controller) SpawnDefaultController();
     }
-    if (IsLocallyControlled() && Fighter == EAetherFighter::Player)
+    if (!IsA<AAetherFrontierCharacter>() && IsLocallyControlled() && Fighter == EAetherFighter::Player)
         if (auto* PC = Cast<APlayerController>(Controller)) { PC->SetInputMode(FInputModeGameOnly()); PC->bShowMouseCursor = false; }
 }
 void AAetherCharacter::ApplyCharacterDefinition()
@@ -368,7 +283,7 @@ void AAetherCharacter::SetVitals(float HP, float MP, float SP)
 }
 void AAetherCharacter::ResetCombat()
 {
-    ActionUntil = CastLockUntil = StunUntil = InvulnerableUntil = 0; NextAI = 0; LastDamageAt = -100;
+    ActionUntil = CastLockUntil = StunUntil = CombatRuntime->InvulnerableUntil = 0; NextAI = 0; CombatRuntime->LastDamageAt = -100;
     bWindingUp = bBlocking = false; NextShockStun = 0;
     CancelActions();
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), bUseBasicAssets ? 100 : 0);
@@ -465,8 +380,8 @@ void AAetherCharacter::ServerBlock_Implementation(bool Value)
 {
     if (!Value) { bBlocking = false; return; }
     if (!Ready() || !Equipment->GuardDefinition()) return; bBlocking = true;
-    const float T = CombatTime(); BlockStarted = T >= NextParryAllowed ? T : -100;
-    if (BlockStarted > 0) NextParryAllowed = T + .7f;
+    const float T = CombatTime(); CombatRuntime->BlockStarted = T >= CombatRuntime->NextParryAllowed ? T : -100;
+    if (CombatRuntime->BlockStarted > 0) CombatRuntime->NextParryAllowed = T + .7f;
 }
 bool AAetherCharacter::TryDodge()
 {
@@ -479,64 +394,11 @@ void AAetherCharacter::RecordDodgeCommit()
     if(HasAuthority())ActionUntil=CombatTime()+.55f;
 }
 void AAetherCharacter::ServerDodge_Implementation(){TryDodge();}
-void AAetherCharacter::ReceiveHit(float Damage, float PostureDamage, AAetherCharacter* Source, bool CanBlock)
-{
-    if(ResourceGate->IsBlocked())
-    {
-        TWeakObjectPtr<AAetherCharacter> Self=this,Other=Source;
-        if(ResourceGate->Defer([Self,Other,Damage,PostureDamage,CanBlock]{if(Self.IsValid())Self->ReceiveHit(Damage,PostureDamage,Other.Get(),CanBlock);}))return;
-    }
-    if (!HasAuthority() || !Alive() || CombatTime() < InvulnerableUntil || AbilitySystem->HasMatchingGameplayTag(AetherDodge::InvulnerableTag())) return;
-    const float T = CombatTime();
-    const bool Front = Source && FVector::DotProduct(GetActorForwardVector(), (Source->GetActorLocation() - GetActorLocation()).GetSafeNormal()) > .25;
-    const auto* Guard=Equipment->GuardDefinition();
-    if (CanBlock && bBlocking && Front && Guard)
-    {
-        RecordEquipmentWear(false,true);
-        if (T - BlockStarted < Guard->ParryWindowSeconds) { if (Source) { Source->StunUntil = T + 1.1f; Source->CancelActions(); } return; }
-        const float Cost = PostureDamage * Guard->GuardStaminaMultiplier;
-        if (Stamina() >= Cost) { AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(), EGameplayModOp::Additive, -Cost); return; }
-        bBlocking = false; StunUntil = T + 1.2f; CancelActions();
-    }
-    ApplyPostureDamage(PostureDamage);
-    FDamageEvent Event; TakeDamage(Damage, Event, Source ? Source->GetController() : nullptr, Source);
-}
-void AAetherCharacter::ApplyPostureDamage(float Amount)
-{
-    if(ResourceGate->IsBlocked())
-    {
-        TWeakObjectPtr<AAetherCharacter> Self=this;
-        if(ResourceGate->Defer([Self,Amount]{if(Self.IsValid())Self->ApplyPostureDamage(Amount);}))return;
-    }
-    if(!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this||!Alive()||!FMath::IsFinite(Amount)||Amount<=0)return;
-    float Posture=bUseBasicAssets?Attributes->Posture.GetCurrentValue()-Amount:Attributes->Posture.GetCurrentValue()+Amount;
-    if(bUseBasicAssets?Posture<=0:Posture>=100)
-    {StunUntil=CombatTime()+1.5f;Posture=0;bBlocking=false;CancelActions();}
-    AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),Posture);
-}
-float AAetherCharacter::TakeDamage(float Amount, const FDamageEvent& Event, AController* EventInstigator, AActor* Causer)
-{
-    if(DeferDamage(Amount,Event,EventInstigator,Causer))return 0;
-    if (!HasAuthority() || !AbilitySystem || AbilitySystem->GetAvatarActor()!=this || !Alive() || !FMath::IsFinite(Amount) || Amount <= 0) return 0;
-    float Mitigated=0;
-    const auto DamageClass=Event.DamageTypeClass;
-    if(DamageClass&&DamageClass->IsChildOf(UAetherFireDamage::StaticClass()))
-        Mitigated=Amount*AetherEquipmentMath::ElementMultiplier(Attributes->GearFireResist.GetCurrentValue());
-    else if(DamageClass&&DamageClass->IsChildOf(UAetherWaterDamage::StaticClass()))
-        Mitigated=Amount*AetherEquipmentMath::ElementMultiplier(Attributes->GearWaterResist.GetCurrentValue());
-    else if(DamageClass&&DamageClass->IsChildOf(UAetherFrostDamage::StaticClass()))
-        Mitigated=Amount*AetherEquipmentMath::ElementMultiplier(Attributes->GearFrostResist.GetCurrentValue());
-    else if(DamageClass&&DamageClass->IsChildOf(UAetherStormDamage::StaticClass()))
-        Mitigated=Amount*AetherEquipmentMath::ElementMultiplier(Attributes->GearStormResist.GetCurrentValue());
-    else Mitigated=AetherEquipmentMath::PhysicalDamage(Amount,Attributes->GearArmor.GetCurrentValue());
-    const float Applied = FMath::Min(Health(), Mitigated);
-    AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetHealthAttribute(), EGameplayModOp::Additive, -Applied);
-    if(Applied>0)RecordEquipmentWear(false,false);
-    LastDamager = Causer; ++DamageReceivedCount; LastDamageAt = CombatTime();
-    if(Applied>0&&Alive())PresentAction(TEXT("Hit"),.35f);
-    if (!Alive()) { CancelActions(); bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); }
-    return Applied;
-}
+void AAetherCharacter::ReceiveHit(float Damage,float PostureDamage,AAetherCharacter* Source,bool CanBlock)
+{CombatRuntime->ReceiveHit(Damage,PostureDamage,Source,CanBlock);}
+void AAetherCharacter::ApplyPostureDamage(float Amount){CombatRuntime->ApplyPostureDamage(Amount);}
+float AAetherCharacter::TakeDamage(float Amount,const FDamageEvent& Event,AController* Instigator,AActor* Causer)
+{return CombatRuntime->ApplyDamage(Amount,Event,Instigator,Causer);}
 void AAetherCharacter::Reaction(EReactiveReaction Kind, double Magnitude, FVector Vector)
 {
     // Legacy reaction events are presentation-only. Shock gameplay uses the typed window below.
@@ -664,7 +526,7 @@ void AAetherCharacter::AdvanceCombatResources(float Dt,double Temperature,TWeakO
     const float T=CombatTime(),Regen=T>ActionUntil&&!bBlocking&&!Equipment->IsBusy()?20:4;
     // 延后的是增量恢复整段动作；不能排队旧绝对生命值而覆盖刚生效的药剂。
     SetVitals(Health(),Mana()+Dt*5,Stamina()+Dt*Regen);
-    if(T-LastDamageAt>2)AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),
+    if(T-CombatRuntime->LastDamageAt>2)AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),
         bUseBasicAssets?FMath::Min(100.f,Attributes->Posture.GetCurrentValue()+Dt*12):FMath::Max(0.f,Attributes->Posture.GetCurrentValue()-Dt*12));
     if(Temperature>55){FDamageEvent E(UAetherFireDamage::StaticClass());TakeDamage(float(FMath::Min(25.0,(Temperature-55)*.12)*Dt),E,nullptr,HeatSource.Get());}
 }
@@ -725,39 +587,6 @@ void AAetherCharacter::ServerInteract_Implementation(bool Alternate)
 { if (Alive()) if (auto* Mode = GetWorld()->GetAuthGameMode<AAetherAdventureMode>()) ClientFeedback(Mode->Interact(this, Alternate)); }
 void AAetherCharacter::ServerSave_Implementation(bool Load)
 { if (auto* Mode = GetWorld()->GetAuthGameMode<AAetherAdventureMode>()) ClientFeedback(Load ? Mode->LoadAdventure(this) : Mode->SaveAdventure(this)); }
-
-AAetherProjectile::AAetherProjectile()
-{
-    PrimaryActorTick.bCanEverTick = true; bReplicates = true; SetReplicateMovement(true); SetNetUpdateFrequency(30);
-    Visual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FireCore")); SetRootComponent(Visual);
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-    Visual->SetStaticMesh(Sphere.Object); Visual->SetCollisionEnabled(ECollisionEnabled::NoCollision); Visual->SetRelativeScale3D(FVector(.28));
-    static ConstructorHelpers::FObjectFinder<UMaterialInterface> Surface(TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
-    if (Surface.Succeeded()) Visual->SetMaterial(0,Surface.Object);
-}
-void AAetherProjectile::BeginPlay() { Super::BeginPlay(); Tint(Visual, FLinearColor(1,.12f,.005f)); }
-void AAetherProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{ Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME(AAetherProjectile, HeatJ); }
-void AAetherProjectile::IntegrateWeather(double& Heat, FVector& V, const Reactive::FEnvironment& E, float Dt)
-{ Heat = FMath::Max(0.0, Heat - (1500 + E.RainKgPerM2Sec * 220000) * Dt); V += E.WindMPerSec * 40 * Dt; }
-void AAetherProjectile::Tick(float Dt)
-{
-    Super::Tick(Dt); Visual->SetRelativeScale3D(FVector(.08 + .2 * FMath::Clamp(HeatJ / 60000, 0.0, 1.0)));
-    if (!HasAuthority()) return;
-    Age += Dt;
-    if (const auto* S = GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()) IntegrateWeather(HeatJ, VelocityCm, S->GetSimulation()->GetEnvironment(), Dt);
-    if (Age > 4 || HeatJ < 500) { Destroy(); return; }
-    FHitResult Hit; const FVector End = GetActorLocation() + VelocityCm * Dt;
-    FCollisionQueryParams P(SCENE_QUERY_STAT(AetherProjectile), false, this); P.AddIgnoredActor(GetOwner());
-    if (GetWorld()->SweepSingleByChannel(Hit,GetActorLocation(),End,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(12),P))
-    {
-        if(auto* Source=Cast<AAetherCharacter>(GetOwner());Source&&Source->Fighter==EAetherFighter::Player)if(auto* Other=Cast<AAetherCharacter>(Hit.GetActor());Other&&Other->Fighter==EAetherFighter::Player){Destroy();return;}
-        if (AActor* A = Hit.GetActor()) if (auto* B = A->FindComponentByClass<UReactiveBodyComponent>())
-        { FReactiveStimulus S; S.SourceActor = GetOwner(); S.HeatJ = HeatJ; S.ImpulseNs = VelocityCm.GetSafeNormal() * 2; B->Inject(S); }
-        Destroy(); return;
-    }
-    SetActorLocation(End);
-}
 
 FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
 {

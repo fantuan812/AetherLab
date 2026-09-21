@@ -101,13 +101,13 @@ void UAetherReviveAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FG
  if((RescueTarget->RescueHolder.IsValid()&&RescueTarget->RescueHolder!=Reviver&&RescueTarget->RescueLeaseUntil>Reviver->CombatTime())||FVector::DistSquared(Reviver->GetActorLocation(),RescueTarget->GetActorLocation())>FMath::Square(220.))
  {EndAbility(H,Info,A,true,true);return;}
  RescueTarget->RescueHolder=Reviver;RescueTarget->RescueLeaseUntil=Reviver->CombatTime()+4;
- Reviver->ReviveStarted=Reviver->CombatTime();Reviver->ReviveDamageSerial=Reviver->DamageReceivedCount;
+ Reviver->ReviveStarted=Reviver->CombatTime();Reviver->ReviveDamageSerial=Reviver->CombatRuntime->DamageReceivedCount;
  auto* Wait=UAbilityTask_WaitDelay::WaitDelay(this,3);Wait->OnFinish.AddDynamic(this,&UAetherReviveAbility::FinishRevive);Wait->ReadyForActivation();
 }
 void UAetherReviveAbility::FinishRevive()
 {
  bool Success=false;
- if(IsValid(RescueTarget)&&RescueTarget->RescueHolder==Reviver&&IsValid(Reviver)&&Reviver->ReviveTarget==RescueTarget&&Reviver->Alive()&&IsValid(Reviver->ReviveTarget)&&!Reviver->ReviveTarget->Alive()&&Reviver->CombatTime()-Reviver->ReviveStarted>=2.99f&&Reviver->DamageReceivedCount==Reviver->ReviveDamageSerial&&Reviver->CombatTime()>=Reviver->StunUntil&&FVector::DistSquared(Reviver->GetActorLocation(),Reviver->ReviveTarget->GetActorLocation())<=FMath::Square(220.))
+ if(IsValid(RescueTarget)&&RescueTarget->RescueHolder==Reviver&&IsValid(Reviver)&&Reviver->ReviveTarget==RescueTarget&&Reviver->Alive()&&IsValid(Reviver->ReviveTarget)&&!Reviver->ReviveTarget->Alive()&&Reviver->CombatTime()-Reviver->ReviveStarted>=2.99f&&Reviver->CombatRuntime->DamageReceivedCount==Reviver->ReviveDamageSerial&&Reviver->CombatTime()>=Reviver->StunUntil&&FVector::DistSquared(Reviver->GetActorLocation(),Reviver->ReviveTarget->GetActorLocation())<=FMath::Square(220.))
  {
   FCollisionQueryParams Q(SCENE_QUERY_STAT(Revive),false,Reviver);Q.AddIgnoredActor(Reviver->ReviveTarget);
   if(!GetWorld()->LineTraceTestByChannel(Reviver->GetActorLocation(),Reviver->ReviveTarget->GetActorLocation(),ECC_Visibility,Q))
