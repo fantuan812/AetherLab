@@ -9,27 +9,27 @@
 #include "Misc/Crc.h"
 
 int32 UAetherCommandClient::PendingIndex() const
-{return Pending.IndexOfByPredicate([&](const auto& P){return P.Owner.Equals(Owner,ESearchCase::CaseSensitive);});}
+{return Pending.IndexOfByPredicate([&](const auto& P){return P.Realm==Realm&&P.Owner.Equals(Owner,ESearchCase::CaseSensitive);});}
 bool UAetherCommandClient::HasPending() const{return PendingIndex()!=INDEX_NONE;}
 bool UAetherCommandClient::Matches(AAetherPlayerController* C,FGuid Id) const
 {return C&&!C->IsActorBeingDestroyed()&&Controller.Get()==C&&C->GetLocalPlayer()==GetLocalPlayer()&&C->IsLocalController()&&Channel.IsValid()&&Id==Channel;}
 
-void UAetherCommandClient::ReceiveChannel(AAetherPlayerController* C,FGuid Id,const FString& Identity)
+void UAetherCommandClient::ReceiveChannel(AAetherPlayerController* C,FGuid Id,const FString& Identity,FGuid NewRealm)
 {
     if(!C||C->IsActorBeingDestroyed()||!C->IsLocalController()||C->GetLocalPlayer()!=GetLocalPlayer()||GetLocalPlayer()->GetPlayerController(C->GetWorld())!=C)return;
     // 延迟到达的旧 Controller 不能清除后来建立的拥有者通道。
     if(!Id.IsValid()){DetachController(C);return;}
-    if(Identity.IsEmpty()||Identity.Len()>32)return;
+    if(!NewRealm.IsValid()||Identity.IsEmpty()||Identity.Len()>32)return;
     for(TCHAR Ch:Identity)if(!FChar::IsAlnum(Ch)&&Ch!='_')return;
-    if(Controller.Get()==C&&Channel==Id&&Owner.Equals(Identity,ESearchCase::CaseSensitive))return;
-    ResetContainer();Controller=C;Channel=Id;Owner=Identity;Profile.Reset();Assembly={};NextSync=0;
+    if(Controller.Get()==C&&Channel==Id&&Realm==NewRealm&&Owner.Equals(Identity,ESearchCase::CaseSensitive))return;
+    ResetContainer();Controller=C;Channel=Id;Realm=NewRealm;Owner=Identity;Profile.Reset();Assembly={};NextSync=0;
     // Pending 保留原拥有者/授权通道；新通道不会在 Tick 中自动续发旧意图。
     OnChanged.Broadcast();
 }
 void UAetherCommandClient::DetachController(AAetherPlayerController* C)
 {
     if(Controller.Get()!=C)return;
-    ResetContainer();Controller.Reset();Channel.Invalidate();Owner.Reset();Profile.Reset();Assembly={};OnChanged.Broadcast();
+    ResetContainer();Controller.Reset();Channel.Invalidate();Realm.Invalidate();Owner.Reset();Profile.Reset();Assembly={};OnChanged.Broadcast();
 }
 bool UAetherCommandClient::Submit(FGuid ExpectedChannel,const FString& Identity,const TArray<uint8>& Bytes,FString& Reason)
 {
@@ -40,7 +40,7 @@ bool UAetherCommandClient::Submit(FGuid ExpectedChannel,const FString& Identity,
     if(Bytes.IsEmpty()||Bytes.Num()>AetherV10Network::CommandBytes||!AetherCommands::Decode(Bytes,Command,Reason))return false;
     if(Command.ExpectedProfileRevision!=Profile->Revision){Reason=TEXT("角色资料已变化，请重新查看后确认。");return false;}
     // 入队发生在 RPC 前，监听服务器即使同步交回回执也能找到原命令。
-    FPending P;P.Owner=Owner;P.Id=Command.CommandId;P.AuthorizedChannel=Channel;P.Bytes=Bytes;
+    FPending P;P.Owner=Owner;P.Realm=Realm;P.Id=Command.CommandId;P.AuthorizedChannel=Channel;P.Bytes=Bytes;
     Pending.Add(MoveTemp(P));Reason.Reset();SendPending();OnChanged.Broadcast();return true;
 }
 void UAetherCommandClient::SendPending()
@@ -140,7 +140,7 @@ TStatId UAetherCommandClient::GetStatId() const{RETURN_QUICK_DECLARE_CYCLE_STAT(
 UWorld* UAetherCommandClient::GetTickableGameObjectWorld() const{return GetWorld();}
 void UAetherCommandClient::Deinitialize()
 {
-    ResetContainer();Controller.Reset();Channel.Invalidate();Owner.Reset();Profile.Reset();Assembly={};Pending.Reset();OnChanged.Clear();OnResult.Clear();
+    ResetContainer();Controller.Reset();Channel.Invalidate();Realm.Invalidate();Owner.Reset();Profile.Reset();Assembly={};Pending.Reset();OnChanged.Clear();OnResult.Clear();
     Super::Deinitialize();
 }
 

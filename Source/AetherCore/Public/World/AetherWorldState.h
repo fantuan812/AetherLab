@@ -43,6 +43,8 @@ struct FAetherEncounterStateV10
 struct AETHERCORE_API FAetherWorldStateV10
 {
     int64 Revision=0;
+    // 首次原生基线检查点生成并持久化；旧 DTO 缺省为空，接入玩家前必须补齐。
+    FGuid RealmId;
     bool bSupplyRestored=false,bWorkshopRestored=false,bBridgeReleased=false,bPowerOn=true;
     double RainKgPerM2Sec=0,AmbientTemperatureC=20;
     FVector WindMPerSec=FVector::ZeroVector;

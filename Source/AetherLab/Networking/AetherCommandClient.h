@@ -33,7 +33,7 @@ public:
     // 重连只恢复快照，不自动执行上一个 Pawn 的意图；用户可明确查询/重试同一拥有者的原请求。
     bool RetryPending();
     void RequestSnapshot();
-    void ReceiveChannel(AAetherPlayerController* C,FGuid NewChannel,const FString& CanonicalOwner);
+    void ReceiveChannel(AAetherPlayerController* C,FGuid NewChannel,const FString& CanonicalOwner,FGuid Realm);
     void DetachController(AAetherPlayerController* C);
     void ReceiveReply(AAetherPlayerController* C,const FAetherV10ReplyPacket& Packet);
     void ReceiveChunk(AAetherPlayerController* C,const FAetherV10SnapshotChunk& Chunk);
@@ -48,7 +48,7 @@ private:
     struct FPending
     {
         FString Owner;
-        FGuid Id,AuthorizedChannel;
+        FGuid Id,AuthorizedChannel,Realm;
         TArray<uint8> Bytes;
         TOptional<FAetherCommandResult> Receipt;
         int32 Attempts=0;
@@ -67,7 +67,7 @@ private:
     void SendPending();
     void RetirePublished();
     TWeakObjectPtr<AAetherPlayerController> Controller;
-    FGuid Channel;
+    FGuid Channel,Realm;
     FString Owner;
     TOptional<FAetherProfileStateV10> Profile;
     FAssembly Assembly,ContainerAssembly;

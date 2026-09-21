@@ -332,6 +332,7 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
     }
     if(Action=="Recover")
     {
+        if(Mode->IsNativeMode()){Mode->RecoverNativePlayer(this);return;}
         if(Alive()||TimeSinceDamage()<3)return;
         ReleaseCarry();SetVitals(MaxHealth,100,100);ResetCombat();
         BeginSafeTravel(PS->Profile.bRegistered?FVector(-500,-500,120):FVector(-6500,-29000,120));return;
@@ -342,6 +343,7 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
     if(Action=="Interact"){Notify(TEXT("请重新选择交互目标。"));return;}
     if(Mode->ExecutePartyAction(this,Action))return;
     if(Action=="Throw"||Action=="Carry"||Action=="Push"){WorldActions->Begin(Action);return;}
+    if(Action=="Claim"&&Mode->IsNativeMode()){Notify(TEXT("请在任务日志中领取待领奖励。"));return;}
     if(Action=="Claim")
     {auto Next=PS->Profile;bool Changed=Next.CollectPending();Changed|=AetherQuests::Settle(Next,Mode->Database->WorldFacts,true);if(Changed)Notify(Mode->Commit(PS,Next)?TEXT("Pending rewards received."):TEXT("Reward save failed; retry."));return;}
     // Inventory mutations use ServerInventory with stable client-selected identity.

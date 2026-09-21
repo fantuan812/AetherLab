@@ -125,3 +125,6 @@
 
 ### 受控世界动作与翻越实现
 补入预测翻越、四向闪避、世界动作组件及占用/接触提交/取消，统一动作复制与双手 IK，受控动画作者工具和完整配方。未编译、未测试；作者工具未执行、资源与视觉/网络验收仍待统一阶段，详见 Architecture/V10-controlled-world-actions.zh-CN.md。
+
+### 世界身份和原生恢复一致性
+新增持久 RealmId 与跨世界重试隔离、原子技能授权快照、原生新 Pawn 资源恢复入口。后端排空期间禁止重装。未编译、未测试，见 Architecture/V10-recovery-identity-grants.zh-CN.md。

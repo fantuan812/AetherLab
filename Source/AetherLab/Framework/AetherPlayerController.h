@@ -20,7 +20,7 @@ public:
     UFUNCTION(Server,Reliable) void ServerV10Command(const FAetherV10CommandPacket& Packet);
     UFUNCTION(Server,Reliable) void ServerV10RequestSnapshot(FGuid Channel);
     UFUNCTION(Server,Reliable) void ServerV10SnapshotAck(FGuid Channel,FGuid Transfer,uint32 NextOffset);
-    UFUNCTION(Client,Reliable) void ClientV10Channel(FGuid Channel,const FString& CanonicalOwner);
+    UFUNCTION(Client,Reliable) void ClientV10Channel(FGuid Channel,const FString& CanonicalOwner,FGuid Realm);
     UFUNCTION(Client,Reliable) void ClientV10Reply(const FAetherV10ReplyPacket& Packet);
     UFUNCTION(Client,Reliable) void ClientV10Snapshot(const FAetherV10SnapshotChunk& Chunk);
     virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;

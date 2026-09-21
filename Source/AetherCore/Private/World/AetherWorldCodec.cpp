@@ -95,6 +95,7 @@ bool AetherWorldCodec::Encode(const FAetherWorldStateV10& S,const FAetherV10Item
     TArray<FString> Facts;S.WorldFactSources.GetKeys(Facts);Facts.Sort([](const auto& A,const auto& B){return A.Compare(B,ESearchCase::CaseSensitive)<0;});
     W.UInt(Facts.Num(),2);for(const auto& K:Facts){W.Text(K);W.Text(S.WorldFactSources[K]);}
     W.Encounter(S.Abbey);W.Encounter(S.Relay);W.UInt(S.LegacySaveSchema,1);W.UInt(S.LegacyGeneration,4);W.Text(S.LegacySourceSha256);
+    if(S.RealmId.IsValid()){W.UInt(0x314D4C52,4);W.Guid(S.RealmId);}
     if(!W.Valid||W.Bytes.Num()>MaxBytes){Reason=TEXT("World cannot be encoded losslessly within size limit");return false;}
     Bytes=MoveTemp(W.Bytes);return true;
 }
@@ -147,6 +148,11 @@ bool AetherWorldCodec::Decode(const TArray<uint8>& Bytes,const FAetherV10ItemDef
         const auto Key=R.Text(128),Value=R.Text(128);if(S.WorldFactSources.Contains(Key))return Fail(TEXT("Duplicate world fact"));S.WorldFactSources.Add(Key,Value);
     }
     S.Abbey=R.Encounter();S.Relay=R.Encounter();S.LegacySaveSchema=int32(R.UInt(1));S.LegacyGeneration=R.Int();S.LegacySourceSha256=R.Text(64);
+    if(R.Valid&&R.Offset<Bytes.Num())
+    {
+        if(R.UInt(4)!=0x314D4C52)return Fail(TEXT("Unknown world extension"));
+        S.RealmId=R.Guid();if(!S.RealmId.IsValid())return Fail(TEXT("Invalid world realm identity"));
+    }
     if(!R.Valid||R.Offset!=Bytes.Num())return Fail(TEXT("Truncated, oversized or trailing world DTO"));
     if(!S.Validate(Items,Rules,Profiles,Reason))return false;
     // 唯一发布点：任何字节、领域不变量或跨角色回执验证失败，都不改变调用者状态。

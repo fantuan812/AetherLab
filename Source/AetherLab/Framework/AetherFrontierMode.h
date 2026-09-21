@@ -54,6 +54,7 @@ public:
     bool NativeSceneReady() const{return bNativeSceneReady&&bNativeBaselineReady;}
     bool IsTravelRegionReady(FVector Destination) const;
     void ReleaseNativePawn(AAetherFrontierCharacter* Pawn);
+    bool RecoverNativePlayer(AAetherFrontierCharacter* Pawn);
     FString ExecuteNativeSceneService(AAetherPlayerController& Controller,const FAetherPlayerCommand& Command);
     bool AuthorizeNativeContainer(AAetherPlayerController& Controller,const FString& Id,bool bOpen);
     const FAetherWorldStateV10* NativeWorldView() const{return NativeWorld.IsSet()?&NativeWorld.GetValue():nullptr;}

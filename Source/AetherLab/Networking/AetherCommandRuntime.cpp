@@ -57,6 +57,7 @@ struct FAetherCommandRuntimeImpl
     int32 NextSender=0;
     float SendElapsed=0;
     bool bPolling=false,bTicking=false,bShutdownRequested=false;
+    FGuid Realm;
     bool HasPendingFacts(const FString& Id) const
     {return Facts->HasPendingForCharacter(Id)||DeferredFacts.ContainsByPredicate([&](const auto& E){return E.CharacterId.Equals(Id,ESearchCase::CaseSensitive);});}
     void PumpFacts()
@@ -240,13 +241,18 @@ UAetherCommandRuntime::~UAetherCommandRuntime()=default;
 bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason)
 {
     check(IsInGameThread());
-    if((Impl&&(Impl->bPolling||Impl->bTicking))||IsInstalled()||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!Resolve||!Publish)
+    if(Impl||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!Resolve||!Publish)
     {Reason=TEXT("Native backend already installed or server context unavailable");return false;}
     const auto& D=FAetherV10Definitions::Get();if(!D.bValid){Reason=D.Error;return false;}
     Impl=MakeUnique<FAetherCommandRuntimeImpl>();Impl->Store=Store;Impl->Resolve=MoveTemp(Resolve);Impl->Publish=MoveTemp(Publish);
     Impl->Coordinator=MakeUnique<FAetherProfileCoordinator>(Store,D.Items,D.Skills,D.Rules,D.Economy,D.Interactions,D.Progression);
     Impl->Facts=MakeUnique<FAetherServerFactCoordinator>(Store);
     Reason.Reset();return true;
+}
+bool UAetherCommandRuntime::SetBackendDomain(FGuid Realm)
+{
+    if(!IsInstalled()||!Realm.IsValid()||(!Impl->Bindings.IsEmpty()&&Impl->Realm!=Realm))return false;
+    Impl->Realm=Realm;return true;
 }
 bool UAetherCommandRuntime::IsInstalled() const{return Impl&&Impl->Coordinator&&!Impl->bShutdownRequested;}
 void UAetherCommandRuntime::SetContainerAuthorizer(TFunction<bool(AAetherPlayerController&,const FString&,bool)> Authorize)
@@ -291,7 +297,7 @@ bool UAetherCommandRuntime::ObserveServerFact(FAetherServerFact Event,FString& R
 bool UAetherCommandRuntime::BindVerifiedPlayer(AAetherPlayerController* C,const FString& Character)
 {
     check(IsInGameThread());
-    if(!IsInstalled()||Impl->bPolling||!C||!C->HasAuthority()||C->GetGameInstance()!=GetGameInstance()||!C->GetPawn())return false;
+    if(!IsInstalled()||!Impl->Realm.IsValid()||Impl->bPolling||!C||!C->HasAuthority()||C->GetGameInstance()!=GetGameInstance()||!C->GetPawn())return false;
     auto* PS=C->GetPlayerState<AAetherPlayerState>();
     // 身份来自服务器登录流程和当前 PlayerState，不读取命令里自报的 ActorIdentity。
     // 此方法不等于账号认证；原型 DevProfile 也不能因此被宣称为正式账号服务。
@@ -310,16 +316,16 @@ bool UAetherCommandRuntime::BindVerifiedPlayer(AAetherPlayerController* C,const 
     const auto Session=Impl->Coordinator->BeginSession(Character);if(!Session.SessionId.IsValid())return false;
     auto B=MakeUnique<FAetherCommandRuntimeImpl::FBinding>();B->Controller=C;B->PlayerState=PS;B->Pawn=C->GetPawn();B->Session=Session;B->Channel=FGuid::NewGuid();
     FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=Character;FString Why;
-    if(!Impl->Facts->Enqueue(MoveTemp(Settle),Why)){Impl->Coordinator->EndSession(Session);return false;}
+    if(!ObserveServerFact(MoveTemp(Settle),Why)){Impl->Coordinator->EndSession(Session);return false;}
     if(auto* Resources=Impl->Gate(*B))Resources->BlockForInitialLoad();
     B->Read=Impl->Store->Read({EAetherAggregateKind::Profile,Character});
-    const auto Channel=B->Channel;Impl->Bindings.Add(C,MoveTemp(B));C->ClientV10Channel(Channel,Character);return true;
+    const auto Channel=B->Channel;Impl->Bindings.Add(C,MoveTemp(B));C->ClientV10Channel(Channel,Character,Impl->Realm);return true;
 }
 void UAetherCommandRuntime::UnbindPlayer(AAetherPlayerController* C)
 {
     if(!IsInstalled()||Impl->bPolling||!C)return;
     if(auto* B=Impl->Bindings.Find(C))
-    {Impl->CloseContainer(**B);Impl->Coordinator->EndSession((*B)->Session);Impl->Bindings.Remove(C);if(IsValid(C))C->ClientV10Channel({},{});}
+    {Impl->CloseContainer(**B);Impl->Coordinator->EndSession((*B)->Session);Impl->Bindings.Remove(C);if(IsValid(C))C->ClientV10Channel({},{},{});}
 }
 void UAetherCommandRuntime::NotifyPawnChanged(AAetherPlayerController* C)
 {
@@ -333,7 +339,7 @@ void UAetherCommandRuntime::NotifyPawnChanged(AAetherPlayerController* C)
     B.bNeedsRecovery=true;B.bNeedFullRecovery=true;B.bDeliveryRequested=false;B.Delivery.Reset();
     B.ResourceCommand.Reset();B.Proof={};B.ProofRead={};B.NextDelivery=0;
     if(!B.Session.SessionId.IsValid()){UnbindPlayer(C);return;}
-    C->ClientV10Channel(B.Channel,B.Session.CharacterId);
+    C->ClientV10Channel(B.Channel,B.Session.CharacterId,Impl->Realm);
     if(B.Pawn.IsValid()){if(auto* Resources=Impl->Gate(B))Resources->BlockForInitialLoad();B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});}
     // 不重置连接令牌桶，频繁重生不能绕过限流。
 }
@@ -525,7 +531,7 @@ void UAetherCommandRuntime::UninstallBackend()
         {
             Impl->bShutdownRequested=true;
             for(auto& Pair:Impl->Bindings)
-            {Impl->Coordinator->EndSession(Pair.Value->Session);if(auto* C=Pair.Key.Get())C->ClientV10Channel({},{});}
+            {Impl->Coordinator->EndSession(Pair.Value->Session);if(auto* C=Pair.Key.Get())C->ClientV10Channel({},{},{});}
             Impl->Bindings.Reset();
         }
         return;
@@ -534,7 +540,7 @@ void UAetherCommandRuntime::UninstallBackend()
     auto Previous=MoveTemp(Impl);
     if(Previous)
     {
-        for(auto& Pair:Previous->Bindings)if(auto* C=Pair.Key.Get())C->ClientV10Channel({},{});
+        for(auto& Pair:Previous->Bindings)if(auto* C=Pair.Key.Get())C->ClientV10Channel({},{},{});
         Previous->Bindings.Reset();Previous->Coordinator.Reset();Previous->Facts.Reset();if(Previous->Store)Previous->Store->Close();
     }
 }

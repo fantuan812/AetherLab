@@ -21,6 +21,7 @@ bool AAetherFrontierMode::CaptureNativeWorld(const FAetherWorldStateV10& Previou
     // 先发布新版本的离散意图，再采集现场，避免旧开关覆盖刚刚确认的操作。
     if(!NativeWorld.IsSet()||Previous.Revision>NativeWorld->Revision)PublishNativeWorld(Previous);
     if(!AetherNativeWorldPhysics::CaptureLoaded(*GetWorld(),Previous,Candidate,Reason))return false;
+    Candidate.RealmId=Previous.RealmId.IsValid()?Previous.RealmId:FGuid::NewGuid();
     // 世界事实、营地/掉落账本由各自事务维护；周期保存只拥有物理、天气和在运行的遭遇阶段。
     Candidate.Abbey=CaptureRun(Encounters->Abbey,Previous.Abbey);Candidate.Relay=CaptureRun(Encounters->Relay,Previous.Relay);
     if(auto* S=GetGameState<AAetherFrontierState>())Candidate.bBridgeReleased=Previous.bBridgeReleased||S->bBridgeReleased;

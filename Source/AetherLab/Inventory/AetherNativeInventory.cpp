@@ -22,10 +22,10 @@ bool AetherNativeInventory::Snapshot(AAetherFrontierCharacter& C,int64 Revision,
     Out.Container=Net->GetContainer();Out.ContainerContext=Net->GetContainerContext();Out.ContainerWorldRevision=Net->GetContainerWorldRevision();
     Out.ProfileRevision=P.Revision;Out.Inventory=P.Inventory;Out.Skills=P.Skills;Out.Gold=P.Gold;
     Out.ServerTimeSeconds=C.CombatTime();
-    if(const auto* PS=C.ProfileState())
+    if(const auto* PS=C.ProfileState();PS&&PS->SkillGrants.ProfileRevision==P.Revision)
     {
         Out.ExternalGrants=PS->GetNativeSkillGrants();
-        for(const auto& G:PS->SkillGrantPresentation)
+        for(const auto& G:PS->SkillGrants.Rows)
         {
             if(G.Source!=uint8(EAetherSkillGrantSource::Temporary)||!G.InstanceId.IsValid())continue;
             const auto* D=FAetherV10Definitions::Get().Skills.Skills.Find(G.SkillId);if(!D)continue;

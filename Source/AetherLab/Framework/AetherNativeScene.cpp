@@ -159,6 +159,8 @@ void AAetherFrontierMode::TickNativeStartup()
         Encounters->SetActorTickEnabled(true);
         UE_LOG(LogTemp,Display,TEXT("AETHER_V10_SCENE_READY revision=%lld"),NativeWorld->Revision);
     }
+    if(!NativeWorld.IsSet()||!GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SetBackendDomain(NativeWorld->RealmId))
+    {FailNativeScene(TEXT("Persisted world identity unavailable"));return;}
     TickNativeContainers();
     for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)BeginNativeLogin(Cast<AAetherPlayerController>(It->Get()));
     TArray<TWeakObjectPtr<AAetherPlayerController>> Completed;

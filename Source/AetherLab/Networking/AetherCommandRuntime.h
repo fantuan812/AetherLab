@@ -24,6 +24,7 @@ public:
     // 由完成迁移/恢复的服务器启动流程注入。不会自行打开、创建、导入或覆盖玩家存档。
     bool InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason);
     bool IsInstalled() const;
+    bool SetBackendDomain(FGuid Realm);
     // 地图切换撤销旧连接与回调，排空已接受的写入后才允许重新安装。
     void UninstallBackend();
     // 含正在退出的后端；新世界必须等旧事务收尾后再打开同一数据库。

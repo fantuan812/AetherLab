@@ -111,9 +111,10 @@ void UAetherSkillTreePage::HandleNativeProfile()
             for(const auto& Weak:Registry->Nearby(C->GetActorLocation(),250))
                 if(auto* Teacher=Cast<AAetherFrontierProp>(Weak.Get());Teacher&&Teacher->Service=="Teacher"&&Teacher->bEnabled)
                     if(AetherGuide::QueryTarget(C,Teacher).Prop==Teacher){S.SkillContext.bAtResetService=true;break;}
-        if(PS&&PS->SkillGrantRevision==P->Revision)S.ExternalGrants=PS->GetNativeSkillGrants();
+        if(PS&&PS->SkillGrants.ProfileRevision==P->Revision)S.ExternalGrants=PS->GetNativeSkillGrants();
     }
-    FString Key=S.Context.SessionId.ToString()+FString::Printf(TEXT("|%lld|%d%d%d%d|%lld"),P->Revision,S.SkillContext.bAtResetService,S.SkillContext.bInCombat,S.SkillContext.bCasting,CommandClient->HasPending(),PS?PS->SkillGrantRevision:-1);
+    FString Key=S.Context.SessionId.ToString()+FString::Printf(TEXT("|%lld|%d%d%d%d|%lld"),P->Revision,S.SkillContext.bAtResetService,S.SkillContext.bInCombat,S.SkillContext.bCasting,CommandClient->HasPending(),PS?PS->SkillGrants.ProfileRevision:-1);
+    if(PS)Key+=TEXT("|grants:")+FString::FromInt(PS->SkillGrants.Sequence);
     for(const auto& G:S.ExternalGrants)Key+=TEXT("|")+G.SourceId+TEXT(":")+G.SkillId+FString::FromInt(G.Rank);
     if(Key==NativeSnapshotKey)return;NativeSnapshotKey=Key;S.Context.SnapshotRevision=++ViewGeneration;
     PublishSnapshot(S);

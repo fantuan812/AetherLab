@@ -19,6 +19,18 @@ struct FAetherSkillGrantPresentation
     UPROPERTY() FGuid InstanceId;
     UPROPERTY() double ExpiresAtServerSeconds=0;
 };
+// 自定义 NetSerialize 将版本、来源及到期时间作为一份原子拥有者快照。
+USTRUCT()
+struct FAetherSkillGrantSnapshot
+{
+    GENERATED_BODY()
+    UPROPERTY() int64 ProfileRevision=-1;
+    UPROPERTY() uint32 Sequence=0;
+    UPROPERTY() TArray<FAetherSkillGrantPresentation> Rows;
+    bool NetSerialize(FArchive& Ar,UPackageMap* Map,bool& Success);
+};
+template<> struct TStructOpsTypeTraits<FAetherSkillGrantSnapshot> : TStructOpsTypeTraitsBase2<FAetherSkillGrantSnapshot>
+{enum {WithNetSerializer=true};};
 struct FAetherTemporarySkillSource
 {
     FGuid InstanceId;
@@ -54,8 +66,7 @@ public:
     bool GrantRestBlessing(FString& Reason);
     void RefreshTemporarySkills();
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
-    UPROPERTY(ReplicatedUsing=OnRep_Presentation) TArray<FAetherSkillGrantPresentation> SkillGrantPresentation;
-    UPROPERTY(ReplicatedUsing=OnRep_Presentation) int64 SkillGrantRevision=-1;
+    UPROPERTY(ReplicatedUsing=OnRep_Presentation) FAetherSkillGrantSnapshot SkillGrants;
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) bool bNativeSkillsEnabled=false;
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) bool bPartyCaptain=false;
     UPROPERTY(ReplicatedUsing=OnRep_Presentation) float InvitationExpires=0;
