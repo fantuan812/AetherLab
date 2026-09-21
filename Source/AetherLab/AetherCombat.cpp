@@ -1,4 +1,5 @@
 #include "AetherCombat.h"
+#include "AetherMotionComponent.h"
 #include "Skills/AetherSkillAbilityBinding.h"
 #include "Combat/AetherEquipmentMath.h"
 #include "Inventory/AetherResourceGate.h"
@@ -152,6 +153,7 @@ AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):
     BodyVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surcoat")); BodyVisual->SetupAttachment(RootComponent);
     BodyVisual->SetStaticMesh(Cube.Object); BodyVisual->SetRelativeScale3D(FVector(.5,.6,1.45)); BodyVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ResourceGate=CreateDefaultSubobject<UAetherResourceGate>(TEXT("ResourceGate"));
+    Motion=CreateDefaultSubobject<UAetherMotionComponent>(TEXT("GeneratedMotion"));
     Equipment = CreateDefaultSubobject<UAetherEquipmentComponent>(TEXT("Equipment"));
     Equipment->ModifyHit.BindWeakLambda(this,[this](FAetherEquipmentHit& Hit){
         if(!Attributes)return;
@@ -621,6 +623,12 @@ void AAetherCharacter::Tick(float Dt)
     }
     GetCharacterMovement()->MaxWalkSpeed = !Alive() || T < StunUntil ? 0.f : (bBlocking ? 220.f : Fighter == EAetherFighter::Player ? 450.f : Fighter==EAetherFighter::Wolf?380.f:230.f) * (Reactive->State.IceFraction > .5 ? 1.f-.5f*AetherEquipmentMath::ElementMultiplier(Attributes->GearFrostResist.GetCurrentValue()) : 1.f);
     Tint(BodyVisual, !Alive() ? FLinearColor(.15f,.15f,.17f) : bWindingUp ? FLinearColor(1,.09f,.01f) : T < StunUntil ? FLinearColor(.1f,.8f,1) : Fighter == EAetherFighter::Player ? FLinearColor(.12f,.34f,.5f) : Fighter == EAetherFighter::FireCaster ? FLinearColor(.55f,.09f,.025f) : FLinearColor(.45f,.3f,.09f));
+    if(Motion&&GetNetMode()!=NM_DedicatedServer)
+    {
+        const bool Controlled=AllowsGeneratedMotion();
+        const FName Style=bIsCrouched?FName("Crouch"):GetVelocity().Size2D()<5?FName("Idle"):Health()<MaxHealth*.3f?FName("Injured"):FName("Walk");
+        Motion->SetIntent(Controlled,Style,FGuid(0,0,uint32(Fighter),Equipment->Attack.Serial));
+    }
     UpdateAnimation();
     const TCHAR* N = Fighter == EAetherFighter::BellKnight ? TEXT("OLEN / BELL KNIGHT") : Fighter == EAetherFighter::ShieldGuard ? TEXT("SHIELD GUARD") : Fighter == EAetherFighter::FireCaster ? TEXT("EMBER CASTER") : TEXT("OATHFARER");
     Nameplate->SetText(FText::FromString(FString::Printf(TEXT("%s  %.0f\n%s"), N, Health(), bPacified ? TEXT("OATH RELEASED") : bWindingUp ? TEXT("ATTACK INCOMING") : TEXT(""))));
@@ -772,4 +780,11 @@ FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
     }
     if(SteeringDirection.IsNearlyZero())NextPathAt=0;
     return SteeringDirection;
+}
+
+bool AAetherCharacter::AllowsGeneratedMotion() const
+{
+    const float T=CombatTime();
+    return Alive()&&T>=StunUntil&&T>=CastLockUntil&&!Equipment->IsBusy()&&!bBlocking&&
+           !GetCharacterMovement()->IsFalling()&&!ResourceGate->IsBlocked();
 }

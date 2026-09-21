@@ -450,3 +450,9 @@ void AAetherFrontierCharacter::CycleItem()
  if(Panel==2)TrackedQuest=AetherGuide::SelectQuest(ProfileState()->Profile,TrackedQuest,true);
  OnPresentationChanged.Broadcast();
 }
+
+bool AAetherFrontierCharacter::AllowsGeneratedMotion() const
+{
+    // 场景交互占用由玩法所有者明确提供，动作插件不反查任务或持久化。
+    return Super::AllowsGeneratedMotion()&&!Carried&&!ReviveTarget&&!bTravelPending;
+}

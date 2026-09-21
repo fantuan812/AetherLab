@@ -50,6 +50,10 @@
     {
       "Name": "EnhancedInput",
       "Enabled": true
+    },
+    {
+      "Name": "AetherMotion",
+      "Enabled": true
     }
   ]
 }

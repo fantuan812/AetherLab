@@ -1,0 +1,28 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "10.0",
+  "FriendlyName": "Aether Motion",
+  "Description": "Pinned native MotionBricks planner, bounded scheduler and generated pose presentation.",
+  "Category": "Animation",
+  "CanContainContent": true,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "AetherMotionRuntime",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "AetherMotionEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "IKRig",
+      "Enabled": true
+    }
+  ]
+}

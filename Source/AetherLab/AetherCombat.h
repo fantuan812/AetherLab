@@ -8,6 +8,7 @@
 #include "ReactiveBodyComponent.h"
 #include "AetherEquipmentComponent.h"
 #include "AetherCombat.generated.h"
+class UAetherMotionComponent;
 
 class UAetherResourceGate;
 class UCameraComponent;
@@ -94,6 +95,7 @@ public:
     AAetherCharacter(const FObjectInitializer& ObjectInitializer=FObjectInitializer::Get());
     FOnAetherCharacterAppearanceChanged OnAppearanceChanged;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherResourceGate> ResourceGate;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherMotionComponent> Motion;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAbilitySystemComponent> AbilitySystem;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherAttributes> Attributes;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UReactiveBodyComponent> Reactive;
@@ -140,6 +142,7 @@ public:
     float MaximumStamina() const {return FMath::Clamp(100.f+Attributes->GearMaxStamina.GetCurrentValue(),1.f,100000.f);}
     bool Alive() const { return Health() > 0 && !bPacified; }
     bool Ready() const;
+    virtual bool AllowsGeneratedMotion() const;
     bool TryDodge();
     void RecordDodgeCommit();
     float CombatTime() const;

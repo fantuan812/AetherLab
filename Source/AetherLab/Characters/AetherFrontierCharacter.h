@@ -28,6 +28,7 @@ class AETHERLAB_API AAetherFrontierCharacter : public AAetherCharacter
 public:
     AAetherFrontierCharacter(const FObjectInitializer& ObjectInitializer=FObjectInitializer::Get());
     bool CanStartLocomotion() const;
+    virtual bool AllowsGeneratedMotion() const override;
     virtual bool CanJumpInternal_Implementation() const override;
     virtual void OnStartCrouch(float HalfHeightAdjust,float ScaledHalfHeightAdjust) override;
     virtual void OnEndCrouch(float HalfHeightAdjust,float ScaledHalfHeightAdjust) override;

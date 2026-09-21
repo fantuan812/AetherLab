@@ -1,4 +1,6 @@
 #include "AetherAnimation.h"
+#include "AetherMotionComponent.h"
+#include "AnimNodes/AnimNode_RetargetPoseFromMesh.h"
 #include "AetherCombat.h"
 #include "AetherContent.h"
 #include "Animation/AnimInstanceProxy.h"
@@ -22,6 +24,8 @@ struct FAetherAnimProxy : FAnimInstanceProxy
 {
  FAnimNode_BlendSpacePlayer_Standalone Ground;
  FAnimNode_SequencePlayer_Standalone Air;
+ FAnimNode_RetargetPoseFromMesh Generated;
+ FAnimNode_TwoWayBlend GeneratedBlend;
  FAnimNode_TwoWayBlend Travel;
  FAnimNode_Slot Action;
  FAnimNode_ConvertLocalToComponentSpace ToComponent;
@@ -34,7 +38,9 @@ struct FAetherAnimProxy : FAnimInstanceProxy
  virtual void Initialize(UAnimInstance* Instance) override
  {
   auto* A=CastChecked<UAetherAnimInstance>(Instance);Ground.SetBlendSpace(A->Locomotion);Air.SetSequence(A->FallClip);
-  Travel.A.SetLinkNode(&Ground);Travel.B.SetLinkNode(&Air);Action.Source.SetLinkNode(&Travel);Action.SlotName="DefaultSlot";Action.bAlwaysUpdateSourcePose=true;
+  Generated.RetargetFrom=ERetargetSourceMode::CustomSkeletalMeshComponent;
+  GeneratedBlend.A.SetLinkNode(&Ground);GeneratedBlend.B.SetLinkNode(&Generated);GeneratedBlend.Alpha=0;
+  Travel.A.SetLinkNode(&GeneratedBlend);Travel.B.SetLinkNode(&Air);Action.Source.SetLinkNode(&Travel);Action.SlotName="DefaultSlot";Action.bAlwaysUpdateSourcePose=true;
   ToComponent.LocalPose.SetLinkNode(&Action);LeftFoot.ComponentPose.SetLinkNode(&ToComponent);RightFoot.ComponentPose.SetLinkNode(&LeftFoot);
   GuardArm.ComponentPose.SetLinkNode(&RightFoot);GuardArm.BoneToModify.BoneName="lowerarm_l";GuardArm.RotationMode=BMM_Additive;GuardArm.RotationSpace=BCS_BoneSpace;GuardArm.Rotation=FRotator(-55,0,20);
   ToLocal.ComponentPose.SetLinkNode(&GuardArm);
@@ -45,6 +51,10 @@ struct FAetherAnimProxy : FAnimInstanceProxy
  virtual void PreUpdate(UAnimInstance* Instance,float Dt) override
  {
   FAnimInstanceProxy::PreUpdate(Instance,Dt);const auto* A=CastChecked<UAetherAnimInstance>(Instance);
+  auto* C=Cast<AAetherCharacter>(Instance->TryGetPawnOwner());auto* Motion=C?C->Motion.Get():nullptr;
+  Generated.SourceMeshComponent=Motion?Motion->GetSourceMesh():nullptr;Generated.IKRetargeterAsset=Motion?Motion->GetRetargeter():nullptr;
+  GeneratedBlend.Alpha=Motion&&Generated.SourceMeshComponent.IsValid()&&Generated.IKRetargeterAsset?Motion->GeneratedWeight():0.f;
+  if(Generated.IKRetargeterAsset&&Generated.SourceMeshComponent.IsValid())Generated.PreUpdate(Instance);
   FVector Position(A->GroundSpeed,0,0);
   if(A->Locomotion){for(int I=0;I<2;++I){const auto& Param=A->Locomotion->GetBlendParameter(I);if(Param.DisplayName.Contains(TEXT("Direction")))Position[I]=A->Direction;else if(I==0||Param.DisplayName.Contains(TEXT("Speed")))Position[I]=A->GroundSpeed;}}
   Ground.SetPosition(Position);Ground.SetPlayRate(FMath::Clamp(A->GroundSpeed/450.f,1.f,1.4f));Travel.Alpha=A->AirWeight;
