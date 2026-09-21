@@ -42,7 +42,7 @@ bool FMotionBricksScheduler::Submit(FAetherMotionInput Input)
         (Input.TransitionTarget.IsSet()&&!Input.TransitionTarget->IsValid()))return false;
     FScopeLock Lock(&Mutex);auto* Entry=Entries.Find(Input.AgentId);
     if(!Entry||bStopping.Load()||Backend==EAetherMotionBackend::Traditional||Input.Stamp.RequestSequence<=Entry->Latest.RequestSequence)return false;
-    Entry->Latest=Input.Stamp;
+    Input.SubmittedAt=FPlatformTime::Seconds();Entry->Latest=Input.Stamp;
     if(!Entry->Pending.IsSet())Entry->QueuedAt=FPlatformTime::Seconds();
     // 在途最多一个、待处理最多一个；只覆盖未开始的输入，没有无界任务队列。
     Entry->Pending=MoveTemp(Input);Wake->Trigger();return true;
@@ -116,7 +116,7 @@ uint32 FMotionBricksScheduler::Run()
         }
         {FScopeLock Lock(&Mutex);Metrics.NativeAgents=NativeIds.Num();}
         if(!HasWork){Wake->Wait(1000);continue;}
-        FAetherMotionResult Result;Result.AgentId=Work.AgentId;Result.Stamp=Work.Stamp;
+        FAetherMotionResult Result;Result.AgentId=Work.AgentId;Result.Stamp=Work.Stamp;Result.SubmittedAt=Work.SubmittedAt;
         if(Model){Result.Clip=Model->Generate(Work,Result.Reason);NativeIds.Add(Work.AgentId);}
         else Result.Reason=Failure.IsEmpty()?TEXT("传统动画"):Failure;
         {

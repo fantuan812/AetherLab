@@ -1,4 +1,6 @@
 #include "Animation/AetherAnimation.h"
+#include "HAL/PlatformTime.h"
+#include "Misc/ScopeExit.h"
 #include "AetherMotionComponent.h"
 #include "AnimNodes/AnimNode_RetargetPoseFromMesh.h"
 #include "Combat/AetherCombat.h"
@@ -48,8 +50,10 @@ float UAetherAnimInstance::AttackPosition(const FAetherAttackDefinition& A,float
 }
 void UAetherAnimInstance::NativeUpdateAnimation(float Dt)
 {
+    const double Started=FPlatformTime::Seconds();
     Super::NativeUpdateAnimation(Dt);
     auto* C=Cast<AAetherCharacter>(TryGetPawnOwner());if(!C||C->GetNetMode()==NM_DedicatedServer)return;
+    ON_SCOPE_EXIT{if(C->Motion)C->Motion->RecordBridgeSeconds(FPlatformTime::Seconds()-Started);};
     // 在游戏线程只采样一次；图代理只消费本帧数值，独立负责传统/生成姿态混合。
     const auto Frame=AetherAnimationSnapshot::Capture(*C);
     UpdateLocomotion(Frame,Dt);

@@ -3,6 +3,8 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "AetherMotionComponent.h"
+#include "HAL/PlatformTime.h"
+#include "Misc/ScopeExit.h"
 #include "AnimNodes/AnimNode_RetargetPoseFromMesh.h"
 #include "Combat/AetherCombat.h"
 #include "Characters/AetherFrontierCharacter.h"
@@ -25,6 +27,21 @@
 #include "UObject/ConstructorHelpers.h"
 namespace
 {
+// 从本次未经 IK 的足部姿态计算目标，避免上一帧已落地的 socket 反馈把摆动脚永久压平。
+// 地形修正只改变高度；作者/生成姿态的水平步幅和抬脚量必须保留。
+struct FAetherGroundFootIK : FAnimNode_TwoBoneIK
+{
+ double FlatContactZ=12;
+ virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output,TArray<FBoneTransform>& Out) override
+ {
+  const auto Index=IKBone.GetCompactPoseIndex(Output.Pose.GetPose().GetBoneContainer());
+  const FVector Authored=Output.Pose.GetComponentSpaceTransform(Index).GetLocation();
+  const FVector Surface=EffectorLocation;
+  EffectorLocation=FVector(Authored.X,Authored.Y,FMath::Max(Surface.Z,Authored.Z+Surface.Z-FlatContactZ));
+  FAnimNode_TwoBoneIK::EvaluateSkeletalControl_AnyThread(Output,Out);
+  EffectorLocation=Surface;
+ }
+};
 struct FAetherAnimProxy : FAnimInstanceProxy
 {
  FAnimNode_BlendSpacePlayer_Standalone Ground;
@@ -36,7 +53,8 @@ struct FAetherAnimProxy : FAnimInstanceProxy
  FAnimNode_SequencePlayer_Standalone Controlled;
  FAnimNode_TwoWayBlend ControlledBlend;
  FAnimNode_ConvertLocalToComponentSpace ToComponent;
- FAnimNode_TwoBoneIK LeftFoot,RightFoot,LeftHand,RightHand;
+ FAetherGroundFootIK LeftFoot,RightFoot;
+ FAnimNode_TwoBoneIK LeftHand,RightHand;
  FAnimNode_ConvertComponentToLocalSpace ToLocal;
  EAetherMotionState Previous=EAetherMotionState::Grounded;
  explicit FAetherAnimProxy(UAnimInstance* Instance):FAnimInstanceProxy(Instance){}
@@ -51,15 +69,17 @@ struct FAetherAnimProxy : FAnimInstanceProxy
   ToComponent.LocalPose.SetLinkNode(&ControlledBlend);LeftFoot.ComponentPose.SetLinkNode(&ToComponent);RightFoot.ComponentPose.SetLinkNode(&LeftFoot);
   LeftHand.ComponentPose.SetLinkNode(&RightFoot);RightHand.ComponentPose.SetLinkNode(&LeftHand);
   ToLocal.ComponentPose.SetLinkNode(&RightHand);
-  for(auto* Foot:{&LeftFoot,&RightFoot,&LeftHand,&RightHand}){Foot->EffectorLocationSpace=BCS_ComponentSpace;Foot->JointTargetLocationSpace=BCS_ComponentSpace;Foot->bAllowStretching=false;Foot->bMaintainEffectorRelRot=true;Foot->Alpha=0;}
+  for(FAnimNode_TwoBoneIK* Foot:{static_cast<FAnimNode_TwoBoneIK*>(&LeftFoot),static_cast<FAnimNode_TwoBoneIK*>(&RightFoot),&LeftHand,&RightHand}){Foot->EffectorLocationSpace=BCS_ComponentSpace;Foot->JointTargetLocationSpace=BCS_ComponentSpace;Foot->bAllowStretching=false;Foot->bMaintainEffectorRelRot=true;Foot->Alpha=0;}
   LeftFoot.IKBone.BoneName="foot_l";RightFoot.IKBone.BoneName="foot_r";
   LeftHand.IKBone.BoneName="hand_l";RightHand.IKBone.BoneName="hand_r";
   FAnimInstanceProxy::Initialize(Instance);
  }
  virtual void PreUpdate(UAnimInstance* Instance,float Dt) override
  {
+  const double Started=FPlatformTime::Seconds();
   FAnimInstanceProxy::PreUpdate(Instance,Dt);const auto* A=CastChecked<UAetherAnimInstance>(Instance);
   auto* C=Cast<AAetherCharacter>(Instance->TryGetPawnOwner());auto* Motion=C?C->Motion.Get():nullptr;
+  ON_SCOPE_EXIT{if(Motion)Motion->RecordBridgeSeconds(FPlatformTime::Seconds()-Started);};
   Generated.SourceMeshComponent=Motion?Motion->GetSourceMesh():nullptr;Generated.IKRetargeterAsset=Motion?Motion->GetRetargeter():nullptr;
   GeneratedBlend.Alpha=Motion&&Generated.SourceMeshComponent.IsValid()&&Generated.IKRetargeterAsset?Motion->GeneratedWeight():0.f;
   if(Generated.IKRetargeterAsset&&Generated.SourceMeshComponent.IsValid())Generated.PreUpdate(Instance);
@@ -72,6 +92,10 @@ struct FAetherAnimProxy : FAnimInstanceProxy
   Controlled.SetSequence(A->ControlledClip);Controlled.SetPlayRate(0);Controlled.SetLoopAnimation(false);
   Controlled.SetAccumulatedTime(A->ControlledTime);ControlledBlend.Alpha=A->ControlledClip?A->ControlledWeight:0;
   Previous=A->MotionState;
+  if(C){
+   const FVector FlatWorld=C->GetActorLocation()-FVector(0,0,C->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()-12);
+   LeftFoot.FlatContactZ=RightFoot.FlatContactZ=C->GetMesh()->GetComponentTransform().InverseTransformPosition(FlatWorld).Z;
+  }
   LeftFoot.Alpha=RightFoot.Alpha=A->FootWeight;LeftFoot.EffectorLocation=A->FootTargets[0];RightFoot.EffectorLocation=A->FootTargets[1];LeftFoot.JointTargetLocation=A->KneeTargets[0];RightFoot.JointTargetLocation=A->KneeTargets[1];
   LeftHand.Alpha=RightHand.Alpha=A->HandWeight;
   LeftHand.EffectorLocation=A->HandTargets[0];RightHand.EffectorLocation=A->HandTargets[1];

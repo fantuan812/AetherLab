@@ -6,6 +6,12 @@
 #include "Networking/AetherV10Packets.h"
 #include "AetherCommandRuntime.generated.h"
 
+// 聚合诊断只暴露数量，不包含角色身份、命令内容或存储载荷。
+struct FAetherCommandRuntimeMetrics
+{
+    int32 Connections=0,PendingCommands=0,PendingFacts=0,DeferredFacts=0,ResourceReservations=0;
+    uint64 SnapshotBytes=0;
+};
 class AAetherPlayerController;
 struct FAetherCommandRuntimeImpl;
 // UHT 热重载构造器也可能触发成员销毁；删除操作在完整类型所在 .cpp 中执行。
@@ -26,6 +32,7 @@ public:
     // 由完成迁移/恢复的服务器启动流程注入。不会自行打开、创建、导入或覆盖玩家存档。
     bool InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason);
     bool IsInstalled() const;
+    FAetherCommandRuntimeMetrics Inspect() const;
     bool SetBackendDomain(FGuid Realm);
     // 地图切换撤销旧连接与回调，排空已接受的写入后才允许重新安装。
     void UninstallBackend();

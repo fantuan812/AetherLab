@@ -1,3 +1,4 @@
+#include "Definitions/AetherV10Definitions.h"
 #include "Interaction/AetherLiveTradeSession.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "World/AetherFrontierProp.h"
@@ -9,7 +10,7 @@ bool AAetherFrontierCharacter::CanTradeWith(AAetherFrontierProp* Target) const
 {
     if(!IsValid(Target)||!ProfileState()||!Ready()||Carried||ReviveTarget||bTravelPending||HasRecentCombat(8))return false;
     const auto Offer=AetherGuide::QueryTarget(const_cast<AAetherFrontierCharacter*>(this),Target);
-    return Offer.bExecutable&&Offer.Prop==Target&&FAetherRules::Get().Shops.Contains(Target->Service);
+    return Offer.bExecutable&&Offer.Prop==Target&&FAetherV10Definitions::Get().Economy.Shops.Contains(Target->Service.ToString());
 }
 FName AAetherFrontierCharacter::ActiveShop() const
 {

@@ -18,8 +18,8 @@ public:
     UPROPERTY(EditAnywhere) TMap<FName,FString> Styles;
     UPROPERTY(EditAnywhere) FString SkeletonSha256;
     UPROPERTY(EditAnywhere) TMap<FName,TSoftObjectPtr<UAetherMotionBoundaryAsset>> TransitionBoundaries;
-    // 行向量约定：源 X 右、Y 上、Z 前 -> UE X 前、Y 右、Z 上，作者工具检查正交/往返。
-    UPROPERTY(EditAnywhere) FVector SourceX=FVector(0,1,0);
+    // 行向量约定：模型 +X 左髋、Y 上、Z 前 -> UE X 前、Y 右、Z 上（镜像变换），作者工具检查正交/往返。
+    UPROPERTY(EditAnywhere) FVector SourceX=FVector(0,-1,0);
     UPROPERTY(EditAnywhere) FVector SourceY=FVector(0,0,1);
     UPROPERTY(EditAnywhere) FVector SourceZ=FVector(1,0,0);
     UPROPERTY(EditAnywhere,meta=(ClampMin=".1",ClampMax="2")) float MaxResultAge=.5f;

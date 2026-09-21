@@ -21,16 +21,25 @@ $taskArgs=@(
 )
 $taskP=Start-Process -FilePath (Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor.exe') -ArgumentList $taskArgs -PassThru -WindowStyle Hidden
 try{
+ $taskGpuSamples=[Collections.Generic.List[object]]::new()
+ $taskNextGpu=Get-Date
  $taskDeadline=(Get-Date).AddSeconds($Seconds+180)
  while(!$taskP.HasExited){
   if((Get-Date) -gt $taskDeadline){throw "Soak deadline: $taskLog"}
+  if((Get-Date) -ge $taskNextGpu){
+   $taskNextGpu=(Get-Date).AddSeconds(30)
+   $taskGpuRows=@(Get-CimInstance -ClassName Win32_PerfFormattedData_GPUPerformanceCounters_GPUProcessMemory -ErrorAction Stop | Where-Object {$_.Name -like ("pid_"+$taskP.Id+"_luid_*")})
+   if($taskGpuRows.Count){$taskGpuSamples.Add([ordered]@{atUtc=[DateTime]::UtcNow.ToString('o');pid=$taskP.Id;dedicatedBytes=($taskGpuRows|Measure-Object DedicatedUsage -Sum).Sum;sharedBytes=($taskGpuRows|Measure-Object SharedUsage -Sum).Sum;committedBytes=($taskGpuRows|Measure-Object TotalCommitted -Sum).Sum})}
+  }
   Start-Sleep -Milliseconds 500
  }
  $taskP.WaitForExit()
+ $taskGpuSamples|ConvertTo-Json -Depth 4|Set-Content -LiteralPath (Join-Path $taskDir 'gpu-process-memory.json') -Encoding utf8
+ if($taskGpuSamples.Count -lt 3){throw 'No sufficient real process GPU memory evidence'}
  if($taskP.ExitCode -ne 0 -or !(Test-Path -LiteralPath $taskReport)){throw "Soak failed: $taskLog"}
  if(Select-String -LiteralPath $taskLog -Pattern 'V10_SOAK_FAIL|Fatal error:' -Quiet){throw "Soak failure marker: $taskLog"}
  $taskResult=Get-Content -LiteralPath $taskReport -Raw|ConvertFrom-Json
- if($taskResult.seconds -lt $Seconds -or $taskResult.replacements -lt 50 -or $taskResult.regionTravels -lt 50 -or $taskResult.menuCycles -lt 100){throw 'Lifecycle coverage incomplete'}
+ if($taskResult.seconds -lt $Seconds -or $taskResult.replacements -lt 50 -or $taskResult.regionTravels -lt 50 -or $taskResult.menuCycles -lt 100 -or $taskResult.commandCycles -lt 50){throw 'Lifecycle coverage incomplete'}
  [ordered]@{schema=1;sourceCommit=$taskSourceCommit;sourceWorkingTreeChanges=$taskSourceChanges;requestedSeconds=$Seconds;report=$taskReport;sourceScope='Editor Development; not full mainline or Shipping'}|ConvertTo-Json -Depth 4|Set-Content -LiteralPath (Join-Path $taskDir 'run-manifest.json') -Encoding utf8
  Write-Output "Native lifecycle run completed: $taskReport. Frame/memory budgets and visual quality require review; this is not Shipping/full-mainline acceptance."
 }finally{if(!$taskP.HasExited){Stop-Process -Id $taskP.Id}}

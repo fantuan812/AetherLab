@@ -22,11 +22,10 @@ def main():
     skeleton = ROOT / "ContentSource/Motion/G1Skeleton.json"
     if not skeleton.is_file():
         raise RuntimeError("先用 MotionAuthor.py extract 从锁定模型生成骨架描述")
-    source = load_optional(OUTPUT + "/SK_G1MotionSource")
+    # 管理的隐藏源网格可原位重建，保证骨架、蒙皮顶点和新的坐标基一起更新。
+    source, reason = ue.AetherMotionAuthoring.create_source(str(skeleton))
     if not source:
-        source, reason = ue.AetherMotionAuthoring.create_source(str(skeleton))
-        if not source:
-            raise RuntimeError(reason)
+        raise RuntimeError(reason)
     resources = [source, source.get_editor_property("skeleton")]
     skeleton_data = json.loads(skeleton.read_text(encoding="utf-8-sig"))
     profiles = []
@@ -49,11 +48,10 @@ def main():
     resources.append(require(OUTPUT + "/IK_G1"))
     for clip in sorted((ROOT / "ContentSource/Motion/Clips").glob("*.json")):
         path = OUTPUT + "/Baked/AN_" + clip.stem
-        animation = load_optional(path)
-        if not animation or clip.stem.lower() in ("crouch", "crouch_idle"):
-            animation, reason = ue.AetherMotionAuthoring.import_clip(str(clip), source, path)
-            if not animation:
-                raise RuntimeError(reason)
+        # 基变换校准后所有已管理片段都必须同步，不能混用旧姿态。
+        animation, reason = ue.AetherMotionAuthoring.import_clip(str(clip), source, path)
+        if not animation:
+            raise RuntimeError(reason)
         resources.append(animation)
         data = json.loads(clip.read_text(encoding="utf-8-sig"))
         style_names = {"idle": "Idle", "walk": "Walk", "injured": "Injured", "injured_walk": "Injured",
@@ -78,6 +76,7 @@ def main():
             boundaries[style] = asset
             resources.append(asset)
     for profile in profiles:
+        profile.set_editor_property("source_x", ue.Vector(0,-1,0))
         profile.set_editor_property("skeleton_sha256", skeleton_data["skeletonSha256"])
         styles = dict(profile.get_editor_property("styles"))
         for key, filename in [("Crouch", "crouch"), ("CrouchIdle", "crouch_idle")]:

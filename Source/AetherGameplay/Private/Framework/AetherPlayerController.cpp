@@ -1,6 +1,8 @@
 #include "Framework/AetherPlayerController.h"
 #include "Tests/AetherNativeNetworkProbe.h"
 #include "Tests/AetherNativeSoakProbe.h"
+#include "Tests/AetherMotionQualityProbe.h"
+#include "Tests/AetherNativeJourneyProbe.h"
 #include "GenericPlatform/GenericPlatformInputDeviceMapper.h"
 #include "Presentation/AetherPresentation.h"
 #include "Presentation/AetherMenuSubsystem.h"
@@ -67,4 +69,4 @@ void AAetherPlayerController::EndPlay(const EEndPlayReason::Type Reason)
 }
 
 void AAetherPlayerController::PlayerTick(float DeltaSeconds)
-{Super::PlayerTick(DeltaSeconds);AetherNativeNetworkProbe::Tick(this);AetherNativeSoakProbe::Tick(this,DeltaSeconds);}
+{Super::PlayerTick(DeltaSeconds);AetherNativeNetworkProbe::Tick(this);AetherNativeSoakProbe::Tick(this,DeltaSeconds);AetherMotionQualityProbe::Tick(this,DeltaSeconds);AetherNativeJourneyProbe::Tick(this);}

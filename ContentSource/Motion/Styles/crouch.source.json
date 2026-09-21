@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "sourceAsset": "/Game/Animation/Motion/Authored/G1_A_CrouchWalk.G1_A_CrouchWalk",
-  "sourceSha256": "fabd5aec764d5cdca39f75f80d3c97cdad3a834a4d0f66ea945608bbc65e2063",
-  "sourceFileSha256": "07d4ff5f9588234549be8ce58a52b5724be96a04c6da312c2e7c1f1188c1e10e",
+  "sourceSha256": "a503298c1c3a538ba9f21fca7d10709eaff7494176f1dcf5a4b719e26c9c8673",
+  "sourceFileSha256": "a34ed0f2d5284deee87b2f2d2887b9cae333277e58bad535a5b5dd89510bd3e2",
   "skeleton": {
     "schema": 1,
     "nativeRevision": "ee0cf5d9035f639ed0787f390fb1ce05d6a4c463",
@@ -320,7 +320,7 @@
       }
     ]
   },
-  "styleSha256": "0cb6d1c2ec035f413670e6c63fac04359a8e36b85b63e5e2bb65f1bc39a32476",
+  "styleSha256": "1e8c0481b14b9c9bebb6548190d3cfc1bfefa68e299153f5afea464c25cbcbce",
   "frames": 31,
   "fps": 30,
   "qualityApproved": false

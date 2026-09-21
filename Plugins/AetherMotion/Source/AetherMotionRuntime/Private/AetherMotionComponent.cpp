@@ -11,6 +11,8 @@
 #include "Engine/StreamableManager.h"
 #include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
+#include "HAL/PlatformTime.h"
+#include "Misc/ScopeExit.h"
 #include "Retargeter/IKRetargeter.h"
 static TAutoConsoleVariable<int32> CVarAetherMotionBackend(TEXT("aether.Motion.Backend"),-1,TEXT("-1 automatic staged backend, 0 traditional, 1 CPU, 2 Vulkan. Quality acceptance is reported separately."),ECVF_Default);
 UAetherMotionComponent::UAetherMotionComponent()
@@ -43,7 +45,8 @@ void UAetherMotionComponent::AssetsReady()
     if(!Profile||!Profile->SourceMesh.Get()||!Profile->Retargeter.Get())return;
     if(!Profile->SourceAnimationClass.Get()){Message=TEXT("G1 动画蓝图资源缺失");return;}
     auto* Character=Cast<ACharacter>(GetOwner());if(!Character)return;
-    SourceMesh=NewObject<USkeletalMeshComponent>(Character,TEXT("GeneratedMotionSource"));
+    // 身体切换后旧组件可能仍等待渲染线程/GC；唯一名称避免同步覆盖旧 UObject。
+    SourceMesh=NewObject<USkeletalMeshComponent>(Character,MakeUniqueObjectName(Character,USkeletalMeshComponent::StaticClass(),TEXT("GeneratedMotionSource")));
     SourceMesh->SetupAttachment(Character->GetRootComponent());SourceMesh->SetAbsolute(false,false,false);
     SourceMesh->SetRelativeLocation(FVector(0,0,-Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()));
     SourceMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);SourceMesh->SetVisibility(false);SourceMesh->SetHiddenInGame(true);
@@ -66,6 +69,8 @@ FMatrix UAetherMotionComponent::PoseBasis() const{return Profile?Profile->Basis(
 UIKRetargeter* UAetherMotionComponent::GetRetargeter() const{return Profile?Profile->Retargeter.Get():nullptr;}
 void UAetherMotionComponent::TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Function)
 {
+    const double TickStarted=FPlatformTime::Seconds();
+    ON_SCOPE_EXIT{RecordBridgeSeconds(FPlatformTime::Seconds()-TickStarted);};
     Super::TickComponent(Dt,Type,Function);if(!Agent)return;
     auto* C=Cast<ACharacter>(GetOwner());if(!C)return;
     // 只有内置双体型配置参与自动切换；作者显式指定的动作档案保持权威。
@@ -108,7 +113,7 @@ void UAetherMotionComponent::TickComponent(float Dt,ELevelTick Type,FActorCompon
         {
             const double Age=Result.Clip?FMath::Max(0.,Now-Result.Clip->SimulationTime):0;
             if(Result.Clip&&Age<=Profile->MaxResultAge&&3+Age*30<Result.Clip->Frames-1)
-            {Clip=Result.Clip;Frame=3+Age*30;AcceptedSequence=Result.Stamp.RequestSequence;++StableResults;bTransitionRequested=false;Message=TEXT("生成动作");}
+            {Clip=Result.Clip;Frame=3+Age*30;AcceptedSequence=Result.Stamp.RequestSequence;LastAcceptedPlanMs=(FPlatformTime::Seconds()-Result.SubmittedAt)*1000.;++StableResults;bTransitionRequested=false;Message=TEXT("生成动作");}
             else {StableResults=0;Message=Result.Reason.IsEmpty()?TEXT("生成结果超时，使用传统动作"):Result.Reason;NextPlan=Now+1;}
         }
     }
@@ -168,3 +173,15 @@ void UAetherMotionComponent::EndPlay(const EEndPlayReason::Type Why)
 
 FString UAetherMotionComponent::Status() const
 {return AetherMotionScheduler().Diagnostic()+TEXT(" · ")+Message;}
+
+void UAetherMotionComponent::RecordBridgeSeconds(double Seconds)
+{
+    check(IsInGameThread());auto& Sample=BridgeSamples[GFrameCounter%2];
+    if(Sample.Frame!=GFrameCounter){Sample.Frame=GFrameCounter;Sample.Seconds=0;}
+    Sample.Seconds+=Seconds;
+}
+double UAetherMotionComponent::BridgeMilliseconds(uint64 FrameNumber) const
+{
+    check(IsInGameThread());const auto& Sample=BridgeSamples[FrameNumber%2];
+    return Sample.Frame==FrameNumber?Sample.Seconds*1000.:0.;
+}

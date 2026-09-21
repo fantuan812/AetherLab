@@ -1,3 +1,4 @@
+#include "Definitions/AetherV10Definitions.h"
 #include "Framework/AetherFrontier.h"
 #include "Quests/AetherGuide.h"
 #include "Interaction/AetherNearbyRegistry.h"
@@ -54,7 +55,7 @@ void AAetherFrontierProp::BeginPlay()
     GetWorld()->GetSubsystem<UAetherNearbyRegistry>()->Register(this);
     Reactive->OnReaction.AddDynamic(this,&AAetherFrontierProp::OnMaterialReaction);
     Reactive->OnElectricalWindow.AddDynamic(this,&AAetherFrontierProp::OnElectricalWindow);
-    if(Service=="Register"||Service=="Inn"||Service=="Teacher"||Service=="Shop"||Service=="Recruit"||Service=="Rescue"||Service=="SealDelivered")
+    if(Service=="Register"||Service=="Inn"||Service=="Teacher"||FAetherV10Definitions::Get().Economy.Shops.Contains(Service.ToString())||Service=="Recruit"||Service=="Rescue"||Service=="SealDelivered")
     {
         // Presentation is applied after the shared asynchronous bundle is ready.
         Person->SetWorldLocation(GetActorLocation()-FVector(0,0,90));Person->SetWorldRotation(FRotator(0,-90,0));
@@ -70,7 +71,7 @@ void AAetherFrontierProp::EndPlay(const EEndPlayReason::Type Reason)
 void AAetherFrontierProp::Tick(float Dt)
 {
     Super::Tick(Dt);
-    if(!Person->GetSkeletalMeshAsset()&&(Service=="Register"||Service=="Inn"||Service=="Teacher"||FAetherRules::Get().Shops.Contains(Service)||Service=="Recruit"||Service=="Rescue"||Service=="SealDelivered"))
+    if(!Person->GetSkeletalMeshAsset()&&(Service=="Register"||Service=="Inn"||Service=="Teacher"||FAetherV10Definitions::Get().Economy.Shops.Contains(Service.ToString())||Service=="Recruit"||Service=="Rescue"||Service=="SealDelivered"))
     if(auto* Assets=GetWorld()->GetSubsystem<UAetherAssetPreload>();Assets&&Assets->Ready()){
         Person->SetSkeletalMesh(FindObject<USkeletalMesh>(nullptr,TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple")));
         if(auto* Idle=FindObject<UAnimSequence>(nullptr,TEXT("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle.MM_Idle")))Person->PlayAnimation(Idle,true);

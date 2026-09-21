@@ -26,7 +26,7 @@ struct FAetherMotionInput
 {
     uint64 AgentId=0;
     FAetherMotionStamp Stamp;
-    double SimulationTime=0;
+    double SimulationTime=0,SubmittedAt=0;
     uint64 AcceptedSequence=0;
     uint32 ConsumedFrameIndex=0;
     FVector3f Movement=FVector3f(0,0,1),Facing=FVector3f(0,0,1);
@@ -51,6 +51,7 @@ struct AETHERMOTIONRUNTIME_API FAetherMotionClip
 using FAetherMotionClipPtr=TSharedPtr<const FAetherMotionClip,ESPMode::ThreadSafe>;
 struct FAetherMotionResult
 {
+    double SubmittedAt=0;
     uint64 AgentId=0;
     FAetherMotionStamp Stamp;
     FAetherMotionClipPtr Clip;

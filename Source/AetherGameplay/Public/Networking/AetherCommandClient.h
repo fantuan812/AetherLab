@@ -29,6 +29,7 @@ public:
     FGuid GetChannel() const{return Channel;}
     const FString& GetOwnerIdentity() const{return Owner;}
     bool HasPending() const;
+    int32 PendingCommandCount() const {return Pending.Num();}
     bool Submit(FGuid ExpectedChannel,const FString& ExpectedOwner,const TArray<uint8>& FrozenBytes,FString& Reason);
     // 重连只恢复快照，不自动执行上一个 Pawn 的意图；用户可明确查询/重试同一拥有者的原请求。
     bool RetryPending();

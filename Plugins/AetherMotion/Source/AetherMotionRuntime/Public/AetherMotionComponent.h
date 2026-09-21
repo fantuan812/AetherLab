@@ -23,6 +23,12 @@ public:
     USkeletalMeshComponent* GetSourceMesh() const{return SourceMesh;}
     UIKRetargeter* GetRetargeter() const;
     FString Status() const;
+    // 真实墙钟提交→游戏线程接收；包含排队、后端冷启动和推理，不用模拟时间近似。
+    double AcceptedPlanMilliseconds() const{return LastAcceptedPlanMs;}
+    uint64 AcceptedPlanSequence() const{return AcceptedSequence;}
+    void RecordBridgeSeconds(double Seconds);
+    double BridgeMilliseconds(uint64 FrameNumber) const;
+
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     virtual void TickComponent(float DeltaTime,ELevelTick TickType,FActorComponentTickFunction* Function) override;
@@ -40,7 +46,10 @@ private:
     uint64 AssetGeneration=0;
     FName BodyProfile;
     uint64 Agent=0,AcceptedSequence=0;
-    double Frame=3,NextPlan=0;
+    double Frame=3,NextPlan=0,LastAcceptedPlanMs=0;
+    struct FBridgeSample{uint64 Frame=MAX_uint64;double Seconds=0;};
+    FBridgeSample BridgeSamples[2]; // 每帧聚合，不增加长时运行的内存占用。
+
     float Weight=0;
     int32 LastBackend=-1,StableResults=0;
     FString Message=TEXT("动作资源准备中");

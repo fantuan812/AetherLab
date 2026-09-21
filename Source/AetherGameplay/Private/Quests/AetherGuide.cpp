@@ -1,3 +1,4 @@
+#include "Definitions/AetherV10Definitions.h"
 #include "Quests/AetherGuide.h"
 #include "World/AetherNativeContainer.h"
 #include "Interaction/AetherNativeInteraction.h"
@@ -112,7 +113,7 @@ FAetherInteractionTarget QueryTarget(AAetherFrontierCharacter* C,AActor* Actor)
  else if(S=="Dummy")R.Prompt=TEXT("装备训练剑，轻击训练木桩");
  else if(Target->bCarryable)R.Prompt=TEXT("[")+C->BindingFor("Carry").GetDisplayName().ToString()+TEXT("] 瞄准物件搬运；可推移或投掷");
  else if(const auto* Label=Labels.Find(S)){R.Prompt=Key+*Label;R.bExecutable=true;}
- else if(FAetherRules::Get().Shops.Contains(S)){R.Prompt=Key+TEXT("与商人交易");R.bExecutable=true;}
+ else if(FAetherV10Definitions::Get().Economy.Shops.Contains(S.ToString())){R.Prompt=Key+TEXT("与商人交易");R.bExecutable=true;}
  else if(S.ToString().StartsWith("Patrol")){R.Prompt=Key+TEXT("记录巡逻位置");R.bExecutable=true;}
  else if(S=="Support")R.Prompt=TEXT("用训练剑切断，或用引焰烧毁支撑绳索");
  else if(S=="Water")R.Prompt=TEXT("对浅水释放霜凝，可形成承重冰面");

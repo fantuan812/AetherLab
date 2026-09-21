@@ -1,4 +1,5 @@
 #include "Misc/AutomationTest.h"
+#include "Definitions/AetherWorldDefinition.h"
 #include "Interaction/AetherInteractionDefinitions.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -30,6 +31,10 @@ bool FAetherInteractionDefinitionTest::RunTest(const FString&)
     if(!TestTrue(*Reason,D.Validate(FAetherRules::Get(),Economy,Reason)))return false;
     for(const TCHAR* Id:{TEXT("Teacher"),TEXT("Register"),TEXT("Inn"),TEXT("Shop"),TEXT("Armorer"),TEXT("Background")})
         TestTrue(TEXT("Formal service definition remains available"),D.Targets.Contains(Id));
+    // 商品和对话合法还不足以保证玩家可达；每份正式商店目录必须有世界实例。
+    for(const auto& Shop:Economy.Shops)
+        TestTrue(TEXT("Every production shop has a placed world service"),FAetherWorldDefinitions::Get().Objects.ContainsByPredicate(
+            [&](const auto& Object){return Object.Service.ToString()==Shop.Key;}));
     auto Bad=D;Bad.Targets[TEXT("Teacher")].Actions[1].RequiredClaims.Add(TEXT("MissingQuest"));
     TestFalse(TEXT("Unknown quest rejected"),Bad.Validate(FAetherRules::Get(),Economy,Reason));
     Bad=D;Bad.Targets[TEXT("Teacher")].Actions[1].RequiredClaims[0]=TEXT("q_main_02");

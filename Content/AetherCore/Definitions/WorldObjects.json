@@ -402,6 +402,29 @@
       "AllowAbsentFromOlderSave": false
     },
     {
+      "Id": "Armorer",
+      "Definition": "Default",
+      "Service": "Armorer",
+      "Location": [
+        -900,
+        -300,
+        90
+      ],
+      "Scale": [
+        0.5,
+        0.5,
+        1.8
+      ],
+      "Kind": 0,
+      "Label": "军械商",
+      "Section": "Frontier",
+      "Persistent": true,
+      "Stream": false,
+      "Supports": [],
+      "Ports": [],
+      "AllowAbsentFromOlderSave": true
+    },
+    {
       "Id": "Recruit",
       "Definition": "Default",
       "Service": "Recruit",

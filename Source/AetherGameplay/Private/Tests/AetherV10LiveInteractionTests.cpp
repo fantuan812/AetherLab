@@ -137,6 +137,10 @@ bool FAetherLiveTradeTest::RunTest(const FString&)
     auto* Mode=W->SpawnActor<AAetherFrontierMode>();
     Mode->Database=NewObject<UAetherFrontierSave>(Mode);Mode->Storage=AetherLocalSnapshotStore();
     Mode->SavePrefix=TEXT("V10Trade_")+FGuid::NewGuid().ToString(EGuidFormats::Digits);
+    auto* Armorer=MakeTarget(W,"Merchant.Armorer","Armorer",FVector(140,-40,0));
+    TestTrue(TEXT("V10-only armorer opens without legacy catalog entry"),C->OpenTrade(Armorer));
+    TestTrue(TEXT("Armorer lease names the actual V10 catalog"),C->ActiveShop()=="Armorer");
+    C->CloseTrade();
     TestFalse(TEXT("Proximity alone is not authorization"),C->AuthorizeTrade(FGuid::NewGuid(),"Shop"));
     TestTrue(TEXT("Explicit interaction opens merchant session"),C->OpenTrade(A));
     const auto Token=C->TradeSession.Token;

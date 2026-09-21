@@ -33,20 +33,14 @@ def curve(values):
     return [key(*v) for v in values]
 
 
-def recipe(name, source=IDLE, duration=1.0, animate=False, reverse=False, tracks=None):
+def recipe(name, source=IDLE, duration=1.0, animate=False, reverse=False, tracks=None, plant_feet=False):
     RECIPES[name] = dict(source=source, schema=1, duration=duration,
-                         animateSource=animate, reverseSource=reverse, tracks=tracks or {})
+                         animateSource=animate, reverseSource=reverse, tracks=tracks or {}, plantFeet=plant_feet)
 
 
-def squat(depth=34, bend=1.0):
+def squat(depth=34):
     return {
         "pelvis": constant(translation=(0, 0, -depth)),
-        "thigh_l": constant((-32*bend, 0, 0)),
-        "thigh_r": constant((32*bend, 0, 0)),
-        "calf_l": constant((64*bend, 0, 0)),
-        "calf_r": constant((-64*bend, 0, 0)),
-        "foot_l": constant((-32*bend, 0, 0)),
-        "foot_r": constant((32*bend, 0, 0)),
         "spine_02": constant((10, 0, 0)),
     }
 
@@ -56,11 +50,11 @@ def arms():
             "lowerarm_l": constant((0, -55, 0)), "lowerarm_r": constant((0, 55, 0))}
 
 
-# 蹲走逐帧保留源动画的交替步态，再烘焙降低骨盆/髋膝踝屈曲；不是静止蹲姿播放。
-recipe("CrouchIdle", tracks=squat())
+# 蹲走逐帧保留源动画的交替步态，再烘焙降低骨盆并以足接触 IK 解出髋膝踝屈曲；不是静止蹲姿播放。
+recipe("CrouchIdle", tracks=squat(), plant_feet=True)
 for name, suffix in [("CrouchWalk", "Fwd"), ("CrouchBack", "Bwd"),
                      ("CrouchLeft", "Left"), ("CrouchRight", "Right")]:
-    recipe(name, BASE + "Unarmed/Walk/MF_Unarmed_Walk_" + suffix, 1.0, True, tracks=squat(30, .85))
+    recipe(name, BASE + "Unarmed/Walk/MF_Unarmed_Walk_" + suffix, 1.0, True, tracks=squat(30), plant_feet=True)
 recipe("CarryIdle", tracks=arms())
 recipe("CarryWalk", WALK, 1.0, True, tracks=arms())
 recipe("Guard", tracks={**arms(), "upperarm_l": constant((0, -68, -55)),
@@ -89,7 +83,7 @@ reach = {
 }
 recipe("Pickup", duration=.7, tracks=reach)
 recipe("PutDown", duration=.65, tracks=reach)
-recipe("Rescue", duration=1.2, tracks={**squat(40, 1.2), **arms(),
+recipe("Rescue", duration=1.2, plant_feet=True, tracks={**squat(40), **arms(),
     "spine_02": curve([(0, (18, 0, 0)), (.5, (23, 0, 0)), (1, (18, 0, 0))]),
     "lowerarm_r": curve([(0, (0, 45, 0)), (.5, (0, 65, 0)), (1, (0, 45, 0))])})
 recipe("Throw", duration=.65, tracks={

@@ -129,6 +129,25 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
  case 17: C->OpenPanel(6);break;
  case 18: Capture(TEXT("Settings.png"));break;
  case 19: Menu->Close();break;
+ case 20: GameKey(EKeys::Gamepad_Special_Left);break;
+ case 21:
+  if(!Check(C&&C->bPanel&&C->Panel==1,TEXT("Gamepad View opens inventory through Enhanced Input")))return;
+  if(!Check(FocusedKey(EKeys::Gamepad_RightShoulder),TEXT("Gamepad shoulder handled by focused menu")))return;break;
+ case 22: case 23: case 24: case 25: case 26:
+  if(!Check(C&&C->Panel==Stage-20,TEXT("Gamepad shoulder cycles actual six pages")))return;
+  if(!Check(FocusedKey(EKeys::Gamepad_RightShoulder),TEXT("Gamepad next page")))return;break;
+ case 27:
+  if(!Check(C&&C->Panel==1,TEXT("Gamepad page cycle wraps to inventory")))return;
+  if(!Check(FocusedKey(EKeys::Gamepad_LeftShoulder),TEXT("Gamepad previous page")))return;break;
+ case 28:
+  if(!Check(C&&C->Panel==6,TEXT("Gamepad reverse page cycle wraps to system")))return;
+  if(!Check(FocusedKey(EKeys::Gamepad_FaceButton_Right),TEXT("Gamepad back closes system")))return;break;
+ case 29:
+  if(!Check(C&&!C->bPanel&&!PC->bShowMouseCursor,TEXT("Gamepad back restores game input")))return;
+  GameKey(EKeys::Gamepad_Special_Right);break;
+ case 30:
+  if(!Check(C&&C->Panel==6&&C->bPanel,TEXT("Gamepad Menu opens system through Enhanced Input")))return;
+  if(!Check(FocusedKey(EKeys::Gamepad_FaceButton_Right),TEXT("Gamepad Menu return")))return;break;
  default:
   {
    // 每一轮跨真实 Slate 帧开/关一次，验证 LocalPlayer 所有权和预览释放；没有新建测试 Widget。

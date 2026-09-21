@@ -254,6 +254,14 @@ bool UAetherCommandRuntime::SetBackendDomain(FGuid Realm)
     if(!IsInstalled()||!Realm.IsValid()||(!Impl->Bindings.IsEmpty()&&Impl->Realm!=Realm))return false;
     Impl->Realm=Realm;return true;
 }
+FAetherCommandRuntimeMetrics UAetherCommandRuntime::Inspect() const
+{
+    check(IsInGameThread());FAetherCommandRuntimeMetrics M;if(!Impl)return M;
+    M.Connections=Impl->Bindings.Num();M.PendingCommands=Impl->Coordinator?Impl->Coordinator->PendingCount():0;
+    M.PendingFacts=Impl->Facts?Impl->Facts->PendingCount():0;M.DeferredFacts=Impl->DeferredFacts.Num();
+    for(const auto& Pair:Impl->Bindings){const auto& B=*Pair.Value;M.ResourceReservations+=B.ResourceCommand.IsSet()?1:0;M.SnapshotBytes+=B.Outgoing.Num()+B.ContainerOutgoing.Num();}
+    return M;
+}
 bool UAetherCommandRuntime::IsInstalled() const{return Impl&&Impl->Coordinator&&!Impl->bShutdownRequested;}
 void UAetherCommandRuntime::SetContainerAuthorizer(TFunction<bool(AAetherPlayerController&,const FString&,bool)> Authorize)
 {if(Impl)Impl->AuthorizeContainer=MoveTemp(Authorize);}

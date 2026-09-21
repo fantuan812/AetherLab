@@ -38,7 +38,7 @@ THIRD_PARTY_INCLUDES_END
 namespace
 {
 const TCHAR* Revision=TEXT("ee0cf5d9035f639ed0787f390fb1ce05d6a4c463");
-FMatrix Basis(){return FMatrix(FPlane(0,1,0,0),FPlane(0,0,1,0),FPlane(1,0,0,0),FPlane(0,0,0,1));}
+FMatrix Basis(){return FMatrix(FPlane(0,-1,0,0),FPlane(0,0,1,0),FPlane(1,0,0,0),FPlane(0,0,0,1));}
 bool AuthoringAllowed(FString& Why)
 {
     if(GEditor&&GEditor->PlayWorld){Why=TEXT("请先停止 PIE，作者操作不能与游戏模型会话并发");return false;}
@@ -129,8 +129,12 @@ TSharedPtr<FJsonValue> Number(double V){return MakeShared<FJsonValueNumber>(V);}
 USkeletalMesh* UAetherMotionAuthoring::CreateSource(const FString& Json,FString& Why)
 {
     Why.Reset();FAetherMotionSkeleton S;if(!Skeleton(Load(Json,Why),S,Why))return nullptr;
-    auto* Mesh=Asset<USkeletalMesh>(TEXT("/Game/Animation/Motion/SK_G1MotionSource"),Why);if(!Mesh)return nullptr;
-    auto* Rig=Asset<USkeleton>(TEXT("/Game/Animation/Motion/SKEL_G1MotionSource"),Why);if(!Rig)return nullptr;
+    FAssetCompilingManager::Get().FinishAllCompilation();
+    auto* Mesh=LoadObject<USkeletalMesh>(nullptr,TEXT("/Game/Animation/Motion/SK_G1MotionSource.SK_G1MotionSource"));
+    if(!Mesh)Mesh=Asset<USkeletalMesh>(TEXT("/Game/Animation/Motion/SK_G1MotionSource"),Why);if(!Mesh)return nullptr;
+    auto* Rig=Mesh->GetSkeleton();if(!Rig)Rig=Asset<USkeleton>(TEXT("/Game/Animation/Motion/SKEL_G1MotionSource"),Why);if(!Rig)return nullptr;
+    const bool Update=Mesh->GetRefSkeleton().GetNum()!=0;
+    if(Update&&Mesh->GetRefSkeleton().GetNum()!=34){Why=TEXT("Existing managed source topology changed");return nullptr;}
     Mesh->SetSkeleton(Rig);
     FMeshDescription Description;FSkeletalMeshAttributes Attributes(Description);Attributes.Register();
     Attributes.GetVertexInstanceUVs().SetNumChannels(1);
@@ -143,7 +147,9 @@ USkeletalMesh* UAetherMotionAuthoring::CreateSource(const FString& Json,FString&
     {
         const FVector Global=Basis().TransformVector(FVector(S.NeutralMeters[I]))*100.;
         FVector Offset=Global;if(S.Parents[I]>=0)Offset-=Basis().TransformVector(FVector(S.NeutralMeters[S.Parents[I]]))*100.;
-        const FTransform Local(Offset);Ref.Add(FMeshBoneInfo(S.Names[I],S.Names[I].ToString(),S.Parents[I]),Local);
+        const FTransform Local(Offset);
+        if(Update){if(Mesh->GetRefSkeleton().GetBoneName(I)!=S.Names[I]){Why=TEXT("Managed source bone mismatch");return nullptr;}Ref.UpdateRefPoseTransform(I,Local);}
+        else Ref.Add(FMeshBoneInfo(S.Names[I],S.Names[I].ToString(),S.Parents[I]),Local);
         const FBoneID Bone=Attributes.CreateBone();Attributes.GetBoneNames()[Bone]=S.Names[I];Attributes.GetBoneParentIndices()[Bone]=S.Parents[I];Attributes.GetBonePoses()[Bone]=Local;
         // 每根骨骼都拥有真实蒙皮三角形，Cook/LOD 不会把无权重 source 链裁掉；网格在运行时隐藏。
         TArray<FVertexInstanceID> Corners;
@@ -161,11 +167,11 @@ USkeletalMesh* UAetherMotionAuthoring::CreateSource(const FString& Json,FString&
         Description.CreatePolygon(Group,Corners);
     }
     }
-    Mesh->GetMaterials().Add(FSkeletalMaterial(UMaterial::GetDefaultMaterial(MD_Surface),true,false,TEXT("Source")));
-    Mesh->GetImportedModel()->LODModels.Add(new FSkeletalMeshLODModel());
-    Mesh->AddLODInfo();Mesh->CreateMeshDescription(0,MoveTemp(Description));
+    Mesh->GetMaterials().Reset();Mesh->GetMaterials().Add(FSkeletalMaterial(UMaterial::GetDefaultMaterial(MD_Surface),true,false,TEXT("Source")));
+    if(Mesh->GetImportedModel()->LODModels.Num()==0)Mesh->GetImportedModel()->LODModels.Add(new FSkeletalMeshLODModel());
+    if(!Mesh->GetLODInfo(0))Mesh->AddLODInfo();Mesh->CreateMeshDescription(0,MoveTemp(Description));
     if(!Mesh->CommitMeshDescription(0)){Why=TEXT("源 LOD 提交失败");return nullptr;}
-    Mesh->SetImportedBounds(FBoxSphereBounds(Bounds));Rig->MergeAllBonesToBoneTree(Mesh);
+    Mesh->SetImportedBounds(FBoxSphereBounds(Bounds));Rig->MergeAllBonesToBoneTree(Mesh);Rig->UpdateReferencePoseFromMesh(Mesh);
     Mesh->CalculateInvRefMatrices();Mesh->Build();Mesh->PostEditChange();
     if(!Save(Rig,Why)||!Save(Mesh,Why))return nullptr;return Mesh;
 }
@@ -232,7 +238,9 @@ UAnimSequence* UAetherMotionAuthoring::ImportClip(const FString& Json,USkeletalM
     {
         C.Sample(F,Pose,Basis());
         // 编辑器烘焙保留完整根轨迹。运行时 Sample 单独抑制水平位移，避免移动权威重复施加。
-        Pose[0].SetTranslation(Basis().TransformVector(FVector(C.Roots[F*3],C.Roots[F*3+1],C.Roots[F*3+2]))*100.);
+        const FQuat Facing(FVector::UpVector,PI/2);
+        Pose[0].SetTranslation(Facing.RotateVector(Basis().TransformVector(FVector(C.Roots[F*3],C.Roots[F*3+1],C.Roots[F*3+2]))*100.));
+        Pose[0].SetRotation((Facing*Pose[0].GetRotation()).GetNormalized());
         for(int32 J=0;J<34;++J){Positions[J].Add(FVector3f(Pose[J].GetTranslation()));Rotations[J].Add(FQuat4f(Pose[J].GetRotation()));}
     }
     TArray<FVector3f> Scale;Scale.Init(FVector3f::OneVector,C.Frames);bool OK=true;
@@ -254,9 +262,14 @@ bool UAetherMotionAuthoring::ExportClip(UAnimSequence* Animation,USkeletalMesh* 
         const FFrameTime Time=Model->GetFrameRate().AsFrameTime(F/30.);
         for(int32 J=0;J<34;++J)
         {
-            const FTransform T=Model->IsValidBoneTrackName(S.Names[J])?Model->EvaluateBoneTrackTransform(S.Names[J],Time,EAnimInterpolationType::Linear):Source->GetRefSkeleton().GetRefBonePose()[J];
+            FTransform T=Model->IsValidBoneTrackName(S.Names[J])?Model->EvaluateBoneTrackTransform(S.Names[J],Time,EAnimInterpolationType::Linear):Source->GetRefSkeleton().GetRefBonePose()[J];
             if(T.ContainsNaN()||!T.GetScale3D().Equals(FVector::OneVector,.001)){Why=TEXT("风格包含无效变换或非单位缩放");return false;}
-            if(J==0){const FVector V=Inverse.TransformVector(T.GetTranslation()/100.);P={Number(V.X),Number(V.Y),Number(V.Z)};}
+            if(J==0){
+                // 与 ImportClip/GeneratedPose 对称地去掉人物网格的参考朝向。
+                const FQuat Unface(FVector::UpVector,-PI/2);
+                T.SetTranslation(Unface.RotateVector(T.GetTranslation()));
+                T.SetRotation((Unface*T.GetRotation()).GetNormalized());
+                const FVector V=Inverse.TransformVector(T.GetTranslation()/100.);P={Number(V.X),Number(V.Y),Number(V.Z)};}
             else if(!T.GetTranslation().Equals(Source->GetRefSkeleton().GetRefBonePose()[J].GetTranslation(),.05))
             {Why=FString::Printf(TEXT("G1 non-root translation: bone=%s frame=%d pose=%s bind=%s"),*S.Names[J].ToString(),F,*T.GetTranslation().ToString(),*Source->GetRefSkeleton().GetRefBonePose()[J].GetTranslation().ToString());return false;}
             const FQuat R=FQuat(B*FQuatRotationMatrix(T.GetRotation())*Inverse).GetNormalized();
@@ -343,7 +356,7 @@ UAnimSequence* UAetherMotionAuthoring::RetargetClip(UAnimSequence* Animation,USk
 
 bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkeletalMesh* G1,bool Reverse,FString& Why)
 {
- Why.Reset();if(!AuthoringAllowed(Why)||!Retargeter||!G1||G1->GetRefSkeleton().GetNum()!=34)return false;
+ Why.Reset();ON_SCOPE_EXIT{if(!Why.IsEmpty())UE_LOG(LogTemp,Error,TEXT("AETHER_RETARGET_CALIBRATION_FAIL %s"),*Why);};if(!AuthoringAllowed(Why)||!Retargeter||!G1||G1->GetRefSkeleton().GetNum()!=34)return false;
  const auto& Ref=G1->GetRefSkeleton();TArray<FTransform> Global;Global.SetNum(Ref.GetNum());double MinZ=0;
  for(int32 I=0;I<Ref.GetNum();++I)
  {
@@ -353,6 +366,52 @@ bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkelet
  const double Height=-MinZ;
  if(Height<40||Height>150){Why=TEXT("G1 reference leg height invalid");return false;}
  auto* Controller=UIKRetargeterController::GetController(Retargeter);
+ // 六关节 G1 腿不能整条插值到三关节人物腿：那会把膝弯曲分摊到髋 yaw/roll。
+ // 按髋、膝、踝分别映射，使两个方向都保留真正的解剖关节位置。
+ for(const auto RigSide:{ERetargetSourceOrTarget::Source,ERetargetSourceOrTarget::Target})
+ {
+  auto* Rig=Controller->GetIKRigWriteable(RigSide);if(!Rig){Why=TEXT("Missing retarget rig");return false;}
+  auto* RC=UIKRigController::GetController(Rig);
+  const bool Robot=RigSide==(Reverse?ERetargetSourceOrTarget::Target:ERetargetSourceOrTarget::Source);
+  for(const TCHAR* SideName:{TEXT("Left"),TEXT("Right")})
+  {
+   const bool Left=FString(SideName)==TEXT("Left");const FString Prefix=Left?TEXT("left"):TEXT("right"),Suffix=Left?TEXT("l"):TEXT("r");
+   const FName HipChain(*(FString(SideName)+TEXT("Leg")));
+   RC->SetRetargetChainStartBone(HipChain,FName(*(Robot?Prefix+TEXT("_hip_pitch_skel"):TEXT("thigh_")+Suffix)));
+   RC->SetRetargetChainEndBone(HipChain,FName(*(Robot?Prefix+TEXT("_hip_yaw_skel"):TEXT("thigh_")+Suffix)));
+   for(const bool Knee:{true,false})
+   {
+    const FName Chain(*(FString(SideName)+(Knee?TEXT("Knee"):TEXT("Ankle"))));
+    const FName Start(*(Robot?Prefix+(Knee?TEXT("_knee_skel"):TEXT("_ankle_pitch_skel")):(Knee?TEXT("calf_"):TEXT("foot_"))+Suffix));
+    const FName End(*(Robot&&!Knee?Prefix+TEXT("_ankle_roll_skel"):Start.ToString()));
+    if(!RC->GetRetargetChains().ContainsByPredicate([&](const FBoneChain& C){return C.ChainName==Chain;}))RC->AddRetargetChain(Chain,Start,End,NAME_None);
+    else {RC->SetRetargetChainStartBone(Chain,Start);RC->SetRetargetChainEndBone(Chain,End);}
+   }
+  }
+  Controller->SetIKRig(RigSide,Rig);
+  if(!Save(Rig,Why))return false;
+ }
+ Controller->SetIKRig(ERetargetSourceOrTarget::Source,Controller->GetIKRigWriteable(ERetargetSourceOrTarget::Source));
+ for(const TCHAR* Name:{TEXT("LeftLeg"),TEXT("RightLeg"),TEXT("LeftKnee"),TEXT("RightKnee"),TEXT("LeftAnkle"),TEXT("RightAnkle")})
+  if(!Controller->SetSourceChain(Name,Name)){Why=TEXT("Cannot map anatomical leg chain");return false;}
+ // 锁定模型的 +X 位于左髋，必须镜像到 UE 角色的 -Y；
+ // 参考人物网格朝 +Y，而 G1 源朝 +X。校准参考朝向后再对齐关节，不能把90度偏差烘进膝轴。
+ const auto RobotSide=Reverse?ERetargetSourceOrTarget::Target:ERetargetSourceOrTarget::Source;
+ for(const auto SideToReset:{ERetargetSourceOrTarget::Source,ERetargetSourceOrTarget::Target})
+  Controller->ResetRetargetPose(Controller->GetCurrentRetargetPoseName(SideToReset),{},SideToReset);
+ Controller->SetRotationOffsetForRetargetPoseBone(TEXT("pelvis_skel"),FQuat(FVector::UpVector,PI/2),RobotSide);
+ Controller->SetRootOffsetInRetargetPose(FVector(0,0,Height),RobotSide);
+ // AutoAlignAllBones 会先清空整份 pose，并再次修改 pelvis，不能在这里使用。
+ // 仅对已映射的非骨盆链逐骨对齐，保持明确校准的前向与身高。
+ auto* TargetRig=Controller->GetIKRigWriteable(ERetargetSourceOrTarget::Target);
+ const auto& TargetRef=TargetRig->GetPreviewMesh()->GetRefSkeleton();TArray<FName> AlignBones;
+ for(const auto& Chain:UIKRigController::GetController(TargetRig)->GetRetargetChains())
+ {
+  const int32 Start=TargetRef.FindBoneIndex(Chain.StartBone.BoneName);
+  for(int32 Bone=TargetRef.FindBoneIndex(Chain.EndBone.BoneName);Bone!=INDEX_NONE;Bone=TargetRef.GetParentIndex(Bone))
+  {const FName Name=TargetRef.GetBoneName(Bone);if(Name!=TEXT("pelvis")&&Name!=TEXT("pelvis_skel")&&Name!=TEXT("root"))AlignBones.AddUnique(Name);if(Bone==Start)break;}
+ }
+ Controller->AutoAlignBones(AlignBones,ERetargetAutoAlignMethod::ChainToChain,ERetargetSourceOrTarget::Target);
  // 模型中立坐标原点在骨盆，UE pelvis op 却按离地高度求体型比例。
  // 只校准 retarget pose 到足底地面，不改锁定的 34 骨模型或推理结果单位。
  const auto Side=Reverse?ERetargetSourceOrTarget::Target:ERetargetSourceOrTarget::Source;
