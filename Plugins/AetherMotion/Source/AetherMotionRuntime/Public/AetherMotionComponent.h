@@ -22,7 +22,7 @@ public:
     float GeneratedWeight() const{return Weight;}
     USkeletalMeshComponent* GetSourceMesh() const{return SourceMesh;}
     UIKRetargeter* GetRetargeter() const;
-    const FString& Status() const{return Message;}
+    FString Status() const;
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     virtual void TickComponent(float DeltaTime,ELevelTick TickType,FActorComponentTickFunction* Function) override;
@@ -36,7 +36,9 @@ private:
     FAetherMotionClipPtr Clip;
     FVector LastPosition=FVector::ZeroVector,LastVelocity=FVector::ZeroVector,LastFacing=FVector::ForwardVector;
     FName DesiredStyle=TEXT("Idle");
-    bool bAllowed=false,bWasAllowed=false;
+    bool bAllowed=false,bWasAllowed=false,bTransitionRequested=false;
+    uint64 AssetGeneration=0;
+    FName BodyProfile;
     uint64 Agent=0,AcceptedSequence=0;
     double Frame=3,NextPlan=0;
     float Weight=0;

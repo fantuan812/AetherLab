@@ -81,9 +81,32 @@ uint32 FMotionBricksScheduler::Run()
             if(Device!=EAetherMotionBackend::Traditional)
             {
                 Model=MakeUnique<FMotionBricksModelOwner>(Api);
-                if(!Model->Initialize(Device,Count,Failure))Model.Reset();
+                EAetherMotionBackend Actual=Device;
+                if(Device==EAetherMotionBackend::Automatic)
+                {
+                    if(Api.Load(Failure))Actual=Api.StagedBackend==TEXT("Vulkan")?EAetherMotionBackend::Vulkan:EAetherMotionBackend::CPU;
+                    else Actual=EAetherMotionBackend::Traditional;
+                }
+                if(Actual==EAetherMotionBackend::Traditional||!Model->Initialize(Actual,Count,Failure))
+                {
+                    Model.Reset();
+                    if(Device==EAetherMotionBackend::Automatic&&Actual==EAetherMotionBackend::Vulkan)
+                    {
+                        const FString VulkanFailure=Failure;
+                        Model=MakeUnique<FMotionBricksModelOwner>(Api);Actual=EAetherMotionBackend::CPU;
+                        if(!Model->Initialize(Actual,Count,Failure))Model.Reset();
+                        else Failure=TEXT("Vulkan 不可用，回退 CPU：")+VulkanFailure;
+                    }
+                }
+                if(Model)
+                {
+                    FScopeLock Lock(&Mutex);
+                    if(Configuration==Version)State=FString::Printf(TEXT("请求 %s · 实际 %s%s"),
+                        Device==EAetherMotionBackend::Automatic?TEXT("自动"):Device==EAetherMotionBackend::CPU?TEXT("CPU"):TEXT("Vulkan"),
+                        Actual==EAetherMotionBackend::CPU?TEXT("CPU"):TEXT("Vulkan"),Failure.IsEmpty()?TEXT(""):*FString(TEXT(" · ")+Failure));
+                }
             }
-            FScopeLock Lock(&Mutex);if(Configuration==Version)State=Model?TEXT("生成动作就绪"):Failure.IsEmpty()?TEXT("传统动画"):Failure;
+            FScopeLock Lock(&Mutex);if(Configuration==Version&&!Model)State=Failure.IsEmpty()?TEXT("传统动画"):TEXT("传统动画 · ")+Failure;
         }
         if(!HasWork){Wake->Wait(1000);continue;}
         FAetherMotionResult Result;Result.AgentId=Work.AgentId;Result.Stamp=Work.Stamp;

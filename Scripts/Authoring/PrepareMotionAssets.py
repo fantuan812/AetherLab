@@ -1,5 +1,6 @@
 """UE 编辑器内动作资源制作。输入由 MotionAuthor.py 生成，不使用开发者绝对路径。"""
 import pathlib
+import json
 import unreal as ue
 
 ROOT = pathlib.Path(ue.Paths.project_dir()).resolve()
@@ -22,6 +23,9 @@ def main():
         if not source:
             raise RuntimeError(reason)
     resources = [source, source.get_editor_property("skeleton")]
+    skeleton_data = json.loads(skeleton.read_text(encoding="utf-8-sig"))
+    profiles = []
+    boundaries = {}
     for body in ["Manny", "Quinn"]:
         target = require("/Game/Characters/Mannequins/Meshes/SKM_" + body + "_Simple")
         profile_path = OUTPUT + "/DA_Motion" + body
@@ -29,6 +33,7 @@ def main():
             ok, reason = ue.AetherMotionAuthoring.create_retarget_assets(source, target, body)
             if not ok:
                 raise RuntimeError(reason)
+        profiles.append(require(profile_path))
         for path in [profile_path, OUTPUT + "/RTG_G1_" + body, OUTPUT + "/RTG_" + body + "_G1", OUTPUT + "/IK_" + body]:
             resources.append(require(path))
     resources.append(require(OUTPUT + "/IK_G1"))
@@ -40,6 +45,33 @@ def main():
             if not animation:
                 raise RuntimeError(reason)
         resources.append(animation)
+        data = json.loads(clip.read_text(encoding="utf-8-sig"))
+        style_names = {"idle": "Idle", "walk": "Walk", "injured": "Injured", "injured_walk": "Injured",
+                       "combat": "Combat", "walk_boxing": "Combat", "strafeleft": "StrafeLeft", "walk_left": "StrafeLeft",
+                       "straferight": "StrafeRight", "walk_right": "StrafeRight"}
+        style = style_names.get(clip.stem.lower())
+        if style:
+            if data.get("skeletonSha256") != skeleton_data["skeletonSha256"] or len(data["roots"]) < 4:
+                raise RuntimeError("边界骨架/帧数无效：" + str(clip))
+            name = "DA_Boundary_" + style
+            asset = LIBRARY.load_asset(OUTPUT + "/" + name)
+            if not asset:
+                factory = ue.DataAssetFactory()
+                factory.set_editor_property("data_asset_class", ue.AetherMotionBoundaryAsset)
+                asset = ue.AssetToolsHelpers.get_asset_tools().create_asset(name, OUTPUT, ue.AetherMotionBoundaryAsset, factory)
+            asset.set_editor_property("skeleton_sha256", data["skeletonSha256"])
+            asset.set_editor_property("native_revision", data["nativeRevision"])
+            asset.set_editor_property("roots", [v for frame in data["roots"][-4:] for v in frame])
+            asset.set_editor_property("rotations", [v for frame in data["rotations"][-4:] for v in frame])
+            if not LIBRARY.save_loaded_asset(asset):
+                raise RuntimeError("边界资产保存失败")
+            boundaries[style] = asset
+            resources.append(asset)
+    for profile in profiles:
+        profile.set_editor_property("skeleton_sha256", skeleton_data["skeletonSha256"])
+        profile.set_editor_property("transition_boundaries", boundaries)
+        if not LIBRARY.save_loaded_asset(profile):
+            raise RuntimeError("动作配置保存失败")
     path = OUTPUT + "/DA_MotionCook"
     label = LIBRARY.load_asset(path)
     if not label:

@@ -1,3 +1,7 @@
+#include "Misc/PackageName.h"
+THIRD_PARTY_INCLUDES_START
+#include <openssl/sha.h>
+THIRD_PARTY_INCLUDES_END
 #include "AetherMotionAuthoring.h"
 #include "AetherMotionProfile.h"
 #include "AetherMotionTypes.h"
@@ -243,6 +247,14 @@ bool UAetherMotionAuthoring::ExportClip(UAnimSequence* Animation,USkeletalMesh* 
         }
         Roots.Add(MakeShared<FJsonValueArray>(P));Rotations.Add(MakeShared<FJsonValueArray>(Q));
     }
+    // 风格来源必须对应已经落盘的资源字节，不能对未保存动画记录旧文件摘要。
+    if(Animation->GetOutermost()->IsDirty()){Why=TEXT("导出前请先保存源动画");return false;}
+    FString SourceFile;
+    if(!FPackageName::DoesPackageExist(Animation->GetOutermost()->GetName(),&SourceFile)){Why=TEXT("源动画包尚未保存");return false;}
+    TArray<uint8> SourceBytes;
+    if(!FFileHelper::LoadFileToArray(SourceBytes,*SourceFile)){Why=TEXT("无法读取源动画包");return false;}
+    uint8 Digest[SHA256_DIGEST_LENGTH];SHA256(SourceBytes.GetData(),SourceBytes.Num(),Digest);
+    O->SetStringField(TEXT("sourceFileSha256"),BytesToHex(Digest,SHA256_DIGEST_LENGTH).ToLower());
     O->SetArrayField(TEXT("roots"),Roots);O->SetArrayField(TEXT("rotations"),Rotations);O->SetStringField(TEXT("sourceAsset"),Animation->GetPathName());
     FString Text;FJsonSerializer::Serialize(O.ToSharedRef(),TJsonWriterFactory<>::Create(&Text));
     if(!FFileHelper::SaveStringToFile(Text,*Output,FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM)){Why=TEXT("姿态文件写入失败");return false;}return true;

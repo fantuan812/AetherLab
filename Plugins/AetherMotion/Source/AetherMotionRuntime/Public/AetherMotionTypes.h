@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 
-enum class EAetherMotionBackend:uint8 {Traditional,CPU,Vulkan};
+enum class EAetherMotionBackend:uint8 {Traditional,CPU,Vulkan,Automatic};
 struct FAetherMotionStamp
 {
     FGuid WorldEpoch,PawnEpoch,ActionInstance;

@@ -11,5 +11,7 @@ bool UAetherMotionProfile::Validate(FString& Why) const
     {Why=TEXT("动作配置/正交基无效");return false;}
     for(const auto& P:Styles)
     {if(P.Key.IsNone()||P.Value.IsEmpty()||P.Value.Len()>64){Why=TEXT("无效动作风格");return false;}for(TCHAR C:P.Value)if(!FChar::IsAlnum(C)&&C!='_'){Why=TEXT("无效风格路径");return false;}}
+    if(TransitionBoundaries.Num()>32||(!TransitionBoundaries.IsEmpty()&&SkeletonSha256.Len()!=64)){Why=TEXT("无效动作边界清单");return false;}
+    for(const auto& Pair:TransitionBoundaries)if(!Styles.Contains(Pair.Key)||Pair.Value.IsNull()){Why=TEXT("动作边界未绑定对应风格");return false;}
     Why.Reset();return true;
 }

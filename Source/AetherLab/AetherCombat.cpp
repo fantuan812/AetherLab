@@ -631,7 +631,13 @@ void AAetherCharacter::Tick(float Dt)
     if(Motion&&GetNetMode()!=NM_DedicatedServer)
     {
         const bool Controlled=AllowsGeneratedMotion();
-        const FName Style=bIsCrouched?FName("Crouch"):GetVelocity().Size2D()<5?FName("Idle"):Health()<MaxHealth*.3f?FName("Injured"):FName("Walk");
+        FName Style=bIsCrouched?FName("Crouch"):GetVelocity().Size2D()<5?FName("Idle"):Health()<MaxHealth*.3f?FName("Injured"):FName("Walk");
+        if(!bIsCrouched&&Health()>=MaxHealth*.3f&&GetVelocity().Size2D()>=5)
+            if(const auto* Player=Cast<AAetherFrontierCharacter>(this);Player&&Player->LockedTarget)
+            {
+                const float Side=FVector::DotProduct(GetVelocity().GetSafeNormal(),GetActorRightVector());
+                Style=Side<-.35?FName("StrafeLeft"):Side>.35?FName("StrafeRight"):FName("Combat");
+            }
         Motion->SetIntent(Controlled,Style,FGuid(0,0,uint32(Fighter),Equipment->Attack.Serial));
     }
     UpdateAnimation();
@@ -790,6 +796,6 @@ FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
 bool AAetherCharacter::AllowsGeneratedMotion() const
 {
     const float T=CombatTime();
-    return Alive()&&T>=StunUntil&&T>=CastLockUntil&&!Equipment->IsBusy()&&!bBlocking&&
+    return Alive()&&T>=StunUntil&&T>=CastLockUntil&&T>=ActionUntil&&!Equipment->IsBusy()&&!bBlocking&&!AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag())&&
            !GetCharacterMovement()->IsFalling()&&!ResourceGate->IsBlocked();
 }

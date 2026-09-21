@@ -114,3 +114,7 @@
 ## 被动与临时授权源码工作单元
 
 新增四系护佑被动、持续属性重建、旅舍限时授权与到期/换生命撤销、状态详情及按队伍招募上限。详见 ../Architecture/V10-passive-temporary-skills.zh-CN.md。未编译、未测试。
+
+## 动作后端与过渡源码工作单元
+
+新增自动制品后端选择/明确诊断、Manny/Quinn 异步切换、战斗侧移风格、四帧真实过渡接线与源动画 SHA256。详见 ../Architecture/V10-motion-selection-transition.zh-CN.md。未编译、未测试；资产和硬件质量仍未验收。

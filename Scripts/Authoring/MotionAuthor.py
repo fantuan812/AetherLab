@@ -230,7 +230,7 @@ def make_style(source, output, name, speed, duration_count, native):
     finally:
         native.free("style",loaded)
     temp.replace(path)
-    atomic_json(path.with_suffix(".source.json"),dict(schema=1,sourceAsset=data.get("sourceAsset"),sourceSha256=source_hash,
+    atomic_json(path.with_suffix(".source.json"),dict(schema=1,sourceAsset=data.get("sourceAsset"),sourceSha256=source_hash,sourceFileSha256=data.get("sourceFileSha256"),
                 skeleton=skeleton,styleSha256=digest(path),frames=frames,fps=30,qualityApproved=False))
 
 def main():

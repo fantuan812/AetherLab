@@ -1,5 +1,6 @@
 #include "AetherMotionComponent.h"
 #include "AetherMotionProfile.h"
+#include "AetherMotionBoundaryAsset.h"
 #include "AetherMotionWorld.h"
 #include "AetherMotionSourceAnimInstance.h"
 #include "MotionBricksScheduler.h"
@@ -11,7 +12,7 @@
 #include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
 #include "Retargeter/IKRetargeter.h"
-static TAutoConsoleVariable<int32> CVarAetherMotionBackend(TEXT("aether.Motion.Backend"),0,TEXT("0 traditional, 1 CPU, 2 Vulkan. Explicit validated profile selection."),ECVF_Default);
+static TAutoConsoleVariable<int32> CVarAetherMotionBackend(TEXT("aether.Motion.Backend"),-1,TEXT("-1 automatic staged backend, 0 traditional, 1 CPU, 2 Vulkan. Quality acceptance is reported separately."),ECVF_Default);
 UAetherMotionComponent::UAetherMotionComponent()
 {
     PrimaryComponentTick.bCanEverTick=true;PrimaryComponentTick.TickGroup=TG_PostPhysics;
@@ -26,13 +27,15 @@ void UAetherMotionComponent::BeginPlay()
 void UAetherMotionComponent::LoadAssets()
 {
     if(ProfileAsset.IsNull())return;const TWeakObjectPtr<UAetherMotionComponent> Self=this;
-    Loading=UAssetManager::GetStreamableManager().RequestAsyncLoad(ProfileAsset.ToSoftObjectPath(),[Self]()
+    const uint64 Generation=++AssetGeneration;
+    Loading=UAssetManager::GetStreamableManager().RequestAsyncLoad(ProfileAsset.ToSoftObjectPath(),[Self,Generation]()
     {
-        if(!Self.IsValid()||!Self->Agent)return;
+        if(!Self.IsValid()||!Self->Agent||Self->AssetGeneration!=Generation)return;
         Self->Profile=Self->ProfileAsset.Get();FString Why;
         if(!Self->Profile||!Self->Profile->Validate(Why)){Self->Message=Why.IsEmpty()?TEXT("动作配置资产缺失"):Why;return;}
         TArray<FSoftObjectPath> Paths={Self->Profile->SourceMesh.ToSoftObjectPath(),Self->Profile->Retargeter.ToSoftObjectPath()};
-        Self->Loading=UAssetManager::GetStreamableManager().RequestAsyncLoad(Paths,[Self](){if(Self.IsValid()&&Self->Agent)Self->AssetsReady();});
+        for(const auto& Pair:Self->Profile->TransitionBoundaries)Paths.Add(Pair.Value.ToSoftObjectPath());
+        Self->Loading=UAssetManager::GetStreamableManager().RequestAsyncLoad(Paths,[Self,Generation](){if(Self.IsValid()&&Self->Agent&&Self->AssetGeneration==Generation)Self->AssetsReady();});
     });
 }
 void UAetherMotionComponent::AssetsReady()
@@ -52,7 +55,7 @@ void UAetherMotionComponent::AssetsReady()
 void UAetherMotionComponent::SetIntent(bool Allowed,FName Style,FGuid Action)
 {
     if(bAllowed!=Allowed||DesiredStyle!=Style||Stamp.ActionInstance!=Action)
-    {bAllowed=Allowed;DesiredStyle=Style;Stamp.ActionInstance=Action;++Stamp.MovementRevision;StableResults=0;NextPlan=0;}
+    {bTransitionRequested=bAllowed&&Allowed&&DesiredStyle!=Style;bAllowed=Allowed;DesiredStyle=Style;Stamp.ActionInstance=Action;++Stamp.MovementRevision;StableResults=0;NextPlan=0;}
 }
 void UAetherMotionComponent::InvalidateMotion()
 {
@@ -62,10 +65,24 @@ FMatrix UAetherMotionComponent::PoseBasis() const{return Profile?Profile->Basis(
 UIKRetargeter* UAetherMotionComponent::GetRetargeter() const{return Profile?Profile->Retargeter.Get():nullptr;}
 void UAetherMotionComponent::TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Function)
 {
-    Super::TickComponent(Dt,Type,Function);if(!Agent||!Profile||!SourceMesh)return;
+    Super::TickComponent(Dt,Type,Function);if(!Agent)return;
     auto* C=Cast<ACharacter>(GetOwner());if(!C)return;
-    const int32 Backend=FMath::Clamp(CVarAetherMotionBackend.GetValueOnGameThread(),0,2);
+    if(const auto* Mesh=C->GetMesh()->GetSkeletalMeshAsset())
+    {
+        const FName Body=Mesh->GetName().Contains(TEXT("Quinn"))?FName(TEXT("Quinn")):FName(TEXT("Manny"));
+        if(BodyProfile!=Body)
+        {
+            BodyProfile=Body;InvalidateMotion();if(Loading)Loading->CancelHandle();
+            if(SourceMesh){SourceMesh->DestroyComponent();SourceMesh=nullptr;}Profile=nullptr;
+            const FString Name=TEXT("DA_Motion")+Body.ToString();
+            ProfileAsset=TSoftObjectPtr<UAetherMotionProfile>(FSoftObjectPath(TEXT("/Game/Animation/Motion/")+Name+TEXT(".")+Name));LoadAssets();
+        }
+    }
+    if(!Profile||!SourceMesh)return;
+    const int32 Requested=CVarAetherMotionBackend.GetValueOnGameThread();
+    const int32 Backend=Requested<0?int32(EAetherMotionBackend::Automatic):FMath::Clamp(Requested,0,2);
     if(Backend!=LastBackend){LastBackend=Backend;InvalidateMotion();AetherMotionScheduler().Configure(EAetherMotionBackend(Backend),Profile->NativeThreads);}
+    if(Backend==0)Message=TEXT("使用传统动作");
     const FVector Position=C->GetActorLocation(),Velocity=C->GetVelocity(),Facing=C->GetActorForwardVector();
     if(FVector::DistSquared(Position,LastPosition)>FMath::Square(250.))InvalidateMotion();
     LastPosition=Position;
@@ -86,7 +103,7 @@ void UAetherMotionComponent::TickComponent(float Dt,ELevelTick Type,FActorCompon
         {
             const double Age=Result.Clip?FMath::Max(0.,Now-Result.Clip->SimulationTime):0;
             if(Result.Clip&&Age<=Profile->MaxResultAge&&3+Age*30<Result.Clip->Frames-1)
-            {Clip=Result.Clip;Frame=3+Age*30;AcceptedSequence=Result.Stamp.RequestSequence;++StableResults;Message=TEXT("生成动作");}
+            {Clip=Result.Clip;Frame=3+Age*30;AcceptedSequence=Result.Stamp.RequestSequence;++StableResults;bTransitionRequested=false;Message=TEXT("生成动作");}
             else {StableResults=0;Message=Result.Reason.IsEmpty()?TEXT("生成结果超时，使用传统动作"):Result.Reason;NextPlan=Now+1;}
         }
     }
@@ -108,6 +125,31 @@ void UAetherMotionComponent::TickComponent(float Dt,ELevelTick Type,FActorCompon
             const FVector Anchor=Inverse.TransformVector(Position/100.);
             if(I.Context.IsValid()){const float DX=Anchor.X-I.Context.Roots[9],DZ=Anchor.Z-I.Context.Roots[11];for(int32 F=0;F<4;++F){I.Context.Roots[F*3]+=DX;I.Context.Roots[F*3+2]+=DZ;}}
         }
+        if(bTransitionRequested&&I.Context.IsValid())
+        {
+            if(const auto* Asset=Profile->TransitionBoundaries.Find(DesiredStyle);Asset&&Asset->Get())
+            {
+                FAetherMotionBoundary Target;
+                if(Asset->Get()->Read(Profile->SkeletonSha256,Target))
+                {
+                    const FVector Anchor=Inverse.TransformVector(Position/100.);
+                    const FVector3f Last(Target.Roots[9],0,Target.Roots[11]);
+                    const FQuat4f Original(Target.Rotations[408],Target.Rotations[409],Target.Rotations[410],Target.Rotations[411]);
+                    const FVector3f Forward=Original.RotateVector(FVector3f(0,0,1));
+                    const float Yaw=FMath::Atan2(I.Facing.X,I.Facing.Z)-FMath::Atan2(Forward.X,Forward.Z);
+                    const FQuat4f Turn(FVector3f(0,1,0),Yaw);
+                    for(int32 F=0;F<4;++F)
+                    {
+                        const FVector3f Local=Turn.RotateVector(FVector3f(Target.Roots[F*3],0,Target.Roots[F*3+2])-Last);
+                        Target.Roots[F*3]=Local.X+Anchor.X+I.Movement.X*I.SpeedMeters*.8f;
+                        Target.Roots[F*3+2]=Local.Z+Anchor.Z+I.Movement.Z*I.SpeedMeters*.8f;
+                        const int32 Q=F*136;FQuat4f Rotation=Turn*FQuat4f(Target.Rotations[Q],Target.Rotations[Q+1],Target.Rotations[Q+2],Target.Rotations[Q+3]);Rotation.Normalize();
+                        Target.Rotations[Q]=Rotation.X;Target.Rotations[Q+1]=Rotation.Y;Target.Rotations[Q+2]=Rotation.Z;Target.Rotations[Q+3]=Rotation.W;
+                    }
+                    I.TransitionTarget=MoveTemp(Target);
+                }
+            }
+        }
         if(AetherMotionScheduler().Submit(MoveTemp(I)))NextPlan=Now+.1;else Message=AetherMotionScheduler().Diagnostic();
     }
 }
@@ -118,3 +160,6 @@ void UAetherMotionComponent::EndPlay(const EEndPlayReason::Type Why)
     Stamp.PawnEpoch.Invalidate();Clip.Reset();if(SourceMesh){SourceMesh->DestroyComponent();SourceMesh=nullptr;}
     Super::EndPlay(Why);
 }
+
+FString UAetherMotionComponent::Status() const
+{return AetherMotionScheduler().Diagnostic()+TEXT(" · ")+Message;}

@@ -2,6 +2,7 @@
 #include "Engine/DataAsset.h"
 #include "AetherMotionProfile.generated.h"
 class USkeletalMesh;
+class UAetherMotionBoundaryAsset;
 class UIKRetargeter;
 UCLASS(BlueprintType)
 class AETHERMOTIONRUNTIME_API UAetherMotionProfile : public UDataAsset
@@ -12,6 +13,8 @@ public:
     UPROPERTY(EditAnywhere) TSoftObjectPtr<USkeletalMesh> SourceMesh;
     UPROPERTY(EditAnywhere) TSoftObjectPtr<UIKRetargeter> Retargeter;
     UPROPERTY(EditAnywhere) TMap<FName,FString> Styles;
+    UPROPERTY(EditAnywhere) FString SkeletonSha256;
+    UPROPERTY(EditAnywhere) TMap<FName,TSoftObjectPtr<UAetherMotionBoundaryAsset>> TransitionBoundaries;
     // 行向量约定：源 X 右、Y 上、Z 前 -> UE X 前、Y 右、Z 上，作者工具检查正交/往返。
     UPROPERTY(EditAnywhere) FVector SourceX=FVector(0,1,0);
     UPROPERTY(EditAnywhere) FVector SourceY=FVector(0,0,1);
