@@ -188,13 +188,27 @@ def make_style(source, output, name, speed, duration_count, native):
         else:
             rotations[:,j] = rotations[:,p] @ local[:,j]
             positions[:,j] = positions[:,p] + np.einsum("fij,j->fi",rotations[:,p],neutral[j]-neutral[p])
+    # 上游风格以地面上的根轨迹为平移原点：Y-up 高度属于关节，根轨迹 Y 必须为零。
+    # agent.cpp 重建骨盆时将 ground_roots 与 joint[0] 相加。减掉完整骨盆会丢失
+    # 模型需要的绝对离地高度；完全不减则重复水平位移和骨盆高度，均会导致推理发散。
+    ground_roots = roots.copy()
+    ground_roots[:, 1] = 0
+    positions -= ground_roots[:, None, :]
+    if (np.max(np.abs(positions[:, 0, [0, 2]])) > 1e-5
+            or not np.allclose(positions[:, 0] + ground_roots, roots, atol=1e-5)):
+        raise ValueError("风格必须保留关节离地高度，并只分离水平根轨迹")
+    # 上游 G1 dummy scheme 的四个虚拟末端没有物理旋转自由度，其条件矩阵恒为世界单位矩阵。
+    # 保留 FK 求出的末端位置，只替换条件旋转；把人形 toe 的旋转送入会放大近零方差特征。
+    for endpoint in ("left_toe_base", "right_toe_base", "left_hand_roll_skel", "right_hand_roll_skel"):
+        index = next(i for i, joint in enumerate(skeleton["joints"]) if joint["name"] == endpoint)
+        rotations[:, index] = np.eye(3, dtype=np.float32)
     heading = np.unwrap(np.arctan2(rotations[:,0,0,2], rotations[:,0,2,2])).astype(np.float32)
     allowed = np.zeros(11, np.int32)
     if not 1 <= duration_count <= 11 or not math.isfinite(speed) or speed < 0 or not name.replace("_","").isalnum():
         raise ValueError("风格元数据无效")
     allowed[:duration_count] = 1
     values = [("global_joint_positions", positions), ("global_joint_rotations", rotations.reshape(frames,34,9)),
-              ("global_root_positions", roots), ("global_headings", heading), ("allowed_tokens", allowed)]
+              ("global_root_positions", ground_roots), ("global_headings", heading), ("allowed_tokens", allowed)]
     source_hash = digest(source)
     # GGUF v3，固定 F32/I32 和 32 字节对齐；所有张量布局与锁定 loader 一致。
     def string(value):
