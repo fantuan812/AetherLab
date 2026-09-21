@@ -51,3 +51,14 @@ Vulkan 前两次包含冷启动/管线建立影响；不能排除这些数值后
 - Win64 Shipping 客户端 UBT 构建成功（V10-shipping-client-build2.log）。之后新增仅开发探针与统计接口已通过 Editor 构建，后续包构建需要包含这些最新代码。
 
 原生生命周期脚本 TestNativeSoak.ps1 默认3600秒，隔离新档，分三阶段运行传统/CPU/Vulkan、50次Pawn替换、50次跨区安全传送和至少100次菜单开关。它记录实际帧百分位和进程内存/对象/native计数，不代替完整主线、显存、纯净机器、Shipping或平台矩阵；目前未宣称运行通过。
+
+## Shipping 客户端与生命周期短验
+
+- 最新 Editor 构建成功；Win64 Shipping 全量 Cook、IoStore、Stage 与归档成功。首次 Zen Stage 连接失败保留在 package2 日志；使用引擎官方 -SkipZenStore 文件式 Cook 后成功，不修改受保护配置。
+- 归档目录 Saved/Release/V10Candidate/Client/Windows。原生 stage.json 各文件逐一 SHA256 通过；真实运行观察到的 motionbricks/GGML DLL 路径均来自此包。
+- Shipping Traditional：V10Package_d6453940440a41aeae45206d2d27eeff；CPU：V10Package_aad995d103454a9d968992837d41d449；Vulkan：V10Package_eaec415c81f44595b085bbfa00ff559c。三项均打开六页正式菜单、保存实际截图并验证关闭后输入/预览释放。CPU 首次脚本因进程模块缓存误判失败；实际报告有28次调用，修正采样后重新运行通过。
+- 以上包 EXE SHA256：6757272318ee27032cffa05ccc9393b9418bc201fa43833feb24086c551bb898。构建基于6e83463加本工作单元的发布诊断/打包修改；旧报告的sourceCommit只记录基提交，此处明确记录工作树边界。之后脚本额外记录启动时未提交源文件列表。
+- 10分钟短验 V10Soak_242b23909d18：600.02秒、50次Pawn替换、50次跨区安全传送、497次菜单开关；传统/CPU/Vulkan分别采样9695/9679/9695帧。P50约16.667ms，P95约29.706/29.769/29.776ms。此次与构建有重叠，不宣称正式60FPS性能达标。内存随后端切换变化，预览RenderTarget对象数随GC回落；资源平台需完整时长复核。
+- Shipping诊断只读进度、通过正式菜单服务开页，必须指定独立UserDir及合成存档前缀；没有调试授予、战斗作弊或存储旁路。它验证包内可达资源，不代替真实输入、完整主线和纯净机器验证。
+
+Shipping Server仍被安装版UE拒绝；Linux服务器工具链/构建亦未完成。完整主线、双人物动作质量、GPU显存及全部性能预算尚未验收。

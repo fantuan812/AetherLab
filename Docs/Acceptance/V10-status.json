@@ -132,14 +132,14 @@
       "id": "V10-19",
       "status": "implemented_under_validation",
       "implementation": "原生恢复、流送屏障、Pawn重绑与会话撤销已接入",
-      "verified": "Dedicated/Listen 各正常/弱网四人、晚加入/重连/重启通过；菜单换Pawn通过",
+      "verified": "Dedicated/Listen 各正常/弱网四人、晚加入/重连/重启通过；菜单换Pawn通过；10分钟50次Pawn替换、50次跨区、497次菜单开关完成，正式时长未验收",
       "remainingAcceptance": "50次重生/分区及60分钟混合测试"
     },
     {
       "id": "V10-20",
       "status": "implemented_under_validation",
       "implementation": "构建、作者、打包、证据收集脚本已交付",
-      "verified": "Editor与Win64 Shipping客户端编译通过、内容校验通过；包及长时未验收",
+      "verified": "Editor、Win64 Shipping编译/Cook/IoStore/Stage/归档成功；传统/CPU/Vulkan包内真实启动、六菜单截图、透明预览与依赖哈希/加载路径检查通过",
       "remainingAcceptance": "安装版UE拒绝Server Target；Shipping、Linux Server、性能和完整发布验收未完成"
     }
   ],

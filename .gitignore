@@ -16,3 +16,6 @@ optix7cache.db*
 
 .idea/
 *.pid
+
+# Cook 生成的访问顺序日志，不是发布源资源。
+Build/**/FileOpenOrder/*.log

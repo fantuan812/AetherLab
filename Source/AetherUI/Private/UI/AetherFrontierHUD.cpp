@@ -4,6 +4,7 @@
 #include "UI/AetherPlayerHUDWidget.h"
 #include "AetherFrontierPanel.h"
 #include "Tests/AetherMenuInteractionProbe.h"
+#include "Diagnostics/AetherPackageCapture.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Engine/Canvas.h"
@@ -18,7 +19,7 @@ void AAetherFrontierHUD::BeginPlay()
 }
 void AAetherFrontierHUD::DrawHUD()
 {
-    Super::DrawHUD();AetherMenuInteraction::Tick(this,PanelWidget);
+    Super::DrawHUD();AetherMenuInteraction::Tick(this,PanelWidget);AetherPackageCapture::Tick(this,PanelWidget);
 #if !UE_BUILD_SHIPPING
     // Canvas 只用于显式打开的开发诊断；正式生命、交互、任务和菜单使用 UMG 控件。
     const auto* C=Cast<AAetherFrontierCharacter>(GetOwningPawn());
