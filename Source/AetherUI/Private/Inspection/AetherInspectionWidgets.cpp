@@ -31,6 +31,7 @@ TSharedRef<SWidget> UAetherInspectionCard::RebuildWidget()
 {
     SetIsFocusable(true);
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this,TEXT("WidgetTree"));
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Size=WidgetTree->ConstructWidget<USizeBox>();Size->SetMinDesiredWidth(200);Size->SetMaxDesiredWidth(420);Size->SetMaxDesiredHeight(620);
@@ -160,6 +161,7 @@ TSharedRef<SWidget> UAetherInspectionConfirmation::RebuildWidget()
 {
     SetIsFocusable(true);
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this,TEXT("WidgetTree"));
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Border=WidgetTree->ConstructWidget<UBorder>();Border->SetPadding(FMargin(20));Border->SetBrushColor(FLinearColor(.04f,.05f,.07f,1));WidgetTree->RootWidget=Border;
@@ -176,7 +178,10 @@ TSharedRef<SWidget> UAetherInspectionConfirmation::RebuildWidget()
         CancelButton->OnClicked.AddDynamic(this,&UAetherInspectionConfirmation::Cancel);
     }
     if(Quantity)Quantity->OnValueChanged.AddUniqueDynamic(this,&UAetherInspectionConfirmation::QuantityChanged);
-    RefreshDraft();return Super::RebuildWidget();
+    RefreshDraft();
+    AetherWidgetAssets::BindButton(*this,TEXT("ConfirmButton"),TEXT("Confirm"));
+    AetherWidgetAssets::BindButton(*this,TEXT("CancelButton"),TEXT("Cancel"));
+    return Super::RebuildWidget();
 }
 void UAetherInspectionConfirmation::SetDraft(const FAetherInspectionDraft& InDraft)
 {

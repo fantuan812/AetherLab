@@ -45,7 +45,7 @@ private:
     void Travel();
     bool bServices=true,bParty=true,bQuests=true;
     FName SelectedBeacon;
-    UPROPERTY() TObjectPtr<UAetherMapCanvas> Map;
-    UPROPERTY() TObjectPtr<UTextBlock> Detail;
-    UPROPERTY() TObjectPtr<UAetherPageButton> TravelButton;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UAetherMapCanvas> Map;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Detail;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UAetherPageButton> TravelButton;
 };

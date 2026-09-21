@@ -58,6 +58,7 @@ UAetherMenuRoot* UAetherMenuRoot::Find(const UUserWidget& Context)
 TSharedRef<SWidget> UAetherMenuRoot::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Overlay=WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(),TEXT("MenuLayers"));WidgetTree->RootWidget=Overlay;
@@ -67,8 +68,11 @@ TSharedRef<SWidget> UAetherMenuRoot::RebuildWidget()
         ModalStack=WidgetTree->ConstructWidget<UCommonActivatableWidgetStack>(UCommonActivatableWidgetStack::StaticClass(),TEXT("ModalStack"));
         auto* ModalSlot=Overlay->AddChildToOverlay(ModalStack);ModalSlot->SetHorizontalAlignment(HAlign_Fill);ModalSlot->SetVerticalAlignment(VAlign_Fill);
         MainStack->SetTransitionDuration(0);ModalStack->SetTransitionDuration(0);ModalStack->SetVisibility(ESlateVisibility::Collapsed);
-        Panel=CreateWidget<UAetherFrontierPanel>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherFrontierPanel>());Dialogue=CreateWidget<UAetherDialoguePage>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherDialoguePage>());
+
     }
+    if(MainStack)MainStack->SetTransitionDuration(0);if(ModalStack)ModalStack->SetTransitionDuration(0);
+    if(!Panel)Panel=CreateWidget<UAetherFrontierPanel>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherFrontierPanel>());
+    if(!Dialogue)Dialogue=CreateWidget<UAetherDialoguePage>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherDialoguePage>());
     return Super::RebuildWidget();
 }
 void UAetherMenuRoot::NativeConstruct()

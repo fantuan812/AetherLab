@@ -137,3 +137,6 @@
 
 ### Gameplay 编译边界与职责收口
 玩法迁入独立 Public/Private 目录，UI 不再依赖装配根；现场服务注册表和动画快照/图/接触职责已拆分，增加逐类型重定向。未编译、未测试；详见 ../Architecture/V10-gameplay-boundary.zh-CN.md。
+
+### Designer 布局资源作者
+正式页面、根栈、复用控件和 HUD 区域已加入真实 WidgetTree 作者描述；原生字段及全部静态按钮已接线。作者脚本尚未执行，未编译、未测试；详见 ../Architecture/V10-designer-layouts.zh-CN.md。

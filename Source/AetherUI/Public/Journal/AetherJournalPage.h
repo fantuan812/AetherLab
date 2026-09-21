@@ -21,11 +21,11 @@ private:
     void ShowDetails();
     int32 Filter=0;
     FName Selected;
-    UPROPERTY() TObjectPtr<UVerticalBox> List;
-    UPROPERTY() TObjectPtr<UVerticalBox> Details;
-    UPROPERTY() TObjectPtr<UVerticalBox> Rewards;
-    UPROPERTY() TObjectPtr<UTextBlock> Notice;
-    UPROPERTY() TObjectPtr<UTextBlock> RefreshClock;
-    UPROPERTY() TObjectPtr<UAetherInspectionCard> ItemCard;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> List;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> Details;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> Rewards;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Notice;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> RefreshClock;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UAetherInspectionCard> ItemCard;
     UPROPERTY() TObjectPtr<UWidget> First;
 };

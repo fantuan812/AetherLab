@@ -38,7 +38,7 @@ private:
     int32 PhysicalSlot=INDEX_NONE;
     bool bFiltered=false;
     FString ShownIcon;
-    UPROPERTY(Transient) TObjectPtr<UBorder> Background;
-    UPROPERTY(Transient) TObjectPtr<UTextBlock> Label;
-    UPROPERTY(Transient) TObjectPtr<UImage> Icon;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UBorder> Background;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Label;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UImage> Icon;
 };

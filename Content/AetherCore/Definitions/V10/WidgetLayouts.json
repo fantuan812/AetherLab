@@ -1,0 +1,1835 @@
+{
+  "SchemaVersion": 1,
+  "Layouts": {
+    "WBP_SkillNode": {
+      "Class": "/Script/UMG.Border",
+      "Name": "Card",
+      "Padding": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Layout2",
+          "Children": [
+            {
+              "Class": "/Script/UMG.HorizontalBox",
+              "Name": "Layout1",
+              "Children": [
+                {
+                  "Class": "/Script/UMG.Image",
+                  "Name": "SkillIcon",
+                  "Size": [
+                    32,
+                    32
+                  ]
+                },
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "SkillTitle",
+                  "Text": "技能",
+                  "FontSize": 13,
+                  "Fill": 1
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "SkillState",
+              "Text": "状态",
+              "FontSize": 13
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "SkillSource",
+              "Text": "来源",
+              "FontSize": 13
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_ItemSlot": {
+      "Class": "/Script/UMG.SizeBox",
+      "Name": "CellSize",
+      "MinWidth": 74,
+      "MinHeight": 80,
+      "Children": [
+        {
+          "Class": "/Script/UMG.Border",
+          "Name": "Background",
+          "Padding": [
+            5,
+            5,
+            5,
+            5
+          ],
+          "Color": [
+            0.025,
+            0.035,
+            0.055,
+            0.98
+          ],
+          "Children": [
+            {
+              "Class": "/Script/UMG.VerticalBox",
+              "Name": "Layout3",
+              "Children": [
+                {
+                  "Class": "/Script/UMG.Image",
+                  "Name": "Icon",
+                  "Size": [
+                    32,
+                    32
+                  ]
+                },
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Label",
+                  "Text": "空格",
+                  "FontSize": 13
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_EquipmentSlot": {
+      "Class": "/Script/UMG.SizeBox",
+      "Name": "CellSize",
+      "MinWidth": 74,
+      "MinHeight": 80,
+      "Children": [
+        {
+          "Class": "/Script/UMG.Border",
+          "Name": "Background",
+          "Padding": [
+            5,
+            5,
+            5,
+            5
+          ],
+          "Color": [
+            0.025,
+            0.035,
+            0.055,
+            0.98
+          ],
+          "Children": [
+            {
+              "Class": "/Script/UMG.VerticalBox",
+              "Name": "Layout3",
+              "Children": [
+                {
+                  "Class": "/Script/UMG.Image",
+                  "Name": "Icon",
+                  "Size": [
+                    32,
+                    32
+                  ]
+                },
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Label",
+                  "Text": "空格",
+                  "FontSize": 13
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_InspectPanel": {
+      "Class": "/Script/UMG.SizeBox",
+      "Name": "CardSize",
+      "MinWidth": 200,
+      "MaxWidth": 420,
+      "MaxHeight": 620,
+      "Children": [
+        {
+          "Class": "/Script/UMG.Border",
+          "Name": "Layout7",
+          "Padding": [
+            16,
+            16,
+            16,
+            16
+          ],
+          "Color": [
+            0.025,
+            0.035,
+            0.055,
+            0.98
+          ],
+          "Children": [
+            {
+              "Class": "/Script/UMG.VerticalBox",
+              "Name": "Layout6",
+              "Children": [
+                {
+                  "Class": "/Script/UMG.HorizontalBox",
+                  "Name": "Layout4",
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.Image",
+                      "Name": "Icon",
+                      "Size": [
+                        48,
+                        48
+                      ]
+                    },
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Heading",
+                      "Text": "详细资料",
+                      "Fill": 1,
+                      "SlotPadding": [
+                        12,
+                        0,
+                        0,
+                        0
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Class": "/Script/UMG.ScrollBox",
+                  "Name": "Layout5",
+                  "Fill": 1,
+                  "SlotPadding": [
+                    6,
+                    0,
+                    6,
+                    0
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.VerticalBox",
+                      "Name": "Rows"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_ConfirmDialog": {
+      "Class": "/Script/UMG.Border",
+      "Name": "Layout12",
+      "Padding": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Layout11",
+          "Children": [
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Prompt",
+              "Text": "确认操作"
+            },
+            {
+              "Class": "/Script/UMG.SpinBox",
+              "Name": "Quantity",
+              "Step": 1,
+              "Digits": 0,
+              "SlotPadding": [
+                0,
+                12,
+                0,
+                12
+              ]
+            },
+            {
+              "Class": "/Script/UMG.HorizontalBox",
+              "Name": "Layout10",
+              "Children": [
+                {
+                  "Class": "/Script/UMG.Button",
+                  "Name": "ConfirmButton",
+                  "SlotPadding": [
+                    3,
+                    3,
+                    3,
+                    3
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Layout8",
+                      "Text": "确认"
+                    }
+                  ]
+                },
+                {
+                  "Class": "/Script/UMG.Button",
+                  "Name": "CancelButton",
+                  "SlotPadding": [
+                    3,
+                    3,
+                    3,
+                    3
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Layout9",
+                      "Text": "取消"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_QuantityDialog": {
+      "Class": "/Script/UMG.Border",
+      "Name": "Layout12",
+      "Padding": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Layout11",
+          "Children": [
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Prompt",
+              "Text": "确认操作"
+            },
+            {
+              "Class": "/Script/UMG.SpinBox",
+              "Name": "Quantity",
+              "Step": 1,
+              "Digits": 0,
+              "SlotPadding": [
+                0,
+                12,
+                0,
+                12
+              ]
+            },
+            {
+              "Class": "/Script/UMG.HorizontalBox",
+              "Name": "Layout10",
+              "Children": [
+                {
+                  "Class": "/Script/UMG.Button",
+                  "Name": "ConfirmButton",
+                  "SlotPadding": [
+                    3,
+                    3,
+                    3,
+                    3
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Layout8",
+                      "Text": "确认"
+                    }
+                  ]
+                },
+                {
+                  "Class": "/Script/UMG.Button",
+                  "Name": "CancelButton",
+                  "SlotPadding": [
+                    3,
+                    3,
+                    3,
+                    3
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Layout9",
+                      "Text": "取消"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_CharacterPreview": {
+      "Class": "/Script/UMG.VerticalBox",
+      "Name": "Layout21",
+      "Children": [
+        {
+          "Class": "/Script/UMG.Border",
+          "Name": "Layout14",
+          "Padding": [
+            12,
+            12,
+            12,
+            12
+          ],
+          "Color": [
+            0.025,
+            0.035,
+            0.055,
+            0.98
+          ],
+          "Children": [
+            {
+              "Class": "/Script/UMG.ScaleBox",
+              "Name": "Layout13",
+              "Children": [
+                {
+                  "Class": "/Script/UMG.Image",
+                  "Name": "Image"
+                }
+              ]
+            }
+          ],
+          "Fill": 1
+        },
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout20",
+          "Children": [
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "LeftButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout15",
+                  "Text": "左转"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "RightButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout16",
+                  "Text": "右转"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "InButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout17",
+                  "Text": "+"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "OutButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout18",
+                  "Text": "−"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "ResetButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout19",
+                  "Text": "重置"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Class": "/Script/UMG.TextBlock",
+          "Name": "Caption",
+          "Text": "角色预览"
+        }
+      ]
+    },
+    "WBP_InventoryPage": {
+      "Class": "/Script/UMG.VerticalBox",
+      "Name": "Layout33",
+      "Children": [
+        {
+          "Class": "/Script/UMG.TextBlock",
+          "Name": "Summary",
+          "Text": ""
+        },
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout24",
+          "SlotPadding": [
+            0,
+            8,
+            0,
+            8
+          ],
+          "Children": [
+            {
+              "Class": "/Script/UMG.EditableTextBox",
+              "Name": "Search",
+              "Text": "搜索名称或定义",
+              "Fill": 1
+            },
+            {
+              "Class": "/Script/UMG.ComboBoxString",
+              "Name": "Categories"
+            },
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "SortButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout22",
+                  "Text": "整理并合并"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "RetryButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout23",
+                  "Text": "同步 / 重试"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "StatusBar"
+        },
+        {
+          "Class": "/Script/UMG.TextBlock",
+          "Name": "Notice",
+          "Text": ""
+        },
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout32",
+          "Fill": 1,
+          "Children": [
+            {
+              "Class": "/Script/UMG.ScrollBox",
+              "Name": "Layout27",
+              "Fill": 0.25,
+              "SlotPadding": [
+                6,
+                0,
+                6,
+                0
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.VerticalBox",
+                  "Name": "Layout26",
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.SizeBox",
+                      "Name": "Layout25",
+                      "Size": [
+                        0,
+                        300
+                      ],
+                      "Children": [
+                        {
+                          "Class": "/Game/UI/Widgets/WBP_CharacterPreview.WBP_CharacterPreview_C",
+                          "Name": "Preview"
+                        }
+                      ]
+                    },
+                    {
+                      "Class": "/Script/UMG.UniformGridPanel",
+                      "Name": "Equipment"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.ScrollBox",
+              "Name": "Layout29",
+              "Fill": 0.5,
+              "SlotPadding": [
+                6,
+                0,
+                6,
+                0
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.VerticalBox",
+                  "Name": "Layout28",
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.UniformGridPanel",
+                      "Name": "Grid"
+                    },
+                    {
+                      "Class": "/Script/UMG.UniformGridPanel",
+                      "Name": "Products",
+                      "SlotPadding": [
+                        0,
+                        16,
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "ContainerTitle",
+                      "Text": ""
+                    },
+                    {
+                      "Class": "/Script/UMG.UniformGridPanel",
+                      "Name": "ContainerGrid"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.ScrollBox",
+              "Name": "Layout31",
+              "Fill": 0.25,
+              "SlotPadding": [
+                6,
+                0,
+                6,
+                0
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.VerticalBox",
+                  "Name": "Layout30",
+                  "Children": [
+                    {
+                      "Class": "/Game/UI/Widgets/WBP_InspectPanel.WBP_InspectPanel_C",
+                      "Name": "Details"
+                    },
+                    {
+                      "Class": "/Game/UI/Widgets/WBP_InspectPanel.WBP_InspectPanel_C",
+                      "Name": "Hover",
+                      "Hidden": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_SkillTreePage": {
+      "Class": "/Script/UMG.VerticalBox",
+      "Name": "Layout41",
+      "Children": [
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout36",
+          "Children": [
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Points",
+              "Text": "技能点",
+              "Fill": 1
+            },
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "ResetButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout34",
+                  "Text": "重置视图"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "RetryButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout35",
+                  "Text": "同步 / 重试原请求"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Class": "/Script/UMG.TextBlock",
+          "Name": "Notice",
+          "Text": ""
+        },
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout37",
+          "Fill": 1,
+          "Children": [
+            {
+              "Class": "/Script/AetherUI.AetherSkillGraphWidget",
+              "Name": "Graph",
+              "Fill": 0.62
+            },
+            {
+              "Class": "/Game/UI/Widgets/WBP_InspectPanel.WBP_InspectPanel_C",
+              "Name": "Details",
+              "Fill": 0.38,
+              "SlotPadding": [
+                12,
+                0,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Hotbar",
+          "SlotPadding": [
+            0,
+            8,
+            0,
+            8
+          ]
+        },
+        {
+          "Class": "/Script/UMG.TextBlock",
+          "Name": "Sources",
+          "Text": ""
+        },
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout40",
+          "Children": [
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "PreviousButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout38",
+                  "Text": "点数来源上一页"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.Button",
+              "Name": "NextButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout39",
+                  "Text": "点数来源下一页"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_PlayerMenu": {
+      "Class": "/Script/UMG.Border",
+      "Name": "MenuFrame",
+      "Padding": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "MenuRows",
+          "Children": [
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Title",
+              "Text": "AetherLab",
+              "FontSize": 24,
+              "Color": [
+                1,
+                0.8,
+                0.4,
+                1
+              ]
+            },
+            {
+              "Class": "/Script/UMG.HorizontalBox",
+              "Name": "Tabs",
+              "SlotPadding": [
+                0,
+                10,
+                0,
+                10
+              ]
+            },
+            {
+              "Class": "/Script/UMG.WidgetSwitcher",
+              "Name": "PageHost",
+              "Fill": 1
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_JournalPage": {
+      "Class": "/Script/UMG.VerticalBox",
+      "Name": "Layout50",
+      "Children": [
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout45",
+          "Children": [
+            {
+              "Class": "/Script/AetherUI.AetherPageButton",
+              "Name": "Filter0",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout42",
+                  "Text": "主线任务"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/AetherUI.AetherPageButton",
+              "Name": "Filter1",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout43",
+                  "Text": "日常委托"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/AetherUI.AetherPageButton",
+              "Name": "Filter2",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout44",
+                  "Text": "已完成"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Class": "/Script/UMG.TextBlock",
+          "Name": "RefreshClock",
+          "Text": "日常委托按服务器 UTC 零点刷新"
+        },
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout49",
+          "Fill": 1,
+          "Children": [
+            {
+              "Class": "/Script/UMG.ScrollBox",
+              "Name": "Layout46",
+              "Fill": 1,
+              "SlotPadding": [
+                6,
+                0,
+                6,
+                0
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.VerticalBox",
+                  "Name": "List"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.ScrollBox",
+              "Name": "Layout47",
+              "Fill": 1,
+              "SlotPadding": [
+                6,
+                0,
+                6,
+                0
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.VerticalBox",
+                  "Name": "Details"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.ScrollBox",
+              "Name": "Layout48",
+              "Fill": 1,
+              "SlotPadding": [
+                6,
+                0,
+                6,
+                0
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.VerticalBox",
+                  "Name": "Rewards"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Class": "/Script/UMG.TextBlock",
+          "Name": "Notice",
+          "Text": ""
+        }
+      ]
+    },
+    "WBP_PartyPage": {
+      "Class": "/Script/UMG.VerticalBox",
+      "Name": "Layout54",
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Invitations"
+        },
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout53",
+          "Fill": 1,
+          "Children": [
+            {
+              "Class": "/Script/UMG.ScrollBox",
+              "Name": "Layout51",
+              "Fill": 1,
+              "SlotPadding": [
+                6,
+                0,
+                6,
+                0
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.VerticalBox",
+                  "Name": "Members"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.ScrollBox",
+              "Name": "Layout52",
+              "Fill": 1,
+              "SlotPadding": [
+                6,
+                0,
+                6,
+                0
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.VerticalBox",
+                  "Name": "Nearby"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Class": "/Script/UMG.TextBlock",
+          "Name": "Notice",
+          "Text": ""
+        }
+      ]
+    },
+    "WBP_Dialogue": {
+      "Class": "/Script/UMG.Border",
+      "Name": "Layout57",
+      "Padding": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Layout56",
+          "Children": [
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Speaker",
+              "Text": "",
+              "FontSize": 24,
+              "Color": [
+                1,
+                0.8,
+                0.4,
+                1
+              ]
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Speech",
+              "Text": "",
+              "SlotPadding": [
+                0,
+                18,
+                0,
+                18
+              ]
+            },
+            {
+              "Class": "/Script/UMG.ScrollBox",
+              "Name": "Layout55",
+              "Fill": 1,
+              "SlotPadding": [
+                6,
+                0,
+                6,
+                0
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.VerticalBox",
+                  "Name": "Choices"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Feedback",
+              "Text": ""
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_MapPage": {
+      "Class": "/Script/UMG.VerticalBox",
+      "Name": "Layout66",
+      "Children": [
+        {
+          "Class": "/Script/UMG.HorizontalBox",
+          "Name": "Layout64",
+          "Children": [
+            {
+              "Class": "/Script/AetherUI.AetherPageButton",
+              "Name": "ServicesButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout58",
+                  "Text": "服务标记"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/AetherUI.AetherPageButton",
+              "Name": "PartyButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout59",
+                  "Text": "队友"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/AetherUI.AetherPageButton",
+              "Name": "QuestsButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout60",
+                  "Text": "任务目标"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/AetherUI.AetherPageButton",
+              "Name": "ZoomInButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout61",
+                  "Text": "放大"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/AetherUI.AetherPageButton",
+              "Name": "ZoomOutButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout62",
+                  "Text": "缩小"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/AetherUI.AetherPageButton",
+              "Name": "CenterButton",
+              "SlotPadding": [
+                3,
+                3,
+                3,
+                3
+              ],
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout63",
+                  "Text": "居中"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Class": "/Script/AetherUI.AetherMapCanvas",
+          "Name": "Map",
+          "Fill": 1
+        },
+        {
+          "Class": "/Script/UMG.TextBlock",
+          "Name": "Detail",
+          "Text": "选择据点、任务或服务标记查看详情。"
+        },
+        {
+          "Class": "/Script/AetherUI.AetherPageButton",
+          "Name": "TravelButton",
+          "SlotPadding": [
+            3,
+            3,
+            3,
+            3
+          ],
+          "Children": [
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout65",
+              "Text": "传送到选中据点"
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_SettingsPage": {
+      "Class": "/Script/UMG.ScrollBox",
+      "Name": "Layout85",
+      "Fill": 1,
+      "SlotPadding": [
+        6,
+        0,
+        6,
+        0
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Layout84",
+          "Children": [
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout67",
+              "Text": "分辨率"
+            },
+            {
+              "Class": "/Script/UMG.ComboBoxString",
+              "Name": "Resolution",
+              "Options": [
+                "1280x720",
+                "1920x1080",
+                "2560x1440",
+                "3440x1440",
+                "3840x2160"
+              ]
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout68",
+              "Text": "窗口模式"
+            },
+            {
+              "Class": "/Script/UMG.ComboBoxString",
+              "Name": "WindowMode",
+              "Options": [
+                "独占全屏",
+                "无边框全屏",
+                "窗口"
+              ]
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout69",
+              "Text": "图形质量"
+            },
+            {
+              "Class": "/Script/UMG.ComboBoxString",
+              "Name": "Quality",
+              "Options": [
+                "低",
+                "中",
+                "高",
+                "极高",
+                "影视"
+              ]
+            },
+            {
+              "Class": "/Script/UMG.CheckBox",
+              "Name": "Vsync",
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout70",
+                  "Text": "垂直同步"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout71",
+              "Text": "主音量"
+            },
+            {
+              "Class": "/Script/UMG.SpinBox",
+              "Name": "Volume",
+              "Min": 0,
+              "Max": 1,
+              "Step": 0.05
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout72",
+              "Text": "鼠标视角灵敏度"
+            },
+            {
+              "Class": "/Script/UMG.SpinBox",
+              "Name": "Mouse",
+              "Min": 0.1,
+              "Max": 3,
+              "Step": 0.1
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout73",
+              "Text": "手柄视角灵敏度"
+            },
+            {
+              "Class": "/Script/UMG.SpinBox",
+              "Name": "Controller",
+              "Min": 0.1,
+              "Max": 3,
+              "Step": 0.1
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout74",
+              "Text": "界面缩放"
+            },
+            {
+              "Class": "/Script/UMG.SpinBox",
+              "Name": "Scale",
+              "Min": 0.75,
+              "Max": 1.5,
+              "Step": 0.05
+            },
+            {
+              "Class": "/Script/UMG.CheckBox",
+              "Name": "Invert",
+              "Children": [
+                {
+                  "Class": "/Script/UMG.TextBlock",
+                  "Name": "Layout75",
+                  "Text": "反转垂直视角"
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout76",
+              "Text": "角色动作"
+            },
+            {
+              "Class": "/Script/UMG.ComboBoxString",
+              "Name": "Backend",
+              "Options": [
+                "自动选择",
+                "传统动画",
+                "CPU 生成",
+                "Vulkan 生成"
+              ]
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Provider",
+              "Text": ""
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Layout77",
+              "Text": "按键 · 相同输入场景内的冲突会交换"
+            },
+            {
+              "Class": "/Script/UMG.ComboBoxString",
+              "Name": "BindingAction",
+              "Options": []
+            },
+            {
+              "Class": "/Script/UMG.InputKeySelector",
+              "Name": "BindingKey"
+            },
+            {
+              "Class": "/Script/UMG.HorizontalBox",
+              "Name": "Layout81",
+              "Children": [
+                {
+                  "Class": "/Script/AetherUI.AetherPageButton",
+                  "Name": "ApplyButton",
+                  "SlotPadding": [
+                    3,
+                    3,
+                    3,
+                    3
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Layout78",
+                      "Text": "保存并应用"
+                    }
+                  ]
+                },
+                {
+                  "Class": "/Script/AetherUI.AetherPageButton",
+                  "Name": "RevertButton",
+                  "SlotPadding": [
+                    3,
+                    3,
+                    3,
+                    3
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Layout79",
+                      "Text": "取消更改"
+                    }
+                  ]
+                },
+                {
+                  "Class": "/Script/AetherUI.AetherPageButton",
+                  "Name": "DefaultsButton",
+                  "SlotPadding": [
+                    3,
+                    3,
+                    3,
+                    3
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Layout80",
+                      "Text": "恢复默认"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.VerticalBox",
+              "Name": "Confirmation",
+              "Hidden": true,
+              "Children": [
+                {
+                  "Class": "/Script/AetherUI.AetherPageButton",
+                  "Name": "ConfirmVideoButton",
+                  "SlotPadding": [
+                    3,
+                    3,
+                    3,
+                    3
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Layout82",
+                      "Text": "保留此分辨率"
+                    }
+                  ]
+                },
+                {
+                  "Class": "/Script/AetherUI.AetherPageButton",
+                  "Name": "RevertVideoButton",
+                  "SlotPadding": [
+                    3,
+                    3,
+                    3,
+                    3
+                  ],
+                  "Children": [
+                    {
+                      "Class": "/Script/UMG.TextBlock",
+                      "Name": "Layout83",
+                      "Text": "恢复原分辨率"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "Class": "/Script/UMG.TextBlock",
+              "Name": "Notice",
+              "Text": ""
+            }
+          ]
+        }
+      ]
+    },
+    "WBP_Vitals": {
+      "Class": "/Script/UMG.Border",
+      "Name": "Layout86",
+      "Padding": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Rows"
+        }
+      ]
+    },
+    "WBP_QuestTracker": {
+      "Class": "/Script/UMG.Border",
+      "Name": "Layout87",
+      "Padding": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Rows"
+        }
+      ]
+    },
+    "WBP_QuickBar": {
+      "Class": "/Script/UMG.Border",
+      "Name": "Layout88",
+      "Padding": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Rows"
+        }
+      ]
+    },
+    "WBP_InteractionPrompt": {
+      "Class": "/Script/UMG.Border",
+      "Name": "Layout89",
+      "Padding": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Rows"
+        }
+      ]
+    },
+    "WBP_TargetVitals": {
+      "Class": "/Script/UMG.Border",
+      "Name": "Layout90",
+      "Padding": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "Color": [
+        0.025,
+        0.035,
+        0.055,
+        0.98
+      ],
+      "Children": [
+        {
+          "Class": "/Script/UMG.VerticalBox",
+          "Name": "Rows"
+        }
+      ]
+    },
+    "WBP_PlayerHUD": {
+      "Class": "/Script/UMG.CanvasPanel",
+      "Name": "HUDCanvas",
+      "Children": [
+        {
+          "Class": "/Game/UI/Widgets/WBP_Vitals.WBP_Vitals_C",
+          "Name": "VitalsSection",
+          "Anchor": [
+            0,
+            0
+          ],
+          "Align": [
+            0,
+            0
+          ],
+          "Position": [
+            20,
+            20
+          ],
+          "Size": [
+            320,
+            225
+          ]
+        },
+        {
+          "Class": "/Game/UI/Widgets/WBP_QuestTracker.WBP_QuestTracker_C",
+          "Name": "QuestSection",
+          "Anchor": [
+            1,
+            0
+          ],
+          "Align": [
+            1,
+            0
+          ],
+          "Position": [
+            -20,
+            20
+          ],
+          "Size": [
+            280,
+            190
+          ]
+        },
+        {
+          "Class": "/Game/UI/Widgets/WBP_QuickBar.WBP_QuickBar_C",
+          "Name": "HotbarSection",
+          "Anchor": [
+            0.5,
+            1
+          ],
+          "Align": [
+            0.5,
+            1
+          ],
+          "Position": [
+            0,
+            -20
+          ],
+          "Size": [
+            540,
+            160
+          ]
+        },
+        {
+          "Class": "/Game/UI/Widgets/WBP_InteractionPrompt.WBP_InteractionPrompt_C",
+          "Name": "InteractionSection",
+          "Anchor": [
+            0.5,
+            0.62
+          ],
+          "Align": [
+            0.5,
+            0.62
+          ],
+          "Position": [
+            0,
+            0
+          ],
+          "Size": [
+            520,
+            130
+          ]
+        },
+        {
+          "Class": "/Game/UI/Widgets/WBP_TargetVitals.WBP_TargetVitals_C",
+          "Name": "TargetSection",
+          "Anchor": [
+            0.5,
+            0
+          ],
+          "Align": [
+            0.5,
+            0
+          ],
+          "Position": [
+            0,
+            20
+          ],
+          "Size": [
+            320,
+            70
+          ]
+        },
+        {
+          "Class": "/Script/UMG.Border",
+          "Name": "Crosshair",
+          "Color": [
+            0.9,
+            0.95,
+            1,
+            0.8
+          ],
+          "Anchor": [
+            0.5,
+            0.5
+          ],
+          "Align": [
+            0.5,
+            0.5
+          ],
+          "Position": [
+            0,
+            0
+          ],
+          "Size": [
+            4,
+            4
+          ]
+        }
+      ]
+    },
+    "WBP_MenuRoot": {
+      "Class": "/Script/UMG.Overlay",
+      "Name": "MenuLayers",
+      "Children": [
+        {
+          "Class": "/Script/AetherUI.AetherGameInputLayer",
+          "Name": "GameLayer"
+        },
+        {
+          "Class": "/Script/CommonUI.CommonActivatableWidgetStack",
+          "Name": "MainStack",
+          "SlotPadding": [
+            32,
+            32,
+            32,
+            32
+          ]
+        },
+        {
+          "Class": "/Script/CommonUI.CommonActivatableWidgetStack",
+          "Name": "ModalStack",
+          "Hidden": true
+        }
+      ]
+    }
+  }
+}

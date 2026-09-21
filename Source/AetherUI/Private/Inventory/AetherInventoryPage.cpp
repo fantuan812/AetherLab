@@ -54,6 +54,7 @@ FString ResultText(EAetherCommandCode Code)
 TSharedRef<SWidget> UAetherInventoryPage::RebuildWidget()
 {
     SetIsFocusable(true);if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Overlay=WidgetTree->ConstructWidget<UOverlay>();WidgetTree->RootWidget=Overlay;
@@ -83,6 +84,12 @@ TSharedRef<SWidget> UAetherInventoryPage::RebuildWidget()
         Hover=CreateWidget<UAetherInspectionCard>(this,AetherWidgetAssets::Class<UAetherInspectionCard>());Right->AddChildToVerticalBox(Hover);Hover->SetVisibility(ESlateVisibility::Collapsed);
         Confirmation=CreateWidget<UAetherInspectionConfirmation>(this,AetherWidgetAssets::Class<UAetherInspectionConfirmation>());
     }
+
+    if(!Confirmation)Confirmation=CreateWidget<UAetherInspectionConfirmation>(this,AetherWidgetAssets::Class<UAetherInspectionConfirmation>());
+    if(Search)Search->OnTextChanged.AddUniqueDynamic(this,&UAetherInventoryPage::SearchChanged);
+    if(Categories)Categories->OnSelectionChanged.AddUniqueDynamic(this,&UAetherInventoryPage::CategoryChanged);
+    AetherWidgetAssets::BindButton(*this,TEXT("SortButton"),TEXT("Sort"));AetherWidgetAssets::BindButton(*this,TEXT("RetryButton"),TEXT("Retry"));
+    if(Hover)Hover->SetVisibility(ESlateVisibility::Collapsed);
     return Super::RebuildWidget();
 }
 void UAetherInventoryPage::NativeConstruct()

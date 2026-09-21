@@ -13,6 +13,7 @@
 TSharedRef<SWidget> UAetherSkillNodeWidget::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Card=WidgetTree->ConstructWidget<UBorder>();Card->SetPadding(FMargin(6));Card->SetBrushColor(FLinearColor(.055,.07,.1));WidgetTree->RootWidget=Card;

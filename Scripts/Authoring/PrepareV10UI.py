@@ -35,6 +35,38 @@ for parent_name, name in rows:
         raise RuntimeError("无法保存控件：" + path)
     assets.append(asset)
 
+# 按子控件依赖顺序编译真实 Designer 布局，父 WBP 引用已经可加载的子 WBP 类。
+layout_doc = json.loads((root / "Content/AetherCore/Definitions/V10/WidgetLayouts.json").read_text(encoding="utf-8-sig"))
+if layout_doc.get("SchemaVersion") != 1:
+    raise RuntimeError("不支持的 Widget 布局版本")
+layouts = layout_doc["Layouts"]
+finished, visiting = set(), set()
+def author_layout(name):
+    if name in finished:
+        return
+    if name in visiting:
+        raise RuntimeError("Widget 布局包含循环引用：" + name)
+    visiting.add(name)
+    spec = layouts[name]
+    def dependencies(node):
+        path = node["Class"]
+        if path.startswith("/Game/UI/Widgets/"):
+            child = path.rsplit("/", 1)[-1].split(".", 1)[0]
+            if child in layouts:
+                author_layout(child)
+        for child in node.get("Children", []):
+            dependencies(child)
+    dependencies(spec)
+    asset = library.load_asset("/Game/UI/Widgets/" + name)
+    result = ue.AetherWidgetAuthoring.apply_layout(asset, json.dumps(spec, ensure_ascii=False))
+    success, reason = result if isinstance(result, tuple) else (bool(result), "")
+    if not success:
+        raise RuntimeError("布局制作失败：" + name + " " + reason)
+    visiting.remove(name)
+    finished.add(name)
+for layout_name in layouts:
+    author_layout(layout_name)
+
 theme_path = "/Game/UI/DA_UITheme"
 theme = library.load_asset(theme_path) if library.does_asset_exist(theme_path) else None
 if not theme:

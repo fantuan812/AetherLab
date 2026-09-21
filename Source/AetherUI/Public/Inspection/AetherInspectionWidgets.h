@@ -55,9 +55,9 @@ private:
     void AddEffect(const TCHAR* Label,const FAetherSkillRankEffect& Effect);
     FAetherInspectionModel Model;
     uint64 Generation=0;
-    UPROPERTY(Transient) TObjectPtr<UVerticalBox> Rows;
-    UPROPERTY(Transient) TObjectPtr<UImage> Icon;
-    UPROPERTY(Transient) TObjectPtr<UTextBlock> Heading;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> Rows;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UImage> Icon;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Heading;
 };
 
 // 数量/危险确认是详情上层独立控件。宿主按令牌关闭本层，不能把它伪装成 hover。
@@ -80,7 +80,7 @@ private:
     UFUNCTION() void Confirm();
     UFUNCTION() void Cancel();
     TOptional<FAetherInspectionDraft> Draft;
-    UPROPERTY(Transient) TObjectPtr<UTextBlock> Prompt;
-    UPROPERTY(Transient) TObjectPtr<USpinBox> Quantity;
-    UPROPERTY(Transient) TObjectPtr<UButton> ConfirmButton;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Prompt;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<USpinBox> Quantity;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UButton> ConfirmButton;
 };

@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "Preview/AetherCharacterPreviewWidget.h"
 #include "Preview/AetherCharacterPreviewSubsystem.h"
 #include "Combat/AetherCombat.h"
@@ -19,6 +20,7 @@
 TSharedRef<SWidget> UAetherCharacterPreviewWidget::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this,TEXT("WidgetTree"));
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Root=WidgetTree->ConstructWidget<UVerticalBox>();WidgetTree->RootWidget=Root;
@@ -42,6 +44,9 @@ TSharedRef<SWidget> UAetherCharacterPreviewWidget::RebuildWidget()
         Caption=WidgetTree->ConstructWidget<UTextBlock>();Caption->SetAutoWrapText(true);
         Root->AddChildToVerticalBox(Caption)->SetPadding(FMargin(0,8));
     }
+
+    const TPair<const TCHAR*,const TCHAR*> Actions[]={{TEXT("LeftButton"),TEXT("TurnLeft")},{TEXT("RightButton"),TEXT("TurnRight")},{TEXT("InButton"),TEXT("ZoomIn")},{TEXT("OutButton"),TEXT("ZoomOut")},{TEXT("ResetButton"),TEXT("ResetCamera")}};
+    for(const auto& A:Actions)AetherWidgetAssets::BindButton(*this,A.Key,A.Value);
     return Super::RebuildWidget();
 }
 void UAetherCharacterPreviewWidget::NativeConstruct()

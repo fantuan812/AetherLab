@@ -16,6 +16,7 @@ using namespace AetherPageWidgets;
 TSharedRef<SWidget> UAetherJournalPage::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Root=WidgetTree->ConstructWidget<UVerticalBox>();WidgetTree->RootWidget=Root;
@@ -32,6 +33,9 @@ TSharedRef<SWidget> UAetherJournalPage::RebuildWidget()
         List=Column();Details=Column();Rewards=Column();
         Notice=Text(*WidgetTree,*Root,TEXT(""));
     }
+
+    for(int32 I=0;I<3;++I)if(auto* B=Cast<UAetherPageButton>(GetWidgetFromName(FName(*FString::Printf(TEXT("Filter%d"),I)))))
+        B->Bind(FSimpleDelegate::CreateWeakLambda(this,[this,I](){Filter=I;Selected=NAME_None;RefreshPage();}));
     return Super::RebuildWidget();
 }
 UWidget* UAetherJournalPage::InitialFocus() const{return First?First.Get():Super::InitialFocus();}

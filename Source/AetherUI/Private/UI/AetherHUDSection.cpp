@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "UI/AetherHUDSection.h"
 #include "UI/AetherUITheme.h"
 #include "Blueprint/WidgetTree.h"
@@ -6,6 +7,7 @@
 TSharedRef<SWidget> UAetherHUDSection::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Border=WidgetTree->ConstructWidget<UBorder>();Border->SetBrushColor(UAetherUITheme::Get().Panel);

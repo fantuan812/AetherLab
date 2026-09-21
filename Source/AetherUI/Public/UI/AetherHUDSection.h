@@ -11,5 +11,5 @@ public:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     UVerticalBox* GetRows(){TakeWidget();return Rows;}
 private:
-    UPROPERTY() TObjectPtr<UVerticalBox> Rows;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> Rows;
 };

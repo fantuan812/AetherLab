@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "Party/AetherPartyPage.h"
 #include "UI/AetherPageWidgets.h"
 #include "Framework/AetherFrontier.h"
@@ -9,6 +10,7 @@ using namespace AetherPageWidgets;
 TSharedRef<SWidget> UAetherPartyPage::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Root=WidgetTree->ConstructWidget<UVerticalBox>();WidgetTree->RootWidget=Root;

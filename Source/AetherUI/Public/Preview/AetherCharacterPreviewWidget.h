@@ -33,7 +33,7 @@ private:
     UFUNCTION() void ZoomOut();
     TWeakObjectPtr<UAetherCharacterPreviewSubsystem> Preview;
     TWeakObjectPtr<AAetherCharacter> RequestedSource;
-    UPROPERTY() TObjectPtr<UImage> Image;
-    UPROPERTY() TObjectPtr<UTextBlock> Caption;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UImage> Image;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Caption;
     bool bDragging=false;
 };

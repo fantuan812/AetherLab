@@ -32,7 +32,7 @@ protected:
     virtual UWidget* NativeGetDesiredFocusTarget() const override;
     virtual bool NativeOnHandleBackAction() override;
 private:
-    UPROPERTY() TObjectPtr<UBorder> Shield;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UBorder> Shield;
     UPROPERTY() TObjectPtr<UUserWidget> BodyWidget;
 };
 /** 一个 LocalPlayer 一个根。主菜单、确认弹层处在同一 CommonUI 输入树内。 */
@@ -51,9 +51,9 @@ public:
 private:
     void Refresh();
     TWeakObjectPtr<UAetherMenuSubsystem> Menu;
-    UPROPERTY() TObjectPtr<UAetherGameInputLayer> GameLayer;
-    UPROPERTY() TObjectPtr<UCommonActivatableWidgetStack> MainStack;
-    UPROPERTY() TObjectPtr<UCommonActivatableWidgetStack> ModalStack;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UAetherGameInputLayer> GameLayer;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UCommonActivatableWidgetStack> MainStack;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UCommonActivatableWidgetStack> ModalStack;
     UPROPERTY() TObjectPtr<UAetherFrontierPanel> Panel;
     UPROPERTY() TObjectPtr<UAetherDialoguePage> Dialogue;
     UPROPERTY() TMap<FGuid,TObjectPtr<UAetherModalLayer>> Modals;

@@ -26,23 +26,42 @@ TSharedRef<SWidget> UAetherPlayerHUDWidget::RebuildWidget()
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
     if(!WidgetTree->RootWidget)
     {
+        // 原生父类可用于作者预览；正式 WBP 将这些锚点/区域保存在 Designer 中。
         auto* Root=WidgetTree->ConstructWidget<UCanvasPanel>();WidgetTree->RootWidget=Root;
-        auto Panel=[&](const TCHAR* Asset,FVector2D Anchor,FVector2D Align,FVector2D Position,FVector2D Size)
+        const auto Panel=[&](const TCHAR* Name,const TCHAR* Asset,FVector2D Anchor,FVector2D Position,FVector2D Size)
         {
-            auto* Border=CreateWidget<UAetherHUDSection>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherHUDSection>(Asset));
-            auto* Slot=Root->AddChildToCanvas(Border);Slot->SetAnchors(FAnchors(Anchor.X,Anchor.Y));Slot->SetAlignment(Align);Slot->SetPosition(Position);Slot->SetSize(Size);
-            return Border->GetRows();
+            auto* W=CreateWidget<UAetherHUDSection>(this,AetherWidgetAssets::Class<UAetherHUDSection>(Asset),FName(Name));
+            auto* Slot=Root->AddChildToCanvas(W);Slot->SetAnchors(FAnchors(Anchor.X,Anchor.Y));Slot->SetAlignment(Anchor);Slot->SetPosition(Position);Slot->SetSize(Size);
         };
-        auto* Resources=Panel(TEXT("WBP_Vitals"),FVector2D(0,0),FVector2D(0,0),FVector2D(20,20),FVector2D(320,225));
+        Panel(TEXT("VitalsSection"),TEXT("WBP_Vitals"),{0,0},{20,20},{320,225});
+        Panel(TEXT("QuestSection"),TEXT("WBP_QuestTracker"),{1,0},{-20,20},{280,190});
+        Panel(TEXT("HotbarSection"),TEXT("WBP_QuickBar"),{.5,1},{0,-20},{540,160});
+        Panel(TEXT("InteractionSection"),TEXT("WBP_InteractionPrompt"),{.5,.62},{0,0},{520,130});
+        Panel(TEXT("TargetSection"),TEXT("WBP_TargetVitals"),{.5,0},{0,20},{320,70});
+        Crosshair=WidgetTree->ConstructWidget<UBorder>();Crosshair->SetBrushColor(FLinearColor(.9,.95,1,.8));
+        auto* Dot=Root->AddChildToCanvas(Crosshair);Dot->SetAnchors(FAnchors(.5,.5));Dot->SetAlignment({.5,.5});Dot->SetSize({4,4});
+    }
+    if(Bars.IsEmpty())BuildContents();
+    return Super::RebuildWidget();
+}
+void UAetherPlayerHUDWidget::BuildContents()
+{
+    const auto Section=[&](const TCHAR* Name)->UVerticalBox*
+    {
+        auto* W=Cast<UAetherHUDSection>(WidgetTree->FindWidget(Name));return W?W->GetRows():nullptr;
+    };
+    const TCHAR* Required[]={TEXT("VitalsSection"),TEXT("QuestSection"),TEXT("HotbarSection"),TEXT("InteractionSection"),TEXT("TargetSection")};
+    for(const auto* Name:Required)if(!Section(Name)){UE_LOG(LogTemp,Error,TEXT("AETHER_HUD_LAYOUT_MISSING %s"),Name);return;}
+    auto* Resources=Section(TEXT("VitalsSection"));
         const TCHAR* Names[]={TEXT("生命"),TEXT("法力"),TEXT("体力")};const FLinearColor Colors[]={FLinearColor(.8,.23,.2),FLinearColor(.22,.5,.9),FLinearColor(.2,.75,.45)};
         for(int32 I=0;I<3;++I)
         {
             Vitals.Add(Text(*WidgetTree,*Resources,Names[I]));auto* B=WidgetTree->ConstructWidget<UProgressBar>();B->SetFillColorAndOpacity(Colors[I]);Resources->AddChildToVerticalBox(B);Bars.Add(B);
         }
         EffectsRow=WidgetTree->ConstructWidget<UHorizontalBox>();Resources->AddChildToVerticalBox(EffectsRow);
-        auto* Quest=Panel(TEXT("WBP_QuestTracker"),FVector2D(1,0),FVector2D(1,0),FVector2D(-20,20),FVector2D(280,190));
+        auto* Quest=Section(TEXT("QuestSection"));
         Guidance=Text(*WidgetTree,*Quest,TEXT(""),FLinearColor(1,.82,.45));
-        auto* Hotbar=Panel(TEXT("WBP_QuickBar"),FVector2D(.5,1),FVector2D(.5,1),FVector2D(0,-20),FVector2D(540,160));
+        auto* Hotbar=Section(TEXT("HotbarSection"));
         auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();Hotbar->AddChildToVerticalBox(Row);
         for(int32 I=0;I<4;++I)
         {
@@ -53,17 +72,15 @@ TSharedRef<SWidget> UAetherPlayerHUDWidget::RebuildWidget()
         }
         State=Text(*WidgetTree,*Hotbar,TEXT(""));
         EquipmentText=Text(*WidgetTree,*Hotbar,TEXT(""));
-        auto* Middle=Panel(TEXT("WBP_InteractionPrompt"),FVector2D(.5,.62),FVector2D(.5,.5),FVector2D::ZeroVector,FVector2D(520,130));
+        auto* Middle=Section(TEXT("InteractionSection"));
         PromptPanel=Middle->GetParent();
-        auto* Target=Panel(TEXT("WBP_TargetVitals"),FVector2D(.5,0),FVector2D(.5,0),FVector2D(0,20),FVector2D(320,70));
+        auto* Target=Section(TEXT("TargetSection"));
         TargetName=Text(*WidgetTree,*Target,TEXT(""));TargetHealth=WidgetTree->ConstructWidget<UProgressBar>();Target->AddChildToVerticalBox(TargetHealth);TargetPanel=Target->GetParent();
         Interaction=Text(*WidgetTree,*Middle,TEXT(""),FLinearColor(1,.85,.45));Feedback=Text(*WidgetTree,*Middle,TEXT(""));
         Encounter=Text(*WidgetTree,*Middle,TEXT(""),FLinearColor(.6,.8,1));
-        Crosshair=WidgetTree->ConstructWidget<UBorder>();Crosshair->SetBrushColor(FLinearColor(.9,.95,1,.8));
-        auto* Dot=Root->AddChildToCanvas(Crosshair);Dot->SetAnchors(FAnchors(.5,.5));Dot->SetAlignment(FVector2D(.5,.5));Dot->SetSize(FVector2D(4,4));
-    }
-    return Super::RebuildWidget();
+
 }
+
 void UAetherPlayerHUDWidget::NativeConstruct()
 {
     Super::NativeConstruct();SetVisibility(ESlateVisibility::HitTestInvisible);Refresh();

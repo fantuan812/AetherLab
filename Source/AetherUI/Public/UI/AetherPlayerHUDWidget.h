@@ -17,8 +17,9 @@ public:
     virtual void NativeDestruct() override;
 private:
     void Refresh();
+    void BuildContents();
     FTimerHandle Timer;
-    UPROPERTY() TObjectPtr<UHorizontalBox> EffectsRow;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UHorizontalBox> EffectsRow;
     TArray<FGuid> ShownEffects;
     UPROPERTY() TArray<TObjectPtr<UTextBlock>> EffectLabels;
     UPROPERTY() TArray<TObjectPtr<UProgressBar>> Bars;
@@ -27,17 +28,17 @@ private:
     UPROPERTY() TArray<TObjectPtr<UImage>> SkillIcons;
     UPROPERTY() TArray<TObjectPtr<UProgressBar>> Cooldowns;
     TArray<FString> ShownIcons;
-    UPROPERTY() TObjectPtr<UTextBlock> EquipmentText;
-    UPROPERTY() TObjectPtr<UTextBlock> TargetName;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> EquipmentText;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> TargetName;
     UPROPERTY() TObjectPtr<UProgressBar> TargetHealth;
     UPROPERTY() TObjectPtr<UWidget> TargetPanel;
     UPROPERTY() TObjectPtr<UWidget> PromptPanel;
-    UPROPERTY() TObjectPtr<UTextBlock> Guidance;
-    UPROPERTY() TObjectPtr<UTextBlock> Interaction;
-    UPROPERTY() TObjectPtr<UTextBlock> Feedback;
-    UPROPERTY() TObjectPtr<UTextBlock> State;
-    UPROPERTY() TObjectPtr<UTextBlock> Encounter;
-    UPROPERTY() TObjectPtr<UBorder> Crosshair;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Guidance;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Interaction;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Feedback;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> State;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Encounter;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UBorder> Crosshair;
     FString LastFeedback;
     double FeedbackUntil=0;
 };

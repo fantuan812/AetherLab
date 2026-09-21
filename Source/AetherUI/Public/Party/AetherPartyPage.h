@@ -17,10 +17,10 @@ public:
 private:
     void Act(FName Action,TWeakObjectPtr<AAetherPlayerState> Target={},TWeakObjectPtr<AAetherFrontierCharacter> Companion={});
     FString LastRoster;
-    UPROPERTY() TObjectPtr<UVerticalBox> Members;
-    UPROPERTY() TObjectPtr<UVerticalBox> Nearby;
-    UPROPERTY() TObjectPtr<UVerticalBox> Invitations;
-    UPROPERTY() TObjectPtr<UTextBlock> Notice;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> Members;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> Nearby;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> Invitations;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Notice;
     UPROPERTY() TObjectPtr<UWidget> First;
     struct FHealthRow{TWeakObjectPtr<AAetherFrontierCharacter> Pawn;TWeakObjectPtr<UTextBlock> Text;};
     TArray<FHealthRow> HealthRows;

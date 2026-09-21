@@ -44,8 +44,8 @@ private:
     TWeakObjectPtr<UAetherCommandClient> Client;
     TWeakObjectPtr<AAetherPlayerState> BoundProfile;
     EAetherMenuPage ShownPage=EAetherMenuPage::None;
-    UPROPERTY() TObjectPtr<UWidgetSwitcher> PageHost;
-    UPROPERTY() TObjectPtr<UHorizontalBox> Tabs;
-    UPROPERTY() TObjectPtr<UTextBlock> Title;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UWidgetSwitcher> PageHost;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UHorizontalBox> Tabs;
+    UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Title;
     UPROPERTY() TMap<EAetherMenuPage,TObjectPtr<UUserWidget>> Pages;
 };

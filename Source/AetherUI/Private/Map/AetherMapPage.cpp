@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "Map/AetherMapPage.h"
 #include "UI/AetherPageWidgets.h"
 #include "Definitions/AetherMapDefinition.h"
@@ -15,6 +16,7 @@ TSharedRef<SWidget> UAetherMapCanvas::RebuildWidget()
 {
     SetIsFocusable(true);SetClipping(EWidgetClipping::ClipToBounds);
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget){auto* B=WidgetTree->ConstructWidget<UBorder>();B->SetBrushColor(FLinearColor(.025,.04,.055));WidgetTree->RootWidget=B;}
     return Super::RebuildWidget();
 }
@@ -87,6 +89,7 @@ FReply UAetherMapCanvas::NativeOnKeyDown(const FGeometry& G,const FKeyEvent& E)
 TSharedRef<SWidget> UAetherMapPage::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Root=WidgetTree->ConstructWidget<UVerticalBox>();WidgetTree->RootWidget=Root;
@@ -103,6 +106,16 @@ TSharedRef<SWidget> UAetherMapPage::RebuildWidget()
         Detail=Text(*WidgetTree,*Root,TEXT("选择据点、任务或服务标记查看详情。"));
         TravelButton=Button(*WidgetTree,*Root,TEXT("传送到选中据点"),FSimpleDelegate::CreateUObject(this,&UAetherMapPage::Travel),false);
     }
+
+    const auto Bind=[&](const TCHAR* Name,FSimpleDelegate Action){if(auto* B=Cast<UAetherPageButton>(GetWidgetFromName(Name)))B->Bind(MoveTemp(Action));};
+    Bind(TEXT("ServicesButton"),FSimpleDelegate::CreateWeakLambda(this,[this](){bServices=!bServices;RefreshPage();}));
+    Bind(TEXT("PartyButton"),FSimpleDelegate::CreateWeakLambda(this,[this](){bParty=!bParty;RefreshPage();}));
+    Bind(TEXT("QuestsButton"),FSimpleDelegate::CreateWeakLambda(this,[this](){bQuests=!bQuests;RefreshPage();}));
+    Bind(TEXT("ZoomInButton"),FSimpleDelegate::CreateWeakLambda(this,[this](){Map->ChangeZoom(1.2f);}));
+    Bind(TEXT("ZoomOutButton"),FSimpleDelegate::CreateWeakLambda(this,[this](){Map->ChangeZoom(1/1.2f);}));
+    Bind(TEXT("CenterButton"),FSimpleDelegate::CreateWeakLambda(this,[this](){Map->Pan=FVector2D::ZeroVector;Map->Zoom=1;}));
+    Bind(TEXT("TravelButton"),FSimpleDelegate::CreateUObject(this,&UAetherMapPage::Travel));
+    if(Map)Map->Selected.BindUObject(this,&UAetherMapPage::Select);
     return Super::RebuildWidget();
 }
 UWidget* UAetherMapPage::InitialFocus() const{return Map?Map.Get():Super::InitialFocus();}

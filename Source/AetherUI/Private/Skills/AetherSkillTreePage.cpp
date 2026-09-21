@@ -27,6 +27,7 @@
 TSharedRef<SWidget> UAetherSkillTreePage::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this,TEXT("WidgetTree"));
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Overlay=WidgetTree->ConstructWidget<UOverlay>();WidgetTree->RootWidget=Overlay;
@@ -56,7 +57,13 @@ TSharedRef<SWidget> UAetherSkillTreePage::RebuildWidget()
         // 遮罩占满本页，数量确认保持独立焦点，点击不会透到下面的节点或快捷位。
         Confirmation=CreateWidget<UAetherInspectionConfirmation>(this,AetherWidgetAssets::Class<UAetherInspectionConfirmation>());
     }
-    Refresh();return Super::RebuildWidget();
+    Refresh();
+    if(!Confirmation)Confirmation=CreateWidget<UAetherInspectionConfirmation>(this,AetherWidgetAssets::Class<UAetherInspectionConfirmation>());
+    AetherWidgetAssets::BindButton(*this,TEXT("ResetButton"),TEXT("ResetGraphView"));
+    AetherWidgetAssets::BindButton(*this,TEXT("RetryButton"),TEXT("RetryNativeCommand"));
+    AetherWidgetAssets::BindButton(*this,TEXT("PreviousButton"),TEXT("PreviousSources"));
+    AetherWidgetAssets::BindButton(*this,TEXT("NextButton"),TEXT("NextSources"));
+    return Super::RebuildWidget();
 }
 void UAetherSkillTreePage::NativeConstruct()
 {

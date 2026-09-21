@@ -39,8 +39,8 @@ private:
     TWeakObjectPtr<AAetherFrontierCharacter> Player;
     void Choose(int32 Index,uint64 Version);
     TWeakObjectPtr<UAetherDialogueSession> Session;
-    UPROPERTY(Transient) TObjectPtr<UTextBlock> Speaker;
-    UPROPERTY(Transient) TObjectPtr<UTextBlock> Speech;
-    UPROPERTY(Transient) TObjectPtr<UTextBlock> Feedback;
-    UPROPERTY(Transient) TObjectPtr<UVerticalBox> Choices;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Speaker;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Speech;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Feedback;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> Choices;
 };

@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "Dialogue/AetherDialoguePage.h"
 #include "CommonInputBaseTypes.h"
 #include "Interaction/AetherDialogueSession.h"
@@ -38,6 +39,7 @@ void UAetherDialogueChoiceButton::Select(){OnChoice.ExecuteIfBound(ChoiceIndex,S
 TSharedRef<SWidget> UAetherDialoguePage::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Border=WidgetTree->ConstructWidget<UBorder>();Border->SetPadding(FMargin(28));Border->SetBrushColor(FLinearColor(.025f,.035f,.055f,.98f));WidgetTree->RootWidget=Border;

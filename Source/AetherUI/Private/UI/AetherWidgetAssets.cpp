@@ -1,7 +1,25 @@
 #include "UI/AetherWidgetAssets.h"
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/Button.h"
+#include "UObject/UnrealType.h"
 namespace AetherWidgetAssets
 {
+void BindDesigner(UUserWidget& Owner,UWidgetTree& Tree)
+{
+    Tree.ForEachWidget([&](UWidget* Widget)
+    {
+        // 只绑定同名且类型相符的控件字段，不按显示文字猜测对象，也不触碰玩法数据。
+        auto* Property=FindFProperty<FObjectPropertyBase>(Owner.GetClass(),Widget->GetFName());
+        if(Property&&Property->PropertyClass->IsChildOf(UWidget::StaticClass())&&Widget->IsA(Property->PropertyClass))
+            Property->SetObjectPropertyValue_InContainer(&Owner,Widget);
+    });
+}
+void BindButton(UUserWidget& Owner,FName Widget,FName Function)
+{
+    if(auto* Button=Cast<UButton>(Owner.GetWidgetFromName(Widget));Button&&Owner.FindFunction(Function))
+    {FScriptDelegate Event;Event.BindUFunction(&Owner,Function);Button->OnClicked.AddUnique(Event);}
+}
 UClass* Resolve(UClass* NativeClass,const TCHAR* Variant)
 {
     if(!NativeClass)return nullptr;

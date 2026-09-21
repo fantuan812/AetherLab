@@ -16,6 +16,7 @@
 TSharedRef<SWidget> UAetherInventoryCell::RebuildWidget()
 {
     SetIsFocusable(true);if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Size=WidgetTree->ConstructWidget<USizeBox>();Size->SetMinDesiredWidth(74);Size->SetMinDesiredHeight(80);WidgetTree->RootWidget=Size;

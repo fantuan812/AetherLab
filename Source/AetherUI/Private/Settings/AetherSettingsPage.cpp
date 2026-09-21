@@ -1,3 +1,4 @@
+#include "UI/AetherWidgetAssets.h"
 #include "Settings/AetherSettingsPage.h"
 #include "UI/AetherPageWidgets.h"
 #include "Presentation/AetherPlayerPreferences.h"
@@ -19,6 +20,7 @@ using namespace AetherPageWidgets;
 TSharedRef<SWidget> UAetherSettingsPage::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
+    if(WidgetTree->RootWidget)AetherWidgetAssets::BindDesigner(*this,*WidgetTree);
     if(!WidgetTree->RootWidget)
     {
         auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();WidgetTree->RootWidget=Scroll;
@@ -49,6 +51,15 @@ TSharedRef<SWidget> UAetherSettingsPage::RebuildWidget()
         Button(*WidgetTree,*Confirmation,TEXT("恢复原分辨率"),FSimpleDelegate::CreateUObject(this,&UAetherSettingsPage::RevertVideo));
         Notice=Text(*WidgetTree,*Root,TEXT(""));Confirmation->SetVisibility(ESlateVisibility::Collapsed);
     }
+
+    if(BindingAction)BindingAction->OnSelectionChanged.AddUniqueDynamic(this,&UAetherSettingsPage::ActionSelected);
+    if(BindingKey)BindingKey->OnKeySelected.AddUniqueDynamic(this,&UAetherSettingsPage::KeySelected);
+    const auto Bind=[&](const TCHAR* Name,FSimpleDelegate Action){if(auto* B=Cast<UAetherPageButton>(GetWidgetFromName(Name)))B->Bind(MoveTemp(Action));};
+    Bind(TEXT("ApplyButton"),FSimpleDelegate::CreateUObject(this,&UAetherSettingsPage::Apply));
+    Bind(TEXT("RevertButton"),FSimpleDelegate::CreateWeakLambda(this,[this](){RevertVideo();RefreshPage();}));
+    Bind(TEXT("DefaultsButton"),FSimpleDelegate::CreateUObject(this,&UAetherSettingsPage::Defaults));
+    Bind(TEXT("ConfirmVideoButton"),FSimpleDelegate::CreateUObject(this,&UAetherSettingsPage::ConfirmVideo));
+    Bind(TEXT("RevertVideoButton"),FSimpleDelegate::CreateUObject(this,&UAetherSettingsPage::RevertVideo));
     return Super::RebuildWidget();
 }
 UWidget* UAetherSettingsPage::InitialFocus() const{return Resolution?Resolution.Get():Super::InitialFocus();}
