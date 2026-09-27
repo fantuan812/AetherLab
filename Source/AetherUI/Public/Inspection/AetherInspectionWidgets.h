@@ -51,11 +51,22 @@ public:
     virtual FReply NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
     virtual void NativeDestruct() override;
 private:
+    struct FDisplayRow
+    {
+        FString Key,Text;
+        FLinearColor Color=FLinearColor::White;
+        TOptional<FAetherInspectionAction> Action;
+        bool bComparison=false;
+    };
     void RenderModel();
     void Forward(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action,bool Comparison);
-    void AddLine(const FString& Text,FLinearColor Color=FLinearColor::White);
-    void AddEffect(const TCHAR* Label,const FAetherSkillRankEffect& Effect);
+    void AddLine(const FString& Key,const FString& Text,FLinearColor Color=FLinearColor::White);
+    void AddEffect(const TCHAR* Key,const TCHAR* Label,const FAetherSkillRankEffect& Effect);
     FAetherInspectionModel Model;
+    TArray<FDisplayRow> DisplayRows;
+    TArray<FString> RenderedKeys;
+    FString IconPathKey;
+    bool bIconResolved=false,bIconRequestPending=false;
     uint64 Generation=0;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UVerticalBox> Rows;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UImage> Icon;

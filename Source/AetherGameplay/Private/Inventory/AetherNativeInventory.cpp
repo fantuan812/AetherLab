@@ -35,6 +35,7 @@ bool AetherNativeInventory::Snapshot(AAetherFrontierCharacter& C,int64 Revision,
     const auto Shop=C.ActiveShop();const auto* Definition=FAetherV10Definitions::Get().Economy.Shops.Find(Shop.ToString());
     if(!Shop.IsNone()&&Definition&&C.TradeSession.Target.IsValid())
     {Out.Shop=*Definition;Out.TradeTargetStableId=C.TradeSession.Target->Spec.Id.ToString();}
+    Out.RebuildLookup();
     return true;
 }
 bool AetherNativeInventory::Submit(AAetherFrontierCharacter& C,FAetherPlayerCommand Command,int64 Seen,FString& Why)

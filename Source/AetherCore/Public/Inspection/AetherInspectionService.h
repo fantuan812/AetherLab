@@ -37,6 +37,13 @@ struct FAetherInspectStatusEffect
 };
 struct FAetherInspectionSnapshot
 {
+    struct FInventoryLookup
+    {
+        TMap<int32,int32> BySlot;
+        TMap<FGuid,int32> ById;
+        TMap<FGuid,FString> Fingerprints;
+        FString LoadoutFingerprint;
+    };
     FAetherInspectContext Context;
     // 展示版本不是数据库版本，命令必须使用独立的聚合版本。
     int64 ProfileRevision=-1,WorldRevision=-1;
@@ -55,6 +62,10 @@ struct FAetherInspectionSnapshot
     TArray<FAetherExternalSkillGrant> ExternalGrants;
     TArray<FAetherInspectStatusEffect> StatusEffects;
     double ServerTimeSeconds=0;
+    FInventoryLookup InventoryLookup,ContainerLookup;
+    void RebuildLookup();
+    const FAetherV10ItemInstance* At(int32 Slot,bool bContainer=false) const;
+    const FAetherV10ItemInstance* Find(FGuid Id,bool bContainer=false) const;
 };
 enum class EAetherInspectionState:uint8 {Ready,Changed,Missing,Invalid};
 enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill,Use,Split,Sell,Buy,Repair,Deposit,Withdraw,ResetSkills};

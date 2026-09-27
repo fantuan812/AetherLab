@@ -50,12 +50,27 @@ TSharedRef<SWidget> UAetherInspectionCard::RebuildWidget()
 }
 void UAetherInspectionCard::SetModel(const FAetherInspectionModel& InModel)
 {
-    ++Generation;Model=InModel;
-    if(Icon){Icon->SetBrushFromTexture(nullptr);Icon->SetVisibility(ESlateVisibility::Hidden);}
-    RenderModel();
-    const auto Path=AetherWidgetAssets::Icon(Model.IconId);
-    if(Path.IsValid())
+    const auto Path=AetherWidgetAssets::Icon(InModel.IconId);
+    const FString NextPath=Path.ToString();
+    const bool IdentityChanged=Model.Request.Context.SessionId!=InModel.Request.Context.SessionId||
+        Model.Request.Target.Kind!=InModel.Request.Target.Kind||Model.Request.Target.InstanceId!=InModel.Request.Target.InstanceId||
+        Model.Request.Target.DefinitionId!=InModel.Request.Target.DefinitionId||Model.Request.Target.SlotId!=InModel.Request.Target.SlotId||
+        Model.Request.Target.ContainerId!=InModel.Request.Target.ContainerId||Model.Request.Target.SkillRank!=InModel.Request.Target.SkillRank;
+    if(IdentityChanged||IconPathKey!=NextPath)
     {
+        ++Generation;bIconRequestPending=false;
+        if(IconPathKey!=NextPath)
+        {
+            bIconResolved=false;
+            if(Icon){Icon->SetBrushFromTexture(nullptr);Icon->SetVisibility(ESlateVisibility::Hidden);}
+        }
+        IconPathKey=NextPath;
+    }
+    Model=InModel;
+    RenderModel();
+    if(Path.IsValid()&&!bIconResolved&&!bIconRequestPending)
+    {
+        bIconRequestPending=true;
         const auto Expected=Generation;const TWeakObjectPtr<UAetherInspectionCard> Self=this;
         UAssetManager::GetStreamableManager().RequestAsyncLoad(Path,[Self,Path,Expected]()
         {if(Self.IsValid())Self->SetResolvedIcon(Expected,Cast<UTexture2D>(Path.ResolveObject()));});
@@ -64,64 +79,100 @@ void UAetherInspectionCard::SetModel(const FAetherInspectionModel& InModel)
 void UAetherInspectionCard::SetResolvedIcon(uint64 DisplayGeneration,UTexture2D* Texture)
 {
     if(DisplayGeneration!=Generation||!Icon)return;
+    bIconResolved=true;bIconRequestPending=false;
     Icon->SetBrushFromTexture(Texture);Icon->SetVisibility(Texture?ESlateVisibility::HitTestInvisible:ESlateVisibility::Hidden);
 }
-void UAetherInspectionCard::AddLine(const FString& Text,FLinearColor Color)
+void UAetherInspectionCard::AddLine(const FString& Key,const FString& Text,FLinearColor Color)
 {
-    if(Text.IsEmpty()||!Rows)return;
-    auto* Line=WidgetTree->ConstructWidget<UTextBlock>();Line->SetText(FText::FromString(Text));Line->SetAutoWrapText(true);
-    Line->SetColorAndOpacity(FSlateColor(Color));Rows->AddChildToVerticalBox(Line)->SetPadding(FMargin(0,3));
+    DisplayRows.Add({Key,Text,Color});
 }
-void UAetherInspectionCard::AddEffect(const TCHAR* Label,const FAetherSkillRankEffect& E)
+void UAetherInspectionCard::AddEffect(const TCHAR* Key,const TCHAR* Label,const FAetherSkillRankEffect& E)
 {
-    AddLine(Label,FLinearColor(.6f,.8f,1));
-    AddLine(FString::Printf(TEXT("技能点 %d · 需求等级 %d"),E.PointCost,E.RequiredLevel));
+    const FString Prefix=Key;
+    AddLine(Prefix+TEXT(":label"),Label,FLinearColor(.6f,.8f,1));
+    AddLine(Prefix+TEXT(":cost"),FString::Printf(TEXT("技能点 %d · 需求等级 %d"),E.PointCost,E.RequiredLevel));
     if(!E.PassiveStats.IsEmpty())
     {
         TArray<FString> Keys;E.PassiveStats.GetKeys(Keys);Keys.Sort();
-        for(const auto& Key:Keys)AddLine(FString::Printf(TEXT("被动 %s +%.1f"),*Key,E.PassiveStats[Key]));
+        for(const auto& Stat:Keys)AddLine(Prefix+TEXT(":passive:")+Stat,FString::Printf(TEXT("被动 %s +%.1f"),*Stat,E.PassiveStats[Stat]));
         return;
     }
-    AddLine(FString::Printf(TEXT("法力 %.1f · 冷却 %.2f 秒 · 距离 %.0f 厘米 · 半径 %.0f 厘米"),E.ManaCost,E.Cooldown,E.RangeCm,E.TargetRadiusCm));
+    AddLine(Prefix+TEXT(":cast"),FString::Printf(TEXT("法力 %.1f · 冷却 %.2f 秒 · 距离 %.0f 厘米 · 半径 %.0f 厘米"),E.ManaCost,E.Cooldown,E.RangeCm,E.TargetRadiusCm));
     // 直接呈现公共等级解析结果，不在 UI 重算材料反应或把水输出量当作免费资源。
-    AddLine(FString::Printf(TEXT("热传递 %.1f J · 水转移 %.3f kg · 电刺激 %.1f J"),E.HeatJ,E.WaterKg,E.ElectricalJ));
+    AddLine(Prefix+TEXT(":reaction"),FString::Printf(TEXT("热传递 %.1f J · 水转移 %.3f kg · 电刺激 %.1f J"),E.HeatJ,E.WaterKg,E.ElectricalJ));
 }
 void UAetherInspectionCard::RenderModel()
 {
     if(!Rows||!Heading)return;
-    FString RestoreFocus;
-    for(auto* Child:Rows->GetAllChildren())if(auto* B=Cast<UAetherInspectionActionButton>(Child);B&&B->HasUserFocus(GetOwningPlayer()))RestoreFocus=B->FocusIdentity();
-    Rows->ClearChildren();Heading->SetText(FText::FromString(Model.Title.IsEmpty()?TEXT("详细资料"):Model.Title));
-    AddLine(Model.Message,Model.CanInteract()?FLinearColor(.8f,.85f,.9f):FLinearColor(1,.65f,.3f));
-    for(const auto& Field:Model.Fields)AddLine(Field.Label+TEXT("：")+Field.Value);
-    if(Model.CurrentSkillEffect.IsSet())AddEffect(TEXT("当前实际效果"),Model.CurrentSkillEffect.GetValue());
-    if(Model.NextSkillEffect.IsSet())AddEffect(TEXT("下一级永久成长"),Model.NextSkillEffect.GetValue());
-    if(Model.SelectedSkillEffect.IsSet())AddEffect(TEXT("所选节点效果"),Model.SelectedSkillEffect.GetValue());
-    if(Model.RemainingSeconds.IsSet())AddLine(FString::Printf(TEXT("剩余 %.1f 秒"),Model.RemainingSeconds.GetValue()));
-    AddLine(Model.ComparisonMessage);
+    DisplayRows.Reset();Heading->SetText(FText::FromString(Model.Title.IsEmpty()?TEXT("详细资料"):Model.Title));
+    AddLine(TEXT("message"),Model.Message,Model.CanInteract()?FLinearColor(.8f,.85f,.9f):FLinearColor(1,.65f,.3f));
+    for(int32 Index=0;Index<Model.Fields.Num();++Index)
+    {const auto& Field=Model.Fields[Index];AddLine(TEXT("field:")+Field.Key+TEXT(":")+LexToString(Index),Field.Label+TEXT("：")+Field.Value);}
+    if(Model.CurrentSkillEffect.IsSet())AddEffect(TEXT("skill:current"),TEXT("当前实际效果"),Model.CurrentSkillEffect.GetValue());
+    if(Model.NextSkillEffect.IsSet())AddEffect(TEXT("skill:next"),TEXT("下一级永久成长"),Model.NextSkillEffect.GetValue());
+    if(Model.SelectedSkillEffect.IsSet())AddEffect(TEXT("skill:selected"),TEXT("所选节点效果"),Model.SelectedSkillEffect.GetValue());
+    if(Model.RemainingSeconds.IsSet())AddLine(TEXT("remaining"),FString::Printf(TEXT("剩余 %.1f 秒"),Model.RemainingSeconds.GetValue()));
+    AddLine(TEXT("comparison:message"),Model.ComparisonMessage);
     for(const auto& Stat:Model.Comparison)
     {
         const auto Color=Stat.Delta()>0?FLinearColor(.35f,1,.55f):Stat.Delta()<0?FLinearColor(1,.45f,.4f):FLinearColor(.8f,.8f,.8f);
         // 正负号、实际数值与颜色同时表达变化，不能只用红绿区分。
-        AddLine(FString::Printf(TEXT("%s：%.2f → %.2f (%+.2f)"),*Stat.Id,Stat.Before,Stat.After,Stat.Delta()),Color);
+        AddLine(TEXT("comparison:stat:")+Stat.Id,FString::Printf(TEXT("%s：%.2f → %.2f (%+.2f)"),*Stat.Id,Stat.Before,Stat.After,Stat.Delta()),Color);
     }
-    if(!Model.DisplacedInstances.IsEmpty())AddLine(FString::Printf(TEXT("此方案将卸下 %d 件现有装备。"),Model.DisplacedInstances.Num()));
+    if(!Model.DisplacedInstances.IsEmpty())AddLine(TEXT("comparison:displaced"),FString::Printf(TEXT("此方案将卸下 %d 件现有装备。"),Model.DisplacedInstances.Num()));
     auto AddButton=[&](const FAetherInspectionAction& Action,bool Comparison)
     {
-        auto* B=WidgetTree->ConstructWidget<UAetherInspectionActionButton>();
-        B->InitializeAction(Model.Request,Action,Comparison);
-        B->OnRequested.AddUObject(this,&UAetherInspectionCard::Forward);
-        auto* Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetAutoWrapText(true);
-        Text->SetText(FText::FromString(Action.Label+(Action.Argument.IsEmpty()?FString():TEXT(" · ")+Action.Argument)));
-        B->SetContent(Text);Rows->AddChildToVerticalBox(B)->SetPadding(FMargin(0,4));
-        if(!RestoreFocus.IsEmpty()&&B->FocusIdentity()==RestoreFocus&&B->GetIsEnabled())B->SetUserFocus(GetOwningPlayer());
-        if(!Action.bEnabled)AddLine(Action.DisabledReason,FLinearColor(.8f,.65f,.5f));
+        const FString Key=TEXT("action:")+LexToString(uint8(Action.Kind))+TEXT(":")+Action.Argument+(Comparison?TEXT(":compare"):TEXT(":act"));
+        FDisplayRow Row;Row.Key=Key;Row.Text=Action.Label+(Action.Argument.IsEmpty()?FString():TEXT(" · ")+Action.Argument);
+        Row.Action=Action;Row.bComparison=Comparison;DisplayRows.Add(MoveTemp(Row));
+        AddLine(Key+TEXT(":reason"),Action.bEnabled?FString():Action.DisabledReason,FLinearColor(.8f,.65f,.5f));
     };
     if(Model.CanInteract())
     {
         for(const auto& SlotValue:Model.ComparisonSlots)
             AddButton({EAetherInspectAction::Equip,SlotValue,TEXT("比较此槽"),{},1,true,false},true);
         for(const auto& Action:Model.Actions)AddButton(Action,false);
+    }
+    bool bSame=RenderedKeys.Num()==DisplayRows.Num()&&Rows->GetChildrenCount()==DisplayRows.Num();
+    if(bSame)for(int32 Index=0;Index<DisplayRows.Num();++Index)
+        if(RenderedKeys[Index]!=DisplayRows[Index].Key){bSame=false;break;}
+    FString RestoreFocus;
+    if(!bSame)
+    {
+        for(auto* Child:Rows->GetAllChildren())if(auto* B=Cast<UAetherInspectionActionButton>(Child);B&&B->HasUserFocus(GetOwningPlayer()))RestoreFocus=B->FocusIdentity();
+        Rows->ClearChildren();RenderedKeys.Reset();
+        for(const auto& Row:DisplayRows)
+        {
+            RenderedKeys.Add(Row.Key);
+            if(Row.Action.IsSet())
+            {
+                auto* Button=WidgetTree->ConstructWidget<UAetherInspectionActionButton>();
+                auto* Label=WidgetTree->ConstructWidget<UTextBlock>();Label->SetAutoWrapText(true);Button->SetContent(Label);
+                Button->OnRequested.AddUObject(this,&UAetherInspectionCard::Forward);
+                Rows->AddChildToVerticalBox(Button)->SetPadding(FMargin(0,4));
+            }
+            else
+            {
+                auto* Line=WidgetTree->ConstructWidget<UTextBlock>();Line->SetAutoWrapText(true);
+                Rows->AddChildToVerticalBox(Line)->SetPadding(FMargin(0,3));
+            }
+        }
+    }
+    for(int32 Index=0;Index<DisplayRows.Num();++Index)
+    {
+        const auto& Row=DisplayRows[Index];auto* Child=Rows->GetChildAt(Index);
+        if(Row.Action.IsSet())
+        {
+            auto* Button=CastChecked<UAetherInspectionActionButton>(Child);
+            Button->InitializeAction(Model.Request,Row.Action.GetValue(),Row.bComparison);
+            if(auto* Label=Cast<UTextBlock>(Button->GetContent()))Label->SetText(FText::FromString(Row.Text));
+            if(!RestoreFocus.IsEmpty()&&Button->FocusIdentity()==RestoreFocus&&Button->GetIsEnabled())Button->SetUserFocus(GetOwningPlayer());
+        }
+        else
+        {
+            auto* Line=CastChecked<UTextBlock>(Child);Line->SetText(FText::FromString(Row.Text));
+            Line->SetColorAndOpacity(FSlateColor(Row.Color));Line->SetVisibility(Row.Text.IsEmpty()?ESlateVisibility::Collapsed:ESlateVisibility::HitTestInvisible);
+        }
     }
 }
 UWidget* UAetherInspectionCard::NavigationTarget() const
@@ -135,7 +186,9 @@ void UAetherInspectionCard::Forward(const FAetherInspectRequest& Request,const F
     if(!Model.CanInteract()||!Request.Context.Same(Model.Request.Context)||Request.Target.Kind!=Model.Request.Target.Kind||
         Request.Target.InstanceId!=Model.Request.Target.InstanceId||Request.Target.SkillRank!=Model.Request.Target.SkillRank||
         !Request.Target.DefinitionId.Equals(Model.Request.Target.DefinitionId,ESearchCase::CaseSensitive)||
-        !Request.Target.SlotId.Equals(Model.Request.Target.SlotId,ESearchCase::CaseSensitive))return;
+        !Request.Target.SlotId.Equals(Model.Request.Target.SlotId,ESearchCase::CaseSensitive)||
+        !Request.Target.ContainerId.Equals(Model.Request.Target.ContainerId,ESearchCase::CaseSensitive)||
+        Request.DependencyKey!=Model.Request.DependencyKey)return;
     if(Comparison)
     {
         if(Model.ComparisonSlots.Contains(Action.Argument))OnComparisonRequested.Broadcast(Request,Action.Argument);
@@ -161,7 +214,8 @@ FReply UAetherInspectionCard::NativeOnKeyDown(const FGeometry& Geometry,const FK
 }
 void UAetherInspectionCard::NativeDestruct()
 {
-    ++Generation;if(Icon)Icon->SetBrushFromTexture(nullptr);
+    ++Generation;bIconResolved=false;bIconRequestPending=false;IconPathKey.Reset();RenderedKeys.Reset();DisplayRows.Reset();
+    if(Icon)Icon->SetBrushFromTexture(nullptr);
     OnActionRequested.Clear();OnComparisonRequested.Clear();OnDismissRequested.Clear();Super::NativeDestruct();
 }
 

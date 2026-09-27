@@ -3,6 +3,54 @@
 
 namespace
 {
+FString ItemFingerprint(const FAetherV10ItemInstance& I)
+{
+    FString Key=I.InstanceId.ToString()+TEXT("|")+I.DefinitionId+TEXT("|")+LexToString(I.Quantity)+TEXT("|")+
+        LexToString(I.Quality)+TEXT("|")+LexToString(I.Durability)+TEXT("|")+I.BoundToCharacter+TEXT("|")+I.StateGroup+
+        TEXT("|")+I.QuestInstanceId.ToString()+TEXT("|")+(I.bLocked?TEXT("1"):TEXT("0"))+(I.bFavorite?TEXT("1"):TEXT("0"));
+    TArray<FString> Names;I.Affixes.GenerateKeyArray(Names);Names.Sort();
+    for(const FString& Name:Names)Key+=TEXT("|")+Name+TEXT("=")+LexToString(I.Affixes.FindChecked(Name));
+    return Key;
+}
+void IndexInventory(const FAetherInventoryStateV10& Inventory,FAetherInspectionSnapshot::FInventoryLookup& Lookup)
+{
+    Lookup={};
+    for(int32 Index=0;Index<Inventory.Items.Num();++Index)
+    {
+        const auto& Item=Inventory.Items[Index];
+        Lookup.BySlot.Add(Item.SlotIndex,Index);Lookup.ById.Add(Item.InstanceId,Index);
+        Lookup.Fingerprints.Add(Item.InstanceId,ItemFingerprint(Item));
+    }
+    TArray<FString> Slots;Inventory.Equipment.GenerateKeyArray(Slots);Slots.Sort();
+    for(const FString& Slot:Slots)
+    {
+        const FGuid Id=Inventory.Equipment.FindChecked(Slot);
+        Lookup.LoadoutFingerprint+=Slot+TEXT("=")+Id.ToString()+TEXT(":")+Lookup.Fingerprints.FindRef(Id)+TEXT(";");
+    }
+}
+}
+void FAetherInspectionSnapshot::RebuildLookup()
+{
+    IndexInventory(Inventory,InventoryLookup);
+    ContainerLookup={};if(Container.IsSet())IndexInventory(Container->Inventory,ContainerLookup);
+}
+const FAetherV10ItemInstance* FAetherInspectionSnapshot::At(int32 Slot,bool bContainer) const
+{
+    const auto& State=bContainer&&Container.IsSet()?Container->Inventory:Inventory;
+    const auto& Lookup=bContainer?ContainerLookup:InventoryLookup;
+    if(const int32* Index=Lookup.BySlot.Find(Slot))return State.Items.IsValidIndex(*Index)?&State.Items[*Index]:nullptr;
+    return Lookup.BySlot.IsEmpty()&&!State.Items.IsEmpty()?State.At(Slot):nullptr;
+}
+const FAetherV10ItemInstance* FAetherInspectionSnapshot::Find(FGuid Id,bool bContainer) const
+{
+    const auto& State=bContainer&&Container.IsSet()?Container->Inventory:Inventory;
+    const auto& Lookup=bContainer?ContainerLookup:InventoryLookup;
+    if(const int32* Index=Lookup.ById.Find(Id))return State.Items.IsValidIndex(*Index)?&State.Items[*Index]:nullptr;
+    return Lookup.ById.IsEmpty()&&!State.Items.IsEmpty()?State.Find(Id):nullptr;
+}
+
+namespace
+{
 void Field(FAetherInspectionModel& M,const TCHAR* Key,const TCHAR* Label,FString Value)
 {M.Fields.Add({Key,Label,MoveTemp(Value)});}
 void Action(FAetherInspectionModel& M,EAetherInspectAction Kind,FString Argument,const TCHAR* Label,
@@ -245,28 +293,24 @@ FString AetherInspection::DependencyKey(const FAetherInspectionSnapshot& S,const
 {
     FString Key;const auto Add=[&](const FString& V){Key+=FString::FromInt(V.Len())+TEXT(":")+V;};
     Add(S.Context.OwnerIdentity);Add(S.Context.SessionId.ToString());
-    const auto Inventory=[&](const FAetherInventoryStateV10& V)
-    {
-        Add(LexToString(V.Capacity));
-        for(int32 Slot=0;Slot<V.Capacity;++Slot)if(const auto* I=V.At(Slot))
-        {
-            Add(LexToString(Slot));Add(I->InstanceId.ToString());Add(I->DefinitionId);Add(LexToString(I->Quantity));
-            Add(LexToString(I->Quality));Add(LexToString(I->Durability));Add(I->BoundToCharacter);Add(I->StateGroup);
-            Add(I->QuestInstanceId.ToString());Add(I->bLocked?TEXT("1"):TEXT("0"));Add(I->bFavorite?TEXT("1"):TEXT("0"));
-            TArray<FString> Names;I->Affixes.GenerateKeyArray(Names);Names.Sort();
-            for(const auto& N:Names){Add(N);Add(LexToString(I->Affixes.FindChecked(N)));}
-        }
-        TArray<FString> Slots;V.Equipment.GenerateKeyArray(Slots);Slots.Sort();
-        for(const auto& N:Slots){Add(N);Add(V.Equipment.FindChecked(N).ToString());}
-    };
     if(T.Kind==EAetherInspectTarget::ItemInstance||T.Kind==EAetherInspectTarget::EquipmentSlot)
     {
-        if(!T.ContainerId.IsEmpty())
+        const bool bContainer=!T.ContainerId.IsEmpty();
+        const auto& Lookup=bContainer?S.ContainerLookup:S.InventoryLookup;
+        Add(T.InstanceId.ToString());
+        Add(bContainer?S.ContainerContext.ToString():FString());Add(T.ContainerId);
+        if(T.Kind==EAetherInspectTarget::ItemInstance&&!T.SlotId.IsEmpty())
         {
-            Add(S.ContainerContext.ToString());Add(T.ContainerId);
-            if(S.Container.IsSet())Inventory(S.Container->Inventory);
+            int32 Slot=INDEX_NONE;
+            if(LexTryParseString(Slot,*T.SlotId))
+            {Add(T.SlotId);const auto* Occupant=S.At(Slot,bContainer);Add(Occupant?Occupant->InstanceId.ToString():TEXT("empty"));}
         }
-        else Inventory(S.Inventory);
+        if(T.Kind==EAetherInspectTarget::EquipmentSlot)
+        {Add(T.SlotId);Add(S.Inventory.Equipment.FindRef(T.SlotId).ToString());}
+        if(const FString* Fingerprint=Lookup.Fingerprints.Find(T.InstanceId))Add(*Fingerprint);
+        else if(const auto* Item=S.Find(T.InstanceId,bContainer))Add(ItemFingerprint(*Item));
+        else Add(TEXT("missing"));
+        if(!T.ComparisonSlot.IsEmpty()){Add(T.ComparisonSlot);Add(S.InventoryLookup.LoadoutFingerprint);}
     }
     else if(T.Kind==EAetherInspectTarget::ItemDefinition)
     {Add(S.TradeTargetStableId);Add(S.Shop.IsSet()?S.Shop->Id:FString());}
@@ -279,9 +323,8 @@ FAetherInspectRequest AetherInspection::Pin(const FAetherInspectionSnapshot& S,F
     if(T.Kind==EAetherInspectTarget::EquipmentSlot)T.InstanceId=S.Inventory.Equipment.FindRef(T.SlotId);
     if(T.Kind==EAetherInspectTarget::EquipmentSlot||T.Kind==EAetherInspectTarget::ItemInstance)
     {
-        const auto* Inventory=&S.Inventory;
-        if(!T.ContainerId.IsEmpty()&&S.Container.IsSet()&&S.Container->ContainerId.Equals(T.ContainerId,ESearchCase::CaseSensitive))Inventory=&S.Container->Inventory;
-        if(const auto* I=Inventory->Find(T.InstanceId))T.DefinitionId=I->DefinitionId;
+        const bool Container=!T.ContainerId.IsEmpty()&&S.Container.IsSet()&&S.Container->ContainerId.Equals(T.ContainerId,ESearchCase::CaseSensitive);
+        if(const auto* I=S.Find(T.InstanceId,Container))T.DefinitionId=I->DefinitionId;
     }
     const FString Key=DependencyKey(S,T);return {S.Context,MoveTemp(T),Key};
 }
@@ -301,7 +344,7 @@ FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,co
             !S.Container->ContainerId.Equals(R.Target.ContainerId,ESearchCase::CaseSensitive)||!S.Container->bActive)
         {M.State=EAetherInspectionState::Changed;M.Message=TEXT("容器会话已失效。");return M;}
         // 复用物品字段，操作能力再收窄为取出，不能直接穿戴或消耗容器中的物品。
-        auto View=S;View.Inventory=S.Container->Inventory;View.Shop.Reset();View.Container.Reset();
+        auto View=S;View.Inventory=S.Container->Inventory;View.Shop.Reset();View.Container.Reset();View.RebuildLookup();
         auto Local=R;Local.Target.ContainerId.Reset();Local.Context=S.Context;Local.DependencyKey=DependencyKey(View,Local.Target);
         auto ContainerItems=Items;ContainerItems.DefaultCapacity=View.Inventory.Capacity;
         M=Build(Local,View,ContainerItems,Skills);M.Request=R;M.Request.Context=S.Context;

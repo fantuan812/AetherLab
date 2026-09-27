@@ -212,8 +212,8 @@ void UAetherInventoryPage::Refresh()
     for(int32 SlotValue=0;SlotValue<Cells.Num();++SlotValue)
     {
         if(auto* Layout=Cast<UUniformGridSlot>(Cells[SlotValue]->Slot)){Layout->SetRow(SlotValue/Columns);Layout->SetColumn(SlotValue%Columns);}
-        const auto* I=Snapshot.Inventory.At(SlotValue);const auto* Def=I?D.Items.Items.Find(I->DefinitionId):nullptr;
-        FAetherInspectTarget Target;Target.Kind=EAetherInspectTarget::ItemInstance;if(I)Target.InstanceId=I->InstanceId;
+        const auto* I=Snapshot.At(SlotValue);const auto* Def=I?D.Items.Items.Find(I->DefinitionId):nullptr;
+        FAetherInspectTarget Target;Target.Kind=EAetherInspectTarget::ItemInstance;Target.SlotId=LexToString(SlotValue);if(I)Target.InstanceId=I->InstanceId;
         FString Label=FString::Printf(TEXT("%02d · 空"),SlotValue+1);bool Filtered=false;
         if(I&&Def)
         {
@@ -248,8 +248,8 @@ void UAetherInventoryPage::Refresh()
     for(int32 N=0;N<Count;++N)
     {
         if(auto* Layout=Cast<UUniformGridSlot>(ContainerCells[N]->Slot)){Layout->SetRow(N/Columns);Layout->SetColumn(N%Columns);}
-        const auto* Item=Container->Inventory.At(N);const auto* Def=Item?D.Items.Items.Find(Item->DefinitionId):nullptr;
-        FAetherInspectTarget T;T.ContainerId=Container->ContainerId;if(Item)T.InstanceId=Item->InstanceId;
+        const auto* Item=Snapshot.At(N,true);const auto* Def=Item?D.Items.Items.Find(Item->DefinitionId):nullptr;
+        FAetherInspectTarget T;T.ContainerId=Container->ContainerId;T.SlotId=LexToString(N);if(Item)T.InstanceId=Item->InstanceId;
         ContainerCells[N]->Present(AetherInspection::Pin(Snapshot,T),N,Def?Def->DisplayName:TEXT("空"),Def?Def->IconId:FString(),false,false);
         ContainerCells[N]->SetItemState(Item,Def);
         ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Left,EUINavigationRule::Escape);
