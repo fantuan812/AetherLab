@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "baselineCommit": "121242c09ed07a28d0057fe22cdad7cd203a194e",
+  "candidateCommit": null,
+  "candidateState": "not_frozen",
+  "implementationRecord": "Docs/Planning/Closure-121242c-implementation.zh-CN.md",
+  "compile": "not_run",
+  "functionalAcceptance": "not_run",
+  "renderedJourneyKeyboardMouse": "not_run",
+  "renderedJourneyGamepad": "not_run",
+  "networkAndRecovery": "not_run",
+  "motionQuality": "insufficient_samples",
+  "clientPackage": "not_run",
+  "windowsServerPackage": "not_run",
+  "linuxServerPackage": "not_run",
+  "licenseReview": "not_run",
+  "releaseAccepted": false,
+  "evidence": []
+}

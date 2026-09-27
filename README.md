@@ -2,6 +2,8 @@
 
 UE 5.8 C++ 开放世界灰盒。人物使用官方 Manny，场景和六种装备使用 Engine BasicShapes。旧试验台及 SwordMagic 美术已移除；旧工具与历史文档保留供追溯，不再作为当前入口。
 
+当前收尾状态见 [121242c 完整性方案实施记录](Docs/Planning/Closure-121242c-implementation.zh-CN.md) 和 [候选状态](Docs/Acceptance/Closure-status.json)。本轮新增代码未编译、未测试；等待用户运行并允许后再做简单功能测试，完整旅程、多人、动作质量和正式包门槛仍待验收。
+
 ## 运行
 
 ```powershell
@@ -30,7 +32,7 @@ WASD 移动，Shift 冲刺，Space 跳跃，Left Ctrl 下蹲，Left Alt 闪避�
 
 轻量验证：`Scripts/TestLight.ps1` 仅运行 9 个小型规则测试；本轮不跑 `TestFrontierNetwork.ps1`、规模压力测试和旧模式回归。如需短启动/重启检查，运行 `Scripts/CheckFrontier.ps1`，使用独立测试存档。完整报告见 [Verification-v5.json](Docs/Verification-v5.json)。
 
-v10 当前整改的实施与未验收边界见 [执行记录](Docs/Planning/V10-remediation-execution.zh-CN.md)。v5～v9 的验证记录只对应各自历史候选；本轮没有运行测试或完成正式平台验收。
+v10 历史整改见 [整改记录](Docs/Planning/V10-remediation-execution.zh-CN.md) 和 [上一轮局部验证](Docs/Planning/V10-review-repair-2026-09-27.zh-CN.md)。这些记录及 v5～v9 的通过项只对应各自历史候选，不代表当前收尾改动已验收。
 
 后续玩法记录见 [Gameplay-v6.zh-CN.md](Docs/Gameplay-v6.zh-CN.md)。J 面板中 Tab / 下一项切换任务，M 查看同一目标的位置。`Scripts/CheckAnimation.ps1` 和 `Scripts/CheckGuidance.ps1` 各进行一次隔离存档的短启动检查，无需多人压力或全量 Cook；结果见 [Verification-v6.json](Docs/Verification-v6.json)。
 

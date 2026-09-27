@@ -20,6 +20,7 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Misc/FileHelper.h"
+#include "Misc/EngineVersion.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 #endif
@@ -29,7 +30,26 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
  if(!FParse::Param(FCommandLine::Get(),TEXT("AetherNativeJourney"))||!PC||!PC->HasAuthority()||!PC->IsLocalController()||!PC->GetLocalPlayer())return;
  struct FState{int32 Step=0,Recoveries=0,GoldBefore=0,PointsBefore=0,ServiceQuantity=0;float ExpectedMana=0;double DeathAt=0;double Start=FPlatformTime::Seconds(),At=Start,Next=0,LogAt=0;bool Bound=false,Sent=false,Traveled=false,Done=false;FGuid Id,Original,Split,ServiceItem;FString Drop;TOptional<FAetherCommandResult> Reply;TArray<TSharedPtr<FJsonValue>> Steps;};
  static FState S;if(S.Done)return;const double Now=FPlatformTime::Seconds();
- const auto Fail=[&](const FString& Why){S.Done=true;UE_LOG(LogTemp,Error,TEXT("V10_JOURNEY_FAIL step=%d %s"),S.Step,*Why);FPlatformMisc::RequestExitWithStatus(false,1);};
+ const auto WriteReport=[&](bool Passed,const FString& Reason,const TArray<FString>& Claims)
+ {
+  auto Report=MakeShared<FJsonObject>();Report->SetNumberField(TEXT("schema"),2);
+  Report->SetBoolField(TEXT("passed"),Passed);Report->SetBoolField(TEXT("fullMainline"),Passed);
+  Report->SetStringField(TEXT("scope"),TEXT("native_mainline_service"));
+  Report->SetStringField(TEXT("coverage"),TEXT("Production service/combat with automated safe travel; excludes rendered UI and normal player input."));
+  Report->SetStringField(TEXT("reason"),Reason);Report->SetNumberField(TEXT("questCount"),Claims.Num());
+  Report->SetNumberField(TEXT("recoveries"),S.Recoveries);Report->SetArrayField(TEXT("steps"),S.Steps);
+  TArray<TSharedPtr<FJsonValue>> ClaimValues;for(const auto& Claim:Claims)ClaimValues.Add(MakeShared<FJsonValueString>(Claim));Report->SetArrayField(TEXT("claims"),ClaimValues);
+  FString Commit,Prefix,Hash,Path,Json;
+  FParse::Value(FCommandLine::Get(),TEXT("AetherCandidateCommit="),Commit);
+  FParse::Value(FCommandLine::Get(),TEXT("AetherSavePrefix="),Prefix);
+  FParse::Value(FCommandLine::Get(),TEXT("AetherArtifactHash="),Hash);
+  FParse::Value(FCommandLine::Get(),TEXT("AetherJourneyReport="),Path);
+  Report->SetStringField(TEXT("candidateCommit"),Commit);Report->SetStringField(TEXT("savePrefix"),Prefix);
+  Report->SetStringField(TEXT("artifactHash"),Hash);Report->SetStringField(TEXT("engineBuild"),FEngineVersion::Current().ToString());
+  FJsonSerializer::Serialize(Report,TJsonWriterFactory<>::Create(&Json));
+  return !Path.IsEmpty()&&FFileHelper::SaveStringToFile(Json,*Path);
+ };
+ const auto Fail=[&](const FString& Why){WriteReport(false,Why,{});S.Done=true;UE_LOG(LogTemp,Error,TEXT("V10_JOURNEY_FAIL step=%d %s"),S.Step,*Why);FPlatformMisc::RequestExitWithStatus(false,1);};
  auto* Client=PC->GetLocalPlayer()->GetSubsystem<UAetherCommandClient>();
  if(!S.Bound)
  {
@@ -60,6 +80,7 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
  const auto Advance=[&](const TCHAR* Name)
  {
   auto Row=MakeShared<FJsonObject>();Row->SetStringField(TEXT("step"),Name);Row->SetNumberField(TEXT("revision"),double(P.Revision));
+  Row->SetNumberField(TEXT("stage"),S.Step);
   Row->SetNumberField(TEXT("gold"),P.Gold);S.Steps.Add(MakeShared<FJsonValueObject>(Row));
   UE_LOG(LogTemp,Display,TEXT("V10_JOURNEY_STEP %d %s revision=%lld"),S.Step,Name,P.Revision);
   S.Step=S.Step==27?32:S.Step==48?28:S.Step==31?49:S.Step+1;S.At=Now;S.Next=Now+.3;S.Sent=false;S.Traveled=false;S.Reply.Reset();C->ServerBlock(false);PC->GetLocalPlayer()->GetSubsystem<UAetherMenuSubsystem>()->Close();
@@ -410,11 +431,8 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
  }
  for(int32 Q=1;Q<=8;++Q)if(!P.Claims.Contains(FString::Printf(TEXT("Q_Main_%02d"),Q))){Fail(TEXT("Missing committed mainline claim"));return;}
 
- auto Report=MakeShared<FJsonObject>();Report->SetBoolField(TEXT("passed"),true);Report->SetNumberField(TEXT("questCount"),8);
- Report->SetBoolField(TEXT("fullMainline"),true);Report->SetNumberField(TEXT("recoveries"),S.Recoveries);
- Report->SetStringField(TEXT("scope"),TEXT("Real production transactions/combat with safe-travel approach automation; human input and UI acceptance are separate."));Report->SetArrayField(TEXT("steps"),S.Steps);
- FString Json,Path;FParse::Value(FCommandLine::Get(),TEXT("AetherJourneyReport="),Path);FJsonSerializer::Serialize(Report,TJsonWriterFactory<>::Create(&Json));
- if(Path.IsEmpty()||!FFileHelper::SaveStringToFile(Json,*Path)){Fail(TEXT("Report write failed"));return;}
+ TArray<FString> Claims;for(int32 Q=1;Q<=8;++Q)Claims.Add(FString::Printf(TEXT("Q_Main_%02d"),Q));
+ if(!WriteReport(true,FString(),Claims)){Fail(TEXT("Report write failed"));return;}
  S.Done=true;UE_LOG(LogTemp,Display,TEXT("V10_JOURNEY_PASS quests=8"));FPlatformMisc::RequestExit(false);
 #endif
 }
