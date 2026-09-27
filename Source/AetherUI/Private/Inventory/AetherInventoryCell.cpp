@@ -129,15 +129,17 @@ void UAetherInventoryCell::NativeOnDragDetected(const FGeometry&,const FPointerE
 bool UAetherInventoryCell::NativeOnDrop(const FGeometry&,const FDragDropEvent&,UDragDropOperation* Op)
 {
     const auto* Drag=Cast<UAetherInventoryDrag>(Op);
-    return !bFiltered&&Drag&&OnItemDrop.IsBound()&&OnItemDrop.Execute(Drag->Source,Request,PhysicalSlot);
+    const auto Target=DropTarget.IsSet()?DropTarget.GetValue():Request;DropTarget.Reset();
+    return !bFiltered&&Drag&&OnItemDrop.IsBound()&&OnItemDrop.Execute(Drag->Source,Target,PhysicalSlot);
 }
 void UAetherInventoryCell::NativeOnDragEnter(const FGeometry& G,const FDragDropEvent& E,UDragDropOperation* Op)
 {
     Super::NativeOnDragEnter(G,E,Op);const auto* Drag=Cast<UAetherInventoryDrag>(Op);if(!Drag)return;
+    DropTarget=Request;
     DropHint=TEXT("此处不能放置");const bool Allowed=!bFiltered&&OnDropPreview.IsBound()&&OnDropPreview.Execute(Drag->Source,Request,PhysicalSlot,DropHint);
     Label->SetText(FText::FromString(ShownText+LINE_TERMINATOR+DropHint));Background->SetBrushColor(Allowed?FLinearColor(.08f,.3f,.16f):FLinearColor(.4f,.1f,.08f));
 }
 void UAetherInventoryCell::NativeOnDragLeave(const FDragDropEvent& E,UDragDropOperation* Op)
 {
-    DropHint.Reset();if(Label)Label->SetText(FText::FromString(ShownText));if(Background)Background->SetBrushColor(RestColor);Super::NativeOnDragLeave(E,Op);
+    DropTarget.Reset();DropHint.Reset();if(Label)Label->SetText(FText::FromString(ShownText));if(Background)Background->SetBrushColor(RestColor);Super::NativeOnDragLeave(E,Op);
 }

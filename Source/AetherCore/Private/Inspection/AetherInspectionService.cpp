@@ -6,7 +6,7 @@ namespace
 FString ItemFingerprint(const FAetherV10ItemInstance& I)
 {
     FString Key=I.InstanceId.ToString()+TEXT("|")+I.DefinitionId+TEXT("|")+LexToString(I.Quantity)+TEXT("|")+
-        LexToString(I.Quality)+TEXT("|")+LexToString(I.Durability)+TEXT("|")+I.BoundToCharacter+TEXT("|")+I.StateGroup+
+        LexToString(I.SlotIndex)+TEXT("|")+LexToString(I.Quality)+TEXT("|")+LexToString(I.Durability)+TEXT("|")+I.BoundToCharacter+TEXT("|")+I.StateGroup+
         TEXT("|")+I.QuestInstanceId.ToString()+TEXT("|")+(I.bLocked?TEXT("1"):TEXT("0"))+(I.bFavorite?TEXT("1"):TEXT("0"));
     TArray<FString> Names;I.Affixes.GenerateKeyArray(Names);Names.Sort();
     for(const FString& Name:Names)Key+=TEXT("|")+Name+TEXT("=")+LexToString(I.Affixes.FindChecked(Name));
@@ -380,6 +380,19 @@ FAetherInspectRequest AetherInspection::Pin(const FAetherInspectionSnapshot& S,F
         if(const auto* I=S.Find(T.InstanceId,Container))T.DefinitionId=I->DefinitionId;
     }
     const FString Key=DependencyKey(S,T);return {S.Context,MoveTemp(T),Key};
+}
+bool AetherInspection::RevalidateIntent(const FAetherInspectionSnapshot& S,const FAetherInspectRequest& R,FAetherInspectRequest& Current)
+{
+    if(!S.Context.IsValid()||!R.Context.IsValid()||R.Context.SessionId!=S.Context.SessionId||
+        !R.Context.OwnerIdentity.Equals(S.Context.OwnerIdentity,ESearchCase::CaseSensitive)||R.DependencyKey.IsEmpty())return false;
+    if(R.Target.Kind!=EAetherInspectTarget::ItemInstance&&R.Target.Kind!=EAetherInspectTarget::EquipmentSlot)return false;
+    const bool Container=!R.Target.ContainerId.IsEmpty();
+    if(Container&&(!S.Container.IsSet()||!S.Container->bActive||!S.ContainerContext.IsValid()||
+        !S.Container->ContainerId.Equals(R.Target.ContainerId,ESearchCase::CaseSensitive)))return false;
+    auto Pinned=Pin(S,R.Target);
+    if(Pinned.Target.InstanceId!=R.Target.InstanceId||Pinned.DependencyKey!=R.DependencyKey)return false;
+    if(R.Target.InstanceId.IsValid()&&!S.Find(R.Target.InstanceId,Container))return false;
+    Current=MoveTemp(Pinned);return true;
 }
 FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,const FAetherInspectionSnapshot& S,
     const FAetherV10ItemDefinitions& Items,const FAetherSkillDefinitionsV10& Skills)

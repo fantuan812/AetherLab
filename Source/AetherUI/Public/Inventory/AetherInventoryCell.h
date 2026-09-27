@@ -44,6 +44,7 @@ public:
     virtual void NativeOnDragLeave(const FDragDropEvent& Event,UDragDropOperation* Operation) override;
 private:
     FAetherInspectRequest Request;
+    TOptional<FAetherInspectRequest> DropTarget;
     int32 PhysicalSlot=INDEX_NONE;
     bool bFiltered=false;
     FString ShownIcon;

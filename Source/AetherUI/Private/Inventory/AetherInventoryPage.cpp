@@ -135,7 +135,7 @@ void UAetherInventoryPage::ClosePresentation()
 }
 void UAetherInventoryPage::ResetPresentation()
 {
-    HideConfirmation();Session=FAetherInspectionSession();PickedSource.Reset();Snapshot={};Player.Reset();
+    HideConfirmation();Session=FAetherInspectionSession();PickedSource.Reset();PickedTarget.Reset();Snapshot={};Player.Reset();
     ++Generation;SeenProfile=SeenWorld=SeenContainerRevision=SeenContainerWorld=-1;
     SeenChannel.Invalidate();SeenTrade.Invalidate();SeenContainerContext.Invalidate();SeenSelected.Invalidate();
     SeenShop.Reset();SeenStatuses.Reset();bSeenCanAct=false;bDirty=true;
@@ -189,11 +189,10 @@ void UAetherInventoryPage::Refresh()
     bDirty=false;Next.Context.SnapshotRevision=Generation;Snapshot=MoveTemp(Next);const auto& D=FAetherV10Definitions::Get();
     if(PickedSource.IsSet())
     {
-        auto Current=AetherInspection::Pin(Snapshot,PickedSource->Target);
-        if(PickedSource->Context.SessionId!=Snapshot.Context.SessionId||PickedSource->Context.OwnerIdentity!=Snapshot.Context.OwnerIdentity||
-            PickedSource->DependencyKey!=Current.DependencyKey||!Snapshot.Find(PickedSource->Target.InstanceId,!PickedSource->Target.ContainerId.IsEmpty()))
+        FAetherInspectRequest Current;
+        if(!AetherInspection::RevalidateIntent(Snapshot,PickedSource.GetValue(),Current))
         {PickedSource.Reset();if(Notice)Notice->SetText(FText::FromString(TEXT("源物品已变化，已取消放置。")));}
-        else PickedSource->Context=Snapshot.Context;
+        else PickedSource=MoveTemp(Current);
     }
     Session.Refresh(Snapshot,D.Items,D.Skills);if(!Session.GetDraft().IsSet())HideConfirmation();
     Preview->SetSource(C);
@@ -217,12 +216,14 @@ void UAetherInventoryPage::Refresh()
     };
     if(Cells.Num()!=Snapshot.Inventory.Capacity)
     {Grid->ClearChildren();Cells.Reset();for(int32 I=0;I<Snapshot.Inventory.Capacity;++I)Cells.Add(MakeCell(Grid,I,Columns));}
+    int32 PreviousFocus=INDEX_NONE;
+    for(int32 N=0;N<Cells.Num();++N)if(Cells[N]->HasUserFocus(GetOwningPlayer()))PreviousFocus=N;
     for(int32 SlotValue=0;SlotValue<Cells.Num();++SlotValue)
     {
         if(auto* Layout=Cast<UUniformGridSlot>(Cells[SlotValue]->Slot)){Layout->SetRow(SlotValue/Columns);Layout->SetColumn(SlotValue%Columns);}
         const auto* I=Snapshot.At(SlotValue);const auto* Def=I?D.Items.Items.Find(I->DefinitionId):nullptr;
         FAetherInspectTarget Target;Target.Kind=EAetherInspectTarget::ItemInstance;Target.SlotId=LexToString(SlotValue);if(I)Target.InstanceId=I->InstanceId;
-        FString Label=FString::Printf(TEXT("%02d · 空"),SlotValue+1);bool Filtered=false;
+        FString Label=FString::Printf(TEXT("%02d · 空"),SlotValue+1);bool Filtered=!CategoryFilter.IsEmpty()||!SearchFilter.IsEmpty();
         if(I&&Def)
         {
             Label=Def->DisplayName;
@@ -230,13 +231,30 @@ void UAetherInventoryPage::Refresh()
         }
         Cells[SlotValue]->Present(AetherInspection::Pin(Snapshot,Target),SlotValue,Label,Def?Def->IconId:FString(),Filtered,I&&I->InstanceId==C->SelectedInstance);
         Cells[SlotValue]->SetItemState(I,Def,I&&Snapshot.Inventory.IsEquipped(I->InstanceId));
-        // Let spatial navigation cross region boundaries; never wrap back into the same grid.
+    }
+    // 所有格子完成展示后再建导航图，避免读到上一轮筛选状态。
+    const auto Available=[&](int32 N){return Cells.IsValidIndex(N)&&!Cells[N]->IsFiltered()&&Cells[N]->GetIsEnabled();};
+    for(int32 N=0;N<Cells.Num();++N)
+    {
+        const auto Find=[&](int32 DX,int32 DY)
+        {
+            const int32 Row=N/Columns,Column=N%Columns;
+            if(DX)for(int32 X=Column+DX;X>=0&&X<Columns;X+=DX){const int32 I=Row*Columns+X;if(Available(I))return I;}
+            if(DY)for(int32 Y=Row+DY;Y>=0&&Y*Columns<Cells.Num();Y+=DY)
+                for(int32 Distance=0;Distance<Columns;++Distance)
+                    for(int32 Sign:{-1,1}){const int32 X=Column+Distance*Sign;if(X>=0&&X<Columns&&Available(Y*Columns+X))return Y*Columns+X;}
+            return INDEX_NONE;
+        };
         const auto Nav=[&](EUINavigation Direction,int32 Neighbor)
-        {if(Cells.IsValidIndex(Neighbor))Cells[SlotValue]->SetNavigationRuleExplicit(Direction,Cells[Neighbor]);
-         else Cells[SlotValue]->SetNavigationRuleBase(Direction,EUINavigationRule::Escape);};
-        Nav(EUINavigation::Left,SlotValue%Columns==0?INDEX_NONE:SlotValue-1);
-        Nav(EUINavigation::Right,SlotValue%Columns==Columns-1?INDEX_NONE:SlotValue+1);
-        Nav(EUINavigation::Up,SlotValue-Columns);Nav(EUINavigation::Down,SlotValue+Columns);
+        {Cells[N]->SetNavigationRuleExplicit(Direction,Available(Neighbor)?static_cast<UWidget*>(Cells[Neighbor].Get()):static_cast<UWidget*>(Search.Get()));};
+        Nav(EUINavigation::Left,Find(-1,0));Nav(EUINavigation::Right,Find(1,0));
+        Nav(EUINavigation::Up,Find(0,-1));Nav(EUINavigation::Down,Find(0,1));
+    }
+    if(PreviousFocus!=INDEX_NONE&&!Available(PreviousFocus))
+    {
+        int32 Nearest=INDEX_NONE;
+        for(int32 N=0;N<Cells.Num();++N)if(Available(N)&&(Nearest==INDEX_NONE||FMath::Abs(N-PreviousFocus)<FMath::Abs(Nearest-PreviousFocus)))Nearest=N;
+        (Nearest==INDEX_NONE?static_cast<UWidget*>(Search.Get()):static_cast<UWidget*>(Cells[Nearest].Get()))->SetUserFocus(GetOwningPlayer());
     }
     if(EquipmentCells.Num()!=D.Items.Slots.Num())
     {Equipment->ClearChildren();EquipmentCells.Reset();for(int32 I=0;I<D.Items.Slots.Num();++I)EquipmentCells.Add(MakeCell(Equipment,I,2));}
@@ -288,6 +306,7 @@ void UAetherInventoryPage::CellIntent(const FAetherInspectRequest& R,int32 Targe
     if(Intent==EAetherCellIntent::Leave){Session.HideHover();RenderDetails();return;}
     if(Intent==EAetherCellIntent::PickUp)
     {
+        PickedTarget.Reset();
         if(PickedSource.IsSet()&&PickedSource->Target.InstanceId==R.Target.InstanceId&&PickedSource->Target.SlotId==R.Target.SlotId&&
             PickedSource->Target.ContainerId==R.Target.ContainerId){PickedSource.Reset();Notice->SetText(FText::FromString(TEXT("已取消放置。")));return;}
         if(R.Target.Kind==EAetherInspectTarget::ItemDefinition||!R.Target.InstanceId.IsValid())
@@ -297,11 +316,13 @@ void UAetherInventoryPage::CellIntent(const FAetherInspectRequest& R,int32 Targe
     if(Intent==EAetherCellIntent::Place&&PickedSource.IsSet())
     {
         if(R.Target.Kind==EAetherInspectTarget::ItemDefinition){Notice->SetText(FText::FromString(TEXT("商品格不能作为落点。")));return;}
-        if(Drop(PickedSource.GetValue(),R,TargetSlot))PickedSource.Reset();
+        const auto Target=PickedTarget.IsSet()&&PickedTarget->Target.SlotId==R.Target.SlotId&&PickedTarget->Target.ContainerId==R.Target.ContainerId&&PickedTarget->Target.Kind==R.Target.Kind?PickedTarget.GetValue():R;
+        if(Drop(PickedSource.GetValue(),Target,TargetSlot)){PickedSource.Reset();PickedTarget.Reset();}
         return;
     }
     if(Intent==EAetherCellIntent::Hover&&PickedSource.IsSet())
     {
+        PickedTarget=R;
         FString Hint;PreviewDrop(PickedSource.GetValue(),R,TargetSlot,Hint);
         if(Notice)Notice->SetText(FText::FromString(Hint));return;
     }
@@ -326,8 +347,8 @@ bool UAetherInventoryPage::PreviewDrop(const FAetherInspectRequest& From,const F
 {
     const auto Reject=[&](const TCHAR* Why){Hint=Why;return false;};
     if(!Snapshot.bCanAct||ModalToken.IsValid())return Reject(TEXT("当前动作或同步尚未完成"));
-    if(!From.Context.Same(Snapshot.Context)||!To.Context.Same(Snapshot.Context)||
-        From.DependencyKey!=AetherInspection::Pin(Snapshot,From.Target).DependencyKey||To.DependencyKey!=AetherInspection::Pin(Snapshot,To.Target).DependencyKey)return Reject(TEXT("对象已变化，请重新拖动"));
+    FAetherInspectRequest CurrentFrom,CurrentTo;
+    if(!AetherInspection::RevalidateIntent(Snapshot,From,CurrentFrom)||!AetherInspection::RevalidateIntent(Snapshot,To,CurrentTo))return Reject(TEXT("对象已变化，请重新拖动"));
     const auto& D=FAetherV10Definitions::Get().Items;
     const bool Cross=!From.Target.ContainerId.IsEmpty()||!To.Target.ContainerId.IsEmpty();
     const auto* Source=From.Target.ContainerId.IsEmpty()?&Snapshot.Inventory:Snapshot.Container.IsSet()?&Snapshot.Container->Inventory:nullptr;
@@ -374,10 +395,16 @@ bool UAetherInventoryPage::PreviewDrop(const FAetherInspectRequest& From,const F
 }
 bool UAetherInventoryPage::Drop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 SlotValue)
 {
+    // Refresh 可能撤销手柄选源，先保存值，避免引用失效。
+    const auto SourceIntent=From,TargetIntent=To;
+    Refresh();FAetherInspectRequest CurrentFrom,CurrentTo;
+    if(!AetherInspection::RevalidateIntent(Snapshot,SourceIntent,CurrentFrom)||!AetherInspection::RevalidateIntent(Snapshot,TargetIntent,CurrentTo))
+    {Notice->SetText(FText::FromString(TEXT("源物品或目标格已变化，请重新选择。")));return false;}
+    return DropCurrent(CurrentFrom,CurrentTo,SlotValue);
+}
+bool UAetherInventoryPage::DropCurrent(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 SlotValue)
+{
     FString Hint;if(!PreviewDrop(From,To,SlotValue,Hint)){Notice->SetText(FText::FromString(Hint));return false;}
-    if(!From.Context.Same(Snapshot.Context)||!To.Context.Same(Snapshot.Context)||!Snapshot.bCanAct||ModalToken.IsValid())return false;
-    if(From.DependencyKey!=AetherInspection::Pin(Snapshot,From.Target).DependencyKey||To.DependencyKey!=AetherInspection::Pin(Snapshot,To.Target).DependencyKey)
-    {Notice->SetText(FText::FromString(TEXT("拖动期间对象已变化，请重新选择。")));return false;}
     if(!From.Target.ContainerId.IsEmpty()||!To.Target.ContainerId.IsEmpty())
     {
         if(!Snapshot.Container.IsSet()||From.Target.Kind!=EAetherInspectTarget::ItemInstance||To.Target.Kind!=EAetherInspectTarget::ItemInstance||

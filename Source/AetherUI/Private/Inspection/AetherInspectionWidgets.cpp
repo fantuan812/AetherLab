@@ -19,13 +19,20 @@
 
 void UAetherInspectionActionButton::InitializeAction(const FAetherInspectRequest& InRequest,const FAetherInspectionAction& InAction,bool Comparison)
 {
+    if(Request.Context.SessionId!=InRequest.Context.SessionId||Request.Context.OwnerIdentity!=InRequest.Context.OwnerIdentity||
+        Request.Target.Kind!=InRequest.Target.Kind||Request.Target.InstanceId!=InRequest.Target.InstanceId||
+        Request.Target.SlotId!=InRequest.Target.SlotId||Request.Target.ContainerId!=InRequest.Target.ContainerId||
+        Request.Target.DefinitionId!=InRequest.Target.DefinitionId||Request.Target.SkillRank!=InRequest.Target.SkillRank||
+        Request.DependencyKey!=InRequest.DependencyKey||Action.Kind!=InAction.Kind||Action.Argument!=InAction.Argument||!InAction.bEnabled)bPressValid=false;
     Request=InRequest;Action=InAction;bComparison=Comparison;SetIsEnabled(Action.bEnabled);
     SetToolTipText(FText::FromString(Action.DisabledReason));
     OnClicked.RemoveDynamic(this,&UAetherInspectionActionButton::Dispatch);
     OnClicked.AddDynamic(this,&UAetherInspectionActionButton::Dispatch);
+    OnPressed.AddUniqueDynamic(this,&UAetherInspectionActionButton::CapturePress);
 }
+void UAetherInspectionActionButton::CapturePress(){bPressValid=Action.bEnabled&&GetIsEnabled();}
 void UAetherInspectionActionButton::Dispatch()
-{if(Action.bEnabled&&GetIsEnabled())OnRequested.Broadcast(Request,Action,bComparison);}
+{const bool Valid=bPressValid;bPressValid=false;if(Valid&&Action.bEnabled&&GetIsEnabled())OnRequested.Broadcast(Request,Action,bComparison);}
 
 TSharedRef<SWidget> UAetherInspectionCard::RebuildWidget()
 {
@@ -158,12 +165,14 @@ void UAetherInspectionCard::RenderModel()
             }
         }
     }
+    bool FocusDisabled=false;
     for(int32 Index=0;Index<DisplayRows.Num();++Index)
     {
         const auto& Row=DisplayRows[Index];auto* Child=Rows->GetChildAt(Index);
         if(Row.Action.IsSet())
         {
             auto* Button=CastChecked<UAetherInspectionActionButton>(Child);
+            FocusDisabled|=Button->HasUserFocus(GetOwningPlayer())&&!Row.Action->bEnabled;
             Button->InitializeAction(Model.Request,Row.Action.GetValue(),Row.bComparison);
             if(auto* Label=Cast<UTextBlock>(Button->GetContent()))Label->SetText(FText::FromString(Row.Text));
             if(!RestoreFocus.IsEmpty()&&Button->FocusIdentity()==RestoreFocus&&Button->GetIsEnabled())Button->SetUserFocus(GetOwningPlayer());
@@ -174,6 +183,7 @@ void UAetherInspectionCard::RenderModel()
             Line->SetColorAndOpacity(FSlateColor(Row.Color));Line->SetVisibility(Row.Text.IsEmpty()?ESlateVisibility::Collapsed:ESlateVisibility::HitTestInvisible);
         }
     }
+    if(FocusDisabled)NavigationTarget()->SetUserFocus(GetOwningPlayer());
 }
 UWidget* UAetherInspectionCard::NavigationTarget() const
 {

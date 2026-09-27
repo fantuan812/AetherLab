@@ -26,7 +26,9 @@ public:
     FOnAetherInspectionButton OnRequested;
     FString FocusIdentity() const {return LexToString(uint8(Action.Kind))+TEXT(":")+Action.Argument+(bComparison?TEXT(":compare"):TEXT(":act"));}
 private:
+    UFUNCTION() void CapturePress();
     UFUNCTION() void Dispatch();
+    bool bPressValid=false;
     FAetherInspectRequest Request;
     FAetherInspectionAction Action;
     bool bComparison=false;

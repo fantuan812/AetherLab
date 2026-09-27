@@ -120,6 +120,8 @@ namespace AetherInspection
     AETHERCORE_API FString DependencyKey(const FAetherInspectionSnapshot& Snapshot,const FAetherInspectTarget& Target);
     // Pin 只固定对象，不提交任何动作。空装备槽也是可查看对象；以后出现物品时需重新打开。
     AETHERCORE_API FAetherInspectRequest Pin(const FAetherInspectionSnapshot& Snapshot,FAetherInspectTarget Target);
+    // 仅用于尚未发送的选源/落点意图；不会重写已编码命令及其 CommandId。
+    AETHERCORE_API bool RevalidateIntent(const FAetherInspectionSnapshot& Snapshot,const FAetherInspectRequest& Intent,FAetherInspectRequest& Current);
     AETHERCORE_API FAetherInspectionModel Build(const FAetherInspectRequest& Request,const FAetherInspectionSnapshot& Snapshot,
         const FAetherV10ItemDefinitions& Items,const FAetherSkillDefinitionsV10& Skills);
     AETHERCORE_API FString InventoryReason(EAetherInventoryMutationCode Code);
