@@ -130,6 +130,20 @@ bool FAetherProfileCoordinator::HasPendingForCharacter(const FString& Character)
 }
 int32 FAetherProfileCoordinator::PendingCount() const
 {check(IsInGameThread());return Impl->Jobs.Num();}
+bool FAetherProfileCoordinator::HasPendingRegionMutation(const TSet<FName>& StableIds) const
+{
+    check(IsInGameThread());
+    for(const auto& Job:Impl->Jobs)
+    {
+        const auto& C=Job->Command;
+        if(C.ExpectedWorldRevision<0||Job->bPrivateContainerScope)continue;
+        // Only an interaction has an exact placed target. Drops, shared containers and
+        // legacy world-scoped requests keep the conservative lease until settled.
+        if(C.Type!=EAetherCommandType::ExecuteInteraction||C.TargetStableId.IsEmpty())return true;
+        for(FName Id:StableIds)if(Id.ToString().Equals(C.TargetStableId,ESearchCase::CaseSensitive))return true;
+    }
+    return false;
+}
 bool FAetherProfileCoordinator::Submit(const FAetherProfileSession& S,const FAetherPlayerCommand& C,FAetherCommandResult& Rejection)
 {
     check(IsInGameThread()&&!Impl->bPolling);

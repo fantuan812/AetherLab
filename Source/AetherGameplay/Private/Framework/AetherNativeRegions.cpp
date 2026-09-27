@@ -11,6 +11,9 @@ void AAetherFrontierMode::AdvanceNativeRegions(const TArray<FName>& Unload,const
     auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();
     auto* Store=GetGameInstance()->GetSubsystem<UAetherNativePersistence>();
     if(!bNativeSceneReady||!W||!Store)return;
+    // 先满足新目的地及其支撑闭包。远区冻结正在等待磁盘或其他玩家的事务时，
+    // 已提交的目的地状态仍可独立恢复，不能把回收旧区域当成加载的前置条件。
+    LoadNativeRegions(Load);
     if(bNativeRegionBarrier)
     {
         if(!NativeRegionOutcome.IsSet())
@@ -42,14 +45,11 @@ void AAetherFrontierMode::AdvanceNativeRegions(const TArray<FName>& Unload,const
     }
     if(!Unload.IsEmpty())
     {
-        if(Store->IsSavingWorld())return;
+        if(Store->IsSavingWorld()||W->GetSimulation()->HasPendingInputs())return;
         // 场景对象可能仍是已接受事务的目标；等持久事实发布后再冻结。
         // 游戏线程中检查与冻结连续执行，冻结后 bEnabled 会拒绝新交互。
         if(const auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>())
-        {
-            const auto Pending=Runtime->Inspect();
-            if(Pending.PendingCommands||Pending.PendingFacts||Pending.DeferredFacts||Pending.ResourceReservations)return;
-        }
+        {TSet<FName> Candidates;for(FName Id:Unload)Candidates.Add(Id);if(Runtime->HasPendingRegionMutation(Candidates))return;}
         TArray<FReactiveSaveRecord> Capture;if(!W->Capture(Capture))return;
         for(FName Id:Unload)if(auto* A=Prop(Id);A&&A->Reactive->bParticipatesInSimulation)
         {if(!Capture.ContainsByPredicate([&](const auto& R){return R.StableId==Id;})){FrozenRegionBodies.Reset();return;}FrozenRegionBodies.Add(Id);}
@@ -65,9 +65,24 @@ void AAetherFrontierMode::AdvanceNativeRegions(const TArray<FName>& Unload,const
         // 冻结记录仍由 Capture 返回，后台写者不会因为求解器注销而遗漏离线区域。
         bNativeRegionBarrier=true;NativeRegionSave=Store->SaveLoadedPhysics();return;
     }
+}
+void AAetherFrontierMode::LoadNativeRegions(const TArray<const FAetherWorldPlacement*>& Load)
+{
     if(Load.IsEmpty())return;
+    auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();
+    if(!W||W->GetSimulation()->HasPendingInputs())return;
+    TArray<const FAetherWorldPlacement*> Admitted;
+    for(const auto* E:Load)
+    {
+        bool Blocked=false;
+        if(bNativeRegionBarrier)for(const auto& Frozen:FrozenRegionActors)
+            if(const auto* Actor=Frozen.Actor.Get();Actor&&(Actor->Spec.Id==E->Id||E->Supports.Contains(Actor->Spec.Id)))
+            {Blocked=true;break;}
+        if(!Blocked)Admitted.Add(E);
+    }
+    if(Admitted.IsEmpty())return;
     TArray<FReactiveSaveRecord> Restore;TArray<AAetherFrontierProp*> Spawned;
-    for(const auto* E:Load)if(auto* A=SpawnPlacement(*E))
+    for(const auto* E:Admitted)if(auto* A=SpawnPlacement(*E))
     {
         Spawned.Add(A);
         if(const auto* R=Database->World.FindByPredicate([&](const auto& V){return V.StableId==E->Id;}))Restore.Add(*R);

@@ -28,7 +28,7 @@ TSet<FName> AAetherFrontierMode::BuildRegionRequirements(const TArray<FVector>& 
 void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
 {
  if(Players.IsEmpty()&&!bNativeRegionBarrier)return;
- auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();if(W->GetSimulation()->HasPendingInputs())return;
+ auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();
  const auto& Definitions=FAetherWorldDefinitions::Get();
  TArray<FVector> Interest=Players;
  // Retain both ends while travel is waiting. Readiness uses exactly this dependency closure.
@@ -38,6 +38,7 @@ void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
  for(const auto& E:Definitions.Objects)if(E.bStream)
  {if(Prop(E.Id)&&!Wanted.Contains(E.Id))Unload.Add(E.Id);else if(!Prop(E.Id)&&Wanted.Contains(E.Id))Load.Add(&E);}
  if(bNativeMode){AdvanceNativeRegions(Unload,Load);return;}
+ if(W->GetSimulation()->HasPendingInputs())return;
  if(Unload.IsEmpty()&&Load.IsEmpty())return;
  // Freeze commits all dirty loaded state first. Failed writes keep every actor alive.
  if(!SaveWorld())return;
@@ -67,7 +68,9 @@ bool AAetherFrontierMode::IsTravelRegionReady(FVector Destination) const
 FString AAetherFrontierMode::TravelRegionBlockReason(FVector Destination) const
 {
  if(bNativeMode&&!NativeSceneReady())return TEXT("等待持久世界恢复");
- if(bNativeMode&&bNativeRegionBarrier)return TEXT("等待区域冻结事务确认");
- int32 Missing=0;for(const auto Id:BuildRegionRequirements({Destination}))if(!Prop(Id))++Missing;
+ int32 Missing=0;bool Frozen=false;
+ for(const auto Id:BuildRegionRequirements({Destination}))
+ {if(!Prop(Id))++Missing;for(const auto& Region:FrozenRegionActors)if(const auto* Actor=Region.Actor.Get();Actor&&Actor->Spec.Id==Id)Frozen=true;}
+ if(Frozen)return TEXT("等待目的地支撑组冻结事务确认");
  return Missing?FString::Printf(TEXT("等待 %d 个目的地实体及支撑依赖"),Missing):FString();
 }

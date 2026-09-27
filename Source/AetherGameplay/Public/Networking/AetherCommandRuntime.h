@@ -33,6 +33,7 @@ public:
     bool InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason);
     bool IsInstalled() const;
     FAetherCommandRuntimeMetrics Inspect() const;
+    bool HasPendingRegionMutation(const TSet<FName>& StableIds) const;
     bool SetBackendDomain(FGuid Realm);
     // 地图切换撤销旧连接与回调，排空已接受的写入后才允许重新安装。
     void UninstallBackend();

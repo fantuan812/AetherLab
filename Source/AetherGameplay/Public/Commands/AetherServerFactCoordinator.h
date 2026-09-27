@@ -31,6 +31,7 @@ public:
     TArray<FAetherServerFactCompletion> Poll(double ServerMonotonicSeconds);
     int32 PendingCount() const;
     bool HasPendingForCharacter(const FString& CharacterId) const;
+    bool HasPendingRegionMutation(const TSet<FName>& StableIds) const;
     bool HasPendingFact(const FString& CharacterId,const FString& FactId) const;
 private:
     struct FImpl;

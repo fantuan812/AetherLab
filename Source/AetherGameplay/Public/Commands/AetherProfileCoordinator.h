@@ -49,6 +49,7 @@ public:
     TArray<FAetherProfileCompletion> Poll(const FAetherResolveProfileContext& Resolve);
     int32 PendingCount() const;
     bool HasPendingForCharacter(const FString& CharacterId) const;
+    bool HasPendingRegionMutation(const TSet<FName>& StableIds) const;
 private:
     struct FImpl;
     TUniquePtr<FImpl> Impl;

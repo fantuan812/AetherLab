@@ -124,6 +124,7 @@ private:
     TFuture<FAetherWorldCheckpointResult> NativeRegionSave;
     TOptional<FAetherWorldCheckpointResult> NativeRegionOutcome;
     void AdvanceNativeRegions(const TArray<FName>& Unload,const TArray<const FAetherWorldPlacement*>& Load);
+    void LoadNativeRegions(const TArray<const FAetherWorldPlacement*>& Load);
     struct FNativeCampWrite {FGuid Instance;TFuture<FAetherWorldCheckpointResult> Write;};
     TMap<FName,FNativeCampWrite> NativeCampWrites;
     bool RecordNativeCampClear(FName Definition,FGuid Instance);

@@ -53,6 +53,19 @@ FAetherServerFactCoordinator::~FAetherServerFactCoordinator()=default;
 int32 FAetherServerFactCoordinator::PendingCount() const{return Impl->Jobs.Num();}
 bool FAetherServerFactCoordinator::HasPendingForCharacter(const FString& Id) const
 {return Impl->Jobs.ContainsByPredicate([&](const auto& J){return J->Event.CharacterId.Equals(Id,ESearchCase::CaseSensitive);});}
+bool FAetherServerFactCoordinator::HasPendingRegionMutation(const TSet<FName>& StableIds) const
+{
+    check(IsInGameThread());
+    for(const auto& Job:Impl->Jobs)
+    {
+        const auto& E=Job->Event;
+        if(E.Kind!=EAetherServerFactKind::World&&E.Kind!=EAetherServerFactKind::Settle&&
+            E.Kind!=EAetherServerFactKind::EncounterReward&&E.Kind!=EAetherServerFactKind::LegacyLoot)continue;
+        if(E.SourceId.IsEmpty())return true;
+        for(FName Id:StableIds)if(Id.ToString().Equals(E.SourceId,ESearchCase::CaseSensitive))return true;
+    }
+    return false;
+}
 bool FAetherServerFactCoordinator::HasPendingFact(const FString& Id,const FString& Fact) const
 {return Impl->Jobs.ContainsByPredicate([&](const auto& J){return J->Event.CharacterId.Equals(Id,ESearchCase::CaseSensitive)&&J->Event.FactId.Equals(Fact,ESearchCase::CaseSensitive);});}
 bool FAetherServerFactCoordinator::Enqueue(FAetherServerFact E,FString& Reason)

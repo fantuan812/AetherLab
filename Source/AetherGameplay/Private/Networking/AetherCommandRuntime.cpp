@@ -268,6 +268,20 @@ FAetherCommandRuntimeMetrics UAetherCommandRuntime::Inspect() const
     for(const auto& Pair:Impl->Bindings){const auto& B=*Pair.Value;M.ResourceReservations+=B.ResourceCommand.IsSet()?1:0;M.SnapshotBytes+=B.Outgoing.Num()+B.ContainerOutgoing.Num();}
     return M;
 }
+bool UAetherCommandRuntime::HasPendingRegionMutation(const TSet<FName>& StableIds) const
+{
+    check(IsInGameThread());if(!Impl||StableIds.IsEmpty())return false;
+    if(Impl->Coordinator&&Impl->Coordinator->HasPendingRegionMutation(StableIds))return true;
+    if(Impl->Facts&&Impl->Facts->HasPendingRegionMutation(StableIds))return true;
+    for(const auto& E:Impl->DeferredFacts)
+    {
+        if(E.Kind!=EAetherServerFactKind::World&&E.Kind!=EAetherServerFactKind::Settle&&
+            E.Kind!=EAetherServerFactKind::EncounterReward&&E.Kind!=EAetherServerFactKind::LegacyLoot)continue;
+        if(E.SourceId.IsEmpty())return true;
+        for(FName Id:StableIds)if(Id.ToString().Equals(E.SourceId,ESearchCase::CaseSensitive))return true;
+    }
+    return false;
+}
 bool UAetherCommandRuntime::IsInstalled() const{return Impl&&Impl->Coordinator&&!Impl->bShutdownRequested;}
 void UAetherCommandRuntime::SetContainerAuthorizer(TFunction<bool(AAetherPlayerController&,const FString&,bool)> Authorize)
 {if(Impl)Impl->AuthorizeContainer=MoveTemp(Authorize);}
