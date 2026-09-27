@@ -201,9 +201,10 @@ void UAetherInspectionConfirmation::RefreshDraft()
     if(!Prompt||!Quantity||!ConfirmButton)return;
     const bool Valid=Draft.IsSet()&&Draft->Token.IsValid()&&Draft->Action.bEnabled&&Draft->Action.MaxQuantity>=1&&Draft->Action.MaxQuantity<=1000;
     Prompt->SetText(FText::FromString(Valid?TEXT("确认")+Draft->Action.Label+TEXT("？"):TEXT("对象已变化，请重新查看。")));
-    ConfirmButton->SetIsEnabled(Valid);Quantity->SetIsEnabled(Valid);
-    Quantity->SetMinValue(1);Quantity->SetMinSliderValue(1);Quantity->SetMaxValue(Valid?Draft->Action.MaxQuantity:1);Quantity->SetMaxSliderValue(Valid?Draft->Action.MaxQuantity:1);
-    Quantity->SetVisibility(Valid&&Draft->Action.MaxQuantity>1?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+    ConfirmButton->SetIsEnabled(Valid);Quantity->SetIsEnabled(Valid&&!Draft->bFixedQuantity);
+    const int32 Min=Valid&&Draft->bFixedQuantity?Draft->Action.MaxQuantity:1;
+    Quantity->SetMinValue(Min);Quantity->SetMinSliderValue(Min);Quantity->SetMaxValue(Valid?Draft->Action.MaxQuantity:1);Quantity->SetMaxSliderValue(Valid?Draft->Action.MaxQuantity:1);
+    Quantity->SetVisibility(Valid&&Draft->Action.MaxQuantity>1&&!Draft->bFixedQuantity?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
     if(Valid)QuantityChanged(Quantity->GetValue());
 }
 void UAetherInspectionConfirmation::QuantityChanged(float Value)
@@ -212,6 +213,7 @@ void UAetherInspectionConfirmation::QuantityChanged(float Value)
     const int32 Count=FMath::Clamp(FMath::RoundToInt(Value),1,Draft->Action.MaxQuantity);
     FString Text=TEXT("确认")+Draft->Action.Label+TEXT("？");
     if(!Draft->Action.ConfirmationSummary.IsEmpty())Text+=LINE_TERMINATOR+Draft->Action.ConfirmationSummary;
+    if(Draft->bFixedQuantity)Text+=LINE_TERMINATOR+FString::Printf(TEXT("固定数量：%d 件"),Draft->Action.MaxQuantity);
     if(Draft->Action.UnitPrice>0)Text+=LINE_TERMINATOR+FString::Printf(TEXT("%d 件 · 合计 %lld 金币"),Count,Draft->Action.UnitPrice*Count);
     Prompt->SetText(FText::FromString(Text));
 }
@@ -219,8 +221,10 @@ void UAetherInspectionConfirmation::Confirm()
 {
     if(!Draft.IsSet()||!Quantity||!ConfirmButton||!ConfirmButton->GetIsEnabled()||!FMath::IsFinite(Quantity->GetValue()))return;
     const int32 Count=FMath::Clamp(FMath::RoundToInt(Quantity->GetValue()),1,Draft->Action.MaxQuantity);
-    const FGuid Token=Draft->Token;InvalidateDraft();OnConfirmed.Broadcast(Token,Count);
+    const FGuid Token=Draft->Token;OnConfirmed.Broadcast(Token,Count);
 }
+void UAetherInspectionConfirmation::SetError(const FString& Reason)
+{if(Draft.IsSet()&&Prompt)Prompt->SetText(FText::FromString(Prompt->GetText().ToString()+LINE_TERMINATOR+Reason));}
 void UAetherInspectionConfirmation::Cancel()
 {
     if(!Draft.IsSet())return;

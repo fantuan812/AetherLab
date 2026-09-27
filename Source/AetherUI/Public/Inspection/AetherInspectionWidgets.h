@@ -69,6 +69,7 @@ class AETHERUI_API UAetherInspectionConfirmation : public UUserWidget
     GENERATED_BODY()
 public:
     void SetDraft(const FAetherInspectionDraft& Draft);
+    void SetError(const FString& Reason);
     void InvalidateDraft();
     FOnAetherInspectionConfirmed OnConfirmed;
     FOnAetherInspectionCancelled OnCancelled;

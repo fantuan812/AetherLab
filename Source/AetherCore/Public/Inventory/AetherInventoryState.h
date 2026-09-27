@@ -60,6 +60,14 @@ struct FAetherInventoryMutation
     TArray<FGuid> AffectedIds;
     TArray<FAetherInventoryTransition> Transitions;
 };
+struct FAetherExactTransferPlan
+{
+    EAetherInventoryMutationCode Code=EAetherInventoryMutationCode::Invalid;
+    int32 MinQuantity=0,MaxQuantity=0;
+    bool bFixedQuantity=false;
+    EAetherTransferMode Mode=EAetherTransferMode::QuickTransfer;
+    FGuid ExpectedTarget;
+};
 
 // Slots 是真实持久位置，不是过滤视图索引；空格通过 Capacity 与未占用索引明确表示。
 // Equipment 只引用仍在库存内的实例，装备和卸下不会改变库存容量。
@@ -103,3 +111,9 @@ struct AETHERCORE_API FAetherInventoryStateV10
 private:
     FAetherInventoryMutation Publish(FAetherInventoryStateV10&& Candidate,FAetherInventoryMutation Result,const FAetherV10ItemDefinitions& Definitions);
 };
+namespace AetherInventoryTransfer
+{
+    // Pure value plan shared by preview, confirmation and the authoritative candidate.
+    AETHERCORE_API FAetherExactTransferPlan Plan(const FAetherInventoryStateV10& Source,const FAetherInventoryStateV10& Destination,
+        FGuid Id,int32 DestinationIndex,FGuid ExpectedTarget,EAetherTransferMode Mode,const FAetherV10ItemDefinitions& Definitions);
+}

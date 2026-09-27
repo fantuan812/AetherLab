@@ -1,4 +1,31 @@
 #include "Inventory/AetherInventoryState.h"
+FAetherExactTransferPlan AetherInventoryTransfer::Plan(const FAetherInventoryStateV10& From,const FAetherInventoryStateV10& To,
+    FGuid Id,int32 DestinationIndex,FGuid ExpectedTarget,EAetherTransferMode Mode,const FAetherV10ItemDefinitions& Definitions)
+{
+    using E=EAetherInventoryMutationCode;FAetherExactTransferPlan P;P.Mode=Mode;P.ExpectedTarget=ExpectedTarget;
+    if(&From==&To||DestinationIndex<0||DestinationIndex>=To.Capacity||
+        (Mode!=EAetherTransferMode::PlaceOrMerge&&Mode!=EAetherTransferMode::SwapWhole))return P;
+    const auto* Source=From.Find(Id);const auto* Target=To.At(DestinationIndex);
+    if(!Source){P.Code=E::Missing;return P;}
+    if((Target?Target->InstanceId:FGuid())!=ExpectedTarget){P.Code=E::Occupied;return P;}
+    if(From.IsEquipped(Id)||(Target&&To.IsEquipped(Target->InstanceId))){P.Code=E::Equipped;return P;}
+    if(Mode==EAetherTransferMode::SwapWhole)
+    {
+        if(!Target)return P;
+        P.MinQuantity=P.MaxQuantity=Source->Quantity;P.bFixedQuantity=true;
+    }
+    else if(Target)
+    {
+        if(!Source->SameStackKey(*Target)){P.Code=E::Incompatible;return P;}
+        const auto* Definition=Definitions.Items.Find(Source->DefinitionId);
+        if(!Definition)return P;
+        P.MaxQuantity=FMath::Min(Source->Quantity,Definition->MaxStack-Target->Quantity);
+    }
+    else P.MaxQuantity=Source->Quantity;
+    if(P.MaxQuantity<1){P.Code=E::Capacity;return P;}
+    if(!P.bFixedQuantity)P.MinQuantity=1;
+    P.Code=E::Applied;return P;
+}
 FAetherInventoryMutation FAetherInventoryStateV10::TransferExact(FAetherInventoryStateV10& Destination,FGuid Id,int32 Quantity,
     int32 DestinationIndex,FGuid ExpectedTarget,EAetherTransferMode Mode,const FAetherV10ItemDefinitions& Definitions)
 {
@@ -9,11 +36,10 @@ FAetherInventoryMutation FAetherInventoryStateV10::TransferExact(FAetherInventor
     SourceDefs.DefaultCapacity=Capacity;TargetDefs.DefaultCapacity=Destination.Capacity;
     if(!Validate(SourceDefs,Reason)||!Destination.Validate(TargetDefs,Reason))return {E::Invalid};
     for(const auto& Item:Items)if(Destination.Find(Item.InstanceId))return {E::Invalid};
+    const auto Plan=AetherInventoryTransfer::Plan(*this,Destination,Id,DestinationIndex,ExpectedTarget,Mode,Definitions);
+    if(Plan.Code!=E::Applied)return {Plan.Code};
+    if(Quantity<Plan.MinQuantity||Quantity>Plan.MaxQuantity)return {E::Invalid};
     const auto* Source=Find(Id);const auto* Target=Destination.At(DestinationIndex);
-    if(!Source)return {E::Missing};
-    if(Quantity<1||Quantity>Source->Quantity)return {E::Invalid};
-    if((Target?Target->InstanceId:FGuid())!=ExpectedTarget)return {E::Occupied};
-    if(IsEquipped(Id)||(Target&&Destination.IsEquipped(Target->InstanceId)))return {E::Equipped};
     auto From=*this,To=Destination;const auto SourceItem=*Source;
     FAetherInventoryMutation Result;Result.Code=E::Applied;Result.ActualQuantity=Quantity;Result.AffectedIds.Add(Id);
     if(Mode==EAetherTransferMode::SwapWhole)

@@ -48,7 +48,7 @@ bool FAetherInspectionSession::Back()
     if(Hover.IsSet()){Hover.Reset();return true;}
     return false;
 }
-FGuid FAetherInspectionSession::BeginAction(EAetherInspectAction Kind,const FString& Argument,int32 Destination,FGuid ExpectedTarget,EAetherTransferMode Mode,const FString& DestinationLabel)
+FGuid FAetherInspectionSession::BeginAction(EAetherInspectAction Kind,const FString& Argument,int32 Destination,FGuid ExpectedTarget,EAetherTransferMode Mode,const FString& DestinationLabel,int32 AllowedMax,bool bFixedQuantity)
 {
     if(Pending.IsSet()||Draft.IsSet()||!Details.IsSet()||!Details->CanInteract())return {};
     const auto* Action=Details->Actions.FindByPredicate([&](const auto& A)
@@ -56,6 +56,11 @@ FGuid FAetherInspectionSession::BeginAction(EAetherInspectAction Kind,const FStr
     if(!Action||!Action->bEnabled)return {};
     Draft=FAetherInspectionDraft{FGuid::NewGuid(),Details->Request,*Action};
     Draft->DestinationIndex=Destination;Draft->ExpectedTarget=ExpectedTarget;Draft->TransferMode=Mode;
+    if(Mode!=EAetherTransferMode::QuickTransfer)
+    {
+        if(AllowedMax<1||AllowedMax>Action->MaxQuantity){Draft.Reset();return {};}
+        Draft->Action.MaxQuantity=AllowedMax;Draft->bFixedQuantity=bFixedQuantity;
+    }
     Draft->ContainerContext=CurrentContainerContext;Draft->ContainerRevision=CurrentContainerRevision;
     if(Mode!=EAetherTransferMode::QuickTransfer)
     {
@@ -79,7 +84,8 @@ bool FAetherInspectionSession::Confirm(FGuid Token,int32 Quantity,const FAetherI
         {return V.Kind==Draft->Action.Kind&&V.Argument.Equals(Draft->Action.Argument,ESearchCase::CaseSensitive);});
     if(!A||!A->bEnabled){Draft.Reset();return Fail(TEXT("当前条件不允许此操作。"));}
     if(A->UnitPrice!=Draft->Action.UnitPrice){Draft.Reset();return Fail(TEXT("报价已变化，请重新确认。"));}
-    if(Quantity<1||Quantity>A->MaxQuantity)return Fail(TEXT("数量超出当前对象允许范围。"));
+    if(Quantity<1||Quantity>FMath::Min(A->MaxQuantity,Draft->Action.MaxQuantity)||
+        (Draft->bFixedQuantity&&Quantity!=Draft->Action.MaxQuantity))return Fail(TEXT("数量超出当前落格允许范围，请修改后确认。"));
     FAetherInspectionDispatch Result;Result.Action=A->Kind;
     using E=EAetherInspectAction;
     if(A->Kind==E::TrackQuest||A->Kind==E::FocusSkill)
@@ -95,7 +101,16 @@ bool FAetherInspectionSession::Confirm(FGuid Token,int32 Quantity,const FAetherI
         {
         case E::Deposit:case E::Withdraw:
             if(!S.Container.IsSet()||!S.Container->ContainerId.Equals(A->Argument,ESearchCase::CaseSensitive))return Fail(TEXT("容器已变化。"));
-            if(S.ContainerContext!=Draft->ContainerContext||S.Container->Revision!=Draft->ContainerRevision)return Fail(TEXT("容器内容已变化，请重新选择落点。"));
+            if(S.ContainerContext!=Draft->ContainerContext||S.Container->Revision!=Draft->ContainerRevision)
+            {Draft.Reset();return Fail(TEXT("容器内容已变化，请重新选择落点。"));}
+            if(Draft->TransferMode!=EAetherTransferMode::QuickTransfer)
+            {
+                const auto& From=A->Kind==E::Deposit?S.Inventory:S.Container->Inventory;
+                const auto& To=A->Kind==E::Deposit?S.Container->Inventory:S.Inventory;
+                const auto Plan=AetherInventoryTransfer::Plan(From,To,Target.InstanceId,Draft->DestinationIndex,Draft->ExpectedTarget,Draft->TransferMode,I);
+                if(Plan.Code!=EAetherInventoryMutationCode::Applied){Draft.Reset();return Fail(TEXT("目标格或对象已变化，请重新选择。"));}
+                if(Quantity<Plan.MinQuantity||Quantity>Plan.MaxQuantity)return Fail(TEXT("数量超出当前落格容量，请修改后确认。"));
+            }
             C.Type=S.Container->Kind==EAetherContainerKind::WorldDrop?EAetherCommandType::PickUpItem:EAetherCommandType::TransferItem;
             C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.TargetStableId=A->Argument;
             if(C.Type==EAetherCommandType::TransferItem)C.ContainerId=A->Argument;

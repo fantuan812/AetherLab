@@ -312,11 +312,13 @@ bool UAetherInventoryPage::PreviewDrop(const FAetherInspectRequest& From,const F
         if(AetherItemEligibility::Query(*Source,Item->InstanceId,Snapshot.Context.OwnerIdentity,Into?Operation:EAetherItemOperation::Withdraw,D)!=EAetherInventoryMutationCode::Applied)return Reject(TEXT("该物品当前不能转移，请查看详情原因"));
         const auto& Destination=Into?Box.Inventory:Snapshot.Inventory;if(DropSlot<0||DropSlot>=Destination.Capacity)return Reject(TEXT("无效目标格"));
         const auto* Other=Destination.At(DropSlot);
+        const auto Mode=Other&&!Item->SameStackKey(*Other)?EAetherTransferMode::SwapWhole:EAetherTransferMode::PlaceOrMerge;
+        const auto Plan=AetherInventoryTransfer::Plan(*Source,Destination,Item->InstanceId,DropSlot,Other?Other->InstanceId:FGuid(),Mode,D);
+        if(Plan.Code!=EAetherInventoryMutationCode::Applied)return Reject(TEXT("目标格不能接收该物品或容量已满"));
         if(!Other){Hint=FString::Printf(TEXT("放入第 %d 格 · 确认数量"),DropSlot+1);return true;}
         if(Item->SameStackKey(*Other))
         {
-            const auto* Def=D.Items.Find(Item->DefinitionId);if(!Def||Other->Quantity>=Def->MaxStack)return Reject(TEXT("目标堆已满"));
-            Hint=FString::Printf(TEXT("合并到第 %d 格 · 最多 %d 件"),DropSlot+1,Def->MaxStack-Other->Quantity);return true;
+            Hint=FString::Printf(TEXT("合并到第 %d 格 · 最多 %d 件"),DropSlot+1,Plan.MaxQuantity);return true;
         }
         if(Box.Kind==EAetherContainerKind::WorldDrop)return Reject(TEXT("战利品袋不能整堆交换"));
         if(Destination.IsEquipped(Other->InstanceId)||AetherItemEligibility::Query(Destination,Other->InstanceId,Snapshot.Context.OwnerIdentity,Into?EAetherItemOperation::Withdraw:Operation,D)!=EAetherInventoryMutationCode::Applied)return Reject(TEXT("目标物品不能反向交换"));
@@ -396,14 +398,24 @@ void UAetherInventoryPage::Action(const FAetherInspectRequest& R,const FAetherIn
 void UAetherInventoryPage::TransferAction(const FAetherInspectRequest& R,const FAetherInspectionAction& A,int32 Destination,FGuid ExpectedTarget,EAetherTransferMode Mode)
 {
     if(!R.Context.Same(Snapshot.Context)||!Client.IsValid()||Client->HasPending())return;
+    int32 AllowedMax=-1;bool bFixedQuantity=false;
+    if(Mode!=EAetherTransferMode::QuickTransfer)
+    {
+        if(!Snapshot.Container.IsSet())return;
+        const auto& From=A.Kind==EAetherInspectAction::Deposit?Snapshot.Inventory:Snapshot.Container->Inventory;
+        const auto& To=A.Kind==EAetherInspectAction::Deposit?Snapshot.Container->Inventory:Snapshot.Inventory;
+        const auto Plan=AetherInventoryTransfer::Plan(From,To,R.Target.InstanceId,Destination,ExpectedTarget,Mode,FAetherV10Definitions::Get().Items);
+        if(Plan.Code!=EAetherInventoryMutationCode::Applied){Notice->SetText(FText::FromString(TEXT("目标格已变化或容量不足。")));return;}
+        AllowedMax=Plan.MaxQuantity;bFixedQuantity=Plan.bFixedQuantity;
+    }
     FString DestinationLabel;
     if(ExpectedTarget.IsValid())
     {
         const auto& Inventory=A.Kind==EAetherInspectAction::Deposit?Snapshot.Container->Inventory:Snapshot.Inventory;
         if(const auto* Target=Inventory.Find(ExpectedTarget))if(const auto* Def=FAetherV10Definitions::Get().Items.Items.Find(Target->DefinitionId))DestinationLabel=Def->DisplayName;
     }
-    const auto Token=Session.BeginAction(A.Kind,A.Argument,Destination,ExpectedTarget,Mode,DestinationLabel);if(!Token.IsValid())return;
-    if(A.bNeedsConfirmation||A.MaxQuantity>1)
+    const auto Token=Session.BeginAction(A.Kind,A.Argument,Destination,ExpectedTarget,Mode,DestinationLabel,AllowedMax,bFixedQuantity);if(!Token.IsValid())return;
+    if(A.bNeedsConfirmation||Session.GetDraft()->Action.MaxQuantity>1)
     {
         if(!Menu.IsValid())return;ModalToken=Menu->PushLayer(TEXT("InventoryConfirmation"));
         if(!ModalToken.IsValid()){Session.Back();return;}auto* Root=UAetherMenuRoot::Find(*this);
@@ -423,9 +435,12 @@ void UAetherInventoryPage::Confirm(FGuid Token,int32 Count)
 {
     if(!Session.GetDraft().IsSet()||Session.GetDraft()->Token!=Token)return;
     // 先采集当前公开状态；交易关闭、受击或目标卸载会使旧确认失效。
-    Refresh();if(!Session.GetDraft().IsSet()||Session.GetDraft()->Token!=Token)return;
+    Refresh();if(!Session.GetDraft().IsSet()||Session.GetDraft()->Token!=Token)
+    {HideConfirmation();Notice->SetText(FText::FromString(TEXT("对象或容器已变化，请重新选择。")));return;}
     FAetherInspectionDispatch Dispatch;FString Why;const auto& D=FAetherV10Definitions::Get();
-    const bool Built=Session.Confirm(Token,Count,Snapshot,D.Items,D.Skills,Dispatch,Why);HideConfirmation();
+    const bool Built=Session.Confirm(Token,Count,Snapshot,D.Items,D.Skills,Dispatch,Why);
+    if(Built||!Session.GetDraft().IsSet())HideConfirmation();
+    else if(Confirmation)Confirmation->SetError(Why);
     if(Built&&Dispatch.Command.IsSet())
         if(!Client.IsValid()||!Client->Submit(Snapshot.Context.SessionId,Snapshot.Context.OwnerIdentity,Dispatch.CommandBytes,Why))
             Session.RejectBeforeSend(Dispatch.Command->CommandId);
