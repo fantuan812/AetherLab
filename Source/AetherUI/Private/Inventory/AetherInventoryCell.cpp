@@ -32,7 +32,7 @@ TSharedRef<SWidget> UAetherInventoryCell::RebuildWidget()
     if(Icon&&ShownIcon.IsEmpty())Icon->SetVisibility(ESlateVisibility::Collapsed);
     if(!Decorations)
     {
-        auto* Body=WidgetTree->RootWidget;Decorations=WidgetTree->ConstructWidget<UOverlay>();WidgetTree->RootWidget=Decorations;
+        auto* Body=WidgetTree->RootWidget.Get();Decorations=WidgetTree->ConstructWidget<UOverlay>();WidgetTree->RootWidget=Decorations;
         auto* BodySlot=Decorations->AddChildToOverlay(Body);BodySlot->SetHorizontalAlignment(HAlign_Fill);BodySlot->SetVerticalAlignment(VAlign_Fill);
         Quantity=WidgetTree->ConstructWidget<UTextBlock>();Quantity->SetVisibility(ESlateVisibility::HitTestInvisible);
         auto* CountSlot=Decorations->AddChildToOverlay(Quantity);CountSlot->SetHorizontalAlignment(HAlign_Right);CountSlot->SetVerticalAlignment(VAlign_Top);CountSlot->SetPadding(FMargin(4));

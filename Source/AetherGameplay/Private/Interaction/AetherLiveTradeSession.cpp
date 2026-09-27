@@ -1,5 +1,5 @@
-#include "Definitions/AetherV10Definitions.h"
 #include "Interaction/AetherLiveTradeSession.h"
+#include "Definitions/AetherV10Definitions.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "World/AetherFrontierProp.h"
 #include "Framework/AetherRules.h"

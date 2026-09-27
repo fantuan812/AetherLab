@@ -141,8 +141,8 @@ void UAetherResourceGate::TickComponent(float Dt,ELevelTick Type,FActorComponent
         if(Receiver&&PublishedUseDeadline!=Receiver->State().UseReadyAtUnixMs)
         {
             PublishedUseDeadline=Receiver->State().UseReadyAtUnixMs;
-            const auto Time=FDateTime::UtcNow();const int64 Now=Time.ToUnixTimestamp()*1000+Time.GetMillisecond();
-            UseReadyAtServerTime=C->CombatTime()+float(FMath::Max<int64>(0,PublishedUseDeadline-Now))*.001f;
+            const auto Time=FDateTime::UtcNow();const int64 UnixNowMs=Time.ToUnixTimestamp()*1000+Time.GetMillisecond();
+            UseReadyAtServerTime=C->CombatTime()+float(FMath::Max<int64>(0,PublishedUseDeadline-UnixNowMs))*.001f;
         }
     }
     if(!Receiver||WaitingForPersistence()||bDraining)return;

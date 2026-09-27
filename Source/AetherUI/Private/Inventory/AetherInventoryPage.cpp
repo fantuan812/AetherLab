@@ -291,7 +291,7 @@ void UAetherInventoryPage::RenderDetails()
     const bool Show=Session.GetHover().IsSet()&&!Session.GetDetails().IsSet();
     Hover->SetVisibility(Show?ESlateVisibility::HitTestInvisible:ESlateVisibility::Collapsed);if(Show)Hover->SetModel(Session.GetHover().GetValue());
 }
-bool UAetherInventoryPage::PreviewDrop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 Slot,FString& Hint) const
+bool UAetherInventoryPage::PreviewDrop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 DropSlot,FString& Hint) const
 {
     const auto Reject=[&](const TCHAR* Why){Hint=Why;return false;};
     if(!Snapshot.bCanAct||ModalToken.IsValid())return Reject(TEXT("当前动作或同步尚未完成"));
@@ -310,13 +310,13 @@ bool UAetherInventoryPage::PreviewDrop(const FAetherInspectRequest& From,const F
         if(Into&&Box.Kind==EAetherContainerKind::WorldDrop)return Reject(TEXT("战利品袋只允许取出"));
         const auto Operation=Box.Kind==EAetherContainerKind::PersonalStorage?EAetherItemOperation::PersonalStorage:EAetherItemOperation::SharedStorage;
         if(AetherItemEligibility::Query(*Source,Item->InstanceId,Snapshot.Context.OwnerIdentity,Into?Operation:EAetherItemOperation::Withdraw,D)!=EAetherInventoryMutationCode::Applied)return Reject(TEXT("该物品当前不能转移，请查看详情原因"));
-        const auto& Destination=Into?Box.Inventory:Snapshot.Inventory;if(Slot<0||Slot>=Destination.Capacity)return Reject(TEXT("无效目标格"));
-        const auto* Other=Destination.At(Slot);
-        if(!Other){Hint=FString::Printf(TEXT("放入第 %d 格 · 确认数量"),Slot+1);return true;}
+        const auto& Destination=Into?Box.Inventory:Snapshot.Inventory;if(DropSlot<0||DropSlot>=Destination.Capacity)return Reject(TEXT("无效目标格"));
+        const auto* Other=Destination.At(DropSlot);
+        if(!Other){Hint=FString::Printf(TEXT("放入第 %d 格 · 确认数量"),DropSlot+1);return true;}
         if(Item->SameStackKey(*Other))
         {
             const auto* Def=D.Items.Find(Item->DefinitionId);if(!Def||Other->Quantity>=Def->MaxStack)return Reject(TEXT("目标堆已满"));
-            Hint=FString::Printf(TEXT("合并到第 %d 格 · 最多 %d 件"),Slot+1,Def->MaxStack-Other->Quantity);return true;
+            Hint=FString::Printf(TEXT("合并到第 %d 格 · 最多 %d 件"),DropSlot+1,Def->MaxStack-Other->Quantity);return true;
         }
         if(Box.Kind==EAetherContainerKind::WorldDrop)return Reject(TEXT("战利品袋不能整堆交换"));
         if(Destination.IsEquipped(Other->InstanceId)||AetherItemEligibility::Query(Destination,Other->InstanceId,Snapshot.Context.OwnerIdentity,Into?EAetherItemOperation::Withdraw:Operation,D)!=EAetherInventoryMutationCode::Applied)return Reject(TEXT("目标物品不能反向交换"));
@@ -325,10 +325,10 @@ bool UAetherInventoryPage::PreviewDrop(const FAetherInspectRequest& From,const F
     auto Candidate=Snapshot.Inventory;FAetherInventoryMutation Result;
     if(To.Target.Kind==EAetherInspectTarget::EquipmentSlot)
     {Result=Candidate.Equip(Item->InstanceId,To.Target.SlotId,Snapshot.Context.OwnerIdentity,D);Hint=TEXT("装备到指定部位");}
-    else if(Slot<0||Slot>=Candidate.Capacity)return Reject(TEXT("无效目标格"));
+    else if(DropSlot<0||DropSlot>=Candidate.Capacity)return Reject(TEXT("无效目标格"));
     else if(From.Target.Kind==EAetherInspectTarget::EquipmentSlot)
-    {Result=Candidate.UnequipTo(Item->InstanceId,Slot,D);Hint=TEXT("卸装并放入该格");}
-    else if(const auto* Other=Candidate.At(Slot))
+    {Result=Candidate.UnequipTo(Item->InstanceId,DropSlot,D);Hint=TEXT("卸装并放入该格");}
+    else if(const auto* Other=Candidate.At(DropSlot))
     {
         if(Item->InstanceId==Other->InstanceId)return Reject(TEXT("物品已在该格"));
         const auto* Def=D.Items.Find(Item->DefinitionId);
@@ -336,7 +336,7 @@ bool UAetherInventoryPage::PreviewDrop(const FAetherInspectRequest& From,const F
         {Result=Candidate.Merge(Item->InstanceId,Other->InstanceId,FMath::Min(Item->Quantity,Def->MaxStack-Other->Quantity),D);Hint=TEXT("合并到该堆");}
         else {Result=Candidate.Swap(Item->InstanceId,Other->InstanceId,D);Hint=TEXT("交换背包格位置");}
     }
-    else {Result=Candidate.Move(Item->InstanceId,Slot,D);Hint=TEXT("移动到该空格");}
+    else {Result=Candidate.Move(Item->InstanceId,DropSlot,D);Hint=TEXT("移动到该空格");}
     if(Result.Code!=EAetherInventoryMutationCode::Applied)return Reject(TEXT("此处不能放置，请查看装备或占格条件"));return true;
 }
 bool UAetherInventoryPage::Drop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 SlotValue)

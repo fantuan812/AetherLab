@@ -7,7 +7,7 @@ public class AetherCore : ModuleRules
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false; // 任务成长及来源回归、交互查询与持久 DTO独立编译，保留模块边界检查。
-        PublicDependencyModuleNames.Add("Core");
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject" });
         PrivateDependencyModuleNames.Add("Json");
     }
 }
