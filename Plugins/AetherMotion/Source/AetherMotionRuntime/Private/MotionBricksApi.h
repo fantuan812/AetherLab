@@ -12,6 +12,7 @@ public:
     FString RuntimeRoot;
     TSet<FString> VerifiedFiles;
     FString StagedBackend;
+    FString StageSha256;
 #define MB_FUNCTION(Name) decltype(&::Name) Name=nullptr;
 #include "MotionBricksRequired.inl"
 #undef MB_FUNCTION

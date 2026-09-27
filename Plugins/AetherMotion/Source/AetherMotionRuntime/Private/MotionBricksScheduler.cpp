@@ -38,6 +38,12 @@ void FMotionBricksScheduler::Configure(EAetherMotionBackend In,uint32 Count)
     FScopeLock Lock(&Mutex);Count=FMath::Clamp(Count,1u,8u);
     if(In==Backend&&Count==Threads)return;
     Backend=In;Threads=Count;++Configuration;
+    QueueSamples.Reset();GenerationSamples.Reset();InferenceSamples.Reset();
+    Metrics.Configuration=Configuration;Metrics.RequestedBackend=In;Metrics.ActualBackend=EAetherMotionBackend::Traditional;
+    Metrics.WindowSuccesses=Metrics.WindowFailures=Metrics.WindowNoModel=Metrics.WindowDiscarded=0;
+    Metrics.QueueSampleCount=Metrics.GenerationSampleCount=Metrics.ColdStartSamples=0;
+    Metrics.QueueP95Milliseconds=Metrics.GenerationP95Milliseconds=Metrics.InferenceP95Milliseconds=0;
+    Metrics.QueueMaxMilliseconds=Metrics.GenerationMaxMilliseconds=0;
     for(auto& Pair:Entries){Pair.Value.Pending.Reset();Pair.Value.Result.Reset();}
     State=In==EAetherMotionBackend::Traditional?TEXT("传统动画"):TEXT("正在后台准备生成动作");Wake->Trigger();
 }
@@ -73,6 +79,8 @@ FAetherMotionSchedulerMetrics FMotionBricksScheduler::Inspect() const
 uint32 FMotionBricksScheduler::Run()
 {
     FMotionBricksApi Api;TUniquePtr<FMotionBricksModelOwner> Model;TSet<uint64> NativeIds;uint64 LoadedConfiguration=0;
+    EAetherMotionBackend ActiveBackend=EAetherMotionBackend::Traditional;
+    double PendingModelLoadMs=0;bool bColdWork=false;
     FString Failure;
     while(!bStopping.Load())
     {
@@ -91,7 +99,9 @@ uint32 FMotionBricksScheduler::Run()
         if(Model)for(auto It=NativeIds.CreateIterator();It;++It)if(!Live.Contains(*It)){Model->RemoveAgent(*It);It.RemoveCurrent();}
         if(LoadedConfiguration!=Version)
         {
+            const double LoadStarted=FPlatformTime::Seconds();
             Model.Reset();NativeIds.Reset();Failure.Reset();LoadedConfiguration=Version;
+            ActiveBackend=EAetherMotionBackend::Traditional;bColdWork=true;
             if(Device!=EAetherMotionBackend::Traditional)
             {
                 Model=MakeUnique<FMotionBricksModelOwner>(Api);
@@ -114,13 +124,20 @@ uint32 FMotionBricksScheduler::Run()
                 }
                 if(Model)
                 {
+                    ActiveBackend=Actual;
                     FScopeLock Lock(&Mutex);
                     if(Configuration==Version)State=FString::Printf(TEXT("请求 %s · 实际 %s%s"),
                         Device==EAetherMotionBackend::Automatic?TEXT("自动"):Device==EAetherMotionBackend::CPU?TEXT("CPU"):TEXT("Vulkan"),
                         Actual==EAetherMotionBackend::CPU?TEXT("CPU"):TEXT("Vulkan"),Failure.IsEmpty()?TEXT(""):*FString(TEXT(" · ")+Failure));
                 }
             }
-            FScopeLock Lock(&Mutex);if(Configuration==Version&&!Model)State=Failure.IsEmpty()?TEXT("传统动画"):TEXT("传统动画 · ")+Failure;
+            PendingModelLoadMs=(FPlatformTime::Seconds()-LoadStarted)*1000.;
+            FScopeLock Lock(&Mutex);
+            if(Configuration==Version)
+            {
+                Metrics.ActualBackend=ActiveBackend;
+                if(!Model)State=Failure.IsEmpty()?TEXT("传统动画"):TEXT("传统动画 · ")+Failure;
+            }
         }
         {FScopeLock Lock(&Mutex);Metrics.NativeAgents=NativeIds.Num();}
         if(!HasWork){Wake->Wait(1000);continue;}
@@ -128,17 +145,48 @@ uint32 FMotionBricksScheduler::Run()
         FAetherMotionResult Result;Result.AgentId=Work.AgentId;Result.Stamp=Work.Stamp;Result.SubmittedAt=Work.SubmittedAt;
         if(Model){Result.Clip=Model->Generate(Work,Result.Reason);NativeIds.Add(Work.AgentId);}
         else Result.Reason=Failure.IsEmpty()?TEXT("传统动画"):Failure;
+        FAetherMotionAttemptSample Sample;
+        Sample.Configuration=Version;Sample.AgentId=Work.AgentId;Sample.RequestSequence=Work.Stamp.RequestSequence;
+        Sample.Requested=Device;Sample.Actual=ActiveBackend;Sample.Style=Work.Style;
+        Sample.ModelId=Model?FString(TEXT("g1-f32:"))+Api.StageSha256:FString();
+        Sample.NativeRevision=Model?FString(FMotionBricksApi::Revision):FString();
+        Sample.bColdStart=bColdWork;Sample.ModelLoadMilliseconds=bColdWork?PendingModelLoadMs:0;
+        bColdWork=false;PendingModelLoadMs=0;
         {
             FScopeLock Lock(&Mutex);
             const double QueueMs=FMath::Max(0.,GenerationStarted-Work.SubmittedAt)*1000.,GenerationMs=(FPlatformTime::Seconds()-GenerationStarted)*1000.;
-            Metrics.QueueP95Milliseconds=RecordLatency(QueueSamples,QueueMs);Metrics.GenerationP95Milliseconds=RecordLatency(GenerationSamples,GenerationMs);
-            Metrics.QueueMaxMilliseconds=FMath::Max(Metrics.QueueMaxMilliseconds,QueueMs);Metrics.GenerationMaxMilliseconds=FMath::Max(Metrics.GenerationMaxMilliseconds,GenerationMs);
+            Sample.QueueMilliseconds=QueueMs;Sample.GenerationMilliseconds=GenerationMs;
+            if(Result.Clip)Sample.InferenceMilliseconds=Result.Clip->InferenceSeconds*1000.;
             Metrics.NativeAgents=NativeIds.Num();if(Model){++Metrics.NativeCalls;if(!Result.Clip)++Metrics.NativeFailures;}
-            if(auto* E=Entries.Find(Work.AgentId))
+            const auto* E=Entries.Find(Work.AgentId);
+            const bool Current=Configuration==Version&&E&&E->Latest.SameIntent(Work.Stamp)&&E->Latest.RequestSequence==Work.Stamp.RequestSequence;
+            Sample.Outcome=!Current?EAetherMotionAttemptOutcome::Discarded:!Model?EAetherMotionAttemptOutcome::NoModel:
+                Result.Clip?EAetherMotionAttemptOutcome::Succeeded:EAetherMotionAttemptOutcome::Failed;
+            if(Metrics.RecentAttempts.Num()>=128)Metrics.RecentAttempts.RemoveAt(0);
+            Metrics.RecentAttempts.Add(MoveTemp(Sample));
+            if(Configuration==Version)
             {
-                E->bExecuting=false;
-                if(Configuration==Version&&E->Latest.SameIntent(Work.Stamp)&&E->Latest.RequestSequence==Work.Stamp.RequestSequence)
-                    E->Result=MoveTemp(Result);
+                Metrics.QueueP95Milliseconds=RecordLatency(QueueSamples,QueueMs);Metrics.QueueSampleCount=QueueSamples.Num();
+                Metrics.QueueMaxMilliseconds=FMath::Max(Metrics.QueueMaxMilliseconds,QueueMs);
+                if(Metrics.RecentAttempts.Last().bColdStart)++Metrics.ColdStartSamples;
+                switch(Metrics.RecentAttempts.Last().Outcome)
+                {
+                case EAetherMotionAttemptOutcome::Succeeded:
+                    ++Metrics.WindowSuccesses;
+                    Metrics.GenerationP95Milliseconds=RecordLatency(GenerationSamples,GenerationMs);
+                    Metrics.GenerationSampleCount=GenerationSamples.Num();
+                    Metrics.GenerationMaxMilliseconds=FMath::Max(Metrics.GenerationMaxMilliseconds,GenerationMs);
+                    Metrics.InferenceP95Milliseconds=RecordLatency(InferenceSamples,Metrics.RecentAttempts.Last().InferenceMilliseconds);
+                    break;
+                case EAetherMotionAttemptOutcome::Failed:++Metrics.WindowFailures;break;
+                case EAetherMotionAttemptOutcome::NoModel:++Metrics.WindowNoModel;break;
+                case EAetherMotionAttemptOutcome::Discarded:++Metrics.WindowDiscarded;break;
+                }
+            }
+            if(auto* Writable=Entries.Find(Work.AgentId))
+            {
+                Writable->bExecuting=false;
+                if(Current)Writable->Result=MoveTemp(Result);
                 else ++Metrics.DiscardedResults;
                 // 废弃输出后，下次请求携带最后实际消费的四帧；ModelOwner 不沿用未播放的计划。
             }

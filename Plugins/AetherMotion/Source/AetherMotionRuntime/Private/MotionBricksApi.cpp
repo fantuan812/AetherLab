@@ -31,7 +31,7 @@ bool RelativePath(const FString& Path)
 }
 bool FMotionBricksApi::VerifyStage(FString& Why)
 {
-    VerifiedFiles.Reset();StagedBackend.Reset();
+    VerifiedFiles.Reset();StagedBackend.Reset();StageSha256.Reset();
     FString Text;if(!FFileHelper::LoadFileToString(Text,*(RuntimeRoot/TEXT("stage.json")))||Text.Len()>1024*1024){Why=TEXT("动作数据包尚未部署");return false;}
     TSharedPtr<FJsonObject> Root;const TArray<TSharedPtr<FJsonValue>>* Files=nullptr;FString Version;double Abi=0;
     if(!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text),Root)||!Root||
@@ -57,6 +57,8 @@ bool FMotionBricksApi::VerifyStage(FString& Why)
     for(const FString& Name:Libraries)
         if((Name.EndsWith(TEXT(".dll"))||Name.Contains(TEXT(".so")))&&!VerifiedFiles.Contains(Name))
         {Why=TEXT("动作目录存在未声明的动态库：")+Name;return false;}
+    if(!Sha256(RuntimeRoot/TEXT("stage.json"),StageSha256))
+    {Why=TEXT("动作发布清单摘要不可读");return false;}
     return true;
 }
 bool FMotionBricksApi::Load(FString& Why)
