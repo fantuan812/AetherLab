@@ -65,8 +65,8 @@ TSharedRef<SWidget> UAetherInventoryPage::RebuildWidget()
         Search->OnTextChanged.AddDynamic(this,&UAetherInventoryPage::SearchChanged);
         Categories=WidgetTree->ConstructWidget<UComboBoxString>();Toolbar->AddChildToHorizontalBox(Categories);Categories->OnSelectionChanged.AddDynamic(this,&UAetherInventoryPage::CategoryChanged);
         auto Button=[&](const TCHAR* Text){auto* B=WidgetTree->ConstructWidget<UButton>();auto* T=WidgetTree->ConstructWidget<UTextBlock>();T->SetText(FText::FromString(Text));B->SetContent(T);Toolbar->AddChildToHorizontalBox(B);return B;};
-        Button(TEXT("整理并合并"))->OnClicked.AddDynamic(this,&UAetherInventoryPage::Sort);
-        Button(TEXT("同步 / 重试"))->OnClicked.AddDynamic(this,&UAetherInventoryPage::Retry);
+        SortButton=Button(TEXT("整理并合并"));SortButton->OnClicked.AddDynamic(this,&UAetherInventoryPage::Sort);
+        RetryButton=Button(TEXT("同步 / 重试"));RetryButton->OnClicked.AddDynamic(this,&UAetherInventoryPage::Retry);
         StatusBar=WidgetTree->ConstructWidget<UHorizontalBox>();Root->AddChildToVerticalBox(StatusBar);
         Notice=WidgetTree->ConstructWidget<UTextBlock>();Notice->SetAutoWrapText(true);Root->AddChildToVerticalBox(Notice);
         auto* Body=WidgetTree->ConstructWidget<UHorizontalBox>();Root->AddChildToVerticalBox(Body)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
@@ -135,7 +135,7 @@ void UAetherInventoryPage::ClosePresentation()
 }
 void UAetherInventoryPage::ResetPresentation()
 {
-    HideConfirmation();Session=FAetherInspectionSession();Snapshot={};Player.Reset();
+    HideConfirmation();Session=FAetherInspectionSession();PickedSource.Reset();Snapshot={};Player.Reset();
     ++Generation;SeenProfile=SeenWorld=SeenContainerRevision=SeenContainerWorld=-1;
     SeenChannel.Invalidate();SeenTrade.Invalidate();SeenContainerContext.Invalidate();SeenSelected.Invalidate();
     SeenShop.Reset();SeenStatuses.Reset();bSeenCanAct=false;bDirty=true;
@@ -187,6 +187,14 @@ void UAetherInventoryPage::Refresh()
         return;
     }
     bDirty=false;Next.Context.SnapshotRevision=Generation;Snapshot=MoveTemp(Next);const auto& D=FAetherV10Definitions::Get();
+    if(PickedSource.IsSet())
+    {
+        auto Current=AetherInspection::Pin(Snapshot,PickedSource->Target);
+        if(PickedSource->Context.SessionId!=Snapshot.Context.SessionId||PickedSource->Context.OwnerIdentity!=Snapshot.Context.OwnerIdentity||
+            PickedSource->DependencyKey!=Current.DependencyKey||!Snapshot.Find(PickedSource->Target.InstanceId,!PickedSource->Target.ContainerId.IsEmpty()))
+        {PickedSource.Reset();if(Notice)Notice->SetText(FText::FromString(TEXT("源物品已变化，已取消放置。")));}
+        else PickedSource->Context=Snapshot.Context;
+    }
     Session.Refresh(Snapshot,D.Items,D.Skills);if(!Session.GetDraft().IsSet())HideConfirmation();
     Preview->SetSource(C);
     StatusBar->ClearChildren();
@@ -223,10 +231,10 @@ void UAetherInventoryPage::Refresh()
         Cells[SlotValue]->Present(AetherInspection::Pin(Snapshot,Target),SlotValue,Label,Def?Def->IconId:FString(),Filtered,I&&I->InstanceId==C->SelectedInstance);
         Cells[SlotValue]->SetItemState(I,Def,I&&Snapshot.Inventory.IsEquipped(I->InstanceId));
         // Let spatial navigation cross region boundaries; never wrap back into the same grid.
-        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Left,EUINavigationRule::Escape);
-        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Right,EUINavigationRule::Escape);
-        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Up,EUINavigationRule::Escape);
-        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Down,EUINavigationRule::Escape);
+        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Left,SlotValue%Columns==0?EUINavigationRule::Escape:EUINavigationRule::Automatic);
+        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Right,SlotValue%Columns==Columns-1||SlotValue==Cells.Num()-1?EUINavigationRule::Escape:EUINavigationRule::Automatic);
+        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Up,SlotValue<Columns?EUINavigationRule::Escape:EUINavigationRule::Automatic);
+        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Down,SlotValue+Columns>=Cells.Num()?EUINavigationRule::Escape:EUINavigationRule::Automatic);
     }
     if(EquipmentCells.Num()!=D.Items.Slots.Num())
     {Equipment->ClearChildren();EquipmentCells.Reset();for(int32 I=0;I<D.Items.Slots.Num();++I)EquipmentCells.Add(MakeCell(Equipment,I,2));}
@@ -252,10 +260,10 @@ void UAetherInventoryPage::Refresh()
         FAetherInspectTarget T;T.ContainerId=Container->ContainerId;T.SlotId=LexToString(N);if(Item)T.InstanceId=Item->InstanceId;
         ContainerCells[N]->Present(AetherInspection::Pin(Snapshot,T),N,Def?Def->DisplayName:TEXT("空"),Def?Def->IconId:FString(),false,false);
         ContainerCells[N]->SetItemState(Item,Def);
-        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Left,EUINavigationRule::Escape);
-        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Right,EUINavigationRule::Escape);
-        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Up,EUINavigationRule::Escape);
-        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Down,EUINavigationRule::Escape);
+        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Left,N%Columns==0?EUINavigationRule::Escape:EUINavigationRule::Automatic);
+        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Right,N%Columns==Columns-1||N==Count-1?EUINavigationRule::Escape:EUINavigationRule::Automatic);
+        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Up,N<Columns?EUINavigationRule::Escape:EUINavigationRule::Automatic);
+        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Down,N+Columns>=Count?EUINavigationRule::Escape:EUINavigationRule::Automatic);
     }
     const auto* Shop=Snapshot.Shop.IsSet()?&Snapshot.Shop.GetValue():nullptr;
     Products->SetVisibility(Shop?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
@@ -270,17 +278,36 @@ void UAetherInventoryPage::Refresh()
     }
     RenderDetails();
 }
-void UAetherInventoryPage::CellIntent(const FAetherInspectRequest& R,int32,EAetherCellIntent Intent)
+void UAetherInventoryPage::CellIntent(const FAetherInspectRequest& R,int32 Slot,EAetherCellIntent Intent)
 {
     if(!R.Context.Same(Snapshot.Context)||ModalToken.IsValid())return;const auto& D=FAetherV10Definitions::Get();
     if(Intent==EAetherCellIntent::Leave){Session.HideHover();RenderDetails();return;}
+    if(Intent==EAetherCellIntent::PickUp)
+    {
+        if(PickedSource.IsSet()&&PickedSource->Target.InstanceId==R.Target.InstanceId&&PickedSource->Target.SlotId==R.Target.SlotId&&
+            PickedSource->Target.ContainerId==R.Target.ContainerId){PickedSource.Reset();Notice->SetText(FText::FromString(TEXT("已取消放置。")));return;}
+        if(R.Target.Kind==EAetherInspectTarget::ItemDefinition||!R.Target.InstanceId.IsValid())
+        {Notice->SetText(FText::FromString(TEXT("请选择有物品的源格。")));return;}
+        PickedSource=R;Notice->SetText(FText::FromString(TEXT("已选源格。方向键选落点，A 放置，Y 查看，B 取消；扳机切换区域。")));return;
+    }
+    if(Intent==EAetherCellIntent::Place&&PickedSource.IsSet())
+    {
+        if(R.Target.Kind==EAetherInspectTarget::ItemDefinition){Notice->SetText(FText::FromString(TEXT("商品格不能作为落点。")));return;}
+        if(Drop(PickedSource.GetValue(),R,Slot))PickedSource.Reset();
+        return;
+    }
+    if(Intent==EAetherCellIntent::Hover&&PickedSource.IsSet())
+    {
+        FString Hint;PreviewDrop(PickedSource.GetValue(),R,Slot,Hint);
+        if(Notice)Notice->SetText(FText::FromString(Hint));return;
+    }
     if(R.Target.Kind==EAetherInspectTarget::ItemInstance&&!R.Target.InstanceId.IsValid())return;
     if(Player.IsValid()&&R.Target.ContainerId.IsEmpty()&&R.Target.InstanceId.IsValid()&&Intent!=EAetherCellIntent::Hover)
     {
         Player->SelectedInstance=R.Target.InstanceId;bDirty=true;
         if(Menu.IsValid()){auto M=Menu->GetPageMemory(EAetherMenuPage::Inventory);M.SelectedInstance=R.Target.InstanceId;Menu->SavePageMemory(EAetherMenuPage::Inventory,M);}
     }
-    if(Intent==EAetherCellIntent::Details){Session.OpenDetails(R.Target,Snapshot,D.Items,D.Skills);RenderDetails();Details->SetUserFocus(GetOwningPlayer());}
+    if(Intent==EAetherCellIntent::Details||Intent==EAetherCellIntent::Place){Session.OpenDetails(R.Target,Snapshot,D.Items,D.Skills);RenderDetails();Details->SetUserFocus(GetOwningPlayer());}
     else if(Intent==EAetherCellIntent::Hover){Session.ShowHover(R.Target,Snapshot,D.Items,D.Skills);RenderDetails();}
 }
 void UAetherInventoryPage::RenderDetails()
@@ -366,7 +393,8 @@ bool UAetherInventoryPage::Drop(const FAetherInspectRequest& From,const FAetherI
         const auto Mode=TargetItem&&!SourceItem->SameStackKey(*TargetItem)?EAetherTransferMode::SwapWhole:EAetherTransferMode::PlaceOrMerge;
         if(Mode==EAetherTransferMode::SwapWhole&&Snapshot.Container->Kind==EAetherContainerKind::WorldDrop)
         {Notice->SetText(FText::FromString(TEXT("战利品袋只能取出，不能交换放回。")));return false;}
-        const auto Selected=*A;TransferAction(From,Selected,SlotValue,TargetItem?TargetItem->InstanceId:FGuid(),Mode);return true;
+        const auto Selected=*A;TransferAction(From,Selected,SlotValue,TargetItem?TargetItem->InstanceId:FGuid(),Mode);
+        return Session.GetDraft().IsSet()||(Client.IsValid()&&Client->HasPending());
     }
     const auto* I=Snapshot.Inventory.Find(From.Target.InstanceId);if(!I)return false;FAetherPlayerCommand C;C.ItemInstanceId=I->InstanceId;
     if(To.Target.Kind==EAetherInspectTarget::EquipmentSlot){C.Type=EAetherCommandType::EquipItem;C.SlotId=To.Target.SlotId;}
@@ -468,12 +496,17 @@ UWidget* UAetherInventoryPage::GetNavigationFocusTarget() const
 {for(const auto& Cell:Cells)if(Cell&&!Cell->IsFiltered())return Cell.Get();return Search.Get();}
 void UAetherInventoryPage::CycleRegion(int32 Direction)
 {
-    TArray<UWidget*> Regions;if(Search)Regions.Add(Search);if(Categories)Regions.Add(Categories);
-    if(!EquipmentCells.IsEmpty())Regions.Add(EquipmentCells[0]);
-    if(auto* Target=GetNavigationFocusTarget();Target&&Target!=Search)Regions.Add(Target);
-    if(!ProductCells.IsEmpty())Regions.Add(ProductCells[0]);
-    if(!ContainerCells.IsEmpty())Regions.Add(ContainerCells[0]);
-    if(Details&&Session.GetDetails().IsSet())Regions.Add(Details->NavigationTarget());
+    TArray<UWidget*> Regions;
+    const auto AddRegion=[&](UWidget* Widget)
+    {if(Widget&&Widget->GetVisibility()!=ESlateVisibility::Collapsed&&Widget->GetVisibility()!=ESlateVisibility::Hidden&&Widget->GetIsEnabled())Regions.Add(Widget);};
+    AddRegion(Search);AddRegion(Categories);AddRegion(SortButton);AddRegion(RetryButton);
+    if(StatusBar&&StatusBar->GetChildrenCount()>0)AddRegion(StatusBar->GetChildAt(0));
+    AddRegion(Preview);
+    if(!EquipmentCells.IsEmpty())AddRegion(EquipmentCells[0]);
+    if(auto* Target=GetNavigationFocusTarget();Target&&Target!=Search)AddRegion(Target);
+    if(!ProductCells.IsEmpty())AddRegion(ProductCells[0]);
+    if(!ContainerCells.IsEmpty())AddRegion(ContainerCells[0]);
+    if(Details&&Session.GetDetails().IsSet())AddRegion(Details->NavigationTarget());
     if(Regions.IsEmpty())return;
     int32 Current=INDEX_NONE;
     for(int32 N=0;N<Regions.Num();++N)
@@ -491,6 +524,10 @@ FReply UAetherInventoryPage::NativeOnPreviewKeyDown(const FGeometry& G,const FKe
     if(!ModalToken.IsValid()&&(E.GetKey()==EKeys::Tab||E.GetKey()==EKeys::Gamepad_LeftTrigger||E.GetKey()==EKeys::Gamepad_RightTrigger))
     {if(!E.IsRepeat())CycleRegion(E.IsShiftDown()||E.GetKey()==EKeys::Gamepad_LeftTrigger?-1:1);return FReply::Handled();}
     if(E.GetKey()==EKeys::Escape||E.GetKey()==EKeys::Gamepad_FaceButton_Right)
-    {if(Session.Back()){HideConfirmation();RenderDetails();return FReply::Handled();}if(Menu.IsValid())Menu->Back();return FReply::Handled();}
+    {
+        if(PickedSource.IsSet()){PickedSource.Reset();if(Notice)Notice->SetText(FText::FromString(TEXT("已取消放置。")));return FReply::Handled();}
+        if(Session.Back()){HideConfirmation();RenderDetails();return FReply::Handled();}
+        if(Menu.IsValid())Menu->Back();return FReply::Handled();
+    }
     return Super::NativeOnPreviewKeyDown(G,E);
 }

@@ -18,6 +18,7 @@ class UTextBlock;
 class UEditableTextBox;
 class UComboBoxString;
 class UBorder;
+class UButton;
 
 UCLASS()
 class AETHERUI_API UAetherInventoryPage : public UUserWidget
@@ -55,6 +56,7 @@ private:
     UFUNCTION() void Retry();
     FAetherInspectionSnapshot Snapshot;
     FAetherInspectionSession Session;
+    TOptional<FAetherInspectRequest> PickedSource;
     TWeakObjectPtr<UAetherCommandClient> Client;
     TWeakObjectPtr<UAetherMenuSubsystem> Menu;
     TWeakObjectPtr<AAetherFrontierCharacter> Player;
@@ -80,6 +82,8 @@ private:
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Notice;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UEditableTextBox> Search;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UComboBoxString> Categories;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UButton> SortButton;
+    UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UButton> RetryButton;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UAetherCharacterPreviewWidget> Preview;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UAetherInspectionCard> Details;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UAetherInspectionCard> Hover;

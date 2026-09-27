@@ -99,9 +99,18 @@ FReply UAetherInventoryCell::NativeOnMouseButtonDown(const FGeometry& G,const FP
 }
 FReply UAetherInventoryCell::NativeOnKeyDown(const FGeometry& G,const FKeyEvent& E)
 {
-    if(E.GetKey()==EKeys::Enter||E.GetKey()==EKeys::Gamepad_FaceButton_Bottom||E.GetKey()==EKeys::Gamepad_FaceButton_Top)
+    if(E.GetKey()==EKeys::Gamepad_FaceButton_Left)
+    {if(!E.IsRepeat()&&!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::PickUp);return FReply::Handled();}
+    if(E.GetKey()==EKeys::Enter||E.GetKey()==EKeys::Gamepad_FaceButton_Bottom)
+    {if(!E.IsRepeat()&&!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Place);return FReply::Handled();}
+    if(E.GetKey()==EKeys::Gamepad_FaceButton_Top)
     {if(!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Details);return FReply::Handled();}
     return Super::NativeOnKeyDown(G,E);
+}
+void UAetherInventoryCell::NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent)
+{
+    Super::NativeOnAddedToFocusPath(InFocusEvent);
+    if(!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Hover);
 }
 void UAetherInventoryCell::NativeOnMouseEnter(const FGeometry& G,const FPointerEvent& E)
 {Super::NativeOnMouseEnter(G,E);if(!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Hover);}

@@ -8,7 +8,7 @@ class UTextBlock;
 class UImage;
 class UOverlay;
 class UProgressBar;
-enum class EAetherCellIntent:uint8 {Hover,Select,Details,Leave};
+enum class EAetherCellIntent:uint8 {Hover,Select,Details,Leave,PickUp,Place};
 DECLARE_DELEGATE_ThreeParams(FOnAetherCellIntent,const FAetherInspectRequest&,int32,EAetherCellIntent);
 DECLARE_DELEGATE_RetVal_ThreeParams(bool,FOnAetherCellDrop,const FAetherInspectRequest&,const FAetherInspectRequest&,int32);
 DECLARE_DELEGATE_RetVal_FourParams(bool,FOnAetherDropPreview,const FAetherInspectRequest&,const FAetherInspectRequest&,int32,FString&);
@@ -35,6 +35,7 @@ public:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual FReply NativeOnMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event) override;
     virtual FReply NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
+    virtual void NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent) override;
     virtual void NativeOnMouseEnter(const FGeometry& Geometry,const FPointerEvent& Event) override;
     virtual void NativeOnMouseLeave(const FPointerEvent& Event) override;
     virtual void NativeOnDragDetected(const FGeometry& Geometry,const FPointerEvent& Event,UDragDropOperation*& Operation) override;
