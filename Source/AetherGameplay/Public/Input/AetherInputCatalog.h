@@ -13,6 +13,8 @@ inline const TArray<FEntry>& Entries()
         {"Sprint",TEXT("冲刺"),EKeys::LeftShift},
         {"Jump",TEXT("跳跃／翻越"),EKeys::SpaceBar},
         {"Crouch",TEXT("下蹲"),EKeys::LeftControl},
+        {"UtilityModifier",TEXT("物件操作修饰键（LB）"),EKeys::Gamepad_LeftShoulder},
+        {"CrouchToggle",TEXT("切换蹲姿（LB+B）"),EKeys::Gamepad_FaceButton_Right},
         {"Dodge",TEXT("闪避"),EKeys::LeftAlt},
         {"Cast",TEXT("施放所选技能"),EKeys::MiddleMouseButton},
         {"One",TEXT("选择技能一"),EKeys::One},{"Two",TEXT("选择技能二"),EKeys::Two},

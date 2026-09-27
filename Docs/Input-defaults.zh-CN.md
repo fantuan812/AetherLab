@@ -9,6 +9,8 @@
 | 冲刺 | LeftShift | Sprint |
 | 跳跃／翻越 | SpaceBar | Jump |
 | 下蹲 | LeftControl | Crouch |
+| 物件操作修饰键（LB） | Gamepad_LeftShoulder | UtilityModifier |
+| 切换蹲姿（LB+B） | Gamepad_FaceButton_Right | CrouchToggle |
 | 闪避 | LeftAlt | Dodge |
 | 施放所选技能 | MiddleMouseButton | Cast |
 | 选择技能一 | One | One |
@@ -48,3 +50,7 @@
 
 菜单：Tab / Shift+Tab 切换区域，手柄扳机切换区域、肩键切换页面；Esc / B 返回最上层。
 攻击保留释放触发，长按 0.35 秒后松开重击；动作缓冲至多一条，有效期 120 毫秒。
+
+手柄游戏状态：LB 仅作修饰键；LB+↑ 搬起/放下、LB+→ 投掷、LB+↓ 推动、LB+← 法力药；LB+B 切换蹲姿，单独 B 闪避。
+倒地交互层：方向键选择等待救援或回据点，A 确认；Y 直接请求回据点。键盘恢复键跟随 F8 动作的自定义绑定。
+键盘 Crouch 的自定义键保持不变；新增 UtilityModifier/CrouchToggle 为独立手柄语义，不覆盖玩家键盘重绑。

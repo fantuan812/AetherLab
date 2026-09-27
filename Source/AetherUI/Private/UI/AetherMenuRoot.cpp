@@ -1,4 +1,7 @@
 #include "UI/AetherMenuRoot.h"
+#include "UI/AetherRecoveryLayer.h"
+#include "Characters/AetherFrontierCharacter.h"
+#include "TimerManager.h"
 #include "UI/AetherWidgetAssets.h"
 #include "Settings/AetherSettingsPage.h"
 #include "UI/AetherFrontierHUD.h"
@@ -73,6 +76,7 @@ TSharedRef<SWidget> UAetherMenuRoot::RebuildWidget()
     if(MainStack)MainStack->SetTransitionDuration(0);if(ModalStack)ModalStack->SetTransitionDuration(0);
     if(!Panel)Panel=CreateWidget<UAetherFrontierPanel>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherFrontierPanel>());
     if(!Dialogue)Dialogue=CreateWidget<UAetherDialoguePage>(GetOwningPlayer(),AetherWidgetAssets::Class<UAetherDialoguePage>());
+    if(!Recovery)Recovery=CreateWidget<UAetherRecoveryLayer>(GetOwningPlayer(),UAetherRecoveryLayer::StaticClass());
     return Super::RebuildWidget();
 }
 void UAetherMenuRoot::NativeConstruct()
@@ -80,6 +84,23 @@ void UAetherMenuRoot::NativeConstruct()
     Super::NativeConstruct();SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     if(auto* LP=GetOwningLocalPlayer()){Menu=LP->GetSubsystem<UAetherMenuSubsystem>();Menu->OnChanged.AddUObject(this,&UAetherMenuRoot::Refresh);}
     UAetherSettingsPage::ApplyLocalPreferences(GetWorld());GameLayer->ActivateWidget();Refresh();
+    GetWorld()->GetTimerManager().SetTimer(RecoveryTimer,this,&UAetherMenuRoot::SyncRecovery,.1f,true);
+}
+void UAetherMenuRoot::SyncRecovery()
+{
+    if(!Menu.IsValid()||!Recovery)return;
+    auto* Pawn=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());
+    const FGuid Life=Pawn?Pawn->RecoveryLife:FGuid();
+    if(RecoveryPawn.Get()!=Pawn||RecoveryToken!=Life)
+    {
+        RecoveryPawn=Pawn;RecoveryToken=Life;
+        Recovery=CreateWidget<UAetherRecoveryLayer>(GetOwningPlayer(),UAetherRecoveryLayer::StaticClass());
+        if(Menu->GetPage()==EAetherMenuPage::Recovery)Refresh();
+    }
+    // 切换或断线期间清理旧实例；迟到点击仍必须匹配 RecoveryLayer 内的令牌。
+    Recovery->Refresh(Pawn);
+    if(Pawn&&!Pawn->Alive())Menu->OpenPage(EAetherMenuPage::Recovery);
+    else if(Menu->GetPage()==EAetherMenuPage::Recovery)Menu->Close();
 }
 void UAetherMenuRoot::Refresh()
 {
@@ -90,6 +111,7 @@ void UAetherMenuRoot::Refresh()
     {MainStack->ClearWidgets();MainStack->SetVisibility(ESlateVisibility::Collapsed);GameLayer->ActivateWidget();return;}
     MainStack->SetVisibility(ESlateVisibility::Visible);
     UCommonActivatableWidget* Desired=Menu->GetPage()==EAetherMenuPage::Dialogue?static_cast<UCommonActivatableWidget*>(Dialogue):static_cast<UCommonActivatableWidget*>(Panel);
+    if(Menu->GetPage()==EAetherMenuPage::Recovery)Desired=Recovery;
     if(MainStack->GetActiveWidget()!=Desired)
     {MainStack->ClearWidgets();MainStack->AddWidgetInstance(*Desired);}
     Desired->ActivateWidget();
@@ -108,6 +130,7 @@ void UAetherMenuRoot::PopModal(FGuid Token)
 }
 void UAetherMenuRoot::NativeDestruct()
 {
+    if(GetWorld())GetWorld()->GetTimerManager().ClearTimer(RecoveryTimer);
     if(Menu.IsValid())Menu->OnChanged.RemoveAll(this);Menu.Reset();
     if(ModalStack)ModalStack->ClearWidgets();Modals.Reset();if(MainStack)MainStack->ClearWidgets();
     if(GameLayer)GameLayer->DeactivateWidget();Super::NativeDestruct();

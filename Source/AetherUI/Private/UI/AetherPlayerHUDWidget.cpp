@@ -1,4 +1,5 @@
 #include "UI/AetherPlayerHUDWidget.h"
+#include "UI/AetherInputHints.h"
 #include "UI/AetherHUDSection.h"
 #include "Inventory/AetherNativeInventory.h"
 #include "Inventory/AetherResourceGate.h"
@@ -136,7 +137,8 @@ void UAetherPlayerHUDWidget::Refresh()
         }
         const float Remaining=FMath::Max(0.f,C->CastLockUntil-C->CombatTime());
         Cooldowns[I]->SetPercent(D&&Remaining>0?FMath::Clamp(Remaining/FMath::Max(.01f,C->CastLockUntil-C->CastStartedAt),0.f,1.f):0);
-        Skills[I]->SetText(FText::FromString(FString::Printf(TEXT("%s%d %s%s"),C->SelectedSpell==I?TEXT("▸ "):TEXT(""),I+1,D?*D->DisplayName:TEXT("未绑定"),D&&!C->SkillUnlocked(*Id)?TEXT(" · 未授权"):TEXT(""))));
+        const FName Actions[]={"One","Two","Three","Four"};
+        Skills[I]->SetText(FText::FromString(FString::Printf(TEXT("%s%s %s%s"),C->SelectedSpell==I?TEXT("▸ "):TEXT(""),*AetherInputHints::Label(*C,LP,Actions[I]),D?*D->DisplayName:TEXT("未绑定"),D&&!C->SkillUnlocked(*Id)?TEXT(" · 未授权"):TEXT(""))));
     }
     FString Gear;
     if(Profile.IsSet())for(const TCHAR* SlotValue:{TEXT("MainHand"),TEXT("OffHand")})
@@ -154,8 +156,11 @@ void UAetherPlayerHUDWidget::Refresh()
     if(Target&&Target->Alive()){TargetName->SetText(FText::FromString(Target->Fighter==EAetherFighter::Player?TEXT("锁定角色"):TEXT("锁定敌人")));TargetHealth->SetPercent(Target->Health()/FMath::Max(1.f,Target->MaxHealth));}
     const auto G=AetherGuide::Resolve(C);
     Guidance->SetText(FText::FromString(G.Title+LINE_TERMINATOR+G.Label+LINE_TERMINATOR+G.Hint+
-        (G.bHasTarget?LINE_TERMINATOR+FString::Printf(TEXT("目标 %.0f 米 · J 查看"),FVector::Dist2D(G.Position,C->GetActorLocation())/100):FString())));
-    C->RefreshInteractionFocus();Interaction->SetText(FText::FromString(C->InteractionFocus.Prompt));
+        (G.bHasTarget?LINE_TERMINATOR+FString::Printf(TEXT("目标 %.0f 米 · %s 查看"),FVector::Dist2D(G.Position,C->GetActorLocation())/100,*AetherInputHints::Label(*C,LP,"J")):FString())));
+    C->RefreshInteractionFocus();
+    FString InteractionPrompt=C->InteractionFocus.Prompt;
+    if(AetherInputHints::IsGamepad(LP))InteractionPrompt.ReplaceInline(*(TEXT("[")+C->BindingFor("Interact").GetDisplayName().ToString()+TEXT("]")),TEXT("[X]"));
+    Interaction->SetText(FText::FromString(InteractionPrompt));
     if(C->Feedback!=LastFeedback){LastFeedback=C->Feedback;FeedbackUntil=GetWorld()->GetTimeSeconds()+6;}
     Feedback->SetText(FText::FromString(GetWorld()->GetTimeSeconds()<FeedbackUntil?LastFeedback:FString()));
     FString Status;
@@ -163,7 +168,7 @@ void UAetherPlayerHUDWidget::Refresh()
     else if(C->bTravelPending)Status=C->TravelWaitReason.IsEmpty()?TEXT("传送准备中"):C->TravelWaitReason;
     else if(C->ResourceGate&&C->ResourceGate->IsStorageSlow())Status=TEXT("存储确认较慢 · 正在恢复原请求，请勿重复操作");
     else if(C->ReviveTarget)Status=TEXT("救援中 · 保持靠近，受伤会打断");
-    else if(C->Carried)Status=TEXT("搬运中 · ")+C->BindingFor("Carry").GetDisplayName().ToString()+TEXT(" 放下 / ")+C->BindingFor("Throw").GetDisplayName().ToString()+TEXT(" 投掷");
+    else if(C->Carried)Status=TEXT("搬运中 · ")+AetherInputHints::Label(*C,LP,"Carry")+TEXT(" 放下 / ")+AetherInputHints::Label(*C,LP,"Throw")+TEXT(" 投掷");
     else if(C->bIsCrouched)Status=TEXT("蹲姿");
     else if(C->bBlocking)Status=TEXT("格挡");
     else if(C->CombatTime()<C->StunUntil)Status=TEXT("眩晕");

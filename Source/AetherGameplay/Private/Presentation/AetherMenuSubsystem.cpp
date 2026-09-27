@@ -4,13 +4,14 @@
 #include "GameFramework/PlayerController.h"
 
 bool UAetherMenuSubsystem::ValidPage(EAetherMenuPage Page)
-{return Page>=EAetherMenuPage::Inventory&&Page<=EAetherMenuPage::Dialogue;}
+{return Page>=EAetherMenuPage::Inventory&&Page<=EAetherMenuPage::Recovery;}
 void UAetherMenuSubsystem::TogglePage(EAetherMenuPage Page)
 {if(ValidPage(Page))SetPage(CurrentPage==Page?EAetherMenuPage::None:Page);}
 void UAetherMenuSubsystem::OpenPage(EAetherMenuPage Page)
 {if(ValidPage(Page))SetPage(Page);}
 void UAetherMenuSubsystem::SetPage(EAetherMenuPage Page)
 {
+    if(auto* C=BoundPawn.Get();C&&!C->Alive()&&Page!=EAetherMenuPage::Recovery)return;
     if(Page==CurrentPage)return;
     const bool WasOpen=IsOpen();CurrentPage=Page;Layers.Reset();
     Publish(WasOpen);
@@ -19,6 +20,7 @@ void UAetherMenuSubsystem::InspectItem(FGuid Id)
 {if(!Id.IsValid())return;OpenPage(EAetherMenuPage::Inventory);RequestedInspection=Id;OnChanged.Broadcast();}
 void UAetherMenuSubsystem::Back()
 {
+    if(CurrentPage==EAetherMenuPage::Recovery)return;
     if(!Layers.IsEmpty()){Layers.Pop();OnChanged.Broadcast();return;}
     SetPage(IsOpen()?EAetherMenuPage::None:EAetherMenuPage::System);
 }

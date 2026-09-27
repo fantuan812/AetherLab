@@ -38,12 +38,12 @@ void UAetherPlayerInputComponent::Setup(UInputComponent* I)
     {
         if(auto* Existing=InputActions.Find(Name))return Existing->Get();
         Key=AetherInputCatalog::DefaultKey(Name,Key);
-        DefaultBindings.Add(Name,Key);
+        if(!Key.IsGamepadKey())DefaultBindings.Add(Name,Key);
         const FString Path=TEXT("/Game/AetherCore/Input/IA_")+Name.ToString()+TEXT(".IA_")+Name.ToString();
         auto* A=LoadObject<UInputAction>(nullptr,*Path);
         if(!A){A=NewObject<UInputAction>(this);A->ValueType=Type;A->bConsumeInput=false;}
         InputActions.Add(Name,A);
-        const auto* Override=GetDefault<UAetherInputProfile>()->Keys.Find(Name);
+        const auto* Override=Key.IsGamepadKey()?nullptr:GetDefault<UAetherInputProfile>()->Keys.Find(Name);
         if(Override)GameplayContext->UnmapKey(A,Key);
         const FKey Desired=Override?*Override:Key;
         if(!GameplayContext->GetMappings().ContainsByPredicate([&](const auto& M){return M.Action==A&&M.Key==Desired;}))GameplayContext->MapKey(A,Desired);
@@ -70,6 +70,8 @@ void UAetherPlayerInputComponent::Setup(UInputComponent* I)
     Bind("Jump",EKeys::SpaceBar,ETriggerEvent::Completed,&AAetherFrontierCharacter::StopJumping);
     Bind("Crouch",EKeys::LeftControl,ETriggerEvent::Started,&AAetherFrontierCharacter::CrouchOn);
     Bind("Crouch",EKeys::LeftControl,ETriggerEvent::Completed,&AAetherFrontierCharacter::CrouchOff);
+    Bind("CrouchToggle",EKeys::Gamepad_FaceButton_Right,ETriggerEvent::Started,&AAetherFrontierCharacter::ToggleCrouchInput);
+    Action("UtilityModifier",EKeys::Gamepad_LeftShoulder,EInputActionValueType::Boolean);
     Bind("One",EKeys::One,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell0);
     Bind("Two",EKeys::Two,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell1);
     Bind("Three",EKeys::Three,ETriggerEvent::Started,&AAetherFrontierCharacter::Spell2);
@@ -126,22 +128,25 @@ void UAetherPlayerInputComponent::Setup(UInputComponent* I)
         {"Jump",EKeys::Gamepad_FaceButton_Bottom},{"Dodge",EKeys::Gamepad_FaceButton_Right},
         {"Interact",EKeys::Gamepad_FaceButton_Left},{"Potion",EKeys::Gamepad_FaceButton_Top},
         {"Sprint",EKeys::Gamepad_LeftThumbstick},{"Lock",EKeys::Gamepad_RightThumbstick},
-        {"Crouch",EKeys::Gamepad_LeftShoulder},{"Cast",EKeys::Gamepad_RightShoulder},
+        {"Cast",EKeys::Gamepad_RightShoulder},
         {"One",EKeys::Gamepad_DPad_Up},{"Two",EKeys::Gamepad_DPad_Right},
         {"Three",EKeys::Gamepad_DPad_Down},{"Four",EKeys::Gamepad_DPad_Left},
         {"I",EKeys::Gamepad_Special_Left},{"Escape",EKeys::Gamepad_Special_Right}};
     for(const auto& P:Pad)if(auto* A=InputActions.Find(P.Key))
         if(!GameplayContext->GetMappings().ContainsByPredicate([&](const auto& M){return M.Action==A->Get()&&M.Key==P.Value;}))
             GameplayContext->MapKey(A->Get(),P.Value);
-    // 按住左肩时十字键成为物理交互，ChordBlocker 阻止底层技能选择穿透。
+    // 清理序列化旧映射；修饰键没有姿态副作用，不能依赖组合键取消事件起身。
+    GameplayContext->UnmapKey(InputActions["Crouch"],EKeys::Gamepad_LeftShoulder);
     const TPair<FName,FKey> Utility[]={{"Carry",EKeys::Gamepad_DPad_Up},{"Throw",EKeys::Gamepad_DPad_Right},
-        {"Push",EKeys::Gamepad_DPad_Down},{"Z",EKeys::Gamepad_DPad_Left}};
+        {"Push",EKeys::Gamepad_DPad_Down},{"Z",EKeys::Gamepad_DPad_Left},{"CrouchToggle",EKeys::Gamepad_FaceButton_Right}};
     for(const auto& P:Utility)
     {
         GameplayContext->UnmapKey(InputActions[P.Key],P.Value);
         auto& M=GameplayContext->MapKey(InputActions[P.Key],P.Value);
-        auto* Chord=NewObject<UInputTriggerChordAction>(GameplayContext);Chord->ChordAction=InputActions["Crouch"];M.Triggers.Add(Chord);
+        auto* Chord=NewObject<UInputTriggerChordAction>(GameplayContext);Chord->ChordAction=InputActions["UtilityModifier"];M.Triggers.Add(Chord);
     }
+    // Enhanced Input 根据 ChordAction 自动遮蔽基础映射；角色入口另检查实际修饰键，
+    // 不手工创建引擎内部 UInputTriggerChordBlocker。
     Sub->AddMappingContext(GameplayContext,0);
     C->OnPresentationChanged.Broadcast();
 }

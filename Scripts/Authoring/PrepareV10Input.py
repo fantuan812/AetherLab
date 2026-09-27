@@ -15,6 +15,7 @@ rows = dict(re.findall(r'Bind\("([^"]+)",EKeys::([A-Za-z0-9_]+),', source))
 rows.update(Forward="W", Backward="S", Left="A", Right="D",
             LookX="MouseX", LookY="MouseY", PadMoveX="Gamepad_LeftX", PadMoveY="Gamepad_LeftY",
             PadLookX="Gamepad_RightX", PadLookY="Gamepad_RightY")
+rows["UtilityModifier"] = "Gamepad_LeftShoulder"
 if len(rows) < 40:
     raise RuntimeError("输入声明不完整，拒绝覆盖资产")
 folder = "/Game/AetherCore/Input"
@@ -49,6 +50,16 @@ for name, key in rows.items():
     input_key = ue.Key()
     input_key.set_editor_property("key_name", key)
     context.map_key(actions[name], input_key)
+# Chord mappings must also be correct in the serialized authoring source.
+toggle_key = ue.Key()
+toggle_key.set_editor_property("key_name", "Gamepad_FaceButton_Right")
+context.unmap_key(actions["CrouchToggle"], toggle_key)
+toggle_mapping = context.map_key(actions["CrouchToggle"], toggle_key)
+chord = ue.InputTriggerChordAction(outer=actions["CrouchToggle"])
+chord.set_editor_property("chord_action", actions["UtilityModifier"])
+actions["CrouchToggle"].set_editor_property("triggers", [chord])
+if not library.save_loaded_asset(actions["CrouchToggle"]):
+    raise RuntimeError("无法保存蹲姿组合触发器")
 # 特定设备附加映射与 Chord 由角色安装到上下文副本；不修改已烘焙的默认资产。
 if not library.save_loaded_asset(context):
     raise RuntimeError("无法保存游戏输入上下文")

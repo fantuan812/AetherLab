@@ -37,6 +37,11 @@ public:
     virtual void OnEndCrouch(float HalfHeightAdjust,float ScaledHalfHeightAdjust) override;
     void StartJumpInput();
     void SetCrouchInput(bool Pressed);
+    void ToggleCrouchInput();
+    void ApplyCrouchIntent();
+    bool UtilityModifierHeld() const;
+    void SelectSpellInput(int32 Slot);
+    bool bCrouchHeld=false,bCrouchToggled=false;
     void SetSprintInput(bool Pressed);
     void ReleaseHeldInput();
     float CrouchCameraOffset=0;
@@ -151,8 +156,17 @@ public:
     void SellItem(){if(bPanel&&Panel==1)RequestSale();}
     void BuyMana(){if(bPanel&&Panel==1)SubmitInventory("Buy","ManaPotion");}
     void BuyRation(){if(bPanel&&Panel==1)SubmitInventory("Buy","Ration");}
-    void UseMana(){if(!bPanel)SubmitInventory("Use","ManaPotion");}
-    void Recover(){ServerAction("Recover");}
+    void UseMana(){if(!bPanel&&Alive())SubmitInventory("Use","ManaPotion");}
+    void Recover();
+    void UpdateRecoveryState();
+    UPROPERTY(Replicated) FGuid RecoveryLife;
+    UPROPERTY(Replicated) FString RecoveryReason;
+    UPROPERTY(Replicated) float RecoveryWait=0;
+    UPROPERTY(Replicated) bool bRecoveryAvailable=false;
+    bool bRecoveryRequested=false,bWasDowned=false;
+    FGuid RecoveryRequestLife;
+    UFUNCTION(Server,Reliable) void ServerRecover(FGuid Life);
+    UFUNCTION(Client,Reliable) void ClientRecoveryResult(FGuid Life,const FString& Reason);
     void PartyCommand(){if(bPanel&&Panel==5)ServerAction("PartyCommand");}
     void Invite(){if(bPanel&&Panel==5)ServerAction("Invite");}
     void AcceptInvite(){if(bPanel&&Panel==5)ServerAction("AcceptInvite");}
@@ -192,7 +206,7 @@ private:
     void CancelAttackInput(){bAttackHeld=false;bAttackCharged=false;bBufferedAttack=false;BufferedAttackUntil=0;}
     void SprintOn(){SetSprintInput(true);} void SprintOff(){SetSprintInput(false);}
     void CrouchOn(){SetCrouchInput(true);} void CrouchOff(){SetCrouchInput(false);}
-    void UsePotion(){if(!bPanel)SubmitInventory("Use","Potion");} void InteractV4();
+    void UsePotion(){if(!bPanel&&Alive())SubmitInventory("Use","Potion");} void InteractV4();
     FAetherWorldServiceCommand PendingService;
     int32 MinimumServiceRevision=0;
     void Throw(){if(!bPanel)RequestWorldAction("Throw");}
@@ -206,8 +220,8 @@ private:
     void ToggleSkills(){SelectPanel(3);} void ToggleMap(){SelectPanel(4);}
     void ToggleParty(){SelectPanel(5);} void ToggleMenu(){MenuBack();}
     void CastSelectedV4(){if(!bPanel)TrySpell(SelectedSpell);}
-    void Spell0(){SelectedSpell=0;} void Spell1(){SelectedSpell=1;} void Spell2(){SelectedSpell=2;} void Spell3(){SelectedSpell=3;}
+    void Spell0(){SelectSpellInput(0);} void Spell1(){SelectSpellInput(1);} void Spell2(){SelectSpellInput(2);} void Spell3(){SelectSpellInput(3);}
     void Forward(float V); void Right(float V); void Yaw(float V); void Pitch(float V);
     void GuardOn(){if(!bPanel)ServerBlock(true);} void GuardOff(){ServerBlock(false);}
-    void Dodge(){if(!bPanel)TryDodge();} void JumpV4(){StartJumpInput();}
+    void Dodge(){if(!bPanel&&!UtilityModifierHeld())TryDodge();} void JumpV4(){StartJumpInput();}
 };

@@ -128,6 +128,10 @@ void AAetherFrontierCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME(AAetherFrontierCharacter,bSprinting);DOREPLIFETIME(AAetherFrontierCharacter,bTravelPending);
     DOREPLIFETIME_CONDITION(AAetherFrontierCharacter,TravelWaitReason,COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(AAetherFrontierCharacter,RecoveryLife,COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(AAetherFrontierCharacter,RecoveryReason,COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(AAetherFrontierCharacter,RecoveryWait,COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(AAetherFrontierCharacter,bRecoveryAvailable,COND_OwnerOnly);
     DOREPLIFETIME(AAetherFrontierCharacter,Carried);DOREPLIFETIME(AAetherFrontierCharacter,CompanionOwner);
     DOREPLIFETIME(AAetherFrontierCharacter,CompanionId);DOREPLIFETIME(AAetherFrontierCharacter,bCompanionHold);DOREPLIFETIME(AAetherFrontierCharacter,EncounterId);DOREPLIFETIME(AAetherFrontierCharacter,BossPhase);DOREPLIFETIME(AAetherFrontierCharacter,BossVersion);DOREPLIFETIME(AAetherFrontierCharacter,BossPhaseStarted);DOREPLIFETIME(AAetherFrontierCharacter,BossPressure);DOREPLIFETIME(AAetherFrontierCharacter,bHealer);DOREPLIFETIME(AAetherFrontierCharacter,ReviveTarget);
 }
@@ -182,13 +186,30 @@ void AAetherFrontierCharacter::StartJumpInput()
     auto* Move=CastChecked<UAetherCharacterMovement>(GetCharacterMovement());
     if(Move->TryStand()&&Move->IsMovingOnGround())
     {
+        bCrouchHeld=bCrouchToggled=false;
         if(AbilitySystem->TryActivateAbilityByClass(UAetherVaultAbility::StaticClass()))return;
         Jump();
     }
 }
 void AAetherFrontierCharacter::SetCrouchInput(bool Pressed)
 {
-    if(Pressed)
+    if(Pressed&&(bPanel||!CanStartLocomotion()||!GetCharacterMovement()->IsMovingOnGround()))return;
+    bCrouchHeld=Pressed;ApplyCrouchIntent();
+}
+void AAetherFrontierCharacter::ToggleCrouchInput()
+{
+    if(bPanel||!CanStartLocomotion()||!GetCharacterMovement()->IsMovingOnGround())return;
+    bCrouchToggled=!bCrouchToggled;ApplyCrouchIntent();
+}
+bool AAetherFrontierCharacter::UtilityModifierHeld() const
+{
+    const auto* PC=Cast<APlayerController>(Controller);return PC&&PC->IsInputKeyDown(EKeys::Gamepad_LeftShoulder);
+}
+void AAetherFrontierCharacter::SelectSpellInput(int32 Slot)
+{if(!bPanel&&Alive()&&!UtilityModifierHeld())SelectedSpell=Slot;}
+void AAetherFrontierCharacter::ApplyCrouchIntent()
+{
+    if(bCrouchHeld||bCrouchToggled)
     {
         if(bPanel||!CanStartLocomotion()||!GetCharacterMovement()->IsMovingOnGround())return;
         SetSprintInput(false);StopJumping();Crouch();
@@ -199,7 +220,7 @@ void AAetherFrontierCharacter::SetSprintInput(bool Pressed)
 {
     auto* Move=CastChecked<UAetherCharacterMovement>(GetCharacterMovement());
     Move->bWantsSprint=Pressed&&!bPanel&&CanStartLocomotion();
-    if(Move->bWantsSprint)Move->TryStand();
+    if(Move->bWantsSprint&&Move->TryStand())bCrouchHeld=bCrouchToggled=false;
     bSprinting=Move->bWantsSprint&&Move->CanSprint();
 }
 void AAetherFrontierCharacter::ServerSprint_Implementation(bool Enabled)
@@ -209,6 +230,7 @@ void AAetherFrontierCharacter::ServerSprint_Implementation(bool Enabled)
 }
 void AAetherFrontierCharacter::ReleaseHeldInput()
 {
+    bCrouchHeld=bCrouchToggled=false;
     StopJumping();SetSprintInput(false);SetCrouchInput(false);CancelAttackInput();ServerBlock(false);
 }
 void AAetherFrontierCharacter::OnStartCrouch(float H,float Scaled)
@@ -235,6 +257,7 @@ void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
 }
 void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 Index)
 {
+    if(Action=="Recover"){ServerRecover_Implementation(RecoveryLife);return;}
     if(ResourceGate->IsBlocked())return; // 新操作可拒绝，已经接受的资源动作由屏障保留。
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>(); auto* PS=ProfileState(); if(!Mode||!PS)return;
     if(bTravelPending&&Action!="Save")return;
@@ -246,13 +269,6 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
         {auto* S=GetWorld()->GetGameState<AAetherFrontierState>();S->bRain=!S->bRain;Notify(S->bRain?TEXT("Rain: thermal and visual channels only."):TEXT("Clear weather."));}
 #endif
         return;
-    }
-    if(Action=="Recover")
-    {
-        if(Mode->IsNativeMode()){Mode->RecoverNativePlayer(this);return;}
-        if(Alive()||TimeSinceDamage()<3)return;
-        ReleaseCarry();SetVitals(MaxHealth,100,100);ResetCombat();
-        BeginSafeTravel(PS->Profile.bRegistered?FVector(-500,-500,120):FVector(-6500,-29000,120));return;
     }
     if(Action=="Save"){Notify(Mode->SaveWorld()?TEXT("World and profiles saved."):TEXT("Save deferred: world has pending reactions."));return;}
     if(!Alive())return;
@@ -280,6 +296,7 @@ void AAetherFrontierCharacter::ReceiveEquipmentHit_Implementation(const FAetherE
 void AAetherFrontierCharacter::Tick(float Dt)
 {
     Super::Tick(Dt);
+    UpdateRecoveryState();
     if(bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget)CancelAttackInput();
     if(IsLocallyControlled())
     {

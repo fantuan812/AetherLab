@@ -58,6 +58,7 @@ public:
     TSet<FName> BuildRegionRequirements(const TArray<FVector>& Interest) const;
     void ReleaseNativePawn(AAetherFrontierCharacter* Pawn);
     bool RecoverNativePlayer(AAetherFrontierCharacter* Pawn);
+    bool CanRecoverNativePlayer(AAetherFrontierCharacter* Pawn,FString& Reason) const;
     FString ExecuteNativeSceneService(AAetherPlayerController& Controller,const FAetherPlayerCommand& Command);
     bool AuthorizeNativeContainer(AAetherPlayerController& Controller,const FString& Id,bool bOpen);
     const FAetherWorldStateV10* NativeWorldView() const{return NativeWorld.IsSet()?&NativeWorld.GetValue():nullptr;}

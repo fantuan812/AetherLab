@@ -7,6 +7,8 @@ class UBorder;
 class UAetherFrontierPanel;
 class UAetherDialoguePage;
 class UAetherMenuSubsystem;
+class UAetherRecoveryLayer;
+class AAetherFrontierCharacter;
 /** 底层游戏输入节点；菜单和模态节点激活时由 CommonUI 自动覆盖。 */
 UCLASS()
 class AETHERUI_API UAetherGameInputLayer : public UCommonActivatableWidget
@@ -50,11 +52,16 @@ public:
     virtual void NativeDestruct() override;
 private:
     void Refresh();
+    void SyncRecovery();
+    FTimerHandle RecoveryTimer;
+    TWeakObjectPtr<AAetherFrontierCharacter> RecoveryPawn;
+    FGuid RecoveryToken;
     TWeakObjectPtr<UAetherMenuSubsystem> Menu;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UAetherGameInputLayer> GameLayer;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UCommonActivatableWidgetStack> MainStack;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UCommonActivatableWidgetStack> ModalStack;
     UPROPERTY() TObjectPtr<UAetherFrontierPanel> Panel;
     UPROPERTY() TObjectPtr<UAetherDialoguePage> Dialogue;
+    UPROPERTY() TObjectPtr<UAetherRecoveryLayer> Recovery;
     UPROPERTY() TMap<FGuid,TObjectPtr<UAetherModalLayer>> Modals;
 };
