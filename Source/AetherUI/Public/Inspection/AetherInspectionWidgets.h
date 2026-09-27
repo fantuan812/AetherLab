@@ -24,6 +24,7 @@ class AETHERUI_API UAetherInspectionActionButton : public UButton
 public:
     void InitializeAction(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action,bool Comparison=false);
     FOnAetherInspectionButton OnRequested;
+    FString FocusIdentity() const {return LexToString(uint8(Action.Kind))+TEXT(":")+Action.Argument+(bComparison?TEXT(":compare"):TEXT(":act"));}
 private:
     UFUNCTION() void Dispatch();
     FAetherInspectRequest Request;
@@ -38,6 +39,7 @@ class AETHERUI_API UAetherInspectionCard : public UUserWidget
     GENERATED_BODY()
 public:
     void SetModel(const FAetherInspectionModel& Model);
+    UWidget* NavigationTarget() const;
     uint64 GetDisplayGeneration() const {return Generation;}
     // 图标解析器异步加载后带回代数；迟到资源不能覆盖后来查看的对象。
     void SetResolvedIcon(uint64 DisplayGeneration,UTexture2D* Texture);

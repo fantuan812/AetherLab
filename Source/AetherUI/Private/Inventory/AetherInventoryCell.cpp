@@ -31,21 +31,23 @@ TSharedRef<SWidget> UAetherInventoryCell::RebuildWidget()
 }
 void UAetherInventoryCell::Present(const FAetherInspectRequest& In,int32 SlotValue,const FString& Text,const FString& IconId,bool Filtered,bool Selected)
 {
-    Request=In;PhysicalSlot=SlotValue;bFiltered=Filtered;TakeWidget();
+    const bool NewContext=Request.Context.SessionId!=In.Context.SessionId||Request.Target.InstanceId!=In.Target.InstanceId;
+    Request=In;PhysicalSlot=SlotValue;bFiltered=Filtered;SetIsFocusable(!Filtered);TakeWidget();
     Label->SetText(FText::FromString(Filtered?TEXT("筛选外"):Text));
     Background->SetBrushColor(Selected?UAetherUITheme::Get().Accent.CopyWithNewOpacity(.4):UAetherUITheme::Get().Card);
     SetRenderOpacity(Filtered?.3f:1.f);
     // 制作管线使用相同有限 IconId 生成图标；资源缺失时保留物品名和格子身份。
-    if(ShownIcon!=IconId)
+    if(ShownIcon!=IconId||NewContext)
     {
+        const uint64 Expected=++IconGeneration;
         ShownIcon=IconId;Icon->SetBrushFromTexture(nullptr);Icon->SetVisibility(ESlateVisibility::Collapsed);
         if(!IconId.IsEmpty())
         {
             const FSoftObjectPath Path=AetherWidgetAssets::Icon(IconId);
             const TWeakObjectPtr<UAetherInventoryCell> Self=this;
-            UAssetManager::GetStreamableManager().RequestAsyncLoad(Path,[Self,Path,IconId]()
+            UAssetManager::GetStreamableManager().RequestAsyncLoad(Path,[Self,Path,IconId,Expected]()
             {
-                if(!Self.IsValid()||Self->ShownIcon!=IconId)return;
+                if(!Self.IsValid()||Self->ShownIcon!=IconId||Self->IconGeneration!=Expected)return;
                 auto* Texture=Cast<UTexture2D>(Path.ResolveObject());Self->Icon->SetBrushFromTexture(Texture);
                 Self->Icon->SetVisibility(Texture?ESlateVisibility::HitTestInvisible:ESlateVisibility::Collapsed);
             });
@@ -77,7 +79,10 @@ void UAetherInventoryCell::NativeOnMouseLeave(const FPointerEvent& E)
 void UAetherInventoryCell::NativeOnDragDetected(const FGeometry&,const FPointerEvent&,UDragDropOperation*& Op)
 {
     if(bFiltered||!Request.Target.InstanceId.IsValid())return;
-    auto* Drag=NewObject<UAetherInventoryDrag>(this);Drag->Source=Request;Op=Drag;
+    auto* Drag=NewObject<UAetherInventoryDrag>(this);Drag->Source=Request;
+    auto* Visual=CreateWidget<UAetherInventoryCell>(GetOwningPlayer(),GetClass());
+    Visual->Present(Request,PhysicalSlot,Label->GetText().ToString(),ShownIcon,false,true);
+    Visual->SetVisibility(ESlateVisibility::HitTestInvisible);Drag->DefaultDragVisual=Visual;Drag->Pivot=EDragPivot::MouseDown;Op=Drag;
 }
 bool UAetherInventoryCell::NativeOnDrop(const FGeometry&,const FDragDropEvent&,UDragDropOperation* Op)
 {

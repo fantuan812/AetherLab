@@ -5,6 +5,7 @@
 #include "GameplayEffectComponents/TargetTagsGameplayEffectComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NativeGameplayTags.h"
+#include "Combat/AetherActionTiming.h"
 
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_DodgeActive,"Aether.Action.Dodge");
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_DodgeCooldown,"Aether.Cooldown.Dodge");
@@ -26,18 +27,18 @@ UAetherDodgeCost::UAetherDodgeCost()
 {
     DurationPolicy=EGameplayEffectDurationType::Instant;
     FGameplayModifierInfo Cost;Cost.Attribute=UAetherAttributes::GetStaminaAttribute();
-    Cost.ModifierOp=EGameplayModOp::Additive;Cost.ModifierMagnitude=FScalableFloat(-18.f);Modifiers.Add(Cost);
+    Cost.ModifierOp=EGameplayModOp::Additive;Cost.ModifierMagnitude=FScalableFloat(-AetherActionTiming::DodgeCost);Modifiers.Add(Cost);
 }
 UAetherDodgeCooldown::UAetherDodgeCooldown()
 {
-    DurationPolicy=EGameplayEffectDurationType::HasDuration;DurationMagnitude=FScalableFloat(.7f);
+    DurationPolicy=EGameplayEffectDurationType::HasDuration;DurationMagnitude=FScalableFloat(AetherActionTiming::DodgeCooldown);
     // 效果 CDO 构造阶段必须创建具名默认子对象，不能调用运行时 NewObject 工厂。
     auto* Tags=CreateDefaultSubobject<UTargetTagsGameplayEffectComponent>(TEXT("GrantedTags"));
     GEComponents.Add(Tags);GrantTag(*Tags,TAG_DodgeCooldown);
 }
 UAetherDodgeInvulnerability::UAetherDodgeInvulnerability()
 {
-    DurationPolicy=EGameplayEffectDurationType::HasDuration;DurationMagnitude=FScalableFloat(.22f);
+    DurationPolicy=EGameplayEffectDurationType::HasDuration;DurationMagnitude=FScalableFloat(AetherActionTiming::DodgeInvulnerability);
     // 效果 CDO 构造阶段必须创建具名默认子对象，不能调用运行时 NewObject 工厂。
     auto* Tags=CreateDefaultSubobject<UTargetTagsGameplayEffectComponent>(TEXT("GrantedTags"));
     GEComponents.Add(Tags);GrantTag(*Tags,TAG_DodgeInvulnerable);
@@ -81,11 +82,11 @@ void UAetherDodgeAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
     FVector Direction=C->GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal2D();
     if(Direction.IsNearlyZero())Direction=C->GetActorForwardVector().GetSafeNormal2D();
     const FVector Local=C->GetActorTransform().InverseTransformVectorNoScale(Direction);
-    C->PresentAction(FMath::Abs(Local.X)>=FMath::Abs(Local.Y)?(Local.X>=0?TEXT("DodgeForward"):TEXT("DodgeBack")):(Local.Y>=0?TEXT("DodgeRight"):TEXT("DodgeLeft")),.55f);
+    C->PresentAction(FMath::Abs(Local.X)>=FMath::Abs(Local.Y)?(Local.X>=0?TEXT("DodgeForward"):TEXT("DodgeBack")):(Local.Y>=0?TEXT("DodgeRight"):TEXT("DodgeLeft")),AetherActionTiming::DodgeDuration);
     auto* Motion=UAbilityTask_ApplyRootMotionConstantForce::ApplyRootMotionConstantForce(this,TEXT("Aether.Dodge"),
-        Direction,700,.35f,false,nullptr,ERootMotionFinishVelocityMode::ClampVelocity,FVector::ZeroVector,0,true);
+        Direction,AetherActionTiming::DodgeSpeed,AetherActionTiming::DodgeMotion,false,nullptr,ERootMotionFinishVelocityMode::ClampVelocity,FVector::ZeroVector,0,true);
     Motion->ReadyForActivation();
-    auto* Recovery=UAbilityTask_WaitDelay::WaitDelay(this,.55f);
+    auto* Recovery=UAbilityTask_WaitDelay::WaitDelay(this,AetherActionTiming::DodgeDuration);
     Recovery->OnFinish.AddDynamic(this,&UAetherDodgeAbility::FinishRecovery);Recovery->ReadyForActivation();
 }
 void UAetherDodgeAbility::FinishRecovery()

@@ -9,10 +9,14 @@ void FAetherInspectionSession::ShowHover(FAetherInspectTarget T,const FAetherIns
 }
 void FAetherInspectionSession::OpenDetails(FAetherInspectTarget T,const FAetherInspectionSnapshot& S,const FAetherV10ItemDefinitions& I,const FAetherSkillDefinitionsV10& K)
 {
-    Hover.Reset();Draft.Reset();Details=AetherInspection::Build(AetherInspection::Pin(S,MoveTemp(T)),S,I,K);MarkPending();
+    Hover.Reset();Draft.Reset();CurrentContainerContext=S.ContainerContext;CurrentContainerRevision=S.Container.IsSet()?S.Container->Revision:-1;
+    Details=AetherInspection::Build(AetherInspection::Pin(S,MoveTemp(T)),S,I,K);MarkPending();
 }
 void FAetherInspectionSession::Refresh(const FAetherInspectionSnapshot& S,const FAetherV10ItemDefinitions& I,const FAetherSkillDefinitionsV10& K)
 {
+    CurrentContainerContext=S.ContainerContext;CurrentContainerRevision=S.Container.IsSet()?S.Container->Revision:-1;
+    if(Draft.IsSet()&&(Draft->Action.Kind==EAetherInspectAction::Deposit||Draft->Action.Kind==EAetherInspectAction::Withdraw)&&
+        (Draft->ContainerContext!=CurrentContainerContext||Draft->ContainerRevision!=CurrentContainerRevision))Draft.Reset();
     // 成功回执可能早于拥有者属性复制。只有同一拥有者会话发布了提交版本才解除等待。
     if(Pending.IsSet()&&Receipt.IsSet()&&S.Context.SessionId==PendingContext.SessionId&&
         S.Context.OwnerIdentity.Equals(PendingContext.OwnerIdentity,ESearchCase::CaseSensitive)&&
@@ -38,13 +42,21 @@ bool FAetherInspectionSession::Back()
     if(Hover.IsSet()){Hover.Reset();return true;}
     return false;
 }
-FGuid FAetherInspectionSession::BeginAction(EAetherInspectAction Kind,const FString& Argument)
+FGuid FAetherInspectionSession::BeginAction(EAetherInspectAction Kind,const FString& Argument,int32 Destination,FGuid ExpectedTarget,EAetherTransferMode Mode)
 {
     if(Pending.IsSet()||Draft.IsSet()||!Details.IsSet()||!Details->CanInteract())return {};
     const auto* Action=Details->Actions.FindByPredicate([&](const auto& A)
         {return A.Kind==Kind&&A.Argument.Equals(Argument,ESearchCase::CaseSensitive);});
     if(!Action||!Action->bEnabled)return {};
-    Draft=FAetherInspectionDraft{FGuid::NewGuid(),Details->Request,*Action};return Draft->Token;
+    Draft=FAetherInspectionDraft{FGuid::NewGuid(),Details->Request,*Action};
+    Draft->DestinationIndex=Destination;Draft->ExpectedTarget=ExpectedTarget;Draft->TransferMode=Mode;
+    Draft->ContainerContext=CurrentContainerContext;Draft->ContainerRevision=CurrentContainerRevision;
+    if(Mode!=EAetherTransferMode::QuickTransfer)
+    {
+        Draft->Action.ConfirmationSummary=FString::Printf(TEXT("%s到第 %d 格；不会改放其他位置。"),Mode==EAetherTransferMode::SwapWhole?TEXT("整堆交换"):TEXT("精确转移"),Destination+1);
+        if(Mode==EAetherTransferMode::SwapWhole)Draft->Action.ConfirmationSummary+=TEXT("双方完整物品交换，数量必须等于源物品整堆数量。");
+    }
+    return Draft->Token;
 }
 bool FAetherInspectionSession::Confirm(FGuid Token,int32 Quantity,const FAetherInspectionSnapshot& S,const FAetherV10ItemDefinitions& I,
     const FAetherSkillDefinitionsV10& K,FAetherInspectionDispatch& Out,FString& Reason)
@@ -58,6 +70,7 @@ bool FAetherInspectionSession::Confirm(FGuid Token,int32 Quantity,const FAetherI
     const auto* A=Current.Actions.FindByPredicate([&](const auto& V)
         {return V.Kind==Draft->Action.Kind&&V.Argument.Equals(Draft->Action.Argument,ESearchCase::CaseSensitive);});
     if(!A||!A->bEnabled){Draft.Reset();return Fail(TEXT("当前条件不允许此操作。"));}
+    if(A->UnitPrice!=Draft->Action.UnitPrice){Draft.Reset();return Fail(TEXT("报价已变化，请重新确认。"));}
     if(Quantity<1||Quantity>A->MaxQuantity)return Fail(TEXT("数量超出当前对象允许范围。"));
     FAetherInspectionDispatch Result;Result.Action=A->Kind;
     using E=EAetherInspectAction;
@@ -74,11 +87,14 @@ bool FAetherInspectionSession::Confirm(FGuid Token,int32 Quantity,const FAetherI
         {
         case E::Deposit:case E::Withdraw:
             if(!S.Container.IsSet()||!S.Container->ContainerId.Equals(A->Argument,ESearchCase::CaseSensitive))return Fail(TEXT("容器已变化。"));
+            if(S.ContainerContext!=Draft->ContainerContext||S.Container->Revision!=Draft->ContainerRevision)return Fail(TEXT("容器内容已变化，请重新选择落点。"));
             C.Type=S.Container->Kind==EAetherContainerKind::WorldDrop?EAetherCommandType::PickUpItem:EAetherCommandType::TransferItem;
             C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.TargetStableId=A->Argument;
             if(C.Type==EAetherCommandType::TransferItem)C.ContainerId=A->Argument;
             if(C.Type==EAetherCommandType::TransferItem)C.TransferDirection=A->Kind==E::Deposit?EAetherTransferDirection::IntoContainer:EAetherTransferDirection::FromContainer;
-            C.ExpectedWorldRevision=S.ContainerWorldRevision;C.ExpectedContainerRevision=S.Container->Revision;break;
+            C.ExpectedWorldRevision=S.Container->Kind==EAetherContainerKind::PersonalStorage?-1:S.ContainerWorldRevision;
+            C.ExpectedContainerRevision=S.Container->Revision;C.TransferMode=Draft->TransferMode;
+            C.DestinationIndex=Draft->DestinationIndex;C.OtherInstanceId=Draft->ExpectedTarget;break;
         case E::Use:C.Type=EAetherCommandType::UseItem;C.ItemInstanceId=Target.InstanceId;break;
         case E::Split:C.Type=EAetherCommandType::SplitStack;C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.DestinationIndex=S.Inventory.FirstEmpty();break;
         case E::Sell:C.Type=EAetherCommandType::SellItem;C.ItemInstanceId=Target.InstanceId;C.Quantity=Quantity;C.TargetStableId=A->Argument;break;

@@ -27,7 +27,7 @@ struct FAetherProfileCoordinator::FImpl
         FAetherProfileSession Session;FAetherPlayerCommand Command;FAetherCommandResult Result;
         EStage Stage=EStage::Receipt;
         EAetherCommitCertainty Certainty=EAetherCommitCertainty::NotSubmitted;
-        bool bReservedResources=false;
+        bool bReservedResources=false,bPrivateContainerScope=false;
         TFuture<FAetherStoreResult> StoreFuture;
         TFuture<FAetherStoreReadResult> ReadFuture;
         TFuture<FAetherStoreSnapshotResult> SnapshotFuture;
@@ -52,16 +52,17 @@ struct FAetherProfileCoordinator::FImpl
     }
     FAetherStoreSnapshotQuery Query(const FJob& J) const
     {
-        FAetherStoreSnapshotQuery Q;Q.Keys={{EAetherAggregateKind::Profile,J.Session.CharacterId},{EAetherAggregateKind::World,TEXT("Main")}};
-        if(AetherContainerCommands::Handles(J.Command.Type)){Q.Keys.Add({EAetherAggregateKind::Container,J.ContainerKey});Q.bIncludeContainerCount=true;}
-        Q.bIncludeProfileRevisions=true;return Q;
+        FAetherStoreSnapshotQuery Q;Q.Keys={{EAetherAggregateKind::Profile,J.Session.CharacterId}};
+        if(!J.bPrivateContainerScope)Q.Keys.Add({EAetherAggregateKind::World,TEXT("Main")});
+        if(AetherContainerCommands::Handles(J.Command.Type)){Q.Keys.Add({EAetherAggregateKind::Container,J.ContainerKey});Q.bIncludeContainerCount=J.Command.Type==EAetherCommandType::DropItem;}
+        Q.bIncludeProfileRevisions=!J.bPrivateContainerScope;return Q;
     }
     bool DecodeProfile(const FAetherStoreSnapshotResult& S,const FString& Actor,FAetherProfileStateV10& P) const
     {
         const auto* Row=S.Values.Find({EAetherAggregateKind::Profile,Actor});FString Reason;
         return S.Code==EAetherStoreCode::Found&&Row&&Row->SchemaVersion==10&&
             AetherProfileCodec::Decode(Row->Payload,Items,Skills,Rules,P,Reason)&&P.CharacterId.Equals(Actor,ESearchCase::CaseSensitive)&&P.Revision==Row->Revision&&
-            S.ProfileRevisions.Contains(Actor)&&S.ProfileRevisions[Actor]==P.Revision;
+            (S.ProfileRevisions.IsEmpty()||(S.ProfileRevisions.Contains(Actor)&&S.ProfileRevisions[Actor]==P.Revision));
     }
     bool Receipt(FJob& J,const FAetherStoreResult& R)
     {
@@ -74,7 +75,8 @@ struct FAetherProfileCoordinator::FImpl
         if(AetherContainerCommands::Handles(J.Command.Type))
         {
             J.ContainerKey=J.Result.ReasonParameters.FindRef(TEXT("ContainerId"));
-            if(J.ContainerKey.IsEmpty()||J.Result.FinalWorldRevision<0||
+            J.bPrivateContainerScope=J.Command.ProtocolVersion>=4&&J.Command.Type==EAetherCommandType::TransferItem&&J.Result.FinalWorldRevision==-1;
+            if(J.ContainerKey.IsEmpty()||(!J.bPrivateContainerScope&&J.Result.FinalWorldRevision<0)||
                 (J.Command.Type==EAetherCommandType::TransferItem&&!J.ContainerKey.Equals(J.Command.ContainerId,ESearchCase::CaseSensitive)))
             {J.Result.Code=EAetherCommandCode::StorageUnavailable;return false;}
             J.Stage=EStage::RefreshBundle;J.SnapshotFuture=Store->ReadSnapshot(Query(J));
@@ -216,13 +218,20 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
                 const auto* ContainerRow=Snapshot.Values.Find({EAetherAggregateKind::Container,J.ContainerKey});
                 FAetherWorldStateV10 World;FAetherContainerStateV10 Container;FString Reason;int64 MinimumContainer=-1;
                 const FString MinimumText=J.Result.ReasonParameters.FindRef(TEXT("ContainerRevision"));
-                if(!WorldRow||!ContainerRow||WorldRow->SchemaVersion!=10||ContainerRow->SchemaVersion!=10||
+                if(!ContainerRow||ContainerRow->SchemaVersion!=10||
                     !LexTryParseString(MinimumContainer,*MinimumText)||MinimumContainer<0||
-                    !AetherWorldCodec::Decode(WorldRow->Payload,Impl->Items,Impl->Rules,Snapshot.ProfileRevisions,World,Reason)||
-                    World.Revision!=WorldRow->Revision||World.Revision<J.Result.FinalWorldRevision||
                     !AetherContainerCodec::Decode(ContainerRow->Payload,Impl->Items,Container,Reason)||
                     !Container.ContainerId.Equals(J.ContainerKey,ESearchCase::CaseSensitive)||Container.Revision!=ContainerRow->Revision||Container.Revision<MinimumContainer||
                     Profile.Revision<J.Result.FinalProfileRevision)
+                {J.Result.Code=EAetherCommandCode::StorageUnavailable;Finish();continue;}
+                if(J.bPrivateContainerScope)
+                {
+                    if(Container.Kind!=EAetherContainerKind::PersonalStorage||!Container.OwnerCharacterId.Equals(J.Session.CharacterId,ESearchCase::CaseSensitive))
+                    {J.Result.Code=EAetherCommandCode::StorageUnavailable;Finish();continue;}
+                    Finish(MoveTemp(Profile),{},MoveTemp(Container));continue;
+                }
+                if(!WorldRow||WorldRow->SchemaVersion!=10||!AetherWorldCodec::Decode(WorldRow->Payload,Impl->Items,Impl->Rules,Snapshot.ProfileRevisions,World,Reason)||
+                    World.Revision!=WorldRow->Revision||World.Revision<J.Result.FinalWorldRevision)
                 {J.Result.Code=EAetherCommandCode::StorageUnavailable;Finish();continue;}
                 Finish(MoveTemp(Profile),MoveTemp(World),MoveTemp(Container));continue;
             }
@@ -242,6 +251,8 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             const auto Allowed=AetherContainerCommands::AuthorizeRead(J.Command,Context,Key);
             if(Allowed!=EAetherCommandCode::Applied||!Key.Equals(J.ContainerKey,ESearchCase::CaseSensitive))
             {J.Result.Code=Allowed==EAetherCommandCode::Applied?EAetherCommandCode::Conflict:Allowed;Finish(MoveTemp(Profile));continue;}
+            if(J.bPrivateContainerScope!=(J.Command.ProtocolVersion>=4&&J.Command.Type==EAetherCommandType::TransferItem&&Context.Container.Kind==EAetherContainerKind::PersonalStorage))
+            {J.Result.Code=EAetherCommandCode::Conflict;Finish(MoveTemp(Profile));continue;}
             FAetherTransaction Transaction;
             if(!AetherContainerCommands::Prepare(J.Command,J.Session.CharacterId,Snapshot,Context,Impl->Items,Impl->Skills,Impl->Rules,Transaction,J.Result))
             {Finish(MoveTemp(Profile));continue;}
@@ -275,6 +286,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
         {
             const auto Allowed=AetherContainerCommands::AuthorizeRead(J.Command,Context,J.ContainerKey);
             if(Allowed!=EAetherCommandCode::Applied){J.Result.Code=Allowed;Finish(MoveTemp(Current));continue;}
+            J.bPrivateContainerScope=J.Command.ProtocolVersion>=4&&J.Command.Type==EAetherCommandType::TransferItem&&Context.Container.Kind==EAetherContainerKind::PersonalStorage;
             J.Stage=E::WorldRead;J.SnapshotFuture=Impl->Store->ReadSnapshot(Impl->Query(J));continue;
         }
         FAetherTransaction Transaction;

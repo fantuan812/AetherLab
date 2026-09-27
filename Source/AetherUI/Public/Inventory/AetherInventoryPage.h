@@ -30,6 +30,8 @@ public:
     virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
     void Refresh();
     void ClosePresentation();
+    void ResetPresentation();
+    void CycleRegion(int32 Direction);
     UWidget* GetNavigationFocusTarget() const;
 private:
     void MenuChanged();
@@ -37,6 +39,8 @@ private:
     void CellIntent(const FAetherInspectRequest& Request,int32 Slot,EAetherCellIntent Intent);
     bool Drop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 Slot);
     void Action(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action);
+    void TransferAction(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action,int32 Destination,
+        FGuid ExpectedTarget,EAetherTransferMode Mode);
     void Compare(const FAetherInspectRequest& Request,const FString& Slot);
     void Confirm(FGuid Token,int32 Quantity);
     void Cancel(FGuid Token);

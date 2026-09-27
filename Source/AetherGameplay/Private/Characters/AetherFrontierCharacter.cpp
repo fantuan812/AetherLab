@@ -29,6 +29,7 @@
 #include "Misc/Parse.h"
 #include "HAL/PlatformMisc.h"
 #include "ReactiveWorldSubsystem.h"
+#include "Combat/AetherActionTiming.h"
 
 AAetherFrontierCharacter::AAetherFrontierCharacter(const FObjectInitializer& ObjectInitializer)
     :Super(ObjectInitializer.SetDefaultSubobjectClass<UAetherCharacterMovement>(ACharacter::CharacterMovementComponentName))
@@ -108,8 +109,22 @@ void AAetherFrontierCharacter::Forward(float V){if(Alive()&&!bPanel&&!bTravelPen
 void AAetherFrontierCharacter::Right(float V){if(Alive()&&!bPanel&&!bTravelPending)AddMovementInput(FRotationMatrix(FRotator(0,GetControlRotation().Yaw,0)).GetUnitAxis(EAxis::Y),V);}
 void AAetherFrontierCharacter::Yaw(float V){if(!bPanel)AddControllerYawInput(V*GetDefault<UAetherPlayerPreferences>()->MouseSensitivity);}
 void AAetherFrontierCharacter::Pitch(float V){const auto* P=GetDefault<UAetherPlayerPreferences>();if(!bPanel)AddControllerPitchInput((P->bInvertLook?V:-V)*P->MouseSensitivity);}
-void AAetherFrontierCharacter::PressAttack(){bAttackHeld=!bPanel;if(bAttackHeld)PressedAt=GetWorld()->GetTimeSeconds();}
-void AAetherFrontierCharacter::ReleaseAttack(){const bool Attack=bAttackHeld;bAttackHeld=false;if(Attack&&!bPanel)ServerAttack(GetWorld()->GetTimeSeconds()-PressedAt>=.35f);}
+void AAetherFrontierCharacter::PressAttack()
+{
+    if(bAttackHeld||bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget)return;
+    bAttackHeld=true;bAttackCharged=false;PressedAt=GetWorld()->GetTimeSeconds();
+    Feedback=TEXT("攻击准备 · 松开轻击，按住蓄力");OnPresentationChanged.Broadcast();
+    UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_PRESSED time=%.3f"),CombatTime());
+}
+void AAetherFrontierCharacter::ReleaseAttack()
+{
+    const bool Attack=bAttackHeld,Heavy=GetWorld()->GetTimeSeconds()-PressedAt>=AetherActionTiming::AttackCharge;
+    bAttackHeld=false;bAttackCharged=false;
+    if(!Attack||bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget){CancelAttackInput();return;}
+    UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_RELEASED time=%.3f heavy=%d"),CombatTime(),Heavy);
+    if(Ready()){bBufferedAttack=false;ServerAttack(Heavy);}
+    else {bBufferedAttack=true;bBufferedHeavy=Heavy;BufferedAttackUntil=CombatTime()+AetherActionTiming::AttackBuffer;}
+}
 void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I){PlayerInput->Setup(I);}
 FKey AAetherFrontierCharacter::BindingFor(FName Name) const{return PlayerInput->BindingFor(Name);}
 void AAetherFrontierCharacter::AetherBind(FName Name,FKey Key){PlayerInput->SetBinding(Name,Key);}
@@ -159,7 +174,7 @@ void AAetherFrontierCharacter::ServerSprint_Implementation(bool Enabled)
 }
 void AAetherFrontierCharacter::ReleaseHeldInput()
 {
-    StopJumping();SetSprintInput(false);SetCrouchInput(false);bAttackHeld=false;ServerBlock(false);
+    StopJumping();SetSprintInput(false);SetCrouchInput(false);CancelAttackInput();ServerBlock(false);
 }
 void AAetherFrontierCharacter::OnStartCrouch(float H,float Scaled)
 {
@@ -206,7 +221,7 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
     // 客户端必须提交所见目标；旧的无目标字符串入口不能重新选择邻近对象。
     if(Action=="Interact"){Notify(TEXT("请重新选择交互目标。"));return;}
     if(Mode->ExecutePartyAction(this,Action))return;
-    if(Action=="Throw"||Action=="Carry"||Action=="Push"){WorldActions->Begin(Action);return;}
+    if(Action=="Throw"||Action=="Carry"||Action=="Push"){Notify(TEXT("请重新选择场景物体。"));return;}
     if(Action=="Claim"&&Mode->IsNativeMode()){Notify(TEXT("请在任务日志中领取待领奖励。"));return;}
     if(Action=="Claim")
     {auto Next=PS->Profile;bool Changed=Next.CollectPending();Changed|=AetherQuests::Settle(Next,Mode->Database->WorldFacts,true);if(Changed)Notify(Mode->Commit(PS,Next)?TEXT("Pending rewards received."):TEXT("Reward save failed; retry."));return;}
@@ -227,6 +242,17 @@ void AAetherFrontierCharacter::ReceiveEquipmentHit_Implementation(const FAetherE
 void AAetherFrontierCharacter::Tick(float Dt)
 {
     Super::Tick(Dt);
+    if(bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget)CancelAttackInput();
+    if(IsLocallyControlled())
+    {
+        if(bAttackHeld&&!bAttackCharged&&GetWorld()->GetTimeSeconds()-PressedAt>=AetherActionTiming::AttackCharge)
+        {bAttackCharged=true;Feedback=TEXT("重击就绪 · 松开执行");OnPresentationChanged.Broadcast();}
+        if(bBufferedAttack)
+        {
+            if(CombatTime()>BufferedAttackUntil)CancelAttackInput();
+            else if(Ready()){const bool Heavy=bBufferedHeavy;bBufferedAttack=false;ServerAttack(Heavy);}
+        }
+    }
     MaintainTrade();
     UpdateSafeTravel();
     CheckClosureClient(Dt);
@@ -262,7 +288,8 @@ void AAetherFrontierCharacter::Tick(float Dt)
         if(TestTime>30){UE_LOG(LogTemp,Display,TEXT("AETHER_V4_NET_FAIL timeout"));FPlatformMisc::RequestExitWithStatus(false,1);}
     }
     if(!HasAuthority())return;
-    if(auto* PS=ProfileState())MaxHealth=100+5*FMath::Clamp(PS->Profile.Experience/200,0,4);
+    // Native profiles publish derived limits from committed progression/equipment only.
+    if(!UsesNativeSkills())if(auto* PS=ProfileState())MaxHealth=100+5*FMath::Clamp(PS->Profile.Experience/200,0,4);
     if(ReviveTarget)
     {
         if(!IsValid(ReviveTarget)||!Alive()||ReviveTarget->Alive()||CombatRuntime->DamageReceivedCount!=ReviveDamageSerial||CombatTime()<StunUntil||FVector::DistSquared(GetActorLocation(),ReviveTarget->GetActorLocation())>FMath::Square(220.0))ReviveTarget=nullptr;

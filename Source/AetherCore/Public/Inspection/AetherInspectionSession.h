@@ -8,6 +8,11 @@ struct FAetherInspectionDraft
     FGuid Token;
     FAetherInspectRequest Request;
     FAetherInspectionAction Action;
+    int32 DestinationIndex=-1;
+    FGuid ExpectedTarget;
+    EAetherTransferMode TransferMode=EAetherTransferMode::QuickTransfer;
+    FGuid ContainerContext;
+    int64 ContainerRevision=-1;
 };
 struct FAetherInspectionDispatch
 {
@@ -35,7 +40,8 @@ public:
     const TOptional<FAetherInspectionModel>& GetHover() const{return Hover;}
     const TOptional<FAetherInspectionModel>& GetDetails() const{return Details;}
     const TOptional<FAetherInspectionDraft>& GetDraft() const{return Draft;}
-    FGuid BeginAction(EAetherInspectAction Action,const FString& Argument);
+    FGuid BeginAction(EAetherInspectAction Action,const FString& Argument,int32 Destination=-1,
+        FGuid ExpectedTarget={},EAetherTransferMode Mode=EAetherTransferMode::QuickTransfer);
     bool Confirm(FGuid Token,int32 Quantity,const FAetherInspectionSnapshot& S,const FAetherV10ItemDefinitions& I,
         const FAetherSkillDefinitionsV10& K,FAetherInspectionDispatch& Out,FString& Reason);
     // 输入坐标必须均为同一 DPI 下的逻辑坐标。先向左/上翻转，再夹取到可见边缘。
@@ -46,5 +52,7 @@ private:
     TOptional<FAetherInspectionDispatch> Pending;
     TOptional<FAetherCommandResult> Receipt;
     FAetherInspectContext PendingContext;
+    FGuid CurrentContainerContext;
+    int64 CurrentContainerRevision=-1;
     void MarkPending();
 };

@@ -22,6 +22,9 @@ public:
     bool IsBlocked() const{return WaitingForPersistence()||(!bDraining&&!Deferred.IsEmpty());}
     bool IsEnabled() const{return Receiver.IsValid();}
     bool IsRecovering() const{return bRecovering;}
+    bool HasUseSummary() const{return bUseSummaryReady;}
+    float UseReadyTime() const{return UseReadyAtServerTime;}
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     FGuid Reservation() const{return Reserved;}
     FAetherConsumableReceiver* GetReceiver(){return Receiver.Get();}
     // true 表示整个动作已排队或当前生命已终止；调用者必须立即返回，不能继续死亡/奖励等副作用。
@@ -31,6 +34,9 @@ public:
     virtual void TickComponent(float Delta,ELevelTick TickType,FActorComponentTickFunction* ThisTick) override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 private:
+    UPROPERTY(Replicated) bool bUseSummaryReady=false;
+    UPROPERTY(Replicated) float UseReadyAtServerTime=0;
+    int64 PublishedUseDeadline=-1;
     bool WaitingForPersistence() const{return bRecovering||Reserved.IsValid()||bPublishing||bFaulted;}
     FAetherResourceStateV10 Sample() const;
     TUniquePtr<FAetherConsumableReceiver> Receiver;

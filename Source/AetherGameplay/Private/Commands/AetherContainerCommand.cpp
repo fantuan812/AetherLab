@@ -2,6 +2,7 @@
 #include "Profile/AetherProfileCodec.h"
 #include "World/AetherWorldCodec.h"
 #include "World/AetherContainerCodec.h"
+#include "Inventory/AetherItemEligibility.h"
 namespace
 {
 bool StableId(const FString& S)
@@ -61,15 +62,16 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
     if(Snapshot.Code!=EAetherStoreCode::Found)return Fail(R::StorageUnavailable);
     const auto* ProfileRow=Snapshot.Values.Find({EAetherAggregateKind::Profile,Actor});
     const auto* WorldRow=Snapshot.Values.Find({EAetherAggregateKind::World,TEXT("Main")});
-    if(!ProfileRow||!WorldRow)return Fail(R::NotReady);
+    const bool PrivateScope=C.ProtocolVersion>=4&&C.Type==E::TransferItem&&Context.Container.Kind==EAetherContainerKind::PersonalStorage;
+    if(!ProfileRow||(!PrivateScope&&!WorldRow))return Fail(R::NotReady);
     FAetherProfileStateV10 P;FAetherWorldStateV10 World;
-    if(ProfileRow->SchemaVersion!=10||WorldRow->SchemaVersion!=10||
-        !AetherProfileCodec::Decode(ProfileRow->Payload,Items,Skills,Rules,P,Reason)||!P.CharacterId.Equals(Actor,ESearchCase::CaseSensitive)||P.Revision!=ProfileRow->Revision||
-        !Snapshot.ProfileRevisions.Contains(Actor)||Snapshot.ProfileRevisions[Actor]!=P.Revision||
-        !AetherWorldCodec::Decode(WorldRow->Payload,Items,Rules,Snapshot.ProfileRevisions,World,Reason)||World.Revision!=WorldRow->Revision)
+    if(ProfileRow->SchemaVersion!=10||
+        !AetherProfileCodec::Decode(ProfileRow->Payload,Items,Skills,Rules,P,Reason)||!P.CharacterId.Equals(Actor,ESearchCase::CaseSensitive)||P.Revision!=ProfileRow->Revision)
         return Fail(R::StorageUnavailable);
-    ProfileRevision=P.Revision;WorldRevision=World.Revision;
-    if(C.ExpectedProfileRevision!=ProfileRevision||C.ExpectedWorldRevision!=WorldRevision)return Fail(R::StaleRevision);
+    if(!PrivateScope&&(WorldRow->SchemaVersion!=10||!Snapshot.ProfileRevisions.Contains(Actor)||Snapshot.ProfileRevisions[Actor]!=P.Revision||
+        !AetherWorldCodec::Decode(WorldRow->Payload,Items,Rules,Snapshot.ProfileRevisions,World,Reason)||World.Revision!=WorldRow->Revision))return Fail(R::StorageUnavailable);
+    ProfileRevision=P.Revision;WorldRevision=PrivateScope?-1:World.Revision;
+    if(C.ExpectedProfileRevision!=ProfileRevision||(!PrivateScope&&C.ExpectedWorldRevision!=WorldRevision))return Fail(R::StaleRevision);
     if(ProfileRevision>=MAX_int64-1||WorldRevision>=MAX_int64-1)return Fail(R::NotReady);
     const auto* Existing=Snapshot.Values.Find({EAetherAggregateKind::Container,Key});
     FAetherContainerStateV10 Container;int64 ContainerRevision=-1;
@@ -78,6 +80,7 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
         if(Existing->SchemaVersion!=10||!AetherContainerCodec::Decode(Existing->Payload,Items,Container,Reason)||
             !Container.ContainerId.Equals(Key,ESearchCase::CaseSensitive)||Container.Revision!=Existing->Revision)return Fail(R::StorageUnavailable);
         ContainerRevision=Container.Revision;if(ContainerRevision>=MAX_int64-1)return Fail(R::NotReady);
+        if(PrivateScope&&(Container.Kind!=EAetherContainerKind::PersonalStorage||!Container.OwnerCharacterId.Equals(Actor,ESearchCase::CaseSensitive)))return Fail(R::Unauthorized);
     }
     else if(C.Type!=E::DropItem)return Fail(R::Missing);
     if(C.Type!=E::DropItem&&C.ExpectedContainerRevision!=ContainerRevision)return Fail(R::StaleRevision);
@@ -99,35 +102,34 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
         if(C.Type==E::PickUpItem&&Container.Kind!=EAetherContainerKind::WorldDrop)return Fail(R::NotAllowed);
         if(C.Type==E::TransferItem&&Container.Kind==EAetherContainerKind::WorldDrop)return Fail(R::NotAllowed);
         const bool Into=C.Type==E::TransferItem&&C.TransferDirection==EAetherTransferDirection::IntoContainer;
-        if(Into)
+        auto& Source=Into?P.Inventory:Container.Inventory;auto& Destination=Into?Container.Inventory:P.Inventory;
+        const auto DepositOperation=Container.Kind==EAetherContainerKind::PersonalStorage?EAetherItemOperation::PersonalStorage:EAetherItemOperation::SharedStorage;
+        auto Eligibility=AetherItemEligibility::Query(Source,C.ItemInstanceId,Actor,Into?DepositOperation:EAetherItemOperation::Withdraw,Items);
+        if(Eligibility!=EAetherInventoryMutationCode::Applied)return Fail(MutationCode(Eligibility));
+        if(C.TransferMode==EAetherTransferMode::SwapWhole)
         {
-            const auto* Item=P.Inventory.Find(C.ItemInstanceId);if(!Item)return Fail(R::Missing);
-            // 私人保管不等于出售或丢弃：锁定与绑定状态原样转移；共享容器仍走 CanRemove。
-            if(Container.Kind==EAetherContainerKind::PersonalStorage)
-            {
-                if(!Item->BoundToCharacter.IsEmpty()&&!Item->BoundToCharacter.Equals(Actor,ESearchCase::CaseSensitive))return Fail(R::NotAllowed);
-            }
-            else
-            {
-                const auto Removable=P.Inventory.CanRemove(C.ItemInstanceId,Actor,false,Items);
-                if(Removable!=EAetherInventoryMutationCode::Applied)return Fail(MutationCode(Removable));
-            }
-            Move=P.Inventory.TransferTo(Container.Inventory,C.ItemInstanceId,C.Quantity,true,Items);
+            if(Container.Kind==EAetherContainerKind::WorldDrop||!Context.Container.bCanDeposit||!Context.Container.bCanWithdraw)return Fail(R::NotAllowed);
+            Eligibility=AetherItemEligibility::Query(Destination,C.OtherInstanceId,Actor,Into?EAetherItemOperation::Withdraw:DepositOperation,Items);
+            if(Eligibility!=EAetherInventoryMutationCode::Applied)return Fail(MutationCode(Eligibility));
         }
-        else Move=Container.Inventory.TransferTo(P.Inventory,C.ItemInstanceId,C.Quantity,true,Items);
+        Move=C.TransferMode==EAetherTransferMode::QuickTransfer?Source.TransferTo(Destination,C.ItemInstanceId,C.Quantity,true,Items):
+            Source.TransferExact(Destination,C.ItemInstanceId,C.Quantity,C.DestinationIndex,C.OtherInstanceId,C.TransferMode,Items);
         if(Container.Kind==EAetherContainerKind::WorldDrop&&Container.Inventory.Items.IsEmpty())Container.bActive=false;
     }
     if(Move.Code!=EAetherInventoryMutationCode::Applied)return Fail(MutationCode(Move.Code));
-    ++P.Revision;++World.Revision;Container.Revision=ContainerRevision+1;
-    Result.Code=R::Applied;Result.FinalProfileRevision=P.Revision;Result.FinalWorldRevision=World.Revision;
+    ++P.Revision;if(!PrivateScope)++World.Revision;Container.Revision=ContainerRevision+1;
+    Result.Code=R::Applied;Result.FinalProfileRevision=P.Revision;Result.FinalWorldRevision=PrivateScope?-1:World.Revision;
     Result.ActualQuantity=Move.ActualQuantity;Result.AffectedIds=Move.AffectedIds;
     for(const auto& M:Move.Transitions){Result.Transfers.Add({M.From,M.To,M.Quantity});Result.AffectedIds.AddUnique(M.From);Result.AffectedIds.AddUnique(M.To);}
     Result.ReasonParameters.Add(TEXT("ContainerId"),Key);Result.ReasonParameters.Add(TEXT("ContainerRevision"),LexToString(Container.Revision));
     FAetherTransaction T;T.ActorId=Actor;T.CommandId=C.CommandId;T.ExpectedProfileRevision=ProfileRevision;T.ProtocolVersion=C.ProtocolVersion;
     FAetherAggregateWrite W;W.ExpectedRevision=ProfileRevision;W.Value.Key={EAetherAggregateKind::Profile,Actor};W.Value.Revision=P.Revision;
     if(!AetherProfileCodec::Encode(P,Items,Skills,Rules,W.Value.Payload,Reason))return Fail(R::Invalid);T.Writes.Add(W);
-    W.ExpectedRevision=WorldRevision;W.Value.Key={EAetherAggregateKind::World,TEXT("Main")};W.Value.Revision=World.Revision;
-    if(!AetherWorldCodec::Encode(World,Items,Rules,Snapshot.ProfileRevisions,W.Value.Payload,Reason))return Fail(R::Invalid);T.Writes.Add(W);
+    if(!PrivateScope)
+    {
+        W.ExpectedRevision=WorldRevision;W.Value.Key={EAetherAggregateKind::World,TEXT("Main")};W.Value.Revision=World.Revision;
+        if(!AetherWorldCodec::Encode(World,Items,Rules,Snapshot.ProfileRevisions,W.Value.Payload,Reason))return Fail(R::Invalid);T.Writes.Add(W);
+    }
     W.ExpectedRevision=ContainerRevision;W.Value.Key={EAetherAggregateKind::Container,Key};W.Value.Revision=Container.Revision;
     if(!AetherContainerCodec::Encode(Container,Items,W.Value.Payload,Reason))return Fail(R::Invalid);T.Writes.Add(W);
     if(!AetherCommands::Encode(C,T.Request,Reason)||!AetherCommands::EncodeResult(Result,T.Result,Reason)||!AetherTransactions::Validate(T,Reason))return Fail(R::Invalid);

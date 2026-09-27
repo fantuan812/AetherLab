@@ -103,6 +103,7 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
         if(IsValid(A)&&A->Allows(Profile.CharacterId)&&Reachable(*C,*A,250.))
         {
             auto& Access=X.Container;Access.ContainerId=A->StableId;Access.TargetStableId=A->StableId;
+            Access.Kind=EAetherContainerKind(A->ContainerKind);
             Access.bAuthorized=true;Access.bTargetReady=true;Access.bCanWithdraw=true;Access.bSafeToStore=!Combat&&!Threatened;
             Access.bInventoryPickup=A->ContainerKind==uint8(EAetherContainerKind::WorldDrop);
             Access.bCanDeposit=!Access.bInventoryPickup&&!Combat&&!Threatened;

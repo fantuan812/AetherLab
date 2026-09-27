@@ -7,6 +7,7 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "NativeGameplayTags.h"
+#include "Combat/AetherActionTiming.h"
 
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_VaultActive,"Aether.Action.Vault");
 namespace AetherVault {FGameplayTag ActiveTag(){return TAG_VaultActive;}}
@@ -64,7 +65,7 @@ void UAetherVaultAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
     auto* C=Info?Cast<AAetherFrontierCharacter>(Info->AvatarActor.Get()):nullptr;
     FVector Contact;
     if(!C||!FindPath(*C,Path,&Contact)||!CommitAbility(H,Info,A)){EndAbility(H,Info,A,true,true);return;}
-    C->PresentAction(TEXT("Vault"),.82f);C->PresentedAction.bHasContact=true;C->PresentedAction.Contact=Contact;
+    C->PresentAction(TEXT("Vault"),AetherActionTiming::VaultDuration);C->PresentedAction.bHasContact=true;C->PresentedAction.Contact=Contact;
     Character=C;DamageAtStart=C->CombatRuntime->LastDamageAt;Phase=0;C->SetSprintInput(false);C->StopJumping();
     C->GetCharacterMovement()->StopMovementImmediately();C->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
     // Flying 仅是受控 root source 的运动阶段，仍由 CharacterMovement 扫掠碰撞；结束必恢复重力。
@@ -76,7 +77,7 @@ void UAetherVaultAbility::NextPhase()
     auto* C=Character.Get();if(!C||!IsActive()){Abort();return;}
     if(Phase>0&&FVector::DistSquared(C->GetActorLocation(),Path[Phase-1])>FMath::Square(12.f)){Abort();return;}
     if(Phase==Path.Num()){EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,false);return;}
-    const float Duration=Phase==1?.38f:.22f;
+    const float Duration=Phase==1?AetherActionTiming::VaultAcross:Phase==0?AetherActionTiming::VaultRise:AetherActionTiming::VaultLand;
     auto* Task=UAbilityTask_ApplyRootMotionMoveToForce::ApplyRootMotionMoveToForce(this,FName(*FString::Printf(TEXT("Aether.Vault.%d"),Phase)),
         Path[Phase++],Duration,false,MOVE_Flying,true,nullptr,ERootMotionFinishVelocityMode::SetVelocity,FVector::ZeroVector,0);
     Task->OnTimedOutAndDestinationReached.AddDynamic(this,&UAetherVaultAbility::NextPhase);
@@ -86,7 +87,14 @@ void UAetherVaultAbility::CheckInterruption()
 {
     auto* C=Character.Get();
     if(!C||!C->Alive()||C->bTravelPending||C->ResourceGate->IsBlocked()||C->CombatTime()<C->StunUntil||
-       C->CombatRuntime->LastDamageAt>DamageAtStart||!CurrentActorInfo||CurrentActorInfo->AvatarActor.Get()!=C)Abort();
+       C->CombatRuntime->LastDamageAt>DamageAtStart||!CurrentActorInfo||CurrentActorInfo->AvatarActor.Get()!=C){Abort();return;}
+    if(Phase>0&&Path.IsValidIndex(Phase-1))
+    {
+        FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherVaultRemainingPath),false,C);FHitResult Hit;
+        const auto* Capsule=C->GetCapsuleComponent();
+        if(C->GetWorld()->SweepSingleByChannel(Hit,C->GetActorLocation(),Path[Phase-1],FQuat::Identity,ECC_Pawn,
+            FCollisionShape::MakeCapsule(Capsule->GetScaledCapsuleRadius(),Capsule->GetScaledCapsuleHalfHeight()),Q))Abort();
+    }
 }
 void UAetherVaultAbility::Abort(){if(IsActive())EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,true);}
 void UAetherVaultAbility::EndAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,bool Replicate,bool Cancelled)

@@ -95,13 +95,21 @@ bool AetherCommands::Validate(const FAetherPlayerCommand& C, FString& Reason)
 {
     const auto Reject=[&](const TCHAR* Why){Reason=Why;return false;};
     if(!IsSupportedProtocol(C.ProtocolVersion))return Reject(TEXT("Unsupported protocol version"));
-    const uint32 Mask=Fields(C.Type);
+    uint32 Mask=Fields(C.Type);
     if(Mask==MAX_uint32)return Reject(TEXT("Unknown typed command"));
+    const bool ContainerAction=C.Type==EAetherCommandType::TransferItem||C.Type==EAetherCommandType::PickUpItem;
+    if(uint8(C.TransferMode)>uint8(EAetherTransferMode::SwapWhole)||
+        ((C.ProtocolVersion<4||!ContainerAction)&&C.TransferMode!=EAetherTransferMode::QuickTransfer))
+        return Reject(TEXT("Invalid transfer mode for protocol/action"));
+    const bool Precise=C.ProtocolVersion>=4&&ContainerAction&&C.TransferMode!=EAetherTransferMode::QuickTransfer;
+    if(Precise){Mask|=Index;if(C.OtherInstanceId.IsValid())Mask|=Other;}
+    if(C.TransferMode==EAetherTransferMode::SwapWhole&&(!C.OtherInstanceId.IsValid()||C.Type!=EAetherCommandType::TransferItem))
+        return Reject(TEXT("Whole swap requires a bidirectional container and target instance"));
     if(C.ExpectedProfileRevision<0 || C.ExpectedProfileRevision==MAX_int64 || !C.CommandId.IsValid() ||
         (uint64(C.CommandId.A)<<32|C.CommandId.B)!=uint64(C.ExpectedProfileRevision+1) ||
         (C.CommandId.C==0 && C.CommandId.D==0))return Reject(TEXT("Invalid revision-bound command identity"));
     if(C.ExpectedWorldRevision < -1 || C.ExpectedWorldRevision==MAX_int64 ||
-        ((Mask&World)!=0 ? C.ExpectedWorldRevision<0 : C.ExpectedWorldRevision!=-1))
+        ((Mask&World)!=0 ? (C.ExpectedWorldRevision<0&&!(C.ProtocolVersion>=4&&C.Type==EAetherCommandType::TransferItem)) : C.ExpectedWorldRevision!=-1))
         return Reject(TEXT("World revision does not match command domain"));
     const bool NeedsInteraction=C.ProtocolVersion>=2&&C.Type==EAetherCommandType::ExecuteInteraction;
     if(NeedsInteraction ? (C.ExpectedInteractionRevision<0||C.ExpectedInteractionRevision==MAX_int64) : C.ExpectedInteractionRevision!=-1)
@@ -141,6 +149,7 @@ bool AetherCommands::Encode(const FAetherPlayerCommand& C, TArray<uint8>& Bytes,
     // v1 的所有字节保持原样；v2 在固定尾部添加一个有符号版本，不复用其他业务字段。
     if(C.ProtocolVersion>=2)W.UInt(C.ExpectedInteractionRevision<0?MAX_uint64:uint64(C.ExpectedInteractionRevision),8);
     if(C.ProtocolVersion>=3)W.UInt(C.ExpectedContainerRevision<0?MAX_uint64:uint64(C.ExpectedContainerRevision),8);
+    if(C.ProtocolVersion>=4)W.UInt(uint8(C.TransferMode),1);
     Bytes=MoveTemp(W.Bytes);return true;
 }
 
@@ -174,6 +183,7 @@ bool AetherCommands::Decode(const TArray<uint8>& Bytes, FAetherPlayerCommand& Ou
         if(Container!=MAX_uint64&&Container>=uint64(MAX_int64)){Reason=TEXT("Container revision overflow");return false;}
         C.ExpectedContainerRevision=Container==MAX_uint64?-1:int64(Container);
     }
+    if(C.ProtocolVersion>=4)C.TransferMode=EAetherTransferMode(R.UInt(1));
     if(!R.Valid || R.Offset!=Bytes.Num()){Reason=TEXT("Truncated or trailing command bytes");return false;}
     if(!Validate(C,Reason))return false;
     Out=MoveTemp(C);return true;

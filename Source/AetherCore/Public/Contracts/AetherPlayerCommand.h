@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
+#include "Contracts/AetherTransferMode.h"
 
 // 数值属于网络协议，新增动作只能追加；禁止复用已发布值或用任意字符串执行。
 enum class EAetherCommandType : uint8
@@ -37,6 +38,7 @@ struct FAetherPlayerCommand
     int32 DestinationIndex = -1;
     bool Enabled = false; // 锁定/收藏的目标值；SortInventory 中表示是否合并相同堆。
     EAetherTransferDirection TransferDirection = EAetherTransferDirection::IntoContainer;
+    EAetherTransferMode TransferMode = EAetherTransferMode::QuickTransfer;
 };
 
 // 回执格式独立于请求版本；格式 2 保存转移关系，旧格式 1 回执保留只读兼容。
@@ -61,8 +63,8 @@ struct FAetherCommandResult
 namespace AetherCommands
 {
     inline constexpr uint16 ProtocolVersion = 1; // 保留旧调用者默认值，不改变已保存请求。
-    inline constexpr uint16 LatestProtocolVersion = 3;
-    inline constexpr bool IsSupportedProtocol(int32 Version) { return Version==1||Version==2||Version==3; }
+    inline constexpr uint16 LatestProtocolVersion = 4;
+    inline constexpr bool IsSupportedProtocol(int32 Version) { return Version>=1&&Version<=4; }
     inline constexpr int32 MaxWireBytes = 1024;
     inline constexpr uint16 ResultSchemaVersion = 2;
     // 这里只检查协议形状；是否持有物品、目标距离、权限和版本仍由权威处理器复验。

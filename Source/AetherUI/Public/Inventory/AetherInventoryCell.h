@@ -26,6 +26,7 @@ public:
     void Present(const FAetherInspectRequest& Request,int32 PhysicalSlot,const FString& Label,const FString& IconId,bool Filtered,bool Selected);
     FOnAetherCellIntent OnIntent;
     FOnAetherCellDrop OnItemDrop;
+    bool IsFiltered() const{return bFiltered;}
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual FReply NativeOnMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event) override;
     virtual FReply NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
@@ -38,6 +39,7 @@ private:
     int32 PhysicalSlot=INDEX_NONE;
     bool bFiltered=false;
     FString ShownIcon;
+    uint64 IconGeneration=0;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UBorder> Background;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Label;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UImage> Icon;

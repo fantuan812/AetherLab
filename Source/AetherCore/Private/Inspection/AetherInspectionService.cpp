@@ -1,4 +1,5 @@
 #include "Inspection/AetherInspectionService.h"
+#include "Inventory/AetherItemEligibility.h"
 
 namespace
 {
@@ -64,7 +65,8 @@ void Item(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FAe
     {M.State=EAetherInspectionState::Changed;M.Message=TEXT("对象定义已变化，请重新选择。");return;}
     const auto& Def=D.Items.FindChecked(I->DefinitionId);DefinitionFields(M,Def);M.Item=*I;
     Field(M,TEXT("quantity"),TEXT("数量"),FString::FromInt(I->Quantity));
-    Field(M,TEXT("quality"),TEXT("品质"),FString::FromInt(I->Quality));
+    Field(M,TEXT("quality"),TEXT("品质元数据（不提供战斗加成）"),FString::FromInt(I->Quality));
+    if(!I->Affixes.IsEmpty())Field(M,TEXT("affixes"),TEXT("词条"),TEXT("保存的实例元数据；当前不参与战斗数值。"));
     Field(M,TEXT("locked"),TEXT("锁定"),I->bLocked?TEXT("已锁定"):TEXT("未锁定"));
     Field(M,TEXT("favorite"),TEXT("收藏"),I->bFavorite?TEXT("已收藏"):TEXT("未收藏"));
     Field(M,TEXT("binding"),TEXT("绑定"),I->BoundToCharacter.IsEmpty()?TEXT("未绑定"):I->BoundToCharacter);
@@ -85,7 +87,25 @@ void Item(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FAe
         S.WorldRevision<0?TEXT("当前暂不可丢弃"):AetherInspection::InventoryReason(Drop),I->Quantity,true);
     Action(M,I->bLocked?EAetherInspectAction::Unlock:EAetherInspectAction::Lock,{},I->bLocked?TEXT("解锁"):TEXT("锁定"),true);
     Action(M,I->bFavorite?EAetherInspectAction::Unfavorite:EAetherInspectAction::Favorite,{},I->bFavorite?TEXT("取消收藏"):TEXT("收藏"),true);
-    if(!Def.UseId.IsEmpty())Action(M,EAetherInspectAction::Use,{},TEXT("使用"),S.bCanAct&&!I->bLocked&&!S.Inventory.IsEquipped(I->InstanceId),TEXT("需满足资源、动作和服务器冷却条件"));
+    if(!Def.UseId.IsEmpty())
+    {
+        const auto Static=AetherItemEligibility::Query(S.Inventory,I->InstanceId,S.Context.OwnerIdentity,EAetherItemOperation::Use,D);
+        const auto* Rule=S.UseRules.Find(Def.UseId);
+        const auto Use=Rule?AetherItemEligibility::QueryUse(*Rule,S.UseSummary):EAetherUseAvailability::Unknown;
+        M.Fields.RemoveAll([](const auto& F){return F.Key==TEXT("use")||F.Key==TEXT("cooldown");});
+        if(Rule)
+        {
+            Field(M,TEXT("use"),TEXT("恢复量"),FString::Printf(TEXT("生命 %.0f / 法力 %.0f / 耐力 %.0f"),Rule->Health,Rule->Mana,Rule->Stamina));
+            Field(M,TEXT("safe"),TEXT("使用条件"),FString::Printf(TEXT("受击后等待 %.1f 秒；药剂共享冷却 %.1f 秒"),Rule->SafeSeconds,Rule->Cooldown));
+            if(S.UseSummary.bKnown)Field(M,TEXT("benefit"),TEXT("预计实际恢复"),FString::Printf(TEXT("生命 %.0f / 法力 %.0f / 耐力 %.0f"),
+                FMath::Clamp(Rule->Health,0.,FMath::Max(0.,S.UseSummary.MaxHealth-S.UseSummary.Health)),
+                FMath::Clamp(Rule->Mana,0.,FMath::Max(0.,S.UseSummary.MaxMana-S.UseSummary.Mana)),
+                FMath::Clamp(Rule->Stamina,0.,FMath::Max(0.,S.UseSummary.MaxStamina-S.UseSummary.Stamina))));
+        }
+        Field(M,TEXT("cooldown"),TEXT("共享冷却剩余"),S.UseSummary.bKnown?FString::Printf(TEXT("%.1f 秒"),S.UseSummary.CooldownRemaining):TEXT("等待同步"));
+        Action(M,EAetherInspectAction::Use,{},TEXT("使用"),Static==EAetherInventoryMutationCode::Applied&&Use==EAetherUseAvailability::Allowed,
+            Static==EAetherInventoryMutationCode::Applied?AetherItemEligibility::UseReason(Use):AetherInspection::InventoryReason(Static));
+    }
     if(I->Quantity>1)Action(M,EAetherInspectAction::Split,{},TEXT("拆分"),S.Inventory.FirstEmpty()!=INDEX_NONE&&!I->bLocked&&!S.Inventory.IsEquipped(I->InstanceId),
         TEXT("需要空格且物品未锁定、未装备"),I->Quantity-1,true);
     if(S.Shop.IsSet()&&!S.TradeTargetStableId.IsEmpty())
@@ -204,6 +224,39 @@ FString AetherInspection::SkillReason(EAetherSkillMutationCode C)
     default:return TEXT("当前技能状态不允许此操作。");
     }
 }
+FString AetherInspection::DependencyKey(const FAetherInspectionSnapshot& S,const FAetherInspectTarget& T)
+{
+    FString Key;const auto Add=[&](const FString& V){Key+=FString::FromInt(V.Len())+TEXT(":")+V;};
+    Add(S.Context.OwnerIdentity);Add(S.Context.SessionId.ToString());
+    const auto Inventory=[&](const FAetherInventoryStateV10& V)
+    {
+        Add(LexToString(V.Capacity));
+        for(int32 Slot=0;Slot<V.Capacity;++Slot)if(const auto* I=V.At(Slot))
+        {
+            Add(LexToString(Slot));Add(I->InstanceId.ToString());Add(I->DefinitionId);Add(LexToString(I->Quantity));
+            Add(LexToString(I->Quality));Add(LexToString(I->Durability));Add(I->BoundToCharacter);Add(I->StateGroup);
+            Add(I->QuestInstanceId.ToString());Add(I->bLocked?TEXT("1"):TEXT("0"));Add(I->bFavorite?TEXT("1"):TEXT("0"));
+            TArray<FString> Names;I->Affixes.GenerateKeyArray(Names);Names.Sort();
+            for(const auto& N:Names){Add(N);Add(LexToString(I->Affixes.FindChecked(N)));}
+        }
+        TArray<FString> Slots;V.Equipment.GenerateKeyArray(Slots);Slots.Sort();
+        for(const auto& N:Slots){Add(N);Add(V.Equipment.FindChecked(N).ToString());}
+    };
+    if(T.Kind==EAetherInspectTarget::ItemInstance||T.Kind==EAetherInspectTarget::EquipmentSlot)
+    {
+        if(!T.ContainerId.IsEmpty())
+        {
+            Add(S.ContainerContext.ToString());Add(T.ContainerId);
+            if(S.Container.IsSet())Inventory(S.Container->Inventory);
+        }
+        else Inventory(S.Inventory);
+    }
+    else if(T.Kind==EAetherInspectTarget::ItemDefinition)
+    {Add(S.TradeTargetStableId);Add(S.Shop.IsSet()?S.Shop->Id:FString());}
+    else if(T.Kind==EAetherInspectTarget::SkillNode)Add(LexToString(S.ProfileRevision));
+    // Status objects are identified and checked for expiry by Build; render cadence is not identity.
+    return Key;
+}
 FAetherInspectRequest AetherInspection::Pin(const FAetherInspectionSnapshot& S,FAetherInspectTarget T)
 {
     if(T.Kind==EAetherInspectTarget::EquipmentSlot)T.InstanceId=S.Inventory.Equipment.FindRef(T.SlotId);
@@ -213,16 +266,18 @@ FAetherInspectRequest AetherInspection::Pin(const FAetherInspectionSnapshot& S,F
         if(!T.ContainerId.IsEmpty()&&S.Container.IsSet()&&S.Container->ContainerId.Equals(T.ContainerId,ESearchCase::CaseSensitive))Inventory=&S.Container->Inventory;
         if(const auto* I=Inventory->Find(T.InstanceId))T.DefinitionId=I->DefinitionId;
     }
-    return {S.Context,MoveTemp(T)};
+    const FString Key=DependencyKey(S,T);return {S.Context,MoveTemp(T),Key};
 }
 FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,const FAetherInspectionSnapshot& S,
     const FAetherV10ItemDefinitions& Items,const FAetherSkillDefinitionsV10& Skills)
 {
     FAetherInspectionModel M;M.Request=R;
     if(!R.Context.IsValid()||!S.Context.IsValid()){Invalid(M,TEXT("尚无已授权的拥有者快照。"));return M;}
-    if(!R.Context.Same(S.Context))
+    if(R.Context.SessionId!=S.Context.SessionId||!R.Context.OwnerIdentity.Equals(S.Context.OwnerIdentity,ESearchCase::CaseSensitive)||
+        (R.DependencyKey.IsEmpty()?!R.Context.Same(S.Context):R.DependencyKey!=DependencyKey(S,R.Target)))
     {M.State=EAetherInspectionState::Changed;M.Message=TEXT("对象已变化，请重新查看后操作。");return M;}
     M.State=EAetherInspectionState::Ready;
+    M.Request.Context=S.Context;
     if(!R.Target.ContainerId.IsEmpty())
     {
         if(R.Target.Kind!=EAetherInspectTarget::ItemInstance||!S.Container.IsSet()||!S.ContainerContext.IsValid()||
@@ -230,8 +285,9 @@ FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,co
         {M.State=EAetherInspectionState::Changed;M.Message=TEXT("容器会话已失效。");return M;}
         // 复用物品字段，操作能力再收窄为取出，不能直接穿戴或消耗容器中的物品。
         auto View=S;View.Inventory=S.Container->Inventory;View.Shop.Reset();View.Container.Reset();
-        auto Local=R;Local.Target.ContainerId.Reset();auto ContainerItems=Items;ContainerItems.DefaultCapacity=View.Inventory.Capacity;
-        M=Build(Local,View,ContainerItems,Skills);M.Request=R;
+        auto Local=R;Local.Target.ContainerId.Reset();Local.Context=S.Context;Local.DependencyKey=DependencyKey(View,Local.Target);
+        auto ContainerItems=Items;ContainerItems.DefaultCapacity=View.Inventory.Capacity;
+        M=Build(Local,View,ContainerItems,Skills);M.Request=R;M.Request.Context=S.Context;
         M.Actions.Reset();M.ComparisonSlots.Reset();M.Comparison.Reset();
         if(M.CanInteract()&&M.Item.IsSet())
             Action(M,EAetherInspectAction::Withdraw,R.Target.ContainerId,S.Container->Kind==EAetherContainerKind::WorldDrop?TEXT("拾取"):TEXT("取出"),
@@ -288,11 +344,13 @@ FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,co
     if(M.CanInteract()&&M.Item.IsSet()&&S.Container.IsSet()&&S.ContainerContext.IsValid()&&S.Container->Kind!=EAetherContainerKind::WorldDrop)
     {
         const auto& I=M.Item.GetValue();
-        bool Allowed=!I.bLocked&&!S.Inventory.IsEquipped(I.InstanceId);
-        if(S.Container->Kind==EAetherContainerKind::PersonalStorage)Allowed&=I.BoundToCharacter.IsEmpty()||I.BoundToCharacter.Equals(S.Context.OwnerIdentity,ESearchCase::CaseSensitive);
-        else Allowed&=S.Inventory.CanRemove(I.InstanceId,S.Context.OwnerIdentity,false,Items)==EAetherInventoryMutationCode::Applied;
+        const auto Eligibility=AetherItemEligibility::Query(S.Inventory,I.InstanceId,S.Context.OwnerIdentity,
+            S.Container->Kind==EAetherContainerKind::PersonalStorage?EAetherItemOperation::PersonalStorage:EAetherItemOperation::SharedStorage,Items);
+        const bool Allowed=Eligibility==EAetherInventoryMutationCode::Applied;
         Action(M,EAetherInspectAction::Deposit,S.Container->ContainerId,TEXT("存入容器"),Allowed&&S.bCanAct&&S.ContainerWorldRevision>=0,
-            TEXT("请先卸下或解锁，并满足绑定与收纳限制"),I.Quantity,true);
+            Allowed?TEXT("需要当前容器授权与可操作状态"):AetherInspection::InventoryReason(Eligibility),I.Quantity,true);
+        if(S.Container->Kind==EAetherContainerKind::PersonalStorage&&(I.QuestInstanceId.IsValid()||Items.Items.FindChecked(I.DefinitionId).bQuestLocked))
+            Field(M,TEXT("storageQuest"),TEXT("任务物品保管"),TEXT("存入后保留任务身份；交付任务可能需要先取回背包。"));
     }
     if(S.ProfileRevision<0||S.ProfileRevision==MAX_int64)
         for(auto& A:M.Actions)if(A.Kind!=EAetherInspectAction::FocusSkill&&A.Kind!=EAetherInspectAction::TrackQuest)

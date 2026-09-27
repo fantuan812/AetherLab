@@ -7,15 +7,10 @@
 #include "Engine/LevelStreaming.h"
 #include "WorldPartition/WorldPartitionSubsystem.h"
 
-void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
+TSet<FName> AAetherFrontierMode::BuildRegionRequirements(const TArray<FVector>& Interest) const
 {
- if(Players.IsEmpty()&&!bNativeRegionBarrier)return;
- auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();if(W->GetSimulation()->HasPendingInputs())return;
  const auto& Definitions=FAetherWorldDefinitions::Get();
  TSet<FName> Wanted;
- TArray<FVector> Interest=Players;
- // 保留原位置和目的地两端，等待期间不得卸载角色脚下的区域。
- for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->bTravelPending)Interest.Add(It->TravelDestination);
  for(const auto& E:Definitions.Objects)
  {
   auto* A=Prop(E.Id);const auto* Saved=Database->World.FindByPredicate([&](const auto& R){return R.StableId==E.Id;});
@@ -28,6 +23,17 @@ void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
  }
  // Support dependencies load/unload as a group; liquid/electrical boundaries disconnect.
  for(int Pass=0;Pass<Definitions.Objects.Num();++Pass){int Before=Wanted.Num();for(const auto& E:Definitions.Objects)for(auto Id:E.Supports)if(Wanted.Contains(E.Id)||Wanted.Contains(Id)){Wanted.Add(E.Id);Wanted.Add(Id);}if(Before==Wanted.Num())break;}
+ return Wanted;
+}
+void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
+{
+ if(Players.IsEmpty()&&!bNativeRegionBarrier)return;
+ auto* W=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();if(W->GetSimulation()->HasPendingInputs())return;
+ const auto& Definitions=FAetherWorldDefinitions::Get();
+ TArray<FVector> Interest=Players;
+ // Retain both ends while travel is waiting. Readiness uses exactly this dependency closure.
+ for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->bTravelPending)Interest.Add(It->TravelDestination);
+ const auto Wanted=BuildRegionRequirements(Interest);
  TArray<FName> Unload;TArray<const FAetherWorldPlacement*> Load;
  for(const auto& E:Definitions.Objects)if(E.bStream)
  {if(Prop(E.Id)&&!Wanted.Contains(E.Id))Unload.Add(E.Id);else if(!Prop(E.Id)&&Wanted.Contains(E.Id))Load.Add(&E);}
@@ -57,7 +63,6 @@ void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
 bool AAetherFrontierMode::IsTravelRegionReady(FVector Destination) const
 {
  if(bNativeMode&&(!NativeSceneReady()||bNativeRegionBarrier))return false;
- for(const auto& E:FAetherWorldDefinitions::Get().Objects)
-     if(E.bStream&&FVector::DistSquared(E.Location,Destination)<FMath::Square(8000.)&&!Prop(E.Id))return false;
+ for(const auto Id:BuildRegionRequirements({Destination}))if(!Prop(Id))return false;
  return true;
 }

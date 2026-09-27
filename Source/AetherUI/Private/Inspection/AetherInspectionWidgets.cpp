@@ -89,6 +89,8 @@ void UAetherInspectionCard::AddEffect(const TCHAR* Label,const FAetherSkillRankE
 void UAetherInspectionCard::RenderModel()
 {
     if(!Rows||!Heading)return;
+    FString RestoreFocus;
+    for(auto* Child:Rows->GetAllChildren())if(auto* B=Cast<UAetherInspectionActionButton>(Child);B&&B->HasUserFocus(GetOwningPlayer()))RestoreFocus=B->FocusIdentity();
     Rows->ClearChildren();Heading->SetText(FText::FromString(Model.Title.IsEmpty()?TEXT("详细资料"):Model.Title));
     AddLine(Model.Message,Model.CanInteract()?FLinearColor(.8f,.85f,.9f):FLinearColor(1,.65f,.3f));
     for(const auto& Field:Model.Fields)AddLine(Field.Label+TEXT("：")+Field.Value);
@@ -112,6 +114,7 @@ void UAetherInspectionCard::RenderModel()
         auto* Text=WidgetTree->ConstructWidget<UTextBlock>();Text->SetAutoWrapText(true);
         Text->SetText(FText::FromString(Action.Label+(Action.Argument.IsEmpty()?FString():TEXT(" · ")+Action.Argument)));
         B->SetContent(Text);Rows->AddChildToVerticalBox(B)->SetPadding(FMargin(0,4));
+        if(!RestoreFocus.IsEmpty()&&B->FocusIdentity()==RestoreFocus&&B->GetIsEnabled())B->SetUserFocus(GetOwningPlayer());
         if(!Action.bEnabled)AddLine(Action.DisabledReason,FLinearColor(.8f,.65f,.5f));
     };
     if(Model.CanInteract())
@@ -120,6 +123,11 @@ void UAetherInspectionCard::RenderModel()
             AddButton({EAetherInspectAction::Equip,SlotValue,TEXT("比较此槽"),{},1,true,false},true);
         for(const auto& Action:Model.Actions)AddButton(Action,false);
     }
+}
+UWidget* UAetherInspectionCard::NavigationTarget() const
+{
+    if(Rows)for(auto* Child:Rows->GetAllChildren())if(auto* B=Cast<UButton>(Child);B&&B->GetIsEnabled())return B;
+    return const_cast<UAetherInspectionCard*>(this);
 }
 void UAetherInspectionCard::Forward(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action,bool Comparison)
 {
@@ -185,7 +193,7 @@ TSharedRef<SWidget> UAetherInspectionConfirmation::RebuildWidget()
 }
 void UAetherInspectionConfirmation::SetDraft(const FAetherInspectionDraft& InDraft)
 {
-    Draft=InDraft;RefreshDraft();if(Quantity)Quantity->SetValue(1);
+    Draft=InDraft;RefreshDraft();if(Quantity)Quantity->SetValue(InDraft.TransferMode==EAetherTransferMode::SwapWhole?InDraft.Action.MaxQuantity:1);
 }
 void UAetherInspectionConfirmation::InvalidateDraft(){Draft.Reset();RefreshDraft();}
 void UAetherInspectionConfirmation::RefreshDraft()

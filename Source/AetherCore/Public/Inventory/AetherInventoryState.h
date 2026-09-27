@@ -1,5 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
+#include "Contracts/AetherTransferMode.h"
 
 // 定义与实例分离。v9 反射 profile 保持冻结；v10 使用这些显式值对象构建持久 DTO。
 struct FAetherV10ItemDefinition
@@ -81,6 +82,8 @@ struct AETHERCORE_API FAetherInventoryStateV10
     // 整堆搬到空格保留 GUID；拆分/合并记录明确的 From/To/Quantity，容量不足可选择部分转移。
     FAetherInventoryMutation TransferTo(FAetherInventoryStateV10& Destination,FGuid Id,int32 Quantity,
         bool AllowPartial,const FAetherV10ItemDefinitions& Definitions);
+    FAetherInventoryMutation TransferExact(FAetherInventoryStateV10& Destination,FGuid Id,int32 Quantity,
+        int32 DestinationIndex,FGuid ExpectedTarget,EAetherTransferMode Mode,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Move(FGuid Id,int32 Destination,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Swap(FGuid A,FGuid B,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Split(FGuid Id,int32 Quantity,FGuid NewId,int32 Destination,const FAetherV10ItemDefinitions& Definitions);

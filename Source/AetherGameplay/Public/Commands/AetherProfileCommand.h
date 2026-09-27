@@ -6,9 +6,11 @@
 #include "Inventory/AetherConsumableEffect.h"
 #include "Interaction/AetherInteractionDefinitions.h"
 #include "World/AetherWorldState.h"
+#include "World/AetherContainerState.h"
 
 struct FAetherContainerAccessContext
 {
+    EAetherContainerKind Kind=EAetherContainerKind::SharedChest;
     FString ContainerId,TargetStableId,RegionId;
     FVector DropLocation=FVector::ZeroVector;
     bool bAuthorized=false,bTargetReady=false,bInventoryPickup=false,bContainerSession=false;

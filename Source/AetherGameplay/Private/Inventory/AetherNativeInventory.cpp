@@ -6,6 +6,7 @@
 #include "Definitions/AetherV10Definitions.h"
 #include "Contracts/AetherTransaction.h"
 #include "Combat/AetherEquipmentMath.h"
+#include "Inventory/AetherResourceGate.h"
 #include "Engine/LocalPlayer.h"
 
 namespace
@@ -26,6 +27,10 @@ bool AetherNativeInventory::Snapshot(AAetherFrontierCharacter& C,int64 Revision,
     StatusEffects(C,Out.StatusEffects);
     if(const auto* PS=C.ProfileState();PS&&PS->SkillGrants.ProfileRevision==P.Revision)Out.ExternalGrants=PS->GetNativeSkillGrants();
     Out.bCanAct=C.Ready()&&!C.Carried&&!C.ReviveTarget&&!C.bTravelPending&&!Net->HasPending();
+    auto& U=Out.UseSummary;U.bKnown=C.ResourceGate->HasUseSummary();U.bCanAct=Out.bCanAct;
+    U.Health=C.Health();U.Mana=C.Mana();U.Stamina=C.Stamina();U.MaxHealth=C.MaxHealth;U.MaxMana=C.MaximumMana();U.MaxStamina=C.MaximumStamina();
+    U.CooldownRemaining=FMath::Max(0.f,C.ResourceGate->UseReadyTime()-C.CombatTime());U.SafeForSeconds=C.TimeSinceDamage();
+    for(const auto& Use:FAetherV10Definitions::Get().Rules.Uses)Out.UseRules.Add(Use.Key.ToString(),Use.Value);
     if(auto* W=C.GetWorld()->GetGameState<AAetherFrontierState>())Out.WorldRevision=W->NativeWorldRevision;
     const auto Shop=C.ActiveShop();const auto* Definition=FAetherV10Definitions::Get().Economy.Shops.Find(Shop.ToString());
     if(!Shop.IsNone()&&Definition&&C.TradeSession.Target.IsValid())

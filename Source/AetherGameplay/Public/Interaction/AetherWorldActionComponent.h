@@ -5,7 +5,7 @@
 class AAetherFrontierCharacter;
 class AAetherFrontierProp;
 UENUM()
-enum class EAetherWorldActionPhase:uint8 {Idle,Pickup,PutDown,Throw};
+enum class EAetherWorldActionPhase:uint8 {Idle,Pickup,PutDown,Throw,Push};
 // 管理场景物体占用、接触前摇、提交和清理；角色只保留输入与生命周期装配。
 UCLASS()
 class AETHERGAMEPLAY_API UAetherWorldActionComponent : public UActorComponent
@@ -13,7 +13,7 @@ class AETHERGAMEPLAY_API UAetherWorldActionComponent : public UActorComponent
     GENERATED_BODY()
 public:
     UAetherWorldActionComponent();
-    bool Begin(FName Action);
+    bool Begin(FName Action,AAetherFrontierProp* SelectedTarget=nullptr);
     void Release();
     bool IsBusy() const{return Phase!=EAetherWorldActionPhase::Idle;}
     AActor* ContactActor() const;
@@ -24,6 +24,8 @@ private:
     UPROPERTY(Replicated) EAetherWorldActionPhase Phase=EAetherWorldActionPhase::Idle;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierProp> Pending;
     float StartedAt=0;
+    FVector CommittedDirection=FVector::ZeroVector;
+    uint32 ActionSerial=0;
     uint64 DamageSerial=0;
     UPROPERTY(Replicated) bool bCommitted=false;
     void Cancel();

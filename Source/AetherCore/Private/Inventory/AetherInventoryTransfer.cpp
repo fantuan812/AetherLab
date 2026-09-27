@@ -1,4 +1,54 @@
 #include "Inventory/AetherInventoryState.h"
+FAetherInventoryMutation FAetherInventoryStateV10::TransferExact(FAetherInventoryStateV10& Destination,FGuid Id,int32 Quantity,
+    int32 DestinationIndex,FGuid ExpectedTarget,EAetherTransferMode Mode,const FAetherV10ItemDefinitions& Definitions)
+{
+    using E=EAetherInventoryMutationCode;FString Reason;
+    if(this==&Destination||DestinationIndex<0||DestinationIndex>=Destination.Capacity||
+        (Mode!=EAetherTransferMode::PlaceOrMerge&&Mode!=EAetherTransferMode::SwapWhole))return {E::Invalid};
+    auto SourceDefs=Definitions,TargetDefs=Definitions;
+    SourceDefs.DefaultCapacity=Capacity;TargetDefs.DefaultCapacity=Destination.Capacity;
+    if(!Validate(SourceDefs,Reason)||!Destination.Validate(TargetDefs,Reason))return {E::Invalid};
+    for(const auto& Item:Items)if(Destination.Find(Item.InstanceId))return {E::Invalid};
+    const auto* Source=Find(Id);const auto* Target=Destination.At(DestinationIndex);
+    if(!Source)return {E::Missing};
+    if(Quantity<1||Quantity>Source->Quantity)return {E::Invalid};
+    if((Target?Target->InstanceId:FGuid())!=ExpectedTarget)return {E::Occupied};
+    if(IsEquipped(Id)||(Target&&Destination.IsEquipped(Target->InstanceId)))return {E::Equipped};
+    auto From=*this,To=Destination;const auto SourceItem=*Source;
+    FAetherInventoryMutation Result;Result.Code=E::Applied;Result.ActualQuantity=Quantity;Result.AffectedIds.Add(Id);
+    if(Mode==EAetherTransferMode::SwapWhole)
+    {
+        if(!Target||Quantity!=SourceItem.Quantity)return {E::Invalid};
+        auto Reverse=*Target;auto Moved=SourceItem;
+        Reverse.SlotIndex=SourceItem.SlotIndex;Moved.SlotIndex=DestinationIndex;
+        From.Items.RemoveAll([&](const auto& V){return V.InstanceId==Id;});
+        To.Items.RemoveAll([&](const auto& V){return V.InstanceId==ExpectedTarget;});
+        From.Items.Add(Reverse);To.Items.Add(Moved);
+        Result.AffectedIds.Add(ExpectedTarget);Result.Transitions={{Id,Id,Quantity},{ExpectedTarget,ExpectedTarget,Reverse.Quantity}};
+    }
+    else
+    {
+        FGuid ResultId=Id;
+        if(Target)
+        {
+            if(!SourceItem.SameStackKey(*Target))return {E::Incompatible};
+            if(Definitions.Items.FindChecked(SourceItem.DefinitionId).MaxStack-Target->Quantity<Quantity)return {E::Capacity};
+            auto* Merged=To.Items.FindByPredicate([&](const auto& V){return V.InstanceId==ExpectedTarget;});
+            Merged->Quantity+=Quantity;ResultId=ExpectedTarget;
+        }
+        else
+        {
+            auto Moved=SourceItem;Moved.Quantity=Quantity;Moved.SlotIndex=DestinationIndex;
+            if(Quantity<SourceItem.Quantity)do {Moved.InstanceId=FGuid::NewGuid();}while(From.Find(Moved.InstanceId)||To.Find(Moved.InstanceId));
+            ResultId=Moved.InstanceId;To.Items.Add(Moved);
+        }
+        auto* Remaining=From.Items.FindByPredicate([&](const auto& V){return V.InstanceId==Id;});Remaining->Quantity-=Quantity;
+        if(Remaining->Quantity==0)From.Items.RemoveAll([&](const auto& V){return V.InstanceId==Id;});
+        Result.AffectedIds.AddUnique(ResultId);Result.Transitions.Add({Id,ResultId,Quantity});
+    }
+    if(!From.Validate(SourceDefs,Reason)||!To.Validate(TargetDefs,Reason))return {E::Invalid};
+    *this=MoveTemp(From);Destination=MoveTemp(To);return Result;
+}
 FAetherInventoryMutation FAetherInventoryStateV10::TransferTo(FAetherInventoryStateV10& Destination,FGuid Id,int32 Quantity,
     bool AllowPartial,const FAetherV10ItemDefinitions& Definitions)
 {

@@ -3,8 +3,16 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
+#include "Misc/DateTime.h"
 
-UAetherResourceGate::UAetherResourceGate(){PrimaryComponentTick.bCanEverTick=true;}
+UAetherResourceGate::UAetherResourceGate(){PrimaryComponentTick.bCanEverTick=true;SetIsReplicatedByDefault(true);}
+void UAetherResourceGate::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME_CONDITION(UAetherResourceGate,bUseSummaryReady,COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(UAetherResourceGate,UseReadyAtServerTime,COND_OwnerOnly);
+}
 FAetherResourceStateV10 UAetherResourceGate::Sample() const
 {
     FAetherResourceStateV10 S=Receiver?Receiver->State():FAetherResourceStateV10();
@@ -108,6 +116,16 @@ void UAetherResourceGate::Fault(const FString& Reason)
 void UAetherResourceGate::TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Tick)
 {
     Super::TickComponent(Dt,Type,Tick);
+    if(const auto* C=Cast<AAetherCharacter>(GetOwner());C&&C->HasAuthority())
+    {
+        bUseSummaryReady=Receiver.IsValid()&&!IsBlocked();
+        if(Receiver&&PublishedUseDeadline!=Receiver->State().UseReadyAtUnixMs)
+        {
+            PublishedUseDeadline=Receiver->State().UseReadyAtUnixMs;
+            const int64 Now=FDateTime::UtcNow().GetTicks()/ETimespan::TicksPerMillisecond-FDateTime(1970,1,1).GetTicks()/ETimespan::TicksPerMillisecond;
+            UseReadyAtServerTime=C->CombatTime()+float(FMath::Max<int64>(0,PublishedUseDeadline-Now))*.001f;
+        }
+    }
     if(!Receiver||WaitingForPersistence()||bDraining)return;
     TGuardValue<bool> Guard(bDraining,true);
     // 每帧有界排空；恢复普通输入前 Reserve 仍要求队列为空，不能插队连续喝药。

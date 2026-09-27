@@ -40,6 +40,8 @@ public:
     void ReleaseHeldInput();
     float CrouchCameraOffset=0;
     bool bAttackHeld=false;
+    bool bAttackCharged=false,bBufferedAttack=false,bBufferedHeavy=false;
+    float BufferedAttackUntil=0;
     virtual void BeginPlay() override;
     virtual void PossessedBy(AController* C) override;
     virtual void UnPossessed() override;
@@ -151,6 +153,9 @@ public:
     void BindPersistentAbilities();
     void ApplyProfileEquipment();
     UFUNCTION(Server,Reliable) void ServerAction(FName Action,int32 Index = 0);
+    void RequestWorldAction(FName Action);
+    UFUNCTION(Server,Reliable) void ServerSelectedWorldAction(FName Action,AAetherFrontierProp* Target,uint32 Sequence);
+    uint32 WorldActionSequence=0,LastWorldActionSequence=0;
     UFUNCTION(Server,Reliable) void ServerPartyAction(FName Action,AAetherPlayerState* InviteTarget,AAetherFrontierCharacter* Companion);
     UFUNCTION(Server,Reliable) void ServerWorldService(FAetherWorldServiceCommand Command,AAetherFrontierProp* Target,FName ActionId);
     // 过渡期仍调用 v9 服务，但网络目标使用原 Actor 实例 + 持久 ID + 动作 + 所见档案版本。
@@ -171,15 +176,15 @@ public:
     int32 ClosureSeenPhase=0;
 private:
     void PressAttack(); void ReleaseAttack();
-    void CancelAttackInput(){bAttackHeld=false;}
+    void CancelAttackInput(){bAttackHeld=false;bAttackCharged=false;bBufferedAttack=false;BufferedAttackUntil=0;}
     void SprintOn(){SetSprintInput(true);} void SprintOff(){SetSprintInput(false);}
     void CrouchOn(){SetCrouchInput(true);} void CrouchOff(){SetCrouchInput(false);}
     void UsePotion(){if(!bPanel)SubmitInventory("Use","Potion");} void InteractV4();
     FAetherWorldServiceCommand PendingService;
     int32 MinimumServiceRevision=0;
-    void Throw(){if(!bPanel)ServerAction("Throw");}
+    void Throw(){if(!bPanel)RequestWorldAction("Throw");}
     void ClaimRewards();
-    void Carry(){if(!bPanel)ServerAction("Carry");} void Push(){if(!bPanel)ServerAction("Push");}
+    void Carry(){if(!bPanel)RequestWorldAction("Carry");} void Push(){if(!bPanel)RequestWorldAction("Push");}
     void EquipNext(){if(!bPanel)SubmitInventory("CycleMain");} void Shield(){if(!bPanel)SubmitInventory("CycleOff");}
     void SaveV4(){ServerAction("Save");} void Recruit(){ServerAction("Recruit");}
     void SplitStack(){if(bPanel&&Panel==1)SubmitInventory("Split");}
