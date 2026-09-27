@@ -7,7 +7,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
-#include "Combat/AetherActionTiming.h"
 #include "Combat/AetherControlledActionDefinition.h"
 UAetherWorldActionComponent::UAetherWorldActionComponent()
 {PrimaryComponentTick.bCanEverTick=true;SetIsReplicatedByDefault(true);}
@@ -40,11 +39,16 @@ bool UAetherWorldActionComponent::Begin(FName Action,AAetherFrontierProp* Select
     auto* C=Cast<AAetherFrontierCharacter>(GetOwner());
     if(!C||!C->HasAuthority()||IsBusy()||!C->Alive()||C->bTravelPending||C->ResourceGate->IsBlocked()||
        C->CombatTime()<C->StunUntil||C->ReviveTarget||(Action!=TEXT("Push")&&Action!=TEXT("Carry")&&Action!=TEXT("Throw")))return false;
+    const FName RuleId=Action==TEXT("Carry")?(C->Carried?TEXT("PutDown"):TEXT("Pickup")):Action;
+    const auto* Definition=AetherControlledActions::Find(RuleId);
+    const int32 Stance=C->Carried?4:C->IsCrouched()?2:1;
+    if(!Definition||!Definition->IsValid()||!(Definition->AllowedStances&Stance)||Definition->bLoop||
+        Definition->ContactPolicy!=EAetherActionContactPolicy::FixedObject||
+        Definition->CancelPolicy!=EAetherActionCancelPolicy::CancelBeforeCommitKeepCommitted||Definition->CommitTime<0)return false;
     if(C->Carried)
     {
         if(Action==TEXT("Push")||SelectedTarget!=C->Carried)return false;
         Pending=C->Carried;Phase=Action==TEXT("Throw")?EAetherWorldActionPhase::Throw:EAetherWorldActionPhase::PutDown;
-        C->PresentAction(Phase==EAetherWorldActionPhase::Throw?TEXT("Throw"):TEXT("PutDown"),AetherActionTiming::ReleaseDuration);
     }
     else
     {
@@ -55,12 +59,11 @@ bool UAetherWorldActionComponent::Begin(FName Action,AAetherFrontierProp* Select
         auto* P=Cast<AAetherFrontierProp>(Hit.GetActor());if(!P||P!=SelectedTarget||P->Carrier||!Reachable(*C,*P))return false;
         // 前摇期间只占用目标，物理抓取在接触提交点执行；第二位玩家无法抢同一物体。
         P->Carrier=C;Pending=P;Phase=Action==TEXT("Push")?EAetherWorldActionPhase::Push:EAetherWorldActionPhase::Pickup;
-        C->PresentAction(Action==TEXT("Push")?TEXT("Push"):TEXT("Pickup"),Action==TEXT("Push")?AetherActionTiming::PushDuration:AetherActionTiming::PickupDuration);
     }
     StartedAt=C->CombatTime();DamageSerial=C->CombatRuntime->DamageReceivedCount;bCommitted=false;
-    const auto* Definition=AetherControlledActions::Find(C->PresentedAction.Id);
-    if(!Definition||!Definition->IsValid()){Cancel();return false;}
     CommitAt=StartedAt+Definition->CommitTime;EndsAt=StartedAt+Definition->Duration;
+    CommittedImpulse=Definition->Impulse;
+    C->PresentAction(RuleId,Definition->Duration);
     CommittedDirection=(Phase==EAetherWorldActionPhase::Push?C->GetActorForwardVector():C->GetControlRotation().Vector()).GetSafeNormal();
     ++ActionSerial;UE_LOG(LogTemp,Verbose,TEXT("AETHER_ACTION_STARTED serial=%u action=%s"),ActionSerial,*Action.ToString());
     C->SetSprintInput(false);C->GetCharacterMovement()->StopMovementImmediately();C->ForceNetUpdate();return true;
@@ -71,7 +74,7 @@ void UAetherWorldActionComponent::Cancel()
     if(C&&Pending&&Pending->Carrier==C&&C->Carried!=Pending){Pending->Carrier=nullptr;Pending->ForceNetUpdate();}
     if(C&&(C->PresentedAction.Id==TEXT("Pickup")||C->PresentedAction.Id==TEXT("Throw")||C->PresentedAction.Id==TEXT("PutDown")||C->PresentedAction.Id==TEXT("Push")))C->PresentedAction.Duration=0;
     if(IsBusy())UE_LOG(LogTemp,Verbose,TEXT("AETHER_ACTION_ENDED serial=%u committed=%d"),ActionSerial,bCommitted);
-    Pending=nullptr;Phase=EAetherWorldActionPhase::Idle;bCommitted=false;
+    Pending=nullptr;Phase=EAetherWorldActionPhase::Idle;bCommitted=false;CommittedImpulse=0;
 }
 void UAetherWorldActionComponent::Release()
 {
@@ -98,7 +101,7 @@ void UAetherWorldActionComponent::TickComponent(float Dt,ELevelTick Type,FActorC
             UE_LOG(LogTemp,Verbose,TEXT("AETHER_ACTION_COMMITTED serial=%u"),ActionSerial);
             if(Phase==EAetherWorldActionPhase::Push)
             {
-                P->Mesh->AddImpulse(CommittedDirection*AetherActionTiming::PushImpulse);
+                P->Mesh->AddImpulse(CommittedDirection*CommittedImpulse);
                 P->Mechanism->RecordImpactSource(C);P->Carrier=nullptr;P->ForceNetUpdate();
             }
             else if(Phase==EAetherWorldActionPhase::Pickup)

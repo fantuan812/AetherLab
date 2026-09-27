@@ -85,6 +85,8 @@ public:
     float MaximumStamina() const {return FMath::Clamp(100.f+Attributes->GearMaxStamina.GetCurrentValue(),1.f,100000.f);}
     bool Alive() const { return Health() > 0 && !bPacified; }
     bool Ready() const;
+    // 仅供持有当前 Dodge 能力实例的提交复验；其他动作仍须使用 Ready()。
+    bool ReadyIgnoringDodgeTag() const;
     virtual bool AllowsGeneratedMotion() const;
     bool TryDodge();
     void RecordDodgeCommit();

@@ -28,6 +28,7 @@ private:
     float CommitAt=0;
     float EndsAt=0;
     FVector CommittedDirection=FVector::ZeroVector;
+    float CommittedImpulse=0;
     uint32 ActionSerial=0;
     uint64 DamageSerial=0;
     UPROPERTY(Replicated) bool bCommitted=false;

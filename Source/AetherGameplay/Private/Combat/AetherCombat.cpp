@@ -4,6 +4,7 @@
 #include "Definitions/AetherV10Definitions.h"
 #include "Skills/AetherSkillAbilityBinding.h"
 #include "Combat/AetherEquipmentMath.h"
+#include "Combat/AetherControlledActionDefinition.h"
 #include "Inventory/AetherResourceGate.h"
 #include "Equipment/AetherElementDamage.h"
 #include "Skills/AetherSkillDefinitions.h"
@@ -289,9 +290,11 @@ bool AAetherCharacter::TrySpell(int32 Spell)
 }
 
 bool AAetherCharacter::Ready() const
+{return ReadyIgnoringDodgeTag()&&!AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag());}
+bool AAetherCharacter::ReadyIgnoringDodgeTag() const
 { const auto* Player=Cast<AAetherFrontierCharacter>(this);
   if(Player&&Player->WorldActions&&Player->WorldActions->IsBusy())return false;
-  const float T = CombatTime(); return !ResourceGate->IsBlocked() && AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && !Equipment->IsBusy() && !AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag())&&!AbilitySystem->HasMatchingGameplayTag(AetherVault::ActiveTag()); }
+  const float T = CombatTime(); return ResourceGate&&!ResourceGate->IsBlocked() && AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && Equipment&&!Equipment->IsBusy() && !AbilitySystem->HasMatchingGameplayTag(AetherVault::ActiveTag()); }
 float AAetherCharacter::CombatTime() const
 { const auto* GS = GetWorld()->GetGameState(); return GS ? GS->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds(); }
 void AAetherCharacter::SetVitals(float HP, float MP, float SP)
@@ -417,7 +420,8 @@ bool AAetherCharacter::TryDodge()
 void AAetherCharacter::RecordDodgeCommit()
 {
     // 继续保留安全服务使用的最近战斗时间；实际成本与无敌窗口由能力效果负责。
-    if(HasAuthority())ActionUntil=CombatTime()+.55f;
+    if(HasAuthority())if(const auto* Definition=AetherControlledActions::Find(TEXT("DodgeForward")))
+        ActionUntil=CombatTime()+Definition->Duration;
 }
 void AAetherCharacter::ServerDodge_Implementation(){TryDodge();}
 void AAetherCharacter::ReceiveHit(float Damage,float PostureDamage,AAetherCharacter* Source,bool CanBlock)

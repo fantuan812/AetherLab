@@ -62,9 +62,12 @@ private:
     UFUNCTION() void FinishRecovery();
     UFUNCTION() void DirectionTimeout();
     void ReceiveDirection(const FGameplayAbilityTargetDataHandle& Data,FGameplayTag Tag);
+    bool CanCommitDodge(const AAetherCharacter* Character,const FGameplayAbilityActorInfo* Info,bool bOwnDodgeActive) const;
     void StartMotion(const FVector& Direction);
     FDelegateHandle DirectionDelegate;
     bool bMotionStarted=false;
+    bool bAwaitingDirection=false;
+    uint32 ActivationActionSerial=0;
     TWeakObjectPtr<AAetherCharacter> ActiveCharacter;
     TWeakObjectPtr<UAbilitySystemComponent> ActiveSystem;
     FActiveGameplayEffectHandle Invulnerability;
