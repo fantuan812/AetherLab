@@ -35,6 +35,17 @@ struct FAetherInspectStatusEffect
     // 单调的服务器同步时间；无期限效果不写结束时间，界面也不制造倒计时。
     TOptional<double> ExpiresAtServerSeconds;
 };
+struct FAetherEquipmentAttackPreview
+{
+    FString Id;
+    double Damage=0,PostureDamage=0,ReachCm=0,RadiusCm=0,DurationSeconds=0;
+};
+struct FAetherEquipmentPreview
+{
+    bool bAllowsGuard=false,bTwoHanded=false;
+    double GuardStaminaMultiplier=0,ParryWindowSeconds=0;
+    TArray<FAetherEquipmentAttackPreview> Attacks;
+};
 struct FAetherInspectionSnapshot
 {
     struct FInventoryLookup
@@ -55,6 +66,7 @@ struct FAetherInspectionSnapshot
     bool bCanAct=false;
     FAetherUseSummary UseSummary;
     TMap<FString,FAetherUseRule> UseRules;
+    TMap<FString,FAetherEquipmentPreview> EquipmentPreviews;
     FString TradeTargetStableId;
     TOptional<FAetherShopDefinitionV10> Shop;
     FAetherSkillStateV10 Skills;

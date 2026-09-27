@@ -6,6 +6,7 @@
 #include "Definitions/AetherV10Definitions.h"
 #include "Contracts/AetherTransaction.h"
 #include "Combat/AetherEquipmentMath.h"
+#include "AetherEquipmentComponent.h"
 #include "Inventory/AetherResourceGate.h"
 #include "Engine/LocalPlayer.h"
 
@@ -31,6 +32,21 @@ bool AetherNativeInventory::Snapshot(AAetherFrontierCharacter& C,int64 Revision,
     U.Health=C.Health();U.Mana=C.Mana();U.Stamina=C.Stamina();U.MaxHealth=C.MaxHealth;U.MaxMana=C.MaximumMana();U.MaxStamina=C.MaximumStamina();
     U.CooldownRemaining=FMath::Max(0.f,C.ResourceGate->UseReadyTime()-C.CombatTime());U.SafeForSeconds=C.TimeSinceDamage();
     for(const auto& Use:FAetherV10Definitions::Get().Rules.Uses)Out.UseRules.Add(Use.Key.ToString(),Use.Value);
+    if(C.Equipment&&C.Equipment->Catalog)
+    {
+        for(const auto& Pair:FAetherV10Definitions::Get().Items.Items)
+        {
+            const FString& Id=Pair.Value.EquipmentId;if(Id.IsEmpty()||Out.EquipmentPreviews.Contains(Id))continue;
+            const auto* Equipment=C.Equipment->Catalog->Find(FName(*Id));if(!Equipment)continue;
+            FAetherEquipmentPreview Preview;Preview.bAllowsGuard=Equipment->bAllowsGuard;
+            Preview.bTwoHanded=Equipment->bOccupiesBothHands;
+            Preview.GuardStaminaMultiplier=Equipment->GuardStaminaMultiplier;
+            Preview.ParryWindowSeconds=Equipment->ParryWindowSeconds;
+            for(const auto& Attack:Equipment->Attacks)
+                Preview.Attacks.Add({Attack.Id.ToString(),Attack.Damage,Attack.PostureDamage,Attack.ReachCm,Attack.RadiusCm,Attack.Duration()});
+            Out.EquipmentPreviews.Add(Id,MoveTemp(Preview));
+        }
+    }
     if(auto* W=C.GetWorld()->GetGameState<AAetherFrontierState>())Out.WorldRevision=W->NativeWorldRevision;
     const auto Shop=C.ActiveShop();const auto* Definition=FAetherV10Definitions::Get().Economy.Shops.Find(Shop.ToString());
     if(!Shop.IsNone()&&Definition&&C.TradeSession.Target.IsValid())

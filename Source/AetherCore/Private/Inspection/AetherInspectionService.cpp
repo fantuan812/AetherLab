@@ -51,27 +51,91 @@ const FAetherV10ItemInstance* FAetherInspectionSnapshot::Find(FGuid Id,bool bCon
 
 namespace
 {
-void Field(FAetherInspectionModel& M,const TCHAR* Key,const TCHAR* Label,FString Value)
-{M.Fields.Add({Key,Label,MoveTemp(Value)});}
+void Field(FAetherInspectionModel& M,FString Key,FString Label,FString Value)
+{M.Fields.Add({MoveTemp(Key),MoveTemp(Label),MoveTemp(Value)});}
 void Action(FAetherInspectionModel& M,EAetherInspectAction Kind,FString Argument,const TCHAR* Label,
     bool Enabled,FString Reason={},int32 Max=1,bool Confirm=false)
 {M.Actions.Add({Kind,MoveTemp(Argument),Label,MoveTemp(Reason),Max,Enabled,Confirm});}
 void Invalid(FAetherInspectionModel& M,const TCHAR* Message)
 {M.State=EAetherInspectionState::Invalid;M.Message=Message;M.Actions.Reset();}
-void DefinitionFields(FAetherInspectionModel& M,const FAetherV10ItemDefinition& D)
+FString DisplayId(const FString& Id)
+{
+    static const TMap<FString,FString> Names={
+        {TEXT("Consumable"),TEXT("消耗品")},{TEXT("Weapon"),TEXT("武器")},{TEXT("Shield"),TEXT("盾牌")},
+        {TEXT("Armor"),TEXT("防具")},{TEXT("Accessory"),TEXT("饰品")},{TEXT("Material"),TEXT("材料")},
+        {TEXT("MainHand"),TEXT("主手")},{TEXT("OffHand"),TEXT("副手")},{TEXT("Head"),TEXT("头部")},
+        {TEXT("Chest"),TEXT("胸部")},{TEXT("Hands"),TEXT("手部")},{TEXT("Legs"),TEXT("腿部")},
+        {TEXT("Feet"),TEXT("足部")},{TEXT("Neck"),TEXT("项链")},{TEXT("Ring1"),TEXT("戒指一")},
+        {TEXT("Ring2"),TEXT("戒指二")},{TEXT("MaxHealth"),TEXT("生命上限")},
+        {TEXT("MaxMana"),TEXT("法力上限")},{TEXT("MaxStamina"),TEXT("耐力上限")},
+        {TEXT("FrostResist"),TEXT("冰霜抗性")},{TEXT("WaterResist"),TEXT("水系抗性")},
+        {TEXT("Light"),TEXT("轻击")},{TEXT("Heavy"),TEXT("重击")}};
+    if(const FString* Name=Names.Find(Id))return *Name;
+    return Id;
+}
+void DynamicUseFields(FAetherInspectionModel& M,const FAetherV10ItemDefinition& D,const FAetherInspectionSnapshot& S)
+{
+    if(D.UseId.IsEmpty())return;
+    const auto* Rule=S.UseRules.Find(D.UseId);
+    if(!Rule)return;
+    if(S.UseSummary.bKnown)
+    {
+        Field(M,TEXT("benefit"),TEXT("当前预计实际恢复"),FString::Printf(TEXT("生命 %.0f / 法力 %.0f / 耐力 %.0f"),
+            FMath::Clamp(Rule->Health,0.,FMath::Max(0.,S.UseSummary.MaxHealth-S.UseSummary.Health)),
+            FMath::Clamp(Rule->Mana,0.,FMath::Max(0.,S.UseSummary.MaxMana-S.UseSummary.Mana)),
+            FMath::Clamp(Rule->Stamina,0.,FMath::Max(0.,S.UseSummary.MaxStamina-S.UseSummary.Stamina))));
+        Field(M,TEXT("cooldownRemaining"),TEXT("当前共享冷却剩余"),FString::Printf(TEXT("%.1f 秒"),S.UseSummary.CooldownRemaining));
+    }
+    else Field(M,TEXT("benefit"),TEXT("当前预计实际恢复"),TEXT("等待角色资源信息"));
+}
+void DefinitionFields(FAetherInspectionModel& M,const FAetherV10ItemDefinition& D,const FAetherInspectionSnapshot& S)
 {
     M.Title=D.DisplayName;M.IconId=D.IconId;M.Category=D.Category;
-    Field(M,TEXT("category"),TEXT("类别"),D.Category);
-    Field(M,TEXT("use"),TEXT("用途"),D.UseId.IsEmpty()?TEXT("不可直接使用"):D.UseId);
+    Field(M,TEXT("category"),TEXT("类别"),DisplayId(D.Category));
     if(!D.UseId.IsEmpty())
     {
-        // 原生定义尚未提供动态使用快照，不能把未知的冷却显示为零或启用未经校验的使用按钮。
-        Field(M,TEXT("cooldown"),TEXT("使用冷却"),TEXT("暂不可用"));
-        Field(M,TEXT("restriction"),TEXT("使用限制"),TEXT("需要满足当前生命、资源和动作条件"));
+        if(const auto* Rule=S.UseRules.Find(D.UseId))
+        {
+            Field(M,TEXT("use"),TEXT("基础恢复"),FString::Printf(TEXT("生命 %.0f / 法力 %.0f / 耐力 %.0f"),Rule->Health,Rule->Mana,Rule->Stamina));
+            Field(M,TEXT("cooldown"),TEXT("基础共享冷却"),FString::Printf(TEXT("%.1f 秒"),Rule->Cooldown));
+            Field(M,TEXT("restriction"),TEXT("基础使用条件"),FString::Printf(TEXT("受击后至少等待 %.1f 秒；仍需满足资源和动作条件"),Rule->SafeSeconds));
+        }
+        else Field(M,TEXT("use"),TEXT("基础用途"),TEXT("使用规则尚未加载"));
+        DynamicUseFields(M,D,S);
     }
-    if(!D.AllowedSlots.IsEmpty())Field(M,TEXT("slots"),TEXT("可装备槽"),FString::Join(D.AllowedSlots,TEXT(" / ")));
-    if(!D.AdditionalOccupiedSlots.IsEmpty())Field(M,TEXT("occupied"),TEXT("额外占用"),FString::Join(D.AdditionalOccupiedSlots,TEXT(" / ")));
-    Field(M,TEXT("source"),TEXT("来源"),TEXT("暂无来源记录"));
+    if(!D.AllowedSlots.IsEmpty())
+    {
+        TArray<FString> Slots;for(const FString& Slot:D.AllowedSlots)Slots.Add(DisplayId(Slot));
+        Field(M,TEXT("slots"),TEXT("可装备槽"),FString::Join(Slots,TEXT(" / ")));
+    }
+    if(!D.AdditionalOccupiedSlots.IsEmpty())
+    {
+        TArray<FString> Slots;for(const FString& Slot:D.AdditionalOccupiedSlots)Slots.Add(DisplayId(Slot));
+        Field(M,TEXT("occupied"),TEXT("额外占用"),FString::Join(Slots,TEXT(" / ")));
+    }
+    if(!D.Stats.IsEmpty())
+    {
+        TArray<FString> Keys;D.Stats.GenerateKeyArray(Keys);Keys.Sort();
+        for(const FString& Key:Keys)
+        {
+            const FString Label=Key==TEXT("Armor")?TEXT("护甲"):DisplayId(Key);
+            Field(M,TEXT("stat:")+Key,FString(TEXT("本件基础附加 · "))+Label,FString::Printf(TEXT("%+.1f"),D.Stats.FindChecked(Key)));
+        }
+    }
+    if(!D.EquipmentId.IsEmpty())
+    {
+        if(const auto* Equipment=S.EquipmentPreviews.Find(D.EquipmentId))
+        {
+            if(Equipment->bTwoHanded)Field(M,TEXT("twoHanded"),TEXT("持握"),TEXT("双手；占用副手"));
+            if(Equipment->bAllowsGuard)
+                Field(M,TEXT("guard"),TEXT("格挡基础"),FString::Printf(TEXT("耐力消耗系数 %.2f；招架窗口 %.2f 秒"),Equipment->GuardStaminaMultiplier,Equipment->ParryWindowSeconds));
+            for(const auto& Attack:Equipment->Attacks)
+                Field(M,TEXT("attack:")+Attack.Id,TEXT("基础动作 · ")+DisplayId(Attack.Id),
+                    FString::Printf(TEXT("基础伤害 %.1f · 姿态伤害 %.1f · 时长 %.2f 秒 · 距离 %.0f 厘米 · 半径 %.0f 厘米"),
+                        Attack.Damage,Attack.PostureDamage,Attack.DurationSeconds,Attack.ReachCm,Attack.RadiusCm));
+        }
+        else Field(M,TEXT("equipmentPending"),TEXT("装备动作"),TEXT("装备定义尚未加载，基础动作数据暂不可用"));
+    }
 }
 void Compare(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FAetherV10ItemDefinitions& D)
 {
@@ -88,12 +152,12 @@ void Compare(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const 
     const auto Before=S.Inventory.EquippedStats(D),After=Candidate.EquippedStats(D);
     TSet<FString> Keys;for(const auto& P:Before)Keys.Add(P.Key);for(const auto& P:After)Keys.Add(P.Key);
     TArray<FString> Ordered=Keys.Array();Ordered.Sort();
-    for(const auto& Key:Ordered)M.Comparison.Add({Key,Before.FindRef(Key),After.FindRef(Key)});
+    for(const auto& Key:Ordered)M.Comparison.Add({Key==TEXT("Armor")?TEXT("护甲"):DisplayId(Key),Before.FindRef(Key),After.FindRef(Key)});
     // 双手替换的副手也必须列出，而非只比较目标格子的单件数据。
     for(const auto& P:S.Inventory.Equipment)
         if(!Candidate.IsEquipped(P.Value))M.DisplacedInstances.AddUnique(P.Value);
     M.DisplacedInstances.Sort([](const FGuid& A,const FGuid& B){return A.ToString()<B.ToString();});
-    M.ComparisonMessage=TEXT("比较装备附加总值；正负差异包含耐久折减和所有被卸下的装备。");
+    M.ComparisonMessage=TEXT("换装后属性变化：仅比较装备附加值，包含耐久折减及卸装；不计算最终伤害或战斗强弱。");
     const auto Grants=[&](const FAetherInventoryStateV10& Inventory)
     {
         TMap<FString,int32> R;TSet<FGuid> Seen;
@@ -128,7 +192,7 @@ void Item(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FAe
     if(!I){M.State=EAetherInspectionState::Changed;M.Message=TEXT("对象已变化或已移出库存，请重新选择。");return;}
     if(!T.DefinitionId.IsEmpty()&&!T.DefinitionId.Equals(I->DefinitionId,ESearchCase::CaseSensitive))
     {M.State=EAetherInspectionState::Changed;M.Message=TEXT("对象定义已变化，请重新选择。");return;}
-    const auto& Def=D.Items.FindChecked(I->DefinitionId);DefinitionFields(M,Def);M.Item=*I;
+    const auto& Def=D.Items.FindChecked(I->DefinitionId);DefinitionFields(M,Def,S);M.Item=*I;
     Field(M,TEXT("quantity"),TEXT("数量"),FString::FromInt(I->Quantity));
     Field(M,TEXT("quality"),TEXT("品质元数据（不提供战斗加成）"),FString::FromInt(I->Quality));
     if(!I->Affixes.IsEmpty())Field(M,TEXT("affixes"),TEXT("词条"),TEXT("保存的实例元数据；当前不参与战斗数值。"));
@@ -157,17 +221,6 @@ void Item(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FAe
         const auto Static=AetherItemEligibility::Query(S.Inventory,I->InstanceId,S.Context.OwnerIdentity,EAetherItemOperation::Use,D);
         const auto* Rule=S.UseRules.Find(Def.UseId);
         const auto Use=Rule?AetherItemEligibility::QueryUse(*Rule,S.UseSummary):EAetherUseAvailability::Unknown;
-        M.Fields.RemoveAll([](const auto& F){return F.Key==TEXT("use")||F.Key==TEXT("cooldown");});
-        if(Rule)
-        {
-            Field(M,TEXT("use"),TEXT("恢复量"),FString::Printf(TEXT("生命 %.0f / 法力 %.0f / 耐力 %.0f"),Rule->Health,Rule->Mana,Rule->Stamina));
-            Field(M,TEXT("safe"),TEXT("使用条件"),FString::Printf(TEXT("受击后等待 %.1f 秒；药剂共享冷却 %.1f 秒"),Rule->SafeSeconds,Rule->Cooldown));
-            if(S.UseSummary.bKnown)Field(M,TEXT("benefit"),TEXT("预计实际恢复"),FString::Printf(TEXT("生命 %.0f / 法力 %.0f / 耐力 %.0f"),
-                FMath::Clamp(Rule->Health,0.,FMath::Max(0.,S.UseSummary.MaxHealth-S.UseSummary.Health)),
-                FMath::Clamp(Rule->Mana,0.,FMath::Max(0.,S.UseSummary.MaxMana-S.UseSummary.Mana)),
-                FMath::Clamp(Rule->Stamina,0.,FMath::Max(0.,S.UseSummary.MaxStamina-S.UseSummary.Stamina))));
-        }
-        Field(M,TEXT("cooldown"),TEXT("共享冷却剩余"),S.UseSummary.bKnown?FString::Printf(TEXT("%.1f 秒"),S.UseSummary.CooldownRemaining):TEXT("等待同步"));
         Action(M,EAetherInspectAction::Use,{},TEXT("使用"),Static==EAetherInventoryMutationCode::Applied&&Use==EAetherUseAvailability::Allowed,
             Static==EAetherInventoryMutationCode::Applied?AetherItemEligibility::UseReason(Use):AetherInspection::InventoryReason(Static));
     }
@@ -363,7 +416,7 @@ FAetherInspectionModel AetherInspection::Build(const FAetherInspectRequest& R,co
         FString Reason;if(!Items.Validate(Reason)){Invalid(M,TEXT("物品定义无效。"));break;}
         if(const auto* D=Items.Items.Find(R.Target.DefinitionId);D&&D->Id.Equals(R.Target.DefinitionId,ESearchCase::CaseSensitive))
         {
-            DefinitionFields(M,*D);
+            DefinitionFields(M,*D,S);
             if(S.Shop.IsSet()&&S.Shop->Products.Contains(D->Id)&&!S.TradeTargetStableId.IsEmpty()&&D->BuyPrice>0)
             {
                 Field(M,TEXT("buyPrice"),TEXT("单件价格"),FString::FromInt(D->BuyPrice));
