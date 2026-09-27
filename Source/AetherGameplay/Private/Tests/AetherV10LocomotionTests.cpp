@@ -92,6 +92,16 @@ bool FAetherLocomotionTest::RunTest(const FString&)
     TestFalse(TEXT("Release clears sprint intent"),M->bWantsSprint);
     TestFalse(TEXT("Canceled attack cannot fire on later release"),C->bAttackHeld);
 
+    C->ToggleCrouchInput();M->UpdateCharacterStateBeforeMovement(.016f);
+    TestTrue(TEXT("Toggle source crouches"),C->IsCrouched()&&C->bCrouchToggled);
+    C->SetCrouchInput(true);C->ToggleCrouchInput();M->UpdateCharacterStateBeforeMovement(.016f);
+    TestTrue(TEXT("Held keyboard source keeps crouch after toggle clears"),C->IsCrouched()&&C->bCrouchHeld&&!C->bCrouchToggled);
+    C->SetCrouchInput(false);M->UpdateCharacterStateBeforeMovement(.016f);
+    TestFalse(TEXT("Both intent sources released stands"),C->IsCrouched());
+    C->ToggleCrouchInput();M->UpdateCharacterStateBeforeMovement(.016f);
+    C->ReleaseHeldInput();M->UpdateCharacterStateBeforeMovement(.016f);
+    TestFalse(TEXT("Lifecycle clear removes toggle intent"),C->bCrouchToggled||C->bCrouchHeld||C->IsCrouched());
+
     FSavedMovePtr Off(new FAetherSavedMove()),On(new FAetherSavedMove());
     auto* SprintMove=static_cast<FAetherSavedMove*>(On.Get());SprintMove->bSavedWantsSprint=true;
     TestTrue(TEXT("Sprint intent encoded in movement packet"),(SprintMove->GetCompressedFlags()&FSavedMove_Character::FLAG_Custom_0)!=0);

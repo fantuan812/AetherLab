@@ -236,7 +236,7 @@ void UAetherInventoryPage::Refresh()
     const auto Available=[&](int32 N){return Cells.IsValidIndex(N)&&!Cells[N]->IsFiltered()&&Cells[N]->GetIsEnabled();};
     for(int32 N=0;N<Cells.Num();++N)
     {
-        const auto Find=[&](int32 DX,int32 DY)
+        const auto Find=[&](int32 DX,int32 DY)->int32
         {
             const int32 Row=N/Columns,Column=N%Columns;
             if(DX)for(int32 X=Column+DX;X>=0&&X<Columns;X+=DX){const int32 I=Row*Columns+X;if(Available(I))return I;}

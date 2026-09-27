@@ -14,6 +14,127 @@
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Preview/AetherCharacterPreviewSubsystem.h"
 #include "Engine/LocalPlayer.h"
+#include "UI/AetherMenuRoot.h"
+#include "UI/AetherRecoveryLayer.h"
+#include "Inventory/AetherInventoryPage.h"
+#include "Inventory/AetherInventoryCell.h"
+#include "Components/EditableTextBox.h"
+#include "Components/UniformGridPanel.h"
+#include "Components/WidgetSwitcher.h"
+#include "Widgets/CommonActivatableWidgetContainer.h"
+#include "Widgets/Input/SEditableTextBox.h"
+
+#if !UE_BUILD_SHIPPING
+namespace
+{
+// Controlled fixtures establish downed state; UI recovery still uses real Slate input and the production service.
+void TickClosureLight(AAetherFrontierHUD* HUD,UAetherFrontierPanel* Panel)
+{
+ static int32 Step=0;static float Next=0,BeforeStamina=0;static bool SearchSet=false;
+ static TWeakObjectPtr<AAetherFrontierCharacter> DownedPawn;
+ static TWeakObjectPtr<UAetherRecoveryLayer> OldLayer;
+ auto* PC=HUD->GetOwningPlayerController();auto* C=Cast<AAetherFrontierCharacter>(PC->GetPawn());
+ auto* Menu=PC->GetLocalPlayer()->GetSubsystem<UAetherMenuSubsystem>();
+ const float Now=HUD->GetWorld()->GetTimeSeconds();if(Now<Next)return;
+ const auto Check=[&](bool Value,const TCHAR* Name)
+ {
+  UE_LOG(LogTemp,Display,TEXT("CLOSURE_LIGHT_%s step=%d %s"),Value?TEXT("PASS"):TEXT("FAIL"),Step,Name);
+  if(!Value){UE_LOG(LogTemp,Error,TEXT("V10_MENU_INTERACTION_FAIL"));FPlatformMisc::RequestExitWithStatus(false,1);}
+  return Value;
+ };
+ const auto Key=[&](FKey K,bool Press){PC->InputKey(FInputKeyEventArgs::CreateSimulated(K,Press?IE_Pressed:IE_Released,Press?1.f:0.f));};
+ const auto Recovery=[&]()->UAetherRecoveryLayer*
+ {auto* Stack=Cast<UCommonActivatableWidgetStack>(HUD->MenuRoot->GetWidgetFromName(TEXT("MainStack")));return Stack?Cast<UAetherRecoveryLayer>(Stack->GetActiveWidget()):nullptr;};
+ const auto UIKey=[&](UAetherRecoveryLayer* Layer,FKey K)
+ {Layer->SetKeyboardFocus();return FSlateApplication::Get().ProcessKeyDownEvent(FKeyEvent(K,FModifierKeysState(),0,false,0,0));};
+ switch(Step)
+ {
+ case 0:
+  if(!C||!C->Ready()||Menu->IsOpen())return;
+  C->SelectedSpell=2;BeforeStamina=C->Stamina();Key(EKeys::Gamepad_LeftShoulder,true);break;
+ case 1:
+  if(!Check(C&&!C->IsCrouched()&&!C->bCrouchToggled,TEXT("LB modifier has no crouch side effect")))return;
+  Key(EKeys::Gamepad_DPad_Up,true);break;
+ case 2:
+  if(!Check(C->SelectedSpell==2&&!C->IsCrouched(),TEXT("LB+DPad does not select base skill or crouch")))return;
+  Key(EKeys::Gamepad_DPad_Up,false);Key(EKeys::Gamepad_FaceButton_Right,true);break;
+ case 3:
+  if(!Check(C->IsCrouched()&&C->bCrouchToggled&&C->Stamina()>=BeforeStamina-.1f,TEXT("LB+B crouches without dodge cost")))return;
+  Key(EKeys::Gamepad_FaceButton_Right,false);break;
+ case 4: Key(EKeys::Gamepad_FaceButton_Right,true);break;
+ case 5:
+  if(!Check(!C->IsCrouched()&&!C->bCrouchToggled,TEXT("Second LB+B safely stands")))return;
+  Key(EKeys::Gamepad_FaceButton_Right,false);Key(EKeys::Gamepad_LeftShoulder,false);break;
+ case 6:
+  if(!C->Ready())return;BeforeStamina=C->Stamina();Key(EKeys::Gamepad_FaceButton_Right,true);break;
+ case 7:
+  if(!Check(C->Stamina()<BeforeStamina-1&&!C->bCrouchToggled,TEXT("B without LB remains dodge")))return;
+  Key(EKeys::Gamepad_FaceButton_Right,false);break;
+ case 8:
+  if(!C->Ready())return;Menu->OpenPage(EAetherMenuPage::Inventory);break;
+ case 9:
+ {
+  auto* Host=Cast<UWidgetSwitcher>(Panel->GetWidgetFromName(TEXT("PageHost")));
+  auto* Page=Host?Cast<UAetherInventoryPage>(Host->GetActiveWidget()):nullptr;
+  auto* Search=Page?Cast<UEditableTextBox>(Page->GetWidgetFromName(TEXT("Search"))):nullptr;
+  auto* Grid=Page?Cast<UUniformGridPanel>(Page->GetWidgetFromName(TEXT("Grid"))):nullptr;
+  if(!Check(Search&&Grid&&Grid->GetChildrenCount()>0,TEXT("Production inventory search and grid available")))return;
+  if(!SearchSet)
+  {
+   Grid->GetChildAt(0)->SetUserFocus(PC);
+   if(!Check(Grid->GetChildAt(0)->HasUserFocus(PC),TEXT("Inventory cell owns focus before filtering")))return;
+   // UEditableTextBox::SetText in UE 5.8 intentionally does not emit OnTextChanged.
+   // Change the Slate text to exercise the real UMG text-change handler while a cell owns focus.
+   StaticCastSharedRef<SEditableTextBox>(Search->TakeWidget())->SetText(FText::FromString(TEXT("__closure_no_match__")));
+   SearchSet=true;Next=Now+.35f;return;
+  }
+  bool AllFiltered=true;for(auto* Child:Grid->GetAllChildren()){const auto* Cell=Cast<UAetherInventoryCell>(Child);AllFiltered&=Cell&&Cell->IsFiltered();}
+  UE_LOG(LogTemp,Display,TEXT("CLOSURE_LIGHT_SEARCH filtered=%d outerFocus=%d innerFocus=%d cellFocus=%d"),AllFiltered,Search->HasUserFocus(PC),Search->HasUserFocusedDescendants(PC),Grid->GetChildAt(0)->HasUserFocus(PC));
+  // SEditableTextBox forwards user focus to its inner SEditableText.
+  if(!Check(AllFiltered&&(Search->HasUserFocus(PC)||Search->HasUserFocusedDescendants(PC)),TEXT("Filtering every slot restores search focus")))return;
+  StaticCastSharedRef<SEditableTextBox>(Search->TakeWidget())->SetText(FText::GetEmpty());Menu->Close();break;
+ }
+ case 10:
+  if(!C->Ready())return;DownedPawn=C;C->CombatRuntime->LastDamageAt=C->CombatTime();C->SetVitals(0,C->Mana(),C->Stamina());break;
+ case 11:
+ {
+  auto* Layer=Recovery();
+  if(!Check(C==DownedPawn.Get()&&!C->Alive()&&Layer&&Layer->IsActivated()&&Menu->GetPage()==EAetherMenuPage::Recovery&&!C->bRecoveryAvailable,TEXT("Downed layer owns focus during server wait")))return;
+  FString Dir;FParse::Value(FCommandLine::Get(),TEXT("AetherMenuCaptureDir="),Dir);
+  FScreenshotRequest::RequestScreenshot(Dir/TEXT("ClosureDowned.png"),true,false);
+  OldLayer=Layer;UIKey(Layer,EKeys::Gamepad_FaceButton_Top);break;
+ }
+ case 12:
+  if(!Check(C==DownedPawn.Get()&&!C->bRecoveryRequested,TEXT("Early recovery input cannot bypass server wait")))return;
+  if(!Check(Recovery()&&UIKey(Recovery(),EKeys::Escape)&&UIKey(Recovery(),EKeys::Gamepad_FaceButton_Right)&&Menu->GetPage()==EAetherMenuPage::Recovery&&Recovery()->IsActivated(),TEXT("Escape and gamepad B cannot dismiss downed layer")))return;
+  break;
+ case 13:
+  if(!C->bRecoveryAvailable)return;
+  if(!Check(Recovery()&&UIKey(Recovery(),EKeys::Gamepad_FaceButton_Top),TEXT("Gamepad Y reaches recovery through Slate")))return;
+  if(OldLayer.IsValid())OldLayer->NativeOnPreviewKeyDown(FGeometry(),FKeyEvent(EKeys::Gamepad_FaceButton_Top,FModifierKeysState(),0,false,0,0));
+  break;
+ case 14:
+  if(!C||C==DownedPawn.Get()||!C->Ready())return;
+  if(!Check(C->Alive()&&!Menu->IsOpen()&&!PC->bShowMouseCursor&&!C->bRecoveryRequested,TEXT("Recovery replaces pawn and restores game input exactly once")))return;
+  if(OldLayer.IsValid())OldLayer->NativeOnPreviewKeyDown(FGeometry(),FKeyEvent(EKeys::Gamepad_FaceButton_Top,FModifierKeysState(),0,false,0,0));
+  DownedPawn=C;break;
+ case 15:
+  if(!Check(C==DownedPawn.Get()&&C->Alive(),TEXT("Late old-layer confirmation cannot affect new pawn")))return;
+  C->CombatRuntime->LastDamageAt=C->CombatTime();C->SetVitals(0,C->Mana(),C->Stamina());break;
+ case 16:
+  if(!Check(Recovery()&&Menu->IsOpen(),TEXT("Second downed life opens a fresh layer")))return;
+  OldLayer=Recovery();C->SetVitals(50,C->Mana(),C->Stamina());break;
+ case 17:
+  if(!Check(C==DownedPawn.Get()&&C->Alive()&&!Menu->IsOpen(),TEXT("Rescue state closes layer without respawning")))return;
+  if(OldLayer.IsValid())OldLayer->NativeOnPreviewKeyDown(FGeometry(),FKeyEvent(EKeys::Gamepad_FaceButton_Top,FModifierKeysState(),0,false,0,0));break;
+ default:
+  if(!Check(C==DownedPawn.Get()&&C->Alive()&&!Menu->IsOpen(),TEXT("Stale rescue confirmation is ignored")))return;
+  UE_LOG(LogTemp,Display,TEXT("V10_MENU_INTERACTION_PASS closure=1 cycles=0 native=1"));FPlatformMisc::RequestExit(false);return;
+ }
+ ++Step;Next=Now+.35f;
+}
+}
+#endif
 
 void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* Panel)
 {
@@ -150,6 +271,7 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   if(!Check(FocusedKey(EKeys::Gamepad_FaceButton_Right),TEXT("Gamepad Menu return")))return;break;
  default:
   {
+   if(FParse::Param(FCommandLine::Get(),TEXT("AetherClosureLight"))){TickClosureLight(HUD,Panel);return;}
    // 每一轮跨真实 Slate 帧开/关一次，验证 LocalPlayer 所有权和预览释放；没有新建测试 Widget。
    static int32 MenuCycles=0;
    if(MenuCycles>=200){

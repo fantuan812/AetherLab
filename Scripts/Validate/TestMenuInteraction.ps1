@@ -1,7 +1,8 @@
 param(
  [string]$EngineRoot='C:\Program Files\Epic Games\UE_5.8',
  [int]$Width=1280,
- [int]$Height=720
+ [int]$Height=720,
+ [switch]$ClosureLight
 )
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -19,6 +20,7 @@ try {
   '-RenderOffscreen','-ForceRes','-windowed',"-ResX=$Width","-ResY=$Height",
   '-unattended','-nosound','-nop4','-NoVSync',
   '-ExecCmds="t.MaxFPS 30,r.ScreenPercentage 75"',"-abslog=$taskLog")
+ if($ClosureLight){$taskArgs+='-AetherClosureLight'}
  $taskProcess=Start-Process -FilePath (Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor.exe') -ArgumentList $taskArgs -PassThru -WindowStyle Hidden
  $taskDeadline=(Get-Date).AddSeconds(90)
  while(!$taskProcess.HasExited){
@@ -29,8 +31,10 @@ try {
  if($taskProcess.ExitCode -ne 0 -or !(Select-String -LiteralPath $taskLog -Pattern 'V10_MENU_INTERACTION_PASS' -Quiet)){
   throw "Menu interaction failed: $taskLog"
  }
- if(Select-String -LiteralPath $taskLog -Pattern 'V10_MENU_INTERACTION_FAIL|Fatal error:' -Quiet){throw "Menu interaction failed: $taskLog"}
- foreach($taskImage in @('Inventory.png','Journal.png','Map.png','NewPawn.png','Skills.png','Party.png','Settings.png')){
+ if(Select-String -LiteralPath $taskLog -Pattern 'V10_MENU_INTERACTION_FAIL|Fatal error:|Ensure condition failed|LogUIActionRouter: Error:' -Quiet){throw "Menu interaction failed: $taskLog"}
+ $taskImageNames=@('Inventory.png','Journal.png','Map.png','NewPawn.png','Skills.png','Party.png','Settings.png')
+ if($ClosureLight){$taskImageNames+='ClosureDowned.png'}
+ foreach($taskImage in $taskImageNames){
   $taskPath=Join-Path $taskImages $taskImage
   if(!(Test-Path -LiteralPath $taskPath) -or (Get-Item -LiteralPath $taskPath).LastWriteTime -lt $taskProcess.StartTime){throw "Missing fresh capture: $taskPath"}
   # Windows 远程桌面可能把大窗口限制为桌面可用尺寸；验 PNG 实际尺寸，不能只信 -ResX/-ResY。

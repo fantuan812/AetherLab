@@ -7,7 +7,12 @@
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
 using namespace AetherPageWidgets;
-UAetherRecoveryLayer::UAetherRecoveryLayer(){bIsModal=true;bIsBackHandler=true;SetIsFocusable(true);}
+UAetherRecoveryLayer::UAetherRecoveryLayer()
+{
+    bIsModal=true;
+    // Esc/B are consumed in NativeOnPreviewKeyDown; no default CommonUI back action is configured.
+    bIsBackHandler=false;SetIsFocusable(true);
+}
 TSharedRef<SWidget> UAetherRecoveryLayer::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);

@@ -4,7 +4,10 @@
   "candidateCommit": null,
   "candidateState": "not_frozen",
   "implementationRecord": "Docs/Planning/Closure-121242c-implementation.zh-CN.md",
-  "compile": "not_run",
+  "compile": "passed",
+  "compileScope": "local_incremental_editor_with_preserved_user_config",
+  "lightFunctionalAcceptance": "passed",
+  "lightFunctionalRecord": "Docs/Acceptance/Closure-light-2026-09-27.zh-CN.md",
   "functionalAcceptance": "not_run",
   "renderedJourneyKeyboardMouse": "not_run",
   "renderedJourneyGamepad": "not_run",
@@ -15,5 +18,7 @@
   "linuxServerPackage": "not_run",
   "licenseReview": "not_run",
   "releaseAccepted": false,
-  "evidence": []
+  "evidence": [
+    "Docs/Acceptance/Closure-light-2026-09-27.zh-CN.md"
+  ]
 }
