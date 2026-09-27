@@ -75,9 +75,9 @@ struct FAetherInspectionSnapshot
     TArray<FAetherInspectStatusEffect> StatusEffects;
     double ServerTimeSeconds=0;
     FInventoryLookup InventoryLookup,ContainerLookup;
-    void RebuildLookup();
-    const FAetherV10ItemInstance* At(int32 Slot,bool bContainer=false) const;
-    const FAetherV10ItemInstance* Find(FGuid Id,bool bContainer=false) const;
+    AETHERCORE_API void RebuildLookup();
+    AETHERCORE_API const FAetherV10ItemInstance* At(int32 Slot,bool bContainer=false) const;
+    AETHERCORE_API const FAetherV10ItemInstance* Find(FGuid Id,bool bContainer=false) const;
 };
 enum class EAetherInspectionState:uint8 {Ready,Changed,Missing,Invalid};
 enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill,Use,Split,Sell,Buy,Repair,Deposit,Withdraw,ResetSkills};

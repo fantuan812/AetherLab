@@ -231,10 +231,12 @@ void UAetherInventoryPage::Refresh()
         Cells[SlotValue]->Present(AetherInspection::Pin(Snapshot,Target),SlotValue,Label,Def?Def->IconId:FString(),Filtered,I&&I->InstanceId==C->SelectedInstance);
         Cells[SlotValue]->SetItemState(I,Def,I&&Snapshot.Inventory.IsEquipped(I->InstanceId));
         // Let spatial navigation cross region boundaries; never wrap back into the same grid.
-        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Left,SlotValue%Columns==0?EUINavigationRule::Escape:EUINavigationRule::Automatic);
-        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Right,SlotValue%Columns==Columns-1||SlotValue==Cells.Num()-1?EUINavigationRule::Escape:EUINavigationRule::Automatic);
-        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Up,SlotValue<Columns?EUINavigationRule::Escape:EUINavigationRule::Automatic);
-        Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Down,SlotValue+Columns>=Cells.Num()?EUINavigationRule::Escape:EUINavigationRule::Automatic);
+        const auto Nav=[&](EUINavigation Direction,int32 Neighbor)
+        {if(Cells.IsValidIndex(Neighbor))Cells[SlotValue]->SetNavigationRuleExplicit(Direction,Cells[Neighbor]);
+         else Cells[SlotValue]->SetNavigationRuleBase(Direction,EUINavigationRule::Escape);};
+        Nav(EUINavigation::Left,SlotValue%Columns==0?INDEX_NONE:SlotValue-1);
+        Nav(EUINavigation::Right,SlotValue%Columns==Columns-1?INDEX_NONE:SlotValue+1);
+        Nav(EUINavigation::Up,SlotValue-Columns);Nav(EUINavigation::Down,SlotValue+Columns);
     }
     if(EquipmentCells.Num()!=D.Items.Slots.Num())
     {Equipment->ClearChildren();EquipmentCells.Reset();for(int32 I=0;I<D.Items.Slots.Num();++I)EquipmentCells.Add(MakeCell(Equipment,I,2));}
@@ -260,10 +262,12 @@ void UAetherInventoryPage::Refresh()
         FAetherInspectTarget T;T.ContainerId=Container->ContainerId;T.SlotId=LexToString(N);if(Item)T.InstanceId=Item->InstanceId;
         ContainerCells[N]->Present(AetherInspection::Pin(Snapshot,T),N,Def?Def->DisplayName:TEXT("空"),Def?Def->IconId:FString(),false,false);
         ContainerCells[N]->SetItemState(Item,Def);
-        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Left,N%Columns==0?EUINavigationRule::Escape:EUINavigationRule::Automatic);
-        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Right,N%Columns==Columns-1||N==Count-1?EUINavigationRule::Escape:EUINavigationRule::Automatic);
-        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Up,N<Columns?EUINavigationRule::Escape:EUINavigationRule::Automatic);
-        ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Down,N+Columns>=Count?EUINavigationRule::Escape:EUINavigationRule::Automatic);
+        const auto Nav=[&](EUINavigation Direction,int32 Neighbor)
+        {if(ContainerCells.IsValidIndex(Neighbor))ContainerCells[N]->SetNavigationRuleExplicit(Direction,ContainerCells[Neighbor]);
+         else ContainerCells[N]->SetNavigationRuleBase(Direction,EUINavigationRule::Escape);};
+        Nav(EUINavigation::Left,N%Columns==0?INDEX_NONE:N-1);
+        Nav(EUINavigation::Right,N%Columns==Columns-1?INDEX_NONE:N+1);
+        Nav(EUINavigation::Up,N-Columns);Nav(EUINavigation::Down,N+Columns);
     }
     const auto* Shop=Snapshot.Shop.IsSet()?&Snapshot.Shop.GetValue():nullptr;
     Products->SetVisibility(Shop?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
@@ -278,7 +282,7 @@ void UAetherInventoryPage::Refresh()
     }
     RenderDetails();
 }
-void UAetherInventoryPage::CellIntent(const FAetherInspectRequest& R,int32 Slot,EAetherCellIntent Intent)
+void UAetherInventoryPage::CellIntent(const FAetherInspectRequest& R,int32 TargetSlot,EAetherCellIntent Intent)
 {
     if(!R.Context.Same(Snapshot.Context)||ModalToken.IsValid())return;const auto& D=FAetherV10Definitions::Get();
     if(Intent==EAetherCellIntent::Leave){Session.HideHover();RenderDetails();return;}
@@ -293,12 +297,12 @@ void UAetherInventoryPage::CellIntent(const FAetherInspectRequest& R,int32 Slot,
     if(Intent==EAetherCellIntent::Place&&PickedSource.IsSet())
     {
         if(R.Target.Kind==EAetherInspectTarget::ItemDefinition){Notice->SetText(FText::FromString(TEXT("商品格不能作为落点。")));return;}
-        if(Drop(PickedSource.GetValue(),R,Slot))PickedSource.Reset();
+        if(Drop(PickedSource.GetValue(),R,TargetSlot))PickedSource.Reset();
         return;
     }
     if(Intent==EAetherCellIntent::Hover&&PickedSource.IsSet())
     {
-        FString Hint;PreviewDrop(PickedSource.GetValue(),R,Slot,Hint);
+        FString Hint;PreviewDrop(PickedSource.GetValue(),R,TargetSlot,Hint);
         if(Notice)Notice->SetText(FText::FromString(Hint));return;
     }
     if(R.Target.Kind==EAetherInspectTarget::ItemInstance&&!R.Target.InstanceId.IsValid())return;

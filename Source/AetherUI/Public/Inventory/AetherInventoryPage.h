@@ -37,7 +37,7 @@ public:
 private:
     void MenuChanged();
     void Receive(const FAetherCommandResult& Result);
-    void CellIntent(const FAetherInspectRequest& Request,int32 Slot,EAetherCellIntent Intent);
+    void CellIntent(const FAetherInspectRequest& Request,int32 TargetSlot,EAetherCellIntent Intent);
     bool Drop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 Slot);
     bool PreviewDrop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 Slot,FString& Hint) const;
     void Action(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action);
