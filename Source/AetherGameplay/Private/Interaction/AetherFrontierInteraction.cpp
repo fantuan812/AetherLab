@@ -7,6 +7,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
+#include "Characters/AetherCompanionComponent.h"
 
 FString AAetherFrontierMode::RecruitCompanion(AAetherFrontierCharacter* C,bool Healer)
 {
@@ -19,7 +20,7 @@ FString AAetherFrontierMode::RecruitCompanion(AAetherFrontierCharacter* C,bool H
     Healer=GuardTaken||(!HealerTaken&&Healer);
     if(Companions.Num()+GetNumPlayers()>=4)return TEXT("Party capacity: four humans and AI combined.");
     auto* B=SpawnFighter(C->GetActorLocation()+FVector(0,150,20),EAetherFighter::Player,NAME_None);B->CompanionOwner=C;B->bHealer=Healer;B->CompanionId=Healer?FName("Muhe"):FName("Lishi");
-    B->SpawnDefaultController();Companions.Add(B);auto Next=PS->Profile;Next.bCompanion=true;Next.Observe("Companion");Next.TryAutoClaim("Q_Main_06");
+    B->SpawnDefaultController();if(!B->CompanionDecision->BeginCompanionControl()){B->Destroy();return TEXT("Companion controller unavailable.");}Companions.Add(B);auto Next=PS->Profile;Next.bCompanion=true;Next.Observe("Companion");Next.TryAutoClaim("Q_Main_06");
     if(!Commit(PS,Next)){B->Destroy();return TEXT("Storage unavailable; recruitment cancelled.");}
     return TEXT("Companion follows, fights, and revives. P shows party.");
 }

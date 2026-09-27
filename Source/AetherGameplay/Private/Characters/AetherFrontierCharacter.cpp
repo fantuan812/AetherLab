@@ -97,6 +97,7 @@ void AAetherFrontierCharacter::BeginPlay()
 void AAetherFrontierCharacter::PossessedBy(AController* C)
 {
     Super::PossessedBy(C); BindPersistentAbilities();
+    if(HasAuthority()&&CompanionDecision)CompanionDecision->BeginCompanionControl();
     if(HasAuthority()&&ProfileState()&&ProfileState()->bNativeSkillsEnabled)ResourceGate->BlockForInitialLoad();
     if(HasAuthority() && ProfileState())
     { Equipment->bProfileManaged=true;GrantSpells();if(HasActorBegunPlay())ApplyProfileEquipment(); }
@@ -104,7 +105,7 @@ void AAetherFrontierCharacter::PossessedBy(AController* C)
     OnPresentationChanged.Broadcast();
 }
 void AAetherFrontierCharacter::UnPossessed()
-{ReleaseHeldInput();CloseTrade();Super::UnPossessed();}
+{if(CompanionDecision)CompanionDecision->EndCompanionControl();ReleaseHeldInput();CloseTrade();Super::UnPossessed();}
 void AAetherFrontierCharacter::OnRep_PlayerState()
 { Super::OnRep_PlayerState(); BindPersistentAbilities(); OnPresentationChanged.Broadcast(); }
 bool AAetherFrontierCharacter::SpellUnlocked(int32 Spell) const
@@ -223,6 +224,7 @@ void AAetherFrontierCharacter::ReleaseCarry()
 {if(WorldActions)WorldActions->Release();}
 void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
+    if(CompanionDecision)CompanionDecision->EndCompanionControl();
     if(DerivedAttributeSystem.IsValid())DerivedAttributeSystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetGearMaxHealthAttribute()).Remove(DerivedHealthDelegate);
     DerivedAttributeSystem.Reset();DerivedHealthDelegate.Reset();
     TradeSession={};SaleConfirmation={};PendingTradeAuthorization.Invalidate();

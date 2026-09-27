@@ -6,6 +6,7 @@
 #include "ReactiveWorldSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "EngineUtils.h"
+#include "Characters/AetherCompanionComponent.h"
 FString FAetherSceneServiceHandlers::Rest(const FAetherSceneServiceContext& X)
 {
     auto& M=X.Mode;auto* C=&X.Character;auto* PS=C->ProfileState();const auto* P=PS->GetNativeProfile();
@@ -39,12 +40,14 @@ FString FAetherSceneServiceHandlers::Recruit(const FAetherSceneServiceContext& X
         auto* B=M.SpawnFighter(C->GetActorLocation()+FVector(0,150,20),EAetherFighter::Player,NAME_None);
         if(!B)return TEXT("无法创建同伴。");
         B->CompanionOwner=C;B->bHealer=Healer;B->CompanionId=Id;
+        B->SpawnDefaultController();
+        if(!B->CompanionDecision->BeginCompanionControl()){B->Destroy();return TEXT("同伴控制权不可用，本次招募已取消。");}
         // 在可回滚的实体装配之后接受服务器事实；任务奖励只在其事务提交后发布。
         FAetherServerFact Fact;Fact.Kind=EAetherServerFactKind::Personal;Fact.CharacterId=P->CharacterId;Fact.FactId=TEXT("Companion");
         FString Why;
         if(!M.GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->ObserveServerFact(MoveTemp(Fact),Why))
         {B->Destroy();return TEXT("进度队列繁忙，本次招募已取消。");}
-        B->SpawnDefaultController();M.Companions.Add(B);
+        M.Companions.Add(B);
         return TEXT("同伴已加入当前队伍；个人招募进度正在保存。");
 
 }

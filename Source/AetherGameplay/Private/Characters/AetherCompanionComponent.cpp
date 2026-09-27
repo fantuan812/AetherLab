@@ -2,6 +2,7 @@
 #include "Framework/AetherFrontier.h"
 #include "Interaction/AetherNearbyRegistry.h"
 #include "Interaction/AetherActions.h"
+#include "AIController.h"
 
 namespace AetherRelations
 {
@@ -25,23 +26,57 @@ bool CanParticipateEncounter(const AAetherFrontierCharacter& A,const AAetherChar
 bool CanAssist(const AAetherFrontierCharacter& A,const AAetherFrontierCharacter& B)
 {return A.Fighter==EAetherFighter::Player&&B.Fighter==EAetherFighter::Player&&SameRecruitmentOwner(A,B);}
 }
-UAetherCompanionComponent::UAetherCompanionComponent(){PrimaryComponentTick.bCanEverTick=true;}
+UAetherCompanionComponent::UAetherCompanionComponent()
+{PrimaryComponentTick.bCanEverTick=true;PrimaryComponentTick.bStartWithTickEnabled=false;}
+bool UAetherCompanionComponent::BeginCompanionControl()
+{
+    auto* C=Cast<AAetherFrontierCharacter>(GetOwner());
+    if(!C||!C->HasAuthority()||!IsValid(C->CompanionOwner)||C->CompanionOwner==C||
+        C->CompanionId.IsNone()||C->Fighter!=EAetherFighter::Player||!Cast<AAIController>(C->GetController()))return false;
+    if(bManaged&&RecruitmentOwner.Get()==C->CompanionOwner&&ManagedController.Get()==C->GetController())return true;
+    EndCompanionControl();
+    RecruitmentOwner=C->CompanionOwner;ManagedController=C->GetController();bManaged=true;++ControlGeneration;
+    NextPerception=0;C->bFollowing=false;SetComponentTickEnabled(true);return true;
+}
+void UAetherCompanionComponent::ClearOwnedActions()
+{
+    auto* C=Cast<AAetherFrontierCharacter>(GetOwner());if(!C)return;
+    CombatTarget.Reset();NextPerception=0;
+    if(OwnedReviveTarget.IsValid()&&C->ReviveTarget==OwnedReviveTarget.Get())C->ReviveTarget=nullptr;
+    OwnedReviveTarget.Reset();
+    if(OwnedHealRequest&&C->CompanionHealRequest==OwnedHealRequest)C->CancelCompanionHeal();
+    OwnedHealRequest=0;
+    if(bOwnsGuard){C->ServerBlock(false);bOwnsGuard=false;}
+    C->bFollowing=false;
+}
+void UAetherCompanionComponent::EndCompanionControl()
+{
+    if(!bManaged)return;
+    ClearOwnedActions();bManaged=false;++ControlGeneration;
+    RecruitmentOwner.Reset();ManagedController.Reset();SetComponentTickEnabled(false);
+}
+void UAetherCompanionComponent::EndPlay(const EEndPlayReason::Type Reason)
+{EndCompanionControl();Super::EndPlay(Reason);}
 void UAetherCompanionComponent::TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Tick)
 {
     Super::TickComponent(Dt,Type,Tick);auto* C=Cast<AAetherFrontierCharacter>(GetOwner());
-    if(!C||!C->HasAuthority())return;
-    if(RecruitmentOwner.Get()!=C->CompanionOwner){RecruitmentOwner=C->CompanionOwner;CombatTarget.Reset();NextPerception=0;C->ReviveTarget=nullptr;C->CancelCompanionHeal();}
-    if(!RecruitmentOwner.IsValid()||!C->Alive()||C->CombatTime()<C->StunUntil||C->bCompanionHold||C->bTravelPending)
-    {CombatTarget.Reset();C->ReviveTarget=nullptr;C->CancelCompanionHeal();C->ServerBlock(false);return;}
+    if(!bManaged||!C||!C->HasAuthority())return;
+    if(!IsValid(C->CompanionOwner)||RecruitmentOwner.Get()!=C->CompanionOwner||
+        ManagedController.Get()!=C->GetController()||!Cast<AAIController>(C->GetController()))
+    {EndCompanionControl();return;}
+    if(!C->Alive()||C->CombatTime()<C->StunUntil||C->bCompanionHold||C->bTravelPending)
+    {ClearOwnedActions();return;}
+    if(OwnedHealRequest&&!C->bCompanionHealPending)OwnedHealRequest=0;
+    if(OwnedReviveTarget.IsValid()&&C->ReviveTarget!=OwnedReviveTarget.Get())OwnedReviveTarget.Reset();
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();
     if(Mode&&Mode->Encounters&&Mode->Encounters->IsChanneling(C))return;
     const float Now=C->CombatTime();auto* Owner=RecruitmentOwner.Get();
     if(!Owner->Alive())
     {
-        C->ServerBlock(false);CombatTarget.Reset();
+        if(bOwnsGuard){C->ServerBlock(false);bOwnsGuard=false;}CombatTarget.Reset();
         if(FVector::DistSquared2D(C->GetActorLocation(),Owner->GetActorLocation())>FMath::Square(170.))C->AddMovementInput(C->SafeMoveDirection(Owner->GetActorLocation()));
         else if(!C->ReviveTarget&&AetherRelations::CanAssist(*C,*Owner))
-        {C->ReviveTarget=Owner;C->ReviveStarted=Now;C->ReviveDamageSerial=C->CombatRuntime->DamageReceivedCount;if(!C->AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass()))C->ReviveTarget=nullptr;}
+        {C->ReviveTarget=Owner;C->ReviveStarted=Now;C->ReviveDamageSerial=C->CombatRuntime->DamageReceivedCount;if(C->AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass()))OwnedReviveTarget=Owner;else C->ReviveTarget=nullptr;}
         return;
     }
     auto* Nearby=GetWorld()->GetSubsystem<UAetherNearbyRegistry>();if(!Nearby)return;
@@ -63,6 +98,7 @@ void UAetherCompanionComponent::TickComponent(float Dt,ELevelTick Type,FActorCom
             if(Patient!=C&&Patient->Reactive->State.TemperatureC>55&&C->WaterReserveKg>=.5f&&C->Ready()&&C->GetController())
             {C->GetController()->SetControlRotation((Patient->GetActorLocation()-C->GetActorLocation()-FVector(0,0,55)).Rotation());if(C->TrySkill(TEXT("Water.Draw"))){C->NextCompanionAction=Now+1;return;}}
             C->NextCompanionAction=Now+5;C->ExecuteCompanionHeal(Patient);
+            if(C->bCompanionHealPending)OwnedHealRequest=C->CompanionHealRequest;
         }
     }
     if(Now>=NextPerception)
@@ -81,7 +117,7 @@ void UAetherCompanionComponent::TickComponent(float Dt,ELevelTick Type,FActorCom
     auto* Target=CombatTarget.Get();const FVector D=(Target?Target->GetActorLocation():Owner->GetActorLocation())-C->GetActorLocation();
     if(C->bHealer)
     {
-        C->ServerBlock(false);
+        if(bOwnsGuard){C->ServerBlock(false);bOwnsGuard=false;}
         if(Target&&D.Size2D()<400)C->AddMovementInput(C->SafeMoveDirection(C->GetActorLocation()-D.GetSafeNormal2D()*350));
         else if(FVector::DistSquared2D(C->GetActorLocation(),Owner->GetActorLocation())>FMath::Square(350.))C->AddMovementInput(C->SafeMoveDirection(Owner->GetActorLocation()));
         return;
@@ -91,8 +127,9 @@ void UAetherCompanionComponent::TickComponent(float Dt,ELevelTick Type,FActorCom
     if(Target)
     {
         C->SetActorRotation(D.Rotation());if(C->GetController())C->GetController()->SetControlRotation(D.Rotation());
-        const bool Guard=D.Size2D()<300&&(Target->bWindingUp||Target->Equipment->IsBusy());C->ServerBlock(Guard);
+        const bool Guard=D.Size2D()<300&&(Target->bWindingUp||Target->Equipment->IsBusy());
+        if(Guard||bOwnsGuard)C->ServerBlock(Guard);bOwnsGuard=Guard;
         if(!Guard&&D.Size2D()<165&&Now>C->NextCompanionAction&&C->Ready()){C->PerformMelee(false);C->NextCompanionAction=Now+1;}
     }
-    else C->ServerBlock(false);
+    else if(bOwnsGuard){C->ServerBlock(false);bOwnsGuard=false;}
 }
