@@ -198,6 +198,16 @@ FAetherInventoryMutation FAetherInventoryStateV10::Unequip(FGuid Id,const FAethe
     auto Next=*this;for(auto It=Next.Equipment.CreateIterator();It;++It)if(It.Value()==Id)It.RemoveCurrent();
     return Publish(MoveTemp(Next),Applied(Id),D);
 }
+FAetherInventoryMutation FAetherInventoryStateV10::UnequipTo(FGuid Id,int32 Destination,const FAetherV10ItemDefinitions& D)
+{
+    FString Why;if(!Validate(D,Why))return Fail(E::Invalid);
+    if(!IsEquipped(Id))return Fail(E::Missing);
+    if(Destination<0||Destination>=Capacity)return Fail(E::Invalid);
+    if(const auto* Occupant=At(Destination);Occupant&&Occupant->InstanceId!=Id)return Fail(E::Occupied);
+    auto Next=*this;for(auto It=Next.Equipment.CreateIterator();It;++It)if(It.Value()==Id)It.RemoveCurrent();
+    Mutable(Next,Id)->SlotIndex=Destination;
+    return Publish(MoveTemp(Next),Applied(Id),D);
+}
 FAetherInventoryMutation FAetherInventoryStateV10::Wear(FGuid Id,int32 Amount,const FAetherV10ItemDefinitions& D)
 {
     FString InitialError;if(!Validate(D,InitialError))return Fail(E::Invalid);
@@ -229,14 +239,22 @@ EAetherInventoryMutationCode FAetherInventoryStateV10::CanRemove(FGuid Id,const 
     return E::Applied;
 }
 // 每次从已确认 loadout 重建总附加值，不在旧结果上累加，避免重生/重连叠加效果。
+TMap<FString,double> FAetherInventoryStateV10::EvaluateItemStats(const FAetherV10ItemInstance& I,const FAetherV10ItemDefinition& Def)
+{
+    TMap<FString,double> Result;
+    const double Scale=Def.MaxDurability>0&&I.Durability==0?Def.BrokenStatMultiplier:1.;
+    for(const auto& Stat:Def.Stats)Result.Add(Stat.Key,Stat.Value*Scale);
+    return Result; // Quality/affixes remain preserved metadata, never fabricated bonuses.
+}
 TMap<FString,double> FAetherInventoryStateV10::EquippedStats(const FAetherV10ItemDefinitions& D) const
 {
     TMap<FString,double> Result;FString Reason;if(!Validate(D,Reason))return Result;
+    TSet<FGuid> Evaluated;
     for(const auto& Pair:Equipment)
     {
+        if(Evaluated.Contains(Pair.Value))continue;Evaluated.Add(Pair.Value);
         const auto* I=Find(Pair.Value);const auto& Def=D.Items.FindChecked(I->DefinitionId);
-        const double Scale=Def.MaxDurability>0&&I->Durability==0?Def.BrokenStatMultiplier:1.;
-        for(const auto& Stat:Def.Stats)Result.FindOrAdd(Stat.Key)+=Stat.Value*Scale;
+        for(const auto& Stat:EvaluateItemStats(*I,Def))Result.FindOrAdd(Stat.Key)+=Stat.Value;
     }
     return Result;
 }

@@ -97,6 +97,7 @@ bool AetherCommands::Validate(const FAetherPlayerCommand& C, FString& Reason)
     if(!IsSupportedProtocol(C.ProtocolVersion))return Reject(TEXT("Unsupported protocol version"));
     uint32 Mask=Fields(C.Type);
     if(Mask==MAX_uint32)return Reject(TEXT("Unknown typed command"));
+    if(C.ProtocolVersion>=4&&C.Type==EAetherCommandType::UnequipItem&&C.DestinationIndex>=0)Mask|=Index;
     const bool ContainerAction=C.Type==EAetherCommandType::TransferItem||C.Type==EAetherCommandType::PickUpItem;
     if(uint8(C.TransferMode)>uint8(EAetherTransferMode::SwapWhole)||
         ((C.ProtocolVersion<4||!ContainerAction)&&C.TransferMode!=EAetherTransferMode::QuickTransfer))

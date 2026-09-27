@@ -1,6 +1,7 @@
 #include "UI/AetherPlayerHUDWidget.h"
 #include "UI/AetherHUDSection.h"
 #include "Inventory/AetherNativeInventory.h"
+#include "Inventory/AetherResourceGate.h"
 #include "UI/AetherWidgetAssets.h"
 #include "Components/Image.h"
 #include "Engine/Texture2D.h"
@@ -159,8 +160,10 @@ void UAetherPlayerHUDWidget::Refresh()
     Feedback->SetText(FText::FromString(GetWorld()->GetTimeSeconds()<FeedbackUntil?LastFeedback:FString()));
     FString Status;
     if(!C->Alive())Status=TEXT("倒地 · 队友可救援，稍后可回据点");
+    else if(C->bTravelPending)Status=C->TravelWaitReason.IsEmpty()?TEXT("传送准备中"):C->TravelWaitReason;
+    else if(C->ResourceGate&&C->ResourceGate->IsStorageSlow())Status=TEXT("存储确认较慢 · 正在恢复原请求，请勿重复操作");
     else if(C->ReviveTarget)Status=TEXT("救援中 · 保持靠近，受伤会打断");
-    else if(C->Carried)Status=TEXT("搬运中 · G 放下 / C 投掷");
+    else if(C->Carried)Status=TEXT("搬运中 · ")+C->BindingFor("Carry").GetDisplayName().ToString()+TEXT(" 放下 / ")+C->BindingFor("Throw").GetDisplayName().ToString()+TEXT(" 投掷");
     else if(C->bIsCrouched)Status=TEXT("蹲姿");
     else if(C->bBlocking)Status=TEXT("格挡");
     else if(C->CombatTime()<C->StunUntil)Status=TEXT("眩晕");

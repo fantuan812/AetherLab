@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Combat/AetherControlledActionDefinition.h"
 #include "AetherActionPresentation.generated.h"
 class UAnimSequence;
 // 只复制动作身份和服务器时间；姿态资源不决定命中、物品提交或移动。
@@ -20,5 +21,10 @@ class AETHERGAMEPLAY_API UAetherActionSet : public UDataAsset
 {
     GENERATED_BODY()
 public:
+    UAetherActionSet();
+    virtual void PostLoad() override;
+    bool bDefinitionValid=true;
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly) int32 DefinitionVersion=1;
+    UPROPERTY(VisibleAnywhere,BlueprintReadOnly) TMap<FName,FAetherControlledActionDefinition> Rules;
     UPROPERTY(EditAnywhere,BlueprintReadOnly) TMap<FName,TObjectPtr<UAnimSequence>> Clips;
 };

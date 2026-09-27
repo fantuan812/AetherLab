@@ -12,6 +12,7 @@ class AAetherFrontierProp;
 class AAetherFrontierCharacter;
 class UAetherPhysicsDamageComponent;
 class UAetherWorldActionComponent;
+class UAetherCompanionComponent;
 class UAetherPlayerInputComponent;
 class UAetherTraversalComponent;
 class UPhysicsHandleComponent;
@@ -42,6 +43,8 @@ public:
     bool bAttackHeld=false;
     bool bAttackCharged=false,bBufferedAttack=false,bBufferedHeavy=false;
     float BufferedAttackUntil=0;
+    uint32 AttackInputSequence=0,BufferedAttackSequence=0,LastAttackInputSequence=0;
+    UFUNCTION(Server,Reliable) void ServerMeleeInput(bool Heavy,uint32 Sequence);
     virtual void BeginPlay() override;
     virtual void PossessedBy(AController* C) override;
     virtual void UnPossessed() override;
@@ -59,12 +62,17 @@ public:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UPhysicsHandleComponent> CarryHandle;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherWorldActionComponent> WorldActions;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherCompanionComponent> CompanionDecision;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherPlayerInputComponent> PlayerInput;
     UPROPERTY(Replicated) bool bSprinting = false;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierProp> Carried;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> CompanionOwner;
     UPROPERTY(Replicated) bool bHealer = false;
-    void ExecuteCompanionHeal(TWeakObjectPtr<AAetherFrontierCharacter> Target);
+    void ExecuteCompanionHeal(TWeakObjectPtr<AAetherFrontierCharacter> Target,uint64 Request=0);
+    void CancelCompanionHeal(){bCompanionHealPending=false;}
+    bool bCompanionHealPending=false;
+    uint64 CompanionHealRequest=0,CompanionHealDamageSerial=0;
+    TWeakObjectPtr<AAetherFrontierCharacter> CompanionHealOwner;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> ReviveTarget;
     TWeakObjectPtr<AAetherFrontierCharacter> RescueHolder;
     float RescueLeaseUntil=0;
@@ -87,6 +95,7 @@ public:
     float NextServerAction = 0;
     float NextPotion = 0;
     UPROPERTY(Replicated) bool bTravelPending=false;
+    UPROPERTY(Replicated) FString TravelWaitReason;
     UPROPERTY(Transient) TObjectPtr<AActor> TravelSourceActor;
     FGuid TravelToken;
     bool bTravelClientReady=false,bTravelCommitted=false;
@@ -151,6 +160,10 @@ public:
     void Dismiss(){if(bPanel&&Panel==5)ServerAction("Dismiss");}
     AAetherPlayerState* ProfileState() const;
     void BindPersistentAbilities();
+    void RefreshDerivedHealth();
+    TWeakObjectPtr<UAbilitySystemComponent> DerivedAttributeSystem;
+    FDelegateHandle DerivedHealthDelegate;
+    bool bDerivedHealthQueued=false;
     void ApplyProfileEquipment();
     UFUNCTION(Server,Reliable) void ServerAction(FName Action,int32 Index = 0);
     void RequestWorldAction(FName Action);

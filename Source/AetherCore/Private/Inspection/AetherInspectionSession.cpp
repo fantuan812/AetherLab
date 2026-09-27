@@ -20,7 +20,13 @@ void FAetherInspectionSession::Refresh(const FAetherInspectionSnapshot& S,const 
     // 成功回执可能早于拥有者属性复制。只有同一拥有者会话发布了提交版本才解除等待。
     if(Pending.IsSet()&&Receipt.IsSet()&&S.Context.SessionId==PendingContext.SessionId&&
         S.Context.OwnerIdentity.Equals(PendingContext.OwnerIdentity,ESearchCase::CaseSensitive)&&
-        S.ProfileRevision>=Receipt->FinalProfileRevision){Pending.Reset();Receipt.Reset();}
+        S.ProfileRevision>=Receipt->FinalProfileRevision)
+    {
+        int64 ContainerRevision=-1;const FString Id=Receipt->ReasonParameters.FindRef(TEXT("ContainerId"));
+        const bool AwaitContainer=!Id.IsEmpty()&&S.ContainerContext.IsValid()&&S.Container.IsSet()&&S.Container->ContainerId==Id&&
+            (!LexTryParseString(ContainerRevision,*Receipt->ReasonParameters.FindRef(TEXT("ContainerRevision")))||S.Container->Revision<ContainerRevision);
+        if(!AwaitContainer){Pending.Reset();Receipt.Reset();}
+    }
     if(Hover.IsSet())
     {
         Hover=AetherInspection::Build(Hover->Request,S,I,K);Hover->Actions.Reset();
@@ -42,7 +48,7 @@ bool FAetherInspectionSession::Back()
     if(Hover.IsSet()){Hover.Reset();return true;}
     return false;
 }
-FGuid FAetherInspectionSession::BeginAction(EAetherInspectAction Kind,const FString& Argument,int32 Destination,FGuid ExpectedTarget,EAetherTransferMode Mode)
+FGuid FAetherInspectionSession::BeginAction(EAetherInspectAction Kind,const FString& Argument,int32 Destination,FGuid ExpectedTarget,EAetherTransferMode Mode,const FString& DestinationLabel)
 {
     if(Pending.IsSet()||Draft.IsSet()||!Details.IsSet()||!Details->CanInteract())return {};
     const auto* Action=Details->Actions.FindByPredicate([&](const auto& A)
@@ -53,7 +59,9 @@ FGuid FAetherInspectionSession::BeginAction(EAetherInspectAction Kind,const FStr
     Draft->ContainerContext=CurrentContainerContext;Draft->ContainerRevision=CurrentContainerRevision;
     if(Mode!=EAetherTransferMode::QuickTransfer)
     {
-        Draft->Action.ConfirmationSummary=FString::Printf(TEXT("%s到第 %d 格；不会改放其他位置。"),Mode==EAetherTransferMode::SwapWhole?TEXT("整堆交换"):TEXT("精确转移"),Destination+1);
+        Draft->Action.ConfirmationSummary=Details->Title+FString::Printf(TEXT(" · %s到第 %d 格"),Mode==EAetherTransferMode::SwapWhole?TEXT("整堆交换"):TEXT("精确转移"),Destination+1);
+        Draft->Action.ConfirmationSummary+=DestinationLabel.IsEmpty()?TEXT("（空格）"):TEXT("（目标：")+DestinationLabel+TEXT("）");
+        Draft->Action.ConfirmationSummary+=TEXT("；不会改放其他位置。");
         if(Mode==EAetherTransferMode::SwapWhole)Draft->Action.ConfirmationSummary+=TEXT("双方完整物品交换，数量必须等于源物品整堆数量。");
     }
     return Draft->Token;

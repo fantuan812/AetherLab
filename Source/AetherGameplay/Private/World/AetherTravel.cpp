@@ -49,6 +49,7 @@ void AAetherFrontierCharacter::BeginSafeTravel(FVector Destination)
     if(!TravelSourceActor){Notify(TEXT("无法建立目的地区域加载请求。"));return;}
     ReleaseCarry();CancelActions();CloseTrade();ReleaseHeldInput();
     bTravelPending=true;TravelToken=FGuid::NewGuid();TravelDestination=Destination;
+    TravelWaitReason=TEXT("等待目的地区域与客户端就绪");
     TravelOrigin=GetActorLocation();TravelStarted=CombatTime();bTravelClientReady=!IsPlayerControlled()||IsLocallyControlled();
     GetCharacterMovement()->StopMovementImmediately();GetCharacterMovement()->DisableMovement();
     // 仍停留在原地并保留碰撞，目标未就绪绝不先卸掉脚下地面。
@@ -90,7 +91,7 @@ void AAetherFrontierCharacter::UpdateSafeTravel()
     if(!bTravelPending)return;
     const auto Finish=[&](bool Committed)
     {
-        bTravelPending=false;SetBase(static_cast<UPrimitiveComponent*>(nullptr));
+        bTravelPending=false;TravelWaitReason.Reset();SetBase(static_cast<UPrimitiveComponent*>(nullptr));
         GetCharacterMovement()->SetMovementMode(Alive()?MOVE_Falling:MOVE_None);
         if(IsPlayerControlled()&&!IsLocallyControlled())ClientFinishTravel(TravelToken,Committed);
         ClearTravelSource();TravelToken.Invalidate();ForceNetUpdate();
@@ -99,8 +100,15 @@ void AAetherFrontierCharacter::UpdateSafeTravel()
     {Finish(false);Notify(TEXT("传送已取消，仍留在原位置。"));return;}
     auto* Assets=GetWorld()->GetSubsystem<UAetherAssetPreload>();
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();FVector Spot;
-    if(!bTravelClientReady||!Assets||!Assets->Ready()||!TravelSourceReady(TravelSourceActor)||
-       !Mode||!Mode->IsTravelRegionReady(TravelDestination)||!Landing(*this,TravelDestination,Spot))return;
+    FString Wait;
+    if(!Assets||!Assets->Ready())Wait=TEXT("等待目的地基础资产");
+    else if(!TravelSourceReady(TravelSourceActor))Wait=TEXT("等待服务端流送碰撞");
+    else if(!Mode)Wait=TEXT("等待世界服务");
+    else Wait=Mode->TravelRegionBlockReason(TravelDestination);
+    if(Wait.IsEmpty()&&!bTravelClientReady)Wait=TEXT("等待客户端目的地就绪");
+    if(Wait.IsEmpty()&&!Landing(*this,TravelDestination,Spot))Wait=TEXT("等待可站立地面与胶囊净空");
+    if(TravelWaitReason!=Wait){TravelWaitReason=Wait;ForceNetUpdate();}
+    if(!Wait.IsEmpty())return;
     SetBase(static_cast<UPrimitiveComponent*>(nullptr));
     if(!TeleportTo(Spot,GetActorRotation(),false,false))return;
     if(auto* PC=Cast<APlayerController>(Controller))PC->ClientSetLocation(Spot,PC->GetControlRotation());

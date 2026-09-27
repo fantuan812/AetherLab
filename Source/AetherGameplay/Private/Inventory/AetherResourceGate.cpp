@@ -11,7 +11,17 @@ void UAetherResourceGate::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME_CONDITION(UAetherResourceGate,bUseSummaryReady,COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(UAetherResourceGate,bSlowStorage,COND_OwnerOnly);
     DOREPLIFETIME_CONDITION(UAetherResourceGate,UseReadyAtServerTime,COND_OwnerOnly);
+}
+FAetherResourceGateMetrics UAetherResourceGate::Inspect() const
+{
+    FAetherResourceGateMetrics M;M.DeferredCount=Deferred.Num();M.DeferredTotal=DeferredTotal;
+    M.RecoveryCount=RecoveryCount;M.PublicationFailures=PublicationFailures;
+    const double Now=FPlatformTime::Seconds();
+    M.OldestWaitSeconds=Deferred.IsEmpty()?0:FMath::Max(0.,Now-Deferred[0].QueuedAt);
+    M.PersistenceWaitSeconds=PersistenceWaitStarted>0?FMath::Max(0.,Now-PersistenceWaitStarted):0;
+    return M;
 }
 FAetherResourceStateV10 UAetherResourceGate::Sample() const
 {
@@ -74,7 +84,7 @@ bool UAetherResourceGate::Publish(const FAetherConsumableReceiver& Expected)
     }
     if(!FMath::IsNearlyEqual(double(C->MaxHealth),S.MaxHealth,.001)||
         !FMath::IsNearlyEqual(double(C->MaximumMana()),S.MaxMana,.001)||
-        !FMath::IsNearlyEqual(double(C->MaximumStamina()),S.MaxStamina,.001))return false;
+        !FMath::IsNearlyEqual(double(C->MaximumStamina()),S.MaxStamina,.001)){++PublicationFailures;return false;}
     TGuardValue<bool> Guard(bPublishing,true);
     // 不调用延迟队列入口 SetVitals；属性通知引发的其他完整动作仍被 bPublishing 挡住。
     C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(),float(S.Health));
@@ -89,7 +99,7 @@ bool UAetherResourceGate::Publish(const FAetherConsumableReceiver& Expected)
 bool UAetherResourceGate::FinishRecovery()
 {
     if(!Receiver||!bRecovering||Reserved.IsValid()||bFaulted||bPublishing)return false;
-    bRecovering=false;TGuardValue<bool> Guard(bDraining,true);return Synchronize();
+    bRecovering=false;++RecoveryCount;TGuardValue<bool> Guard(bDraining,true);return Synchronize();
 }
 bool UAetherResourceGate::Defer(TUniqueFunction<void()> Action)
 {
@@ -102,7 +112,7 @@ bool UAetherResourceGate::Defer(TUniqueFunction<void()> Action)
         // 明确终止此连接，下次登录必须经过排空旧写者和完整新生命恢复。
         Fault(TEXT("Resource action backlog exceeded; reconnect after storage recovery"));return true;
     }
-    Deferred.Add(MoveTemp(Action));return true;
+    Deferred.Add({MoveTemp(Action),FPlatformTime::Seconds()});++DeferredTotal;return true;
 }
 void UAetherResourceGate::Fault(const FString& Reason)
 {
@@ -118,11 +128,20 @@ void UAetherResourceGate::TickComponent(float Dt,ELevelTick Type,FActorComponent
     Super::TickComponent(Dt,Type,Tick);
     if(const auto* C=Cast<AAetherCharacter>(GetOwner());C&&C->HasAuthority())
     {
+        const double Now=FPlatformTime::Seconds();
+        if(WaitingForPersistence())
+        {
+            if(PersistenceWaitStarted<=0)PersistenceWaitStarted=Now;
+            bSlowStorage=Now-PersistenceWaitStarted>=2.;
+            // 终止旧生命的入口，不取消数据库 Future、不释放不确定预留；写者仍由 Runtime 排空。
+            if(Now-PersistenceWaitStarted>=30.&&!bFaulted)Fault(TEXT("Persistence confirmation timed out; session recovery required"));
+        }
+        else {PersistenceWaitStarted=0;bSlowStorage=false;}
         bUseSummaryReady=Receiver.IsValid()&&!IsBlocked();
         if(Receiver&&PublishedUseDeadline!=Receiver->State().UseReadyAtUnixMs)
         {
             PublishedUseDeadline=Receiver->State().UseReadyAtUnixMs;
-            const int64 Now=FDateTime::UtcNow().GetTicks()/ETimespan::TicksPerMillisecond-FDateTime(1970,1,1).GetTicks()/ETimespan::TicksPerMillisecond;
+            const auto Time=FDateTime::UtcNow();const int64 Now=Time.ToUnixTimestamp()*1000+Time.GetMillisecond();
             UseReadyAtServerTime=C->CombatTime()+float(FMath::Max<int64>(0,PublishedUseDeadline-Now))*.001f;
         }
     }
@@ -131,7 +150,7 @@ void UAetherResourceGate::TickComponent(float Dt,ELevelTick Type,FActorComponent
     // 每帧有界排空；恢复普通输入前 Reserve 仍要求队列为空，不能插队连续喝药。
     for(int32 Budget=0;Budget<32&&!Deferred.IsEmpty()&&!IsBlocked();++Budget)
     {
-        auto Action=MoveTemp(Deferred[0]);Deferred.RemoveAt(0);Action();
+        auto Action=MoveTemp(Deferred[0].Action);Deferred.RemoveAt(0);Action();
         if(!IsValid(GetOwner())||GetOwner()->IsActorBeingDestroyed())break;
         if(!Synchronize())break;
     }

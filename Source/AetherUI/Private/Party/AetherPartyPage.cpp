@@ -30,6 +30,7 @@ void UAetherPartyPage::RefreshPage()
     Members->ClearChildren();Nearby->ClearChildren();Invitations->ClearChildren();HealthRows.Reset();First=nullptr;
     auto* C=Player();auto* PS=C?C->ProfileState():nullptr;if(!PS)return;
     Text(*WidgetTree,*Members,TEXT("当前队伍"),FLinearColor(1,.8f,.4f));
+    Text(*WidgetTree,*Members,TEXT("医者仅照顾自己、招募者及同一招募归属的同伴。"));
     Text(*WidgetTree,*Nearby,TEXT("附近玩家 · 邀请范围五米"),FLinearColor(.4f,.8f,1));
     if(!PS->InvitedBy.IsEmpty())
     {

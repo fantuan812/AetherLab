@@ -35,6 +35,7 @@ private:
     int32 BeforeWindowMode=0,BeforeQuality=0;
     bool BeforeVsync=false;
     TMap<FName,FKey> DraftKeys;
+    TArray<FName> BindingIds;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UComboBoxString> Resolution;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UComboBoxString> WindowMode;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UComboBoxString> Quality;

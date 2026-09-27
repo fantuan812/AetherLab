@@ -16,22 +16,7 @@
 namespace
 {
 FString DisabledReason(const FAetherDialogueChoiceView& C)
-{
-    if(C.ReasonId==TEXT("QuestRequired"))
-    {
-        const auto* Id=C.ReasonParameters.Find(TEXT("QuestId"));
-        const auto* Q=Id?FAetherV10Definitions::Get().Rules.Quest(FName(**Id)):nullptr;
-        return TEXT("先完成：")+(Q?Q->Title:Id?*Id:TEXT("前置任务"));
-    }
-    if(C.ReasonId==TEXT("ObjectiveRequired"))return TEXT("先完成前置目标");
-    if(C.ReasonId==TEXT("ObjectivesIncomplete"))return TEXT("任务目标尚未完成");
-    if(C.ReasonId==TEXT("InCombat"))return TEXT("脱离战斗后开放");
-    if(C.ReasonId==TEXT("TargetThreatened"))return TEXT("附近仍有威胁");
-    if(C.ReasonId==TEXT("OutOfReach"))return TEXT("请靠近并保持视线");
-    if(C.ReasonId==TEXT("TargetBusy"))return TEXT("请先结束当前动作");
-    if(C.ReasonId==TEXT("QuestUnavailable"))return TEXT("任务已完成或尚未开放");
-    return TEXT("暂不可用，请等待状态更新");
-}
+{return AetherInteractionQueries::ReasonText(C.ReasonId,C.ReasonParameters,FAetherV10Definitions::Get().Rules);}
 }
 void UAetherDialogueChoiceButton::BindChoice(int32 Index,uint64 Version)
 {ChoiceIndex=Index;ShownVersion=Version;OnClicked.AddUniqueDynamic(this,&UAetherDialogueChoiceButton::Select);}

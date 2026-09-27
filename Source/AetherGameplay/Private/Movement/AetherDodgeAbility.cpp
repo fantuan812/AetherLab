@@ -6,6 +6,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NativeGameplayTags.h"
 #include "Combat/AetherActionTiming.h"
+#include "AbilitySystemComponent.h"
+#include "GameplayPrediction.h"
 
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_DodgeActive,"Aether.Action.Dodge");
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_DodgeCooldown,"Aether.Cooldown.Dodge");
@@ -66,7 +68,50 @@ void UAetherDodgeAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
 {
     auto* C=Info?Cast<AAetherCharacter>(Info->AvatarActor.Get()):nullptr;
     if(!C){EndAbility(H,Info,Activation,true,true);return;}
-    ActiveCharacter=C;ActiveSystem=Info->AbilitySystemComponent;
+    ActiveCharacter=C;ActiveSystem=Info->AbilitySystemComponent;bMotionStarted=false;
+    if(!ActiveSystem.IsValid()){EndAbility(H,Info,Activation,true,true);return;}
+    if(C->HasAuthority()&&C->IsPlayerControlled()&&!Info->IsLocallyControlled())
+    {
+        DirectionDelegate=ActiveSystem->AbilityTargetDataSetDelegate(H,Activation.GetActivationPredictionKey()).AddUObject(this,&UAetherDodgeAbility::ReceiveDirection);
+        if(!ActiveSystem->CallReplicatedTargetDataDelegatesIfSet(H,Activation.GetActivationPredictionKey()))
+        {
+            auto* Timeout=UAbilityTask_WaitDelay::WaitDelay(this,.75f);
+            Timeout->OnFinish.AddDynamic(this,&UAetherDodgeAbility::DirectionTimeout);Timeout->ReadyForActivation();
+        }
+        return;
+    }
+    FVector Direction=C->GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal2D();
+    if(Direction.IsNearlyZero())Direction=C->GetActorForwardVector().GetSafeNormal2D();
+    if(!C->HasAuthority())
+    {
+        FScopedPredictionWindow Prediction(ActiveSystem.Get(),true);
+        auto* Target=new FAetherDodgeDirection();Target->Direction=Direction;
+        FGameplayAbilityTargetDataHandle Data(Target);
+        ActiveSystem->CallServerSetReplicatedTargetData(H,Activation.GetActivationPredictionKey(),Data,FGameplayTag(),ActiveSystem->ScopedPredictionKey);
+    }
+    StartMotion(Direction);
+}
+void UAetherDodgeAbility::ReceiveDirection(const FGameplayAbilityTargetDataHandle& Data,FGameplayTag)
+{
+    if(!IsActive()||!ActiveSystem.IsValid()||bMotionStarted)return;
+    const bool Valid=Data.Num()==1&&Data.Get(0)&&Data.Get(0)->GetScriptStruct()==FAetherDodgeDirection::StaticStruct();
+    const FVector Direction=Valid?FVector(static_cast<const FAetherDodgeDirection*>(Data.Get(0))->Direction):FVector::ZeroVector;
+    ActiveSystem->ConsumeClientReplicatedTargetData(CurrentSpecHandle,CurrentActivationInfo.GetActivationPredictionKey());
+    if(!Valid||Direction.ContainsNaN()||FMath::Abs(Direction.Z)>.01f||!FMath::IsNearlyEqual(Direction.SizeSquared2D(),1.f,.02f))
+    {EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,true);return;}
+    StartMotion(Direction.GetSafeNormal2D());
+}
+void UAetherDodgeAbility::DirectionTimeout()
+{if(!bMotionStarted)EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,true);}
+void UAetherDodgeAbility::StartMotion(const FVector& Direction)
+{
+    auto* C=ActiveCharacter.Get();const auto H=CurrentSpecHandle;const auto* Info=CurrentActorInfo;const auto Activation=CurrentActivationInfo;
+    if(bMotionStarted||!C||!Info||!ActiveSystem.IsValid()||ActiveSystem->GetAvatarActor()!=C||!C->Alive()||
+        C->CombatTime()<C->StunUntil||!C->GetCharacterMovement()->IsMovingOnGround())
+    {EndAbility(H,Info,Activation,true,true);return;}
+    if(const auto* Player=Cast<AAetherFrontierCharacter>(C);Player&&(Player->bTravelPending||Player->Carried||Player->ReviveTarget))
+    {EndAbility(H,Info,Activation,true,true);return;}
+    bMotionStarted=true;
     // 提交只发生一次，预测失败由 GAS 回滚成本。服务器拒绝时能力取消同时移除根运动。
     if(!CommitAbility(H,Info,Activation)||!IsActive()||!ActiveCharacter.IsValid()||
         !ActiveSystem.IsValid()||ActiveSystem->GetAvatarActor()!=C)
@@ -77,10 +122,8 @@ void UAetherDodgeAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
         Invulnerability=ApplyGameplayEffectToOwner(H,Info,Activation,GetDefault<UAetherDodgeInvulnerability>(),1);
     }
     if(auto* Player=Cast<AAetherFrontierCharacter>(C))Player->SetSprintInput(false);
-    // 输入方向来自 CharacterMovement 已传输的加速度；没有输入时朝角色前方。
+    // 本地预测与服务器使用相同的单次输入方向，不能等待下一帧加速度改变动作方向。
     // IgnoreZ 保留重力；不调用 LaunchCharacter，也不强制保持 Walking，越过边缘自然下落。
-    FVector Direction=C->GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal2D();
-    if(Direction.IsNearlyZero())Direction=C->GetActorForwardVector().GetSafeNormal2D();
     const FVector Local=C->GetActorTransform().InverseTransformVectorNoScale(Direction);
     C->PresentAction(FMath::Abs(Local.X)>=FMath::Abs(Local.Y)?(Local.X>=0?TEXT("DodgeForward"):TEXT("DodgeBack")):(Local.Y>=0?TEXT("DodgeRight"):TEXT("DodgeLeft")),AetherActionTiming::DodgeDuration);
     auto* Motion=UAbilityTask_ApplyRootMotionConstantForce::ApplyRootMotionConstantForce(this,TEXT("Aether.Dodge"),
@@ -98,7 +141,13 @@ void UAetherDodgeAbility::EndAbility(FGameplayAbilitySpecHandle H,const FGamepla
     if(ScopeLockCount>0)
     {WaitingToExecute.Add(FPostLockDelegate::CreateUObject(this,&UAetherDodgeAbility::EndAbility,H,Info,Activation,Replicate,Cancelled));return;}
     // 使用激活时的 ASC，避免换 Pawn 后的迟到取消触碰新角色。取消不返还已提交成本或冷却。
-    if(ActiveSystem.IsValid()&&Invulnerability.IsValid())ActiveSystem->RemoveActiveGameplayEffect(Invulnerability);
+    if(ActiveSystem.IsValid())
+    {
+        if(Invulnerability.IsValid())ActiveSystem->RemoveActiveGameplayEffect(Invulnerability);
+        ActiveSystem->AbilityTargetDataSetDelegate(H,Activation.GetActivationPredictionKey()).Remove(DirectionDelegate);
+        ActiveSystem->ConsumeClientReplicatedTargetData(H,Activation.GetActivationPredictionKey());
+    }
+    DirectionDelegate.Reset();bMotionStarted=false;
     if(auto* C=ActiveCharacter.Get();C&&C->PresentedAction.Id.ToString().StartsWith(TEXT("Dodge")))C->PresentedAction.Duration=0;
     Invulnerability.Invalidate();ActiveCharacter.Reset();ActiveSystem.Reset();
     // 基类结束所有任务；RootMotion task 的 OnDestroy 移除对应 source。

@@ -2,9 +2,21 @@
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
 #include "GameplayEffect.h"
+#include "Abilities/GameplayAbilityTargetTypes.h"
 #include "AetherDodgeAbility.generated.h"
 
 class AAetherCharacter;
+// 只传递有界单位方向；速度、时长、成本和无敌窗始终由能力定义决定。
+USTRUCT()
+struct FAetherDodgeDirection : public FGameplayAbilityTargetData
+{
+    GENERATED_BODY()
+    UPROPERTY() FVector_NetQuantizeNormal Direction;
+    virtual UScriptStruct* GetScriptStruct() const override{return StaticStruct();}
+    bool NetSerialize(FArchive& Ar,UPackageMap* Map,bool& Success){return Direction.NetSerialize(Ar,Map,Success);}
+};
+template<> struct TStructOpsTypeTraits<FAetherDodgeDirection> : TStructOpsTypeTraitsBase2<FAetherDodgeDirection>
+{enum {WithNetSerializer=true,WithCopy=true};};
 namespace AetherDodge
 {
     AETHERGAMEPLAY_API FGameplayTag ActiveTag();
@@ -48,6 +60,11 @@ public:
     virtual void OnAvatarSet(const FGameplayAbilityActorInfo* Info,const FGameplayAbilitySpec& Spec) override;
 private:
     UFUNCTION() void FinishRecovery();
+    UFUNCTION() void DirectionTimeout();
+    void ReceiveDirection(const FGameplayAbilityTargetDataHandle& Data,FGameplayTag Tag);
+    void StartMotion(const FVector& Direction);
+    FDelegateHandle DirectionDelegate;
+    bool bMotionStarted=false;
     TWeakObjectPtr<AAetherCharacter> ActiveCharacter;
     TWeakObjectPtr<UAbilitySystemComponent> ActiveSystem;
     FActiveGameplayEffectHandle Invulnerability;

@@ -38,6 +38,7 @@ private:
     void Receive(const FAetherCommandResult& Result);
     void CellIntent(const FAetherInspectRequest& Request,int32 Slot,EAetherCellIntent Intent);
     bool Drop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 Slot);
+    bool PreviewDrop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 Slot,FString& Hint) const;
     void Action(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action);
     void TransferAction(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action,int32 Destination,
         FGuid ExpectedTarget,EAetherTransferMode Mode);

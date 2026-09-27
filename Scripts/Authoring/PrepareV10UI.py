@@ -15,73 +15,75 @@ root = pathlib.Path(ue.Paths.project_dir())
 library = ue.EditorAssetLibrary
 tools = ue.AssetToolsHelpers.get_asset_tools()
 assets = []
-source = (root / "Source/AetherUI/Private/UI/AetherWidgetAssets.cpp").read_text(encoding="utf-8-sig")
-rows = re.findall(r'\{TEXT\("(Aether[^"]+)"\),TEXT\("(WBP_[^"]+)"\)\}', source)
-rows += [("AetherInventoryCell", "WBP_EquipmentSlot"),
-         ("AetherInspectionConfirmation", "WBP_QuantityDialog")]
-rows += [("AetherHUDSection", name) for name in ("WBP_Vitals", "WBP_QuestTracker", "WBP_QuickBar", "WBP_InteractionPrompt", "WBP_TargetVitals")]
-if len(rows) < 16:
-    raise RuntimeError("Widget 资源注册表不完整")
-library.make_directory("/Game/UI/Widgets")
-for parent_name, name in rows:
-    parent = getattr(ue, parent_name, None)
-    if parent is None:
-        raise RuntimeError("尚未编译原生控件：" + parent_name)
-    path = "/Game/UI/Widgets/" + name
-    asset = load_optional(path) if library.does_asset_exist(path) else None
-    if not asset:
-        factory = ue.WidgetBlueprintFactory()
-        factory.set_editor_property("parent_class", parent)
-        asset = tools.create_asset(name, "/Game/UI/Widgets", ue.WidgetBlueprint, factory)
-    if not isinstance(asset, ue.WidgetBlueprint):
-        raise RuntimeError("Widget 资产类型冲突：" + path)
-    # 已有蓝图布局保持，不通过脚本清空设计者的 WidgetTree。
-    if not library.save_loaded_asset(asset):
-        raise RuntimeError("无法保存控件：" + path)
-    assets.append(asset)
+icons_only = '-AetherIconsOnly' in ue.SystemLibrary.get_command_line()
+if not icons_only:
+    source = (root / "Source/AetherUI/Private/UI/AetherWidgetAssets.cpp").read_text(encoding="utf-8-sig")
+    rows = re.findall(r'\{TEXT\("(Aether[^"]+)"\),TEXT\("(WBP_[^"]+)"\)\}', source)
+    rows += [("AetherInventoryCell", "WBP_EquipmentSlot"),
+             ("AetherInspectionConfirmation", "WBP_QuantityDialog")]
+    rows += [("AetherHUDSection", name) for name in ("WBP_Vitals", "WBP_QuestTracker", "WBP_QuickBar", "WBP_InteractionPrompt", "WBP_TargetVitals")]
+    if len(rows) < 16:
+        raise RuntimeError("Widget 资源注册表不完整")
+    library.make_directory("/Game/UI/Widgets")
+    for parent_name, name in rows:
+        parent = getattr(ue, parent_name, None)
+        if parent is None:
+            raise RuntimeError("尚未编译原生控件：" + parent_name)
+        path = "/Game/UI/Widgets/" + name
+        asset = load_optional(path) if library.does_asset_exist(path) else None
+        if not asset:
+            factory = ue.WidgetBlueprintFactory()
+            factory.set_editor_property("parent_class", parent)
+            asset = tools.create_asset(name, "/Game/UI/Widgets", ue.WidgetBlueprint, factory)
+        if not isinstance(asset, ue.WidgetBlueprint):
+            raise RuntimeError("Widget 资产类型冲突：" + path)
+        # 已有蓝图布局保持，不通过脚本清空设计者的 WidgetTree。
+        if not library.save_loaded_asset(asset):
+            raise RuntimeError("无法保存控件：" + path)
+        assets.append(asset)
 
-# 按子控件依赖顺序编译真实 Designer 布局，父 WBP 引用已经可加载的子 WBP 类。
-layout_doc = json.loads((root / "Content/AetherCore/Definitions/V10/WidgetLayouts.json").read_text(encoding="utf-8-sig"))
-if layout_doc.get("SchemaVersion") != 1:
-    raise RuntimeError("不支持的 Widget 布局版本")
-layouts = layout_doc["Layouts"]
-finished, visiting = set(), set()
-def author_layout(name):
-    if name in finished:
-        return
-    if name in visiting:
-        raise RuntimeError("Widget 布局包含循环引用：" + name)
-    visiting.add(name)
-    spec = layouts[name]
-    def dependencies(node):
-        path = node["Class"]
-        if path.startswith("/Game/UI/Widgets/"):
-            child = path.rsplit("/", 1)[-1].split(".", 1)[0]
-            if child in layouts:
-                author_layout(child)
-        for child in node.get("Children", []):
-            dependencies(child)
-    dependencies(spec)
-    asset = load_optional("/Game/UI/Widgets/" + name)
-    result = ue.AetherWidgetAuthoring.apply_layout(asset, json.dumps(spec, ensure_ascii=False))
-    success, reason = result if isinstance(result, tuple) else (result is not None and result is not False, result if isinstance(result, str) else "")
-    if not success:
-        raise RuntimeError("布局制作失败：" + name + " " + reason)
-    visiting.remove(name)
-    finished.add(name)
-for layout_name in layouts:
-    author_layout(layout_name)
+    # 按子控件依赖顺序编译真实 Designer 布局，父 WBP 引用已经可加载的子 WBP 类。
+    layout_doc = json.loads((root / "Content/AetherCore/Definitions/V10/WidgetLayouts.json").read_text(encoding="utf-8-sig"))
+    if layout_doc.get("SchemaVersion") != 1:
+        raise RuntimeError("不支持的 Widget 布局版本")
+    layouts = layout_doc["Layouts"]
+    finished, visiting = set(), set()
+    def author_layout(name):
+        if name in finished:
+            return
+        if name in visiting:
+            raise RuntimeError("Widget 布局包含循环引用：" + name)
+        visiting.add(name)
+        spec = layouts[name]
+        def dependencies(node):
+            path = node["Class"]
+            if path.startswith("/Game/UI/Widgets/"):
+                child = path.rsplit("/", 1)[-1].split(".", 1)[0]
+                if child in layouts:
+                    author_layout(child)
+            for child in node.get("Children", []):
+                dependencies(child)
+        dependencies(spec)
+        asset = load_optional("/Game/UI/Widgets/" + name)
+        result = ue.AetherWidgetAuthoring.apply_layout(asset, json.dumps(spec, ensure_ascii=False))
+        success, reason = result if isinstance(result, tuple) else (result is not None and result is not False, result if isinstance(result, str) else "")
+        if not success:
+            raise RuntimeError("布局制作失败：" + name + " " + reason)
+        visiting.remove(name)
+        finished.add(name)
+    for layout_name in layouts:
+        author_layout(layout_name)
 
-theme_path = "/Game/UI/DA_UITheme"
-theme = load_optional(theme_path) if library.does_asset_exist(theme_path) else None
-if not theme:
-    factory = ue.DataAssetFactory()
-    factory.set_editor_property("data_asset_class", ue.AetherUITheme)
-    theme = tools.create_asset("DA_UITheme", "/Game/UI", ue.AetherUITheme, factory)
-if not isinstance(theme, ue.AetherUITheme):
-    raise RuntimeError("主题类型冲突")
-library.save_loaded_asset(theme)
-assets.append(theme)
+    theme_path = "/Game/UI/DA_UITheme"
+    theme = load_optional(theme_path) if library.does_asset_exist(theme_path) else None
+    if not theme:
+        factory = ue.DataAssetFactory()
+        factory.set_editor_property("data_asset_class", ue.AetherUITheme)
+        theme = tools.create_asset("DA_UITheme", "/Game/UI", ue.AetherUITheme, factory)
+    if not isinstance(theme, ue.AetherUITheme):
+        raise RuntimeError("主题类型冲突")
+    library.save_loaded_asset(theme)
+    assets.append(theme)
 
 # 图标使用自制基础几何线条；不下载外部人物、贴图或具有不明许可的图集。
 items = json.loads((root / "Content/AetherCore/Definitions/V10/Items.json").read_text(encoding="utf-8-sig"))
@@ -90,6 +92,14 @@ ids = sorted({x["IconId"] for x in items["Items"] + skills["Skills"] if x.get("I
 scratch = root / "Saved/Authoring/UIIcons"
 scratch.mkdir(parents=True, exist_ok=True)
 glyphs = {
+    "ManaPotion": [[(23,10),(41,10),(41,20),(48,30),(48,51),(16,51),(16,30),(23,20),(23,10)],[(35,25),(25,38),(34,38),(28,47)]],
+    "Ration": [[(12,35),(16,24),(29,19),(45,21),(53,31),(50,47),(16,48),(12,35)],[(23,25),(20,35)],[(34,23),(31,34)],[(44,26),(41,36)]],
+    "Herb": [[(20,54),(37,14)],[(28,37),(12,30),(12,20),(26,24),(28,37)],[(32,28),(37,11),(51,12),(47,25),(32,28)]],
+    "Wood": [[(12,25),(24,13),(54,36),(42,51),(12,25)],[(12,25),(17,39),(42,51)],[(24,21),(45,38)],[(20,30),(38,44)]],
+    "Ore": [[(11,45),(18,25),(30,10),(46,18),(55,43),(38,54),(11,45)],[(18,25),(35,31),(46,18)],[(35,31),(38,54)]],
+    "Quest": [[(18,11),(47,11),(47,51),(18,51),(18,11)],[(25,23),(39,23)],[(25,32),(39,32)],[(25,41),(33,41)]],
+    "Hammer": [[(11,13),(35,13),(42,25),(18,31),(11,13)],[(29,28),(46,52),(40,56),(23,31)]],
+    "Staff": [[(21,55),(40,19),(36,8),(47,10),(52,20),(40,26)],[(35,12),(46,18)]],
     "Potion": [[(25,12),(39,12),(39,22),(46,40),(43,53),(21,53),(18,40),(25,22),(25,12)],[(25,20),(39,20)]],
     "Material": [[(32,10),(51,24),(47,48),(21,54),(12,32),(32,10)],[(12,32),(32,27),(51,24)],[(32,27),(21,54)]],
     "Weapon": [[(16,50),(47,11),(49,24),(23,48)],[(16,37),(31,49)]],
@@ -158,6 +168,8 @@ rules=label.get_editor_property("rules")
 rules.set_editor_property("cook_rule",ue.PrimaryAssetCookRule.ALWAYS_COOK)
 label.set_editor_property("rules",rules)
 label.set_editor_property("is_runtime_label",True)
+if icons_only:
+    assets = list(label.get_editor_property("explicit_assets")) + assets
 label.set_editor_property("explicit_assets",assets)
 if not library.save_loaded_asset(label):
     raise RuntimeError("无法保存 UI Cook 标签")

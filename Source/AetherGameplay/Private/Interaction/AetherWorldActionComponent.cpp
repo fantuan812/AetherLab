@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "Combat/AetherActionTiming.h"
+#include "Combat/AetherControlledActionDefinition.h"
 UAetherWorldActionComponent::UAetherWorldActionComponent()
 {PrimaryComponentTick.bCanEverTick=true;SetIsReplicatedByDefault(true);}
 void UAetherWorldActionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -20,10 +21,19 @@ AActor* UAetherWorldActionComponent::ContactActor() const
 }
 bool UAetherWorldActionComponent::Reachable(AAetherFrontierCharacter& C,AAetherFrontierProp& P) const
 {
-    if(P.IsActorBeingDestroyed()||!P.bCarryable||P.Reactive->State.bBroken||!P.Mesh->IsSimulatingPhysics()||P.Mesh->GetMass()>80||
-       (P.Carrier&&P.Carrier!=&C)||FVector::DistSquared(C.GetActorLocation(),P.GetActorLocation())>FMath::Square(200.))return false;
+    return ManipulationReason(C,P).IsEmpty();
+}
+FString UAetherWorldActionComponent::ManipulationReason(const AAetherFrontierCharacter& C,const AAetherFrontierProp& P)
+{
+    if(!P.bEnabled||P.IsActorBeingDestroyed()||!P.bCarryable)return TEXT("此物件不能搬运或推动");
+    if(P.Reactive->State.bBroken)return TEXT("物件已损坏，无法搬运");
+    if(!P.Mesh->IsSimulatingPhysics())return TEXT("物件当前固定，无法搬运");
+    if(P.Mesh->GetMass()>80)return TEXT("物件过重，无法搬运或推动");
+    if(P.Carrier&&P.Carrier!=&C)return TEXT("物件正被其他角色占用");
+    if(FVector::DistSquared(C.GetActorLocation(),P.GetActorLocation())>FMath::Square(200.))return TEXT("靠近物件后可搬运");
     FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherHandReach),false,&C);Q.AddIgnoredActor(&P);
-    return !GetWorld()->LineTraceTestByChannel(C.GetActorLocation()+FVector(0,0,20),P.GetActorLocation(),ECC_Visibility,Q);
+    if(C.GetWorld()->LineTraceTestByChannel(C.GetActorLocation()+FVector(0,0,20),P.GetActorLocation(),ECC_Visibility,Q))return TEXT("物件被障碍挡住");
+    return {};
 }
 bool UAetherWorldActionComponent::Begin(FName Action,AAetherFrontierProp* SelectedTarget)
 {
@@ -48,6 +58,9 @@ bool UAetherWorldActionComponent::Begin(FName Action,AAetherFrontierProp* Select
         C->PresentAction(Action==TEXT("Push")?TEXT("Push"):TEXT("Pickup"),Action==TEXT("Push")?AetherActionTiming::PushDuration:AetherActionTiming::PickupDuration);
     }
     StartedAt=C->CombatTime();DamageSerial=C->CombatRuntime->DamageReceivedCount;bCommitted=false;
+    const auto* Definition=AetherControlledActions::Find(C->PresentedAction.Id);
+    if(!Definition||!Definition->IsValid()){Cancel();return false;}
+    CommitAt=StartedAt+Definition->CommitTime;EndsAt=StartedAt+Definition->Duration;
     CommittedDirection=(Phase==EAetherWorldActionPhase::Push?C->GetActorForwardVector():C->GetControlRotation().Vector()).GetSafeNormal();
     ++ActionSerial;UE_LOG(LogTemp,Verbose,TEXT("AETHER_ACTION_STARTED serial=%u action=%s"),ActionSerial,*Action.ToString());
     C->SetSprintInput(false);C->GetCharacterMovement()->StopMovementImmediately();C->ForceNetUpdate();return true;
@@ -79,8 +92,7 @@ void UAetherWorldActionComponent::TickComponent(float Dt,ELevelTick Type,FActorC
     if(IsBusy())
     {
         if(!Pending||(!bCommitted&&!Reachable(*C,*Pending))){Release();return;}
-        const float Elapsed=C->CombatTime()-StartedAt;
-        if(!bCommitted&&Elapsed>=(Phase==EAetherWorldActionPhase::Push?AetherActionTiming::PushContact:AetherActionTiming::HandContact))
+        if(!bCommitted&&C->CombatTime()>=CommitAt)
         {
             bCommitted=true;auto* P=Pending.Get();
             UE_LOG(LogTemp,Verbose,TEXT("AETHER_ACTION_COMMITTED serial=%u"),ActionSerial);
@@ -105,7 +117,7 @@ void UAetherWorldActionComponent::TickComponent(float Dt,ELevelTick Type,FActorC
                 P->Mechanism->RecordImpactSource(C);P->ForceNetUpdate();
             }
         }
-        if(Elapsed>=C->PresentedAction.Duration){Cancel();C->ForceNetUpdate();}
+        if(C->CombatTime()>=EndsAt){Cancel();C->ForceNetUpdate();}
     }
     if(C->Carried)
     {

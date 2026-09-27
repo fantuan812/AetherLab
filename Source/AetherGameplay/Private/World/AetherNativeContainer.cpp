@@ -40,6 +40,12 @@ void AAetherNativeContainer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void AAetherNativeContainer::ApplyKind()
 {
+    // A loot pouch is a collection container, never the physical material stored inside it.
+    if(ContainerKind==uint8(EAetherContainerKind::WorldDrop))
+    {
+        if(auto* Shape=LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Sphere.Sphere")))Mesh->SetStaticMesh(Shape);
+        SetActorScale3D(FVector(.38,.38,.26));
+    }
     // 私人储物箱与其他玩家的箱子共享服务位置；不制造不可见的服务器阻挡几何。
     Mesh->SetCollisionEnabled(ContainerKind==uint8(EAetherContainerKind::PersonalStorage)?ECollisionEnabled::NoCollision:ECollisionEnabled::QueryOnly);
 }

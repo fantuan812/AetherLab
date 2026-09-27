@@ -3,6 +3,7 @@
 #include "UI/AetherPageWidgets.h"
 #include "Presentation/AetherPlayerPreferences.h"
 #include "Input/AetherInputProfile.h"
+#include "Input/AetherInputCatalog.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "AetherMotionComponent.h"
 #include "Components/SpinBox.h"
@@ -83,23 +84,25 @@ void UAetherSettingsPage::RefreshPage()
     WindowMode->SetSelectedIndex(int32(S->GetFullscreenMode()));Quality->SetSelectedIndex(FMath::Clamp(S->GetOverallScalabilityLevel(),0,4));Vsync->SetIsChecked(S->IsVSyncEnabled());
     Volume->SetValue(P->MasterVolume);Mouse->SetValue(P->MouseSensitivity);Controller->SetValue(P->ControllerSensitivity);Scale->SetValue(P->UIScale);Invert->SetIsChecked(P->bInvertLook);
     Backend->SetSelectedIndex(FMath::Clamp(P->MotionBackend+1,0,3));
-    DraftKeys.Reset();BindingAction->ClearOptions();
+    DraftKeys.Reset();BindingIds.Reset();BindingAction->ClearOptions();
     if(auto* C=Player())
     {
         TArray<FName> Names;C->InputDefaults().GetKeys(Names);Names.Sort(FNameLexicalLess());
         for(FName Name:Names)if(Name!="LookX"&&Name!="LookY"&&Name!="Escape"&&!Name.ToString().StartsWith(TEXT("Pad")))
-        {DraftKeys.Add(Name,C->BindingFor(Name));BindingAction->AddOption(Name.ToString());}
+        {DraftKeys.Add(Name,C->BindingFor(Name));BindingIds.Add(Name);BindingAction->AddOption(AetherInputCatalog::Label(Name));}
     }
     if(BindingAction->GetOptionCount())BindingAction->SetSelectedIndex(0);bLoading=false;ActionSelected(BindingAction->GetSelectedOption(),ESelectInfo::Direct);
 }
 void UAetherSettingsPage::ActionSelected(FString Value,ESelectInfo::Type)
 {
-    if(bLoading||!BindingKey)return;TGuardValue<bool> Guard(bLoading,true);BindingKey->SetSelectedKey(FInputChord(DraftKeys.FindRef(FName(Value))));
+    if(bLoading||!BindingKey)return;const int32 Index=BindingAction->GetSelectedIndex();if(!BindingIds.IsValidIndex(Index))return;
+    TGuardValue<bool> Guard(bLoading,true);BindingKey->SetSelectedKey(FInputChord(DraftKeys.FindRef(BindingIds[Index])));
 }
 void UAetherSettingsPage::KeySelected(FInputChord Chord)
 {
     if(bLoading||!Chord.Key.IsValid()||Chord.Key.IsGamepadKey()||Chord.Key==EKeys::Escape||Chord.Key.IsAxis1D()||Chord.Key.IsAxis2D())return;
-    const FName Name(BindingAction->GetSelectedOption());if(!DraftKeys.Contains(Name))return;const FKey Old=DraftKeys[Name];
+    const int32 Index=BindingAction->GetSelectedIndex();if(!BindingIds.IsValidIndex(Index))return;
+    const FName Name=BindingIds[Index];if(!DraftKeys.Contains(Name))return;const FKey Old=DraftKeys[Name];
     for(auto& Pair:DraftKeys)if(Pair.Key!=Name&&Pair.Value==Chord.Key&&(UAetherInputProfile::Context(Name)&UAetherInputProfile::Context(Pair.Key)))Pair.Value=Old;
     DraftKeys[Name]=Chord.Key;Notice->SetText(FText::FromString(TEXT("键位变更尚未保存；同一场景内冲突已交换。")));
 }

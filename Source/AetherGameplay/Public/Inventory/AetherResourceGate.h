@@ -5,6 +5,12 @@
 #include "AetherResourceGate.generated.h"
 
 class AAetherCharacter;
+struct FAetherResourceGateMetrics
+{
+    int32 DeferredCount=0;
+    uint64 DeferredTotal=0,RecoveryCount=0,PublicationFailures=0;
+    double OldestWaitSeconds=0,PersistenceWaitSeconds=0;
+};
 // 每个 Pawn 的资源生命屏障。旧 Pawn 被销毁时队列随生命结束，不转投同角色的新 Pawn。
 UCLASS()
 class AETHERGAMEPLAY_API UAetherResourceGate : public UActorComponent
@@ -23,6 +29,8 @@ public:
     bool IsEnabled() const{return Receiver.IsValid();}
     bool IsRecovering() const{return bRecovering;}
     bool HasUseSummary() const{return bUseSummaryReady;}
+    bool IsStorageSlow() const{return bSlowStorage;}
+    FAetherResourceGateMetrics Inspect() const;
     float UseReadyTime() const{return UseReadyAtServerTime;}
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     FGuid Reservation() const{return Reserved;}
@@ -35,12 +43,16 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 private:
     UPROPERTY(Replicated) bool bUseSummaryReady=false;
+    UPROPERTY(Replicated) bool bSlowStorage=false;
     UPROPERTY(Replicated) float UseReadyAtServerTime=0;
     int64 PublishedUseDeadline=-1;
     bool WaitingForPersistence() const{return bRecovering||Reserved.IsValid()||bPublishing||bFaulted;}
     FAetherResourceStateV10 Sample() const;
     TUniquePtr<FAetherConsumableReceiver> Receiver;
-    TArray<TUniqueFunction<void()>> Deferred;
+    struct FDeferredAction {TUniqueFunction<void()> Action;double QueuedAt=0;};
+    TArray<FDeferredAction> Deferred;
+    uint64 DeferredTotal=0,RecoveryCount=0,PublicationFailures=0;
+    double PersistenceWaitStarted=0;
     FGuid Reserved;
     TOptional<FAetherResourceStateV10> ReservedBefore;
     bool bRecovering=false,bPublishing=false,bFaulted=false,bDraining=false;

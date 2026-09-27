@@ -40,6 +40,22 @@ FAetherObjectiveGuidance AetherInteractionQueries::Guidance(const FAetherInterac
     }
     G.bRewardReady=true;G.Label=TEXT("目标已完成，奖励待领取");G.Hint=TEXT("查看任务奖励并领取。");return G;
 }
+FString AetherInteractionQueries::ReasonText(const FString& Id,const TMap<FString,FString>& P,const FAetherRules& Rules)
+{
+    if(Id==TEXT("QuestRequired"))
+    {const auto* Required=P.Find(TEXT("QuestId"));const auto* Q=Required?Rules.Quest(FName(**Required)):nullptr;return TEXT("先完成：")+(Q?Q->Title:FString(TEXT("前置任务")));}
+    if(Id==TEXT("ObjectiveRequired"))
+    {const auto* Required=P.Find(TEXT("ObjectiveId"));const auto* O=Required?Rules.Objectives.Find(FName(**Required)):nullptr;return O?TEXT("先完成：")+O->Label+TEXT(" · ")+O->Hint:TEXT("先完成前置目标");}
+    if(Id==TEXT("ObjectivesIncomplete"))return TEXT("任务目标尚未完成，可在日志中追踪");
+    if(Id==TEXT("InCombat"))return TEXT("脱离战斗后开放");
+    if(Id==TEXT("TargetThreatened"))return TEXT("附近仍有威胁");
+    if(Id==TEXT("OutOfReach"))return TEXT("请靠近并保持视线");
+    if(Id==TEXT("TargetBusy")||Id==TEXT("ActorNotReady"))return TEXT("请先结束当前动作或等待同步完成");
+    if(Id==TEXT("QuestUnavailable"))return TEXT("任务已完成或尚未开放");
+    if(Id==TEXT("ServiceUnavailable"))return TEXT("该服务暂不可用");
+    if(Id==TEXT("TargetDowned"))return TEXT("倒地时不能使用该服务");
+    return TEXT("暂不可用，请等待状态更新");
+}
 FAetherInteractionProvider::FAetherInteractionProvider(FAetherInteractionDefinition D,FAetherInteractionSnapshot S,FAetherRules R)
     :Definition(MoveTemp(D)),Snapshot(MoveTemp(S)),Rules(MoveTemp(R)){}
 FAetherObjectiveGuidance FAetherInteractionProvider::Guidance() const

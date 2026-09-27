@@ -1,12 +1,15 @@
 #include "Definitions/AetherV10Definitions.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Combat/AetherControlledActionDefinition.h"
 
 const FAetherV10Definitions& FAetherV10Definitions::Get()
 {
     static const FAetherV10Definitions Value=[]
     {
         FAetherV10Definitions D;D.Rules=FAetherRules::Get();D.Skills=FAetherSkillDefinitionsV10::Get();
+        for(const auto& Action:AetherControlledActions::All())if(!Action.IsValid())
+        {D.Error=TEXT("Invalid controlled action rule");return D;}
         if(!D.Rules.bValid||!D.Skills.Validate(D.Error)){if(D.Error.IsEmpty())D.Error=D.Rules.Error;return D;}
         auto Read=[&](const TCHAR* Name,FString& Text)
         {
@@ -15,6 +18,9 @@ const FAetherV10Definitions& FAetherV10Definitions::Get()
         };
         FString Text;if(!Read(TEXT("Items.json"),Text))return D;
         D.Items=FAetherV10ItemDefinitions::Parse(Text,D.Error);if(!D.Items.Validate(D.Error))return D;
+        for(const auto& Pair:D.Items.Items)
+            if(!Pair.Value.UseId.IsEmpty()&&!D.Rules.Uses.Contains(FName(*Pair.Value.UseId)))
+            {D.Error=TEXT("Item references an unknown use definition");return D;}
         for(const auto& Pair:D.Items.Items)for(const auto& Grant:Pair.Value.SkillGrants)
             if(!D.Skills.Effect(Grant.Key,Grant.Value)){D.Error=TEXT("Equipment references unknown skill rank");return D;}
         if(!Read(TEXT("Containers.json"),Text))return D;

@@ -24,9 +24,13 @@ UE 5.8 C++ 开放世界灰盒。人物使用官方 Manny，场景和六种装备
 
 ## 主要操作
 
-WASD 移动，Shift 冲刺，Ctrl 跳跃，Space 闪避；左键轻击/按住重击，右键格挡。1–4 选元素，鼠标中键施法，F 锁定；E 交互，G 搬运/放下，C 投掷，V 推物。Q 生命药、Z 法力药；R/T 装备。I/J/K/M/P/Esc 打开背包/任务/技能/地图/队伍/菜单。F5 保存、倒地后 F8 回据点；开发模式 F10 反应调试、F11 晴雨。
+当前语义动作与默认键位由 [统一操作目录](Docs/Input-defaults.zh-CN.md) 生成；重绑后以游戏内当前映射为准。
+
+WASD 移动，Shift 冲刺，Space 跳跃，Left Ctrl 下蹲，Left Alt 闪避；左键短按松开轻击、按住 0.35 秒后松开重击，右键格挡。1–4 选元素，鼠标中键施法，F 锁定；E 交互，G 搬运/放下，C 投掷，V 推物。Q 生命药、Z 法力药；R/T 装备。I/J/K/M/P/Esc 打开背包/任务/技能/地图/队伍/菜单。背包 Tab/Shift+Tab 或手柄左右扳机切换操作区域，肩键切换大页；确认先关闭，再返回详情、页面。游戏内重绑后的提示以当前映射为准。F5 保存、倒地后 F8 回据点；开发模式 F10 反应调试、F11 晴雨。
 
 轻量验证：`Scripts/TestLight.ps1` 仅运行 9 个小型规则测试；本轮不跑 `TestFrontierNetwork.ps1`、规模压力测试和旧模式回归。如需短启动/重启检查，运行 `Scripts/CheckFrontier.ps1`，使用独立测试存档。完整报告见 [Verification-v5.json](Docs/Verification-v5.json)。
+
+v10 当前整改的实施与未验收边界见 [执行记录](Docs/Planning/V10-remediation-execution.zh-CN.md)。v5～v9 的验证记录只对应各自历史候选；本轮没有运行测试或完成正式平台验收。
 
 后续玩法记录见 [Gameplay-v6.zh-CN.md](Docs/Gameplay-v6.zh-CN.md)。J 面板中 Tab / 下一项切换任务，M 查看同一目标的位置。`Scripts/CheckAnimation.ps1` 和 `Scripts/CheckGuidance.ps1` 各进行一次隔离存档的短启动检查，无需多人压力或全量 Cook；结果见 [Verification-v6.json](Docs/Verification-v6.json)。
 

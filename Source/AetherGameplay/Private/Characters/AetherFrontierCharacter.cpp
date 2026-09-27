@@ -30,10 +30,12 @@
 #include "HAL/PlatformMisc.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Combat/AetherActionTiming.h"
+#include "Characters/AetherCompanionComponent.h"
+#include "Combat/AetherDerivedStats.h"
 
 AAetherFrontierCharacter::AAetherFrontierCharacter(const FObjectInitializer& ObjectInitializer)
     :Super(ObjectInitializer.SetDefaultSubobjectClass<UAetherCharacterMovement>(ACharacter::CharacterMovementComponentName))
-{ bUseBasicAssets=true;JumpMaxCount=1;JumpMaxHoldTime=.18f;CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle"));WorldActions=CreateDefaultSubobject<UAetherWorldActionComponent>(TEXT("WorldActions"));PlayerInput=CreateDefaultSubobject<UAetherPlayerInputComponent>(TEXT("PlayerInput")); }
+{ bUseBasicAssets=true;JumpMaxCount=1;JumpMaxHoldTime=.18f;CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle"));WorldActions=CreateDefaultSubobject<UAetherWorldActionComponent>(TEXT("WorldActions"));PlayerInput=CreateDefaultSubobject<UAetherPlayerInputComponent>(TEXT("PlayerInput"));CompanionDecision=CreateDefaultSubobject<UAetherCompanionComponent>(TEXT("CompanionDecision")); }
 AAetherPlayerState* AAetherFrontierCharacter::ProfileState() const {return GetPlayerState<AAetherPlayerState>();}
 void AAetherFrontierCharacter::BindPersistentAbilities()
 {
@@ -46,8 +48,30 @@ void AAetherFrontierCharacter::BindPersistentAbilities()
             if(auto* Old=Cast<AAetherCharacter>(PS->AbilitySystem->GetAvatarActor());Old&&Old!=this)Old->CancelActions();
         }
         AbilitySystem=PS->AbilitySystem; Attributes=PS->Attributes; AbilitySystem->InitAbilityActorInfo(PS,this);
+        if(HasAuthority()&&DerivedAttributeSystem.Get()!=AbilitySystem)
+        {
+            if(DerivedAttributeSystem.IsValid())DerivedAttributeSystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetGearMaxHealthAttribute()).Remove(DerivedHealthDelegate);
+            DerivedAttributeSystem=AbilitySystem;
+            DerivedHealthDelegate=AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetGearMaxHealthAttribute()).AddWeakLambda(this,[this](const FOnAttributeChangeData&)
+            {
+                // GAS replaces source effects in several steps. Never clamp against an intermediate removal.
+                if(bDerivedHealthQueued)return;bDerivedHealthQueued=true;
+                GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this,[this]{bDerivedHealthQueued=false;RefreshDerivedHealth();}));
+            });
+        }
         if(HasAuthority())PS->RefreshTemporarySkills();
     }
+}
+void AAetherFrontierCharacter::RefreshDerivedHealth()
+{
+    auto* PS=ProfileState();const auto* P=PS?PS->GetNativeProfile():nullptr;
+    if(!HasAuthority()||!P||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this)return;
+    // Re-evaluate after the barrier instead of queueing a stale absolute limit or health value.
+    const TWeakObjectPtr<AAetherFrontierCharacter> Self=this;
+    if(ResourceGate->IsEnabled()&&ResourceGate->Defer([Self]{if(Self.IsValid())Self->RefreshDerivedHealth();}))return;
+    MaxHealth=AetherDerivedStats::MaximumHealth(P->Experience,Attributes->GearMaxHealth.GetCurrentValue());
+    if(Health()>MaxHealth)SetVitals(MaxHealth,Mana(),Stamina());
+    ForceNetUpdate();
 }
 void AAetherFrontierCharacter::BeginPlay()
 {
@@ -102,6 +126,7 @@ void AAetherFrontierCharacter::ApplyProfileEquipment()
 void AAetherFrontierCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps); DOREPLIFETIME(AAetherFrontierCharacter,bSprinting);DOREPLIFETIME(AAetherFrontierCharacter,bTravelPending);
+    DOREPLIFETIME_CONDITION(AAetherFrontierCharacter,TravelWaitReason,COND_OwnerOnly);
     DOREPLIFETIME(AAetherFrontierCharacter,Carried);DOREPLIFETIME(AAetherFrontierCharacter,CompanionOwner);
     DOREPLIFETIME(AAetherFrontierCharacter,CompanionId);DOREPLIFETIME(AAetherFrontierCharacter,bCompanionHold);DOREPLIFETIME(AAetherFrontierCharacter,EncounterId);DOREPLIFETIME(AAetherFrontierCharacter,BossPhase);DOREPLIFETIME(AAetherFrontierCharacter,BossVersion);DOREPLIFETIME(AAetherFrontierCharacter,BossPhaseStarted);DOREPLIFETIME(AAetherFrontierCharacter,BossPressure);DOREPLIFETIME(AAetherFrontierCharacter,bHealer);DOREPLIFETIME(AAetherFrontierCharacter,ReviveTarget);
 }
@@ -111,19 +136,28 @@ void AAetherFrontierCharacter::Yaw(float V){if(!bPanel)AddControllerYawInput(V*G
 void AAetherFrontierCharacter::Pitch(float V){const auto* P=GetDefault<UAetherPlayerPreferences>();if(!bPanel)AddControllerPitchInput((P->bInvertLook?V:-V)*P->MouseSensitivity);}
 void AAetherFrontierCharacter::PressAttack()
 {
-    if(bAttackHeld||bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget)return;
+    if(bAttackHeld||bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget||AttackInputSequence==MAX_uint32)return;
+    ++AttackInputSequence;
+    bBufferedAttack=false; // 新按下替换上一条尚未提交的短缓冲。
     bAttackHeld=true;bAttackCharged=false;PressedAt=GetWorld()->GetTimeSeconds();
     Feedback=TEXT("攻击准备 · 松开轻击，按住蓄力");OnPresentationChanged.Broadcast();
-    UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_PRESSED time=%.3f"),CombatTime());
+    UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_PRESSED input=%u synchronized_time=%.3f"),AttackInputSequence,CombatTime());
 }
 void AAetherFrontierCharacter::ReleaseAttack()
 {
     const bool Attack=bAttackHeld,Heavy=GetWorld()->GetTimeSeconds()-PressedAt>=AetherActionTiming::AttackCharge;
     bAttackHeld=false;bAttackCharged=false;
     if(!Attack||bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget){CancelAttackInput();return;}
-    UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_RELEASED time=%.3f heavy=%d"),CombatTime(),Heavy);
-    if(Ready()){bBufferedAttack=false;ServerAttack(Heavy);}
-    else {bBufferedAttack=true;bBufferedHeavy=Heavy;BufferedAttackUntil=CombatTime()+AetherActionTiming::AttackBuffer;}
+    UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_RELEASED input=%u synchronized_time=%.3f heavy=%d"),AttackInputSequence,CombatTime(),Heavy);
+    if(Ready()){bBufferedAttack=false;ServerMeleeInput(Heavy,AttackInputSequence);}
+    else {bBufferedAttack=true;bBufferedHeavy=Heavy;BufferedAttackSequence=AttackInputSequence;BufferedAttackUntil=CombatTime()+AetherActionTiming::AttackBuffer;}
+}
+void AAetherFrontierCharacter::ServerMeleeInput_Implementation(bool Heavy,uint32 Sequence)
+{
+    if(!Sequence||Sequence<=LastAttackInputSequence)return;LastAttackInputSequence=Sequence;
+    if(!RequestMelee(Heavy?TEXT("Heavy"):TEXT("Light")))return;
+    Equipment->Attack.InputSequence=Sequence;ForceNetUpdate();
+    UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_ACCEPTED input=%u attack=%u server_time=%.3f"),Sequence,Equipment->Attack.Serial,CombatTime());
 }
 void AAetherFrontierCharacter::SetupPlayerInputComponent(UInputComponent* I){PlayerInput->Setup(I);}
 FKey AAetherFrontierCharacter::BindingFor(FName Name) const{return PlayerInput->BindingFor(Name);}
@@ -189,6 +223,8 @@ void AAetherFrontierCharacter::ReleaseCarry()
 {if(WorldActions)WorldActions->Release();}
 void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
+    if(DerivedAttributeSystem.IsValid())DerivedAttributeSystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetGearMaxHealthAttribute()).Remove(DerivedHealthDelegate);
+    DerivedAttributeSystem.Reset();DerivedHealthDelegate.Reset();
     TradeSession={};SaleConfirmation={};PendingTradeAuthorization.Invalidate();
     InteractionFocus={};bHasInteractionFocus=false;
     if(auto* Registry=GetWorld()->GetSubsystem<UAetherNearbyRegistry>())Registry->Unregister(this);
@@ -250,7 +286,7 @@ void AAetherFrontierCharacter::Tick(float Dt)
         if(bBufferedAttack)
         {
             if(CombatTime()>BufferedAttackUntil)CancelAttackInput();
-            else if(Ready()){const bool Heavy=bBufferedHeavy;bBufferedAttack=false;ServerAttack(Heavy);}
+            else if(Ready()){const bool Heavy=bBufferedHeavy;bBufferedAttack=false;ServerMeleeInput(Heavy,BufferedAttackSequence);}
         }
     }
     MaintainTrade();
@@ -296,85 +332,31 @@ void AAetherFrontierCharacter::Tick(float Dt)
         if(ReviveTarget){FCollisionQueryParams Q(SCENE_QUERY_STAT(RescueLOS),false,this);Q.AddIgnoredActor(ReviveTarget);if(GetWorld()->LineTraceTestByChannel(GetActorLocation(),ReviveTarget->GetActorLocation(),ECC_Visibility,Q))ReviveTarget=nullptr;}
         if(!ReviveTarget)if(auto* Spec=AbilitySystem->FindAbilitySpecFromClass(UAetherReviveAbility::StaticClass()))AbilitySystem->CancelAbilityHandle(Spec->Handle);
     }
-    if(!IsValid(CompanionOwner)||!Alive()||CombatTime()<StunUntil||bCompanionHold)return;
-    if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();M&&M->Encounters&&M->Encounters->IsChanneling(this))return;
-    const float T=CombatTime();
-    if(!CompanionOwner->Alive())
-    {
-        ServerBlock(false);
-        const FVector D=CompanionOwner->GetActorLocation()-GetActorLocation();
-        if(D.Size2D()>170)AddMovementInput(SafeMoveDirection(CompanionOwner->GetActorLocation()));
-        else if(!ReviveTarget){ReviveTarget=CompanionOwner;ReviveStarted=T;ReviveDamageSerial=CombatRuntime->DamageReceivedCount;if(!AbilitySystem->TryActivateAbilityByClass(UAetherReviveAbility::StaticClass()))ReviveTarget=nullptr;}
-        return;
-    }
-    // 医者照顾同一招募队伍，包括自己；选取范围内生命比例最低的存活队员。
-    // 沿用既有 15 法力 / 20 生命 / 5 秒冷却，不因验证场景增加治疗强度。
-    if(bHealer&&T>NextCompanionAction&&Mana()>=15)
-    {
-        AAetherFrontierCharacter* Patient=nullptr;float Lowest=.65f;
-        for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)
-        {
-            if((*It!=this&&*It!=CompanionOwner&&It->CompanionOwner!=CompanionOwner)||!It->Alive()||
-               FVector::DistSquared(GetActorLocation(),It->GetActorLocation())>FMath::Square(600.))continue;
-            const float Fraction=It->Health()/FMath::Max(It->MaxHealth,1.f);if(Fraction>=Lowest)continue;
-            FCollisionQueryParams Q(SCENE_QUERY_STAT(CompanionHealSight),false,this);Q.AddIgnoredActor(*It);
-            if(*It!=this&&GetWorld()->LineTraceTestByChannel(GetActorLocation(),It->GetActorLocation(),ECC_Visibility,Q))continue;
-            Patient=*It;Lowest=Fraction;
-        }
-        if(Patient){
-            // 热伤害会继续消耗生命。医者先经正式引水能力给着火队员降温，消耗真实储水与法力。
-            if(Patient!=this&&Patient->Reactive->State.TemperatureC>55&&WaterReserveKg>=.5f&&Ready()&&Controller){
-                Controller->SetControlRotation((Patient->GetActorLocation()-GetActorLocation()-FVector(0,0,55)).Rotation());
-                if(TrySkill(TEXT("Water.Draw"))){NextCompanionAction=T+1;return;}
-            }
-            NextCompanionAction=T+5;ExecuteCompanionHeal(Patient);
-        }
-    }
-    AAetherCharacter* Target=nullptr;double Best=FMath::Square(900.0);
-    for(TActorIterator<AAetherCharacter> It(GetWorld());It;++It)if(It->Fighter!=EAetherFighter::Player&&It->Alive())
-    {double D=FVector::DistSquared(GetActorLocation(),It->GetActorLocation());if(D<Best)
-     {auto* FC=Cast<AAetherFrontierCharacter>(*It);auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(FC&&!FC->EncounterId.IsNone()&&M&&M->Encounters&&!M->Encounters->Participates(this,FC->EncounterId))continue;
-      FCollisionQueryParams Q(SCENE_QUERY_STAT(CompanionSight),false,this);Q.AddIgnoredActor(*It);if(GetWorld()->LineTraceTestByChannel(GetActorLocation(),It->GetActorLocation(),ECC_Visibility,Q))continue;Best=D;Target=*It;}}
-    const FVector D=(Target?Target->GetActorLocation():CompanionOwner->GetActorLocation())-GetActorLocation();
-    if(bHealer)
-    {
-        // 治疗同伴保持后排，不再拿着近战模板追进敌群而耗尽整个队伍的治疗资源。
-        ServerBlock(false);
-        if(Target&&D.Size2D()<400)AddMovementInput(SafeMoveDirection(GetActorLocation()-D.GetSafeNormal2D()*350));
-        else if(FVector::DistSquared2D(GetActorLocation(),CompanionOwner->GetActorLocation())>FMath::Square(350.))
-            AddMovementInput(SafeMoveDirection(CompanionOwner->GetActorLocation()));
-        return;
-    }
-    if(!Target){if(D.Size2D()>400)bFollowing=true;else if(D.Size2D()<250)bFollowing=false;}
-    if(Target?D.Size2D()>145:bFollowing)
-    {
-        FHitResult Wall;FCollisionQueryParams Q(SCENE_QUERY_STAT(CompanionMove),false,this);Q.AddIgnoredActor(CompanionOwner);if(Target)Q.AddIgnoredActor(Target);
-        FVector Dir=D.GetSafeNormal2D();
-        if(GetWorld()->LineTraceSingleByChannel(Wall,GetActorLocation(),GetActorLocation()+Dir*160,ECC_Visibility,Q))Dir=FVector::CrossProduct(Wall.ImpactNormal,FVector::UpVector).GetSafeNormal();
-        AddMovementInput(SafeMoveDirection(Target?Target->GetActorLocation():CompanionOwner->GetActorLocation()));
-    }
-    if(Target){
-        SetActorRotation(D.Rotation());if(Controller)Controller->SetControlRotation(D.Rotation());
-        const bool Guard=D.Size2D()<300&&(Target->bWindingUp||Target->Equipment->IsBusy());
-        ServerBlock(Guard);
-        if(!Guard&&D.Size2D()<165&&T>NextCompanionAction&&Ready()){PerformMelee(false);NextCompanionAction=T+1;}
-    }else ServerBlock(false);
 }
 
-void AAetherFrontierCharacter::ExecuteCompanionHeal(TWeakObjectPtr<AAetherFrontierCharacter> Target)
+void AAetherFrontierCharacter::ExecuteCompanionHeal(TWeakObjectPtr<AAetherFrontierCharacter> Target,uint64 Request)
 {
+    if(!Request)
+    {
+        if(bCompanionHealPending||CompanionHealRequest==MAX_uint64)return;
+        Request=++CompanionHealRequest;bCompanionHealPending=true;
+        CompanionHealOwner=CompanionOwner;CompanionHealDamageSerial=CombatRuntime->DamageReceivedCount;
+    }
+    if(!bCompanionHealPending||Request!=CompanionHealRequest)return;
     auto* Recipient=Target.Get();
-    const bool SameParty=Recipient&&(Recipient==this||Recipient==CompanionOwner||(CompanionOwner&&Recipient->CompanionOwner==CompanionOwner));
-    if(!HasAuthority()||!SameParty||!bHealer||!Alive()||!Recipient->Alive()||
-        Mana()<15||FVector::DistSquared(GetActorLocation(),Recipient->GetActorLocation())>FMath::Square(600.))return;
+    const bool SameRecruitment=Recipient&&AetherRelations::CanAssist(*this,*Recipient);
+    if(!HasAuthority()||!SameRecruitment||!bHealer||!Alive()||!Recipient->Alive()||CombatTime()<StunUntil||bTravelPending||bCompanionHold||Recipient->Health()>=Recipient->MaxHealth||
+        CompanionHealOwner.Get()!=CompanionOwner||CompanionHealDamageSerial!=CombatRuntime->DamageReceivedCount||
+        Mana()<15||FVector::DistSquared(GetActorLocation(),Recipient->GetActorLocation())>FMath::Square(600.)){CancelCompanionHeal();return;}
     FCollisionQueryParams Sight(SCENE_QUERY_STAT(CompanionHealCommit),false,this);Sight.AddIgnoredActor(Recipient);
-    if(Recipient!=this&&GetWorld()->LineTraceTestByChannel(GetActorLocation(),Recipient->GetActorLocation(),ECC_Visibility,Sight))return;
+    if(Recipient!=this&&GetWorld()->LineTraceTestByChannel(GetActorLocation(),Recipient->GetActorLocation(),ECC_Visibility,Sight)){CancelCompanionHeal();return;}
     const TWeakObjectPtr<AAetherFrontierCharacter> Self=this;
-    if(Recipient->ResourceGate->Defer([Self,Target]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target);}))return;
-    if(ResourceGate->Defer([Self,Target]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target);}))return;
+    if(Recipient->ResourceGate->Defer([Self,Target,Request]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target,Request);}))return;
+    if(ResourceGate->Defer([Self,Target,Request]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target,Request);}))return;
     // 整个治疗及施法者扣费一起延后，以执行时的当前生命加增量，不排队旧绝对目标。
     Recipient->SetVitals(Recipient->Health()+20,Recipient->Mana(),Recipient->Stamina());
     AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(),EGameplayModOp::Additive,-15);
+    NextCompanionAction=CombatTime()+5;CancelCompanionHeal();
 }
 float AAetherFrontierCharacter::TakeDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer)
 {

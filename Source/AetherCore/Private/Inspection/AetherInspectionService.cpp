@@ -46,6 +46,23 @@ void Compare(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const 
         if(!Candidate.IsEquipped(P.Value))M.DisplacedInstances.AddUnique(P.Value);
     M.DisplacedInstances.Sort([](const FGuid& A,const FGuid& B){return A.ToString()<B.ToString();});
     M.ComparisonMessage=TEXT("比较装备附加总值；正负差异包含耐久折减和所有被卸下的装备。");
+    const auto Grants=[&](const FAetherInventoryStateV10& Inventory)
+    {
+        TMap<FString,int32> R;TSet<FGuid> Seen;
+        for(const auto& Slot:Inventory.Equipment)
+        {
+            if(Seen.Contains(Slot.Value))continue;Seen.Add(Slot.Value);
+            const auto* I=Inventory.Find(Slot.Value);if(!I)continue;const auto& Def=D.Items.FindChecked(I->DefinitionId);
+            if(Def.MaxDurability>0&&I->Durability==0)continue;
+            for(const auto& G:Def.SkillGrants)R.FindOrAdd(G.Key)=FMath::Max(R.FindRef(G.Key),G.Value);
+        }
+        return R;
+    };
+    const auto OldGrants=Grants(S.Inventory),NewGrants=Grants(Candidate);TSet<FString> GrantIds;
+    for(const auto& G:OldGrants)GrantIds.Add(G.Key);for(const auto& G:NewGrants)GrantIds.Add(G.Key);
+    TArray<FString> OrderedGrants=GrantIds.Array();OrderedGrants.Sort();
+    for(const auto& Id:OrderedGrants)if(OldGrants.FindRef(Id)!=NewGrants.FindRef(Id))
+        Field(M,TEXT("gearSkill"),TEXT("装备来源技能等级变化"),FString::Printf(TEXT("%s：%d → %d（永久学习保留）"),*Id,OldGrants.FindRef(Id),NewGrants.FindRef(Id)));
 }
 void Item(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FAetherV10ItemDefinitions& D)
 {

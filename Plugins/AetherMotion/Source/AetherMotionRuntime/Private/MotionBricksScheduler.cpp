@@ -4,6 +4,14 @@
 #include "HAL/PlatformTime.h"
 #include "HAL/RunnableThread.h"
 #include "Misc/ScopeLock.h"
+namespace
+{
+double RecordLatency(TArray<double>& Samples,double Value)
+{
+    if(Samples.Num()>=128)Samples.RemoveAt(0);Samples.Add(Value);
+    auto Ordered=Samples;Ordered.Sort();return Ordered[FMath::Clamp(FMath::CeilToInt(Ordered.Num()*.95)-1,0,Ordered.Num()-1)];
+}
+}
 
 FMotionBricksScheduler::FMotionBricksScheduler()
 {
@@ -116,17 +124,22 @@ uint32 FMotionBricksScheduler::Run()
         }
         {FScopeLock Lock(&Mutex);Metrics.NativeAgents=NativeIds.Num();}
         if(!HasWork){Wake->Wait(1000);continue;}
+        const double GenerationStarted=FPlatformTime::Seconds();
         FAetherMotionResult Result;Result.AgentId=Work.AgentId;Result.Stamp=Work.Stamp;Result.SubmittedAt=Work.SubmittedAt;
         if(Model){Result.Clip=Model->Generate(Work,Result.Reason);NativeIds.Add(Work.AgentId);}
         else Result.Reason=Failure.IsEmpty()?TEXT("传统动画"):Failure;
         {
             FScopeLock Lock(&Mutex);
+            const double QueueMs=FMath::Max(0.,GenerationStarted-Work.SubmittedAt)*1000.,GenerationMs=(FPlatformTime::Seconds()-GenerationStarted)*1000.;
+            Metrics.QueueP95Milliseconds=RecordLatency(QueueSamples,QueueMs);Metrics.GenerationP95Milliseconds=RecordLatency(GenerationSamples,GenerationMs);
+            Metrics.QueueMaxMilliseconds=FMath::Max(Metrics.QueueMaxMilliseconds,QueueMs);Metrics.GenerationMaxMilliseconds=FMath::Max(Metrics.GenerationMaxMilliseconds,GenerationMs);
             Metrics.NativeAgents=NativeIds.Num();if(Model){++Metrics.NativeCalls;if(!Result.Clip)++Metrics.NativeFailures;}
             if(auto* E=Entries.Find(Work.AgentId))
             {
                 E->bExecuting=false;
                 if(Configuration==Version&&E->Latest.SameIntent(Work.Stamp)&&E->Latest.RequestSequence==Work.Stamp.RequestSequence)
                     E->Result=MoveTemp(Result);
+                else ++Metrics.DiscardedResults;
                 // 废弃输出后，下次请求携带最后实际消费的四帧；ModelOwner 不沿用未播放的计划。
             }
         }

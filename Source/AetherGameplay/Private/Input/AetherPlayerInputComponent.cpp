@@ -1,6 +1,7 @@
 #include "Input/AetherPlayerInputComponent.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "Input/AetherInputProfile.h"
+#include "Input/AetherInputCatalog.h"
 #include "Presentation/AetherPlayerPreferences.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -36,6 +37,7 @@ void UAetherPlayerInputComponent::Setup(UInputComponent* I)
     auto Action=[&](FName Name,FKey Key,EInputActionValueType Type)
     {
         if(auto* Existing=InputActions.Find(Name))return Existing->Get();
+        Key=AetherInputCatalog::DefaultKey(Name,Key);
         DefaultBindings.Add(Name,Key);
         const FString Path=TEXT("/Game/AetherCore/Input/IA_")+Name.ToString()+TEXT(".IA_")+Name.ToString();
         auto* A=LoadObject<UInputAction>(nullptr,*Path);

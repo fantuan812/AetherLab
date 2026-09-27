@@ -82,11 +82,13 @@ reach = {
     "upperarm_r": curve([(0, (0, 0, 0)), (.4, (0, 65, 20)), (.65, (0, 65, 20)), (1, (0, 0, 0))]),
 }
 recipe("Pickup", duration=.7, tracks=reach)
-recipe("PutDown", duration=.65, tracks=reach)
+recipe("Push", duration=.7, tracks={**reach,
+    "spine_02": curve([(0,(0,0,0)),(.5,(18,0,0)),(.65,(25,0,0)),(1,(0,0,0))])})
+recipe("PutDown", duration=.7, tracks=reach)
 recipe("Rescue", duration=1.2, plant_feet=True, tracks={**squat(40), **arms(),
     "spine_02": curve([(0, (18, 0, 0)), (.5, (23, 0, 0)), (1, (18, 0, 0))]),
     "lowerarm_r": curve([(0, (0, 45, 0)), (.5, (0, 65, 0)), (1, (0, 45, 0))])})
-recipe("Throw", duration=.65, tracks={
+recipe("Throw", duration=.7, tracks={
     "spine_02": curve([(0, (0, 0, 0)), (.35, (-15, 0, 0)), (.65, (20, 0, 0)), (1, (0, 0, 0))]),
     "upperarm_l": curve([(0, (0, -45, -35)), (.35, (0, -20, -110)), (.65, (0, -80, -25)), (1, (0, 0, 0))]),
     "upperarm_r": curve([(0, (0, 45, 35)), (.35, (0, 20, 110)), (.65, (0, 80, 25)), (1, (0, 0, 0))])})

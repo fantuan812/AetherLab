@@ -29,6 +29,7 @@ public:
     virtual void RefreshPage(){}
     virtual void LiveRefresh(){}
     virtual void PageClosed(){}
+    virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
     AAetherFrontierCharacter* Player() const;
     const FAetherProfileStateV10* Profile() const;
     bool IsOpen() const;
@@ -36,6 +37,8 @@ protected:
     TWeakObjectPtr<UAetherMenuSubsystem> Menu;
     TWeakObjectPtr<UAetherCommandClient> Client;
 private:
+    TArray<UWidget*> FocusableWidgets() const;
+    void RestoreFocusIndex(int32 Index);
     bool bOpen=false;
     void MenuChanged();
     void ProfileChanged();

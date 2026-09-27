@@ -109,6 +109,7 @@ struct FAetherReplicatedAttack
 {
     GENERATED_BODY()
     UPROPERTY() uint32 Serial = 0;
+    UPROPERTY() uint32 InputSequence = 0;
     UPROPERTY() FName ItemId;
     UPROPERTY() FName AttackId;
     UPROPERTY() float StartedAt = -100;

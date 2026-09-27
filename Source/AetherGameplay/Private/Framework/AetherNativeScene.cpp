@@ -10,6 +10,7 @@
 #include "EngineUtils.h"
 #include "Assets/AetherAssetPreload.h"
 #include "World/AetherWorldDefinition.h"
+#include "Interaction/AetherNativeInteraction.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -22,6 +23,30 @@ FAetherEncounterRun EncounterView(const FAetherEncounterStateV10& S)
     FAetherEncounterRun R;R.Definition=FName(*S.Definition);R.Instance=S.Instance;R.Phase=EAetherEncounterPhase(S.Phase);
     R.Version=S.Version;R.Wave=S.Wave;R.LockedSeats=S.LockedSeats;R.PhaseStarted=S.PhaseStarted;R.Progress=S.Progress;
     R.Participants=S.Participants;R.Settled=S.Settled;return R;
+}
+bool ValidateV10SceneReferences(FString& Reason)
+{
+    const auto& D=FAetherV10Definitions::Get();const auto& W=FAetherWorldDefinitions::Get();
+    if(!D.bValid||!W.bValid){Reason=D.bValid?W.Error:D.Error;return false;}
+    for(const auto& Objective:D.Rules.Objectives)
+    {
+        const auto* Placement=W.Find(Objective.Value.Anchor);
+        if(!Placement||!Placement->Id.ToString().Equals(Objective.Value.Anchor.ToString(),ESearchCase::CaseSensitive))
+        {Reason=TEXT("Quest objective refers to a missing map anchor: ")+Objective.Key.ToString();return false;}
+    }
+    for(const auto& Entry:D.Interactions.Targets)for(const auto& Action:Entry.Value.Actions)
+    {
+        using K=EAetherInteractionActionKind;
+        if(!AetherNativeInteraction::IsPersistent(Action.Kind)&&!AetherNativeInteraction::IsSceneService(Action.Kind)&&
+            Action.Kind!=K::TrackObjective&&Action.Kind!=K::ResetSkills&&
+            !(Action.Kind==K::Talk&&Entry.Value.Dialogue.Contains(Action.DialogueId)))
+        {Reason=TEXT("Interaction has no registered production handler: ")+Entry.Key+TEXT("/")+Action.Id;return false;}
+        // Loot is spawned by committed rewards. Citizen is decorative content with no map placement.
+        if(Entry.Key!=TEXT("Loot")&&Entry.Key!=TEXT("Citizen")&&Entry.Key!=TEXT("Background")&&
+            !W.Objects.ContainsByPredicate([&](const auto& P){return P.Service.ToString().Equals(Entry.Key,ESearchCase::CaseSensitive);}))
+        {Reason=TEXT("Interaction has no map service instance: ")+Entry.Key;return false;}
+    }
+    Reason.Reset();return true;
 }
 }
 void AAetherFrontierMode::FailNativeScene(const FString& Reason)
@@ -123,6 +148,7 @@ void AAetherFrontierMode::TickNativeStartup()
     {
         auto* Assets=GetWorld()->GetSubsystem<UAetherAssetPreload>();
         if(Persistence->Phase()!=EAetherNativePersistencePhase::Prepared||!Encounters||!Assets||!Assets->Ready())return;
+        FString ContentReason;if(!ValidateV10SceneReferences(ContentReason)){FailNativeScene(ContentReason);return;}
         // 同一游戏线程内完成恢复和后端安装；所有回调只捕获弱 GameMode，旅行后不会访问旧世界。
         const TWeakObjectPtr<AAetherFrontierMode> Self=this;FString Why;
         if(!Persistence->Activate(

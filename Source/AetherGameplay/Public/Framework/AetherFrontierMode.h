@@ -54,6 +54,7 @@ public:
     bool IsNativeMode() const{return bNativeMode;}
     bool NativeSceneReady() const{return bNativeSceneReady&&bNativeBaselineReady;}
     bool IsTravelRegionReady(FVector Destination) const;
+    FString TravelRegionBlockReason(FVector Destination) const;
     TSet<FName> BuildRegionRequirements(const TArray<FVector>& Interest) const;
     void ReleaseNativePawn(AAetherFrontierCharacter* Pawn);
     bool RecoverNativePlayer(AAetherFrontierCharacter* Pawn);

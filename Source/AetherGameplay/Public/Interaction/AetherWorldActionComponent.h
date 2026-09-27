@@ -17,6 +17,7 @@ public:
     void Release();
     bool IsBusy() const{return Phase!=EAetherWorldActionPhase::Idle;}
     AActor* ContactActor() const;
+    static FString ManipulationReason(const AAetherFrontierCharacter& C,const AAetherFrontierProp& P);
     virtual void TickComponent(float Delta,ELevelTick Type,FActorComponentTickFunction* Tick) override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;
@@ -24,6 +25,8 @@ private:
     UPROPERTY(Replicated) EAetherWorldActionPhase Phase=EAetherWorldActionPhase::Idle;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierProp> Pending;
     float StartedAt=0;
+    float CommitAt=0;
+    float EndsAt=0;
     FVector CommittedDirection=FVector::ZeroVector;
     uint32 ActionSerial=0;
     uint64 DamageSerial=0;

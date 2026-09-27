@@ -41,7 +41,7 @@ void UAetherAnimInstance::UpdateActions(AAetherCharacter& Character,const FAethe
        Direction>45?TEXT("CrouchRight"):Direction<-45?TEXT("CrouchLeft"):TEXT("CrouchWalk");
    Elapsed=Now;Loop=true;
  }
- UAnimSequence* Selected=nullptr;if(ActionSet)if(const auto* Found=ActionSet->Clips.Find(Id))Selected=Found->Get();
+ UAnimSequence* Selected=nullptr;if(ActionSet&&ActionSet->bDefinitionValid)if(const auto* Found=ActionSet->Clips.Find(Id))Selected=Found->Get();
  if(Selected)
  {
    ControlledClip=Selected;const float Length=Selected->GetPlayLength();
@@ -59,6 +59,7 @@ void UAetherAnimInstance::UpdateActions(AAetherCharacter& Character,const FAethe
   if(Attack&&LastAttack!=C->Equipment->Attack.Serial)
   {
    LastAttack=C->Equipment->Attack.Serial;
+   UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_VISIBLE input=%u attack=%u synchronized_time=%.3f"),C->Equipment->Attack.InputSequence,LastAttack,C->CombatTime());
    UAnimSequence* Clip=C->Equipment->Attack.AttackId=="Heavy"?HeavyClip.Get():LightClips[LastAttack%LightClips.Num()].Get();
    if(Attack->Animation.IsValid())Clip=Attack->Animation.Get();else if(!Attack->Animation.IsNull())Clip=Attack->Animation.LoadSynchronous();
    if(Clip){AttackMontage=PlaySlotAnimationAsDynamicMontage(Clip,"DefaultSlot",.06f,.12f);if(AttackMontage)Montage_SetPlayRate(AttackMontage,0);}

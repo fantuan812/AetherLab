@@ -31,9 +31,11 @@ EAetherInventoryMutationCode AetherItemEligibility::Query(const FAetherInventory
     if(Inventory.IsEquipped(Id))return E::Equipped;
     if(!Item->BoundToCharacter.IsEmpty()&&!Item->BoundToCharacter.Equals(Owner,ESearchCase::CaseSensitive))return E::Bound;
     if(Operation==EAetherItemOperation::PersonalStorage||Operation==EAetherItemOperation::Withdraw)return E::Applied;
-    if(Operation==EAetherItemOperation::Sell)return Inventory.CanRemove(Id,Owner,true,Definitions);
+    // 容器有自己的固定容量；共享资格不可错误地用背包默认容量复验整份容器。
+    auto ScopedDefinitions=Definitions;ScopedDefinitions.DefaultCapacity=Inventory.Capacity;
+    if(Operation==EAetherItemOperation::Sell)return Inventory.CanRemove(Id,Owner,true,ScopedDefinitions);
     if(Operation==EAetherItemOperation::Drop||Operation==EAetherItemOperation::SharedStorage)
-        return Inventory.CanRemove(Id,Owner,false,Definitions);
+        return Inventory.CanRemove(Id,Owner,false,ScopedDefinitions);
     if(Item->bLocked||Def->bQuestLocked||Item->QuestInstanceId.IsValid())return E::Locked;
     return Def->UseId.IsEmpty()?E::NotAllowed:E::Applied;
 }

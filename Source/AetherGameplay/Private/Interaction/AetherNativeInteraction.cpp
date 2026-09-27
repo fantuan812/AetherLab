@@ -57,7 +57,10 @@ TOptional<FAetherInteractionProvider> AetherNativeInteraction::Provider(AAetherF
     for(const auto& Skill:D.Skills.Skills)
         S.bHasStoryGrantAvailable|=Skill.Value.bStoryBase&&!P->Skills.StoryGrants.Contains(Skill.Key)&&
             (Skill.Value.RequiredQuest.IsEmpty()||P->Claims.Contains(Skill.Value.RequiredQuest));
-    for(const auto& Action:Definition->Actions)if(IsPersistent(Action.Kind)||IsSceneService(Action.Kind)||Action.Kind==EAetherInteractionActionKind::Talk||Action.Kind==EAetherInteractionActionKind::TrackObjective||Action.Kind==EAetherInteractionActionKind::ResetSkills)S.RegisteredHandlers.Add(Action.Kind);
+    for(const auto& Action:Definition->Actions)
+        if(IsPersistent(Action.Kind)||IsSceneService(Action.Kind)||
+            (Action.Kind==EAetherInteractionActionKind::Talk&&Definition->Dialogue.Contains(Action.DialogueId))||
+            Action.Kind==EAetherInteractionActionKind::TrackObjective||Action.Kind==EAetherInteractionActionKind::ResetSkills)S.RegisteredHandlers.Add(Action.Kind);
     return FAetherInteractionProvider(*Definition,MoveTemp(S),D.Rules);
 }
 bool AetherNativeInteraction::Submit(AAetherFrontierCharacter& C,const FAetherInteractionSelection& S,FString& Reason)

@@ -10,6 +10,8 @@ struct FAetherMotionSchedulerMetrics
 {
     int32 Agents=0,NativeAgents=0,Pending=0,Executing=0;
     uint64 NativeCalls=0,NativeFailures=0;
+    uint64 DiscardedResults=0;
+    double QueueP95Milliseconds=0,GenerationP95Milliseconds=0,QueueMaxMilliseconds=0,GenerationMaxMilliseconds=0;
 };
 
 // 进程共享一个模型执行线程；队列里都是值对象，不持有 Actor/UObject。
@@ -39,6 +41,7 @@ private:
     };
     mutable FCriticalSection Mutex;
     FAetherMotionSchedulerMetrics Metrics;
+    TArray<double> QueueSamples,GenerationSamples;
     TMap<uint64,FEntry> Entries;
     uint64 NextId=1,Configuration=1;
     EAetherMotionBackend Backend=EAetherMotionBackend::Traditional;

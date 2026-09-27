@@ -93,11 +93,13 @@ struct AETHERCORE_API FAetherInventoryStateV10
     FAetherInventoryMutation Sort(bool MergeStacks,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Equip(FGuid Id,const FString& Slot,const FString& ServerCharacterId,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Unequip(FGuid Id,const FAetherV10ItemDefinitions& Definitions);
+    FAetherInventoryMutation UnequipTo(FGuid Id,int32 Destination,const FAetherV10ItemDefinitions& Definitions);
     FAetherInventoryMutation Wear(FGuid Id,int32 Amount,const FAetherV10ItemDefinitions& Definitions);
     // 修复只修改候选耐久；扣款和服务权限必须在同一个 profile 事务内进行。
     FAetherInventoryMutation Repair(FGuid Id,const FAetherV10ItemDefinitions& Definitions);
     EAetherInventoryMutationCode CanRemove(FGuid Id,const FString& ServerCharacterId,bool ForSale,const FAetherV10ItemDefinitions& Definitions) const;
     TMap<FString,double> EquippedStats(const FAetherV10ItemDefinitions& Definitions) const;
+    static TMap<FString,double> EvaluateItemStats(const FAetherV10ItemInstance& Item,const FAetherV10ItemDefinition& Definition);
 private:
     FAetherInventoryMutation Publish(FAetherInventoryStateV10&& Candidate,FAetherInventoryMutation Result,const FAetherV10ItemDefinitions& Definitions);
 };

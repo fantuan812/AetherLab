@@ -119,7 +119,7 @@ bool UAetherEquipmentComponent::BeginCommittedAttack(FName Id,FName ExpectedItem
     if (!CanStartAttack(Id) || LoadoutRevision!=ExpectedRevision) return false;
     auto* Item=InSlot(TEXT("MainHand")); if (!Item||Item->ItemId!=ExpectedItem) return false;
     ActiveDefinition=*Item->FindAttack(Id);
-    Attack.ItemId=Item->ItemId; Attack.AttackId=Id; Attack.StartedAt=Clock(); Attack.bCancelled=false;
+    Attack.ItemId=Item->ItemId; Attack.AttackId=Id; Attack.StartedAt=Clock(); Attack.bCancelled=false;Attack.InputSequence=0;
     if (++Attack.Serial==0) ++Attack.Serial;
     bAttackRunning=true; HitActors.Reset(); LastAttackElapsed=-1; ++AcceptedAttackCount;
     // The caller binds lifecycle delegates before publishing this transition.
@@ -152,6 +152,7 @@ void UAetherEquipmentComponent::ResolveHits(const FAetherAttackDefinition& D)
         FHitResult Block; const FVector Point=H.bStartPenetrating?Target->GetActorLocation():FVector(H.ImpactPoint);
         if (GetWorld()->LineTraceSingleByChannel(Block,Start,Point,ECC_Visibility,Q) && Block.GetActor()!=Target) continue;
         HitActors.Add(Target); FAetherEquipmentHit Hit; Hit.Source=GetOwner(); Hit.ItemId=Attack.ItemId; Hit.AttackId=Attack.AttackId;
+        UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_CONTACT input=%u attack=%u server_time=%.3f"),Attack.InputSequence,Attack.Serial,Clock());
         Hit.Damage=D.Damage; Hit.PostureDamage=D.PostureDamage; Hit.ImpulseNs=Forward*D.ImpulseNs; Hit.CuttingWorkJ=D.CuttingWorkJ;
         ModifyHit.ExecuteIfBound(Hit);
         IAetherHitReceiver::Execute_ReceiveEquipmentHit(Target,Hit); ++AppliedHitCount;

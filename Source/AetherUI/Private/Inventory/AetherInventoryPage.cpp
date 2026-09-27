@@ -3,6 +3,7 @@
 #include "UI/AetherPageWidgets.h"
 #include "UI/AetherMenuRoot.h"
 #include "Inventory/AetherNativeInventory.h"
+#include "Inventory/AetherItemEligibility.h"
 #include "Inspection/AetherInspectionWidgets.h"
 #include "Preview/AetherCharacterPreviewWidget.h"
 #include "Networking/AetherCommandClient.h"
@@ -151,6 +152,7 @@ void UAetherInventoryPage::Refresh()
 {
     if(bUpdating||!bWasOpen||!Client.IsValid()||!Grid)return;TGuardValue<bool> Guard(bUpdating,true);
     auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());FAetherInspectionSnapshot Next;
+    if(Client->HasPending()&&Notice)Notice->SetText(FText::FromString(Client->PendingDescription()));
     if(!C||!AetherNativeInventory::Snapshot(*C,Generation,Next))
     {ResetPresentation();Summary->SetText(FText::FromString(TEXT("等待原生背包同步")));return;}
     if(Player.Get()!=C||SeenChannel!=Next.Context.SessionId){ResetPresentation();Player=C;}
@@ -203,7 +205,7 @@ void UAetherInventoryPage::Refresh()
     {
         auto* Cell=CreateWidget<UAetherInventoryCell>(this,AetherWidgetAssets::Class<UAetherInventoryCell>(Parent==Equipment?TEXT("WBP_EquipmentSlot"):nullptr));auto* CellSlot=Parent->AddChildToUniformGrid(Cell,Index/ColumnCount,Index%ColumnCount);
         CellSlot->SetHorizontalAlignment(HAlign_Fill);CellSlot->SetVerticalAlignment(VAlign_Fill);
-        Cell->OnIntent.BindUObject(this,&UAetherInventoryPage::CellIntent);Cell->OnItemDrop.BindUObject(this,&UAetherInventoryPage::Drop);return Cell;
+        Cell->OnIntent.BindUObject(this,&UAetherInventoryPage::CellIntent);Cell->OnItemDrop.BindUObject(this,&UAetherInventoryPage::Drop);Cell->OnDropPreview.BindUObject(this,&UAetherInventoryPage::PreviewDrop);return Cell;
     };
     if(Cells.Num()!=Snapshot.Inventory.Capacity)
     {Grid->ClearChildren();Cells.Reset();for(int32 I=0;I<Snapshot.Inventory.Capacity;++I)Cells.Add(MakeCell(Grid,I,Columns));}
@@ -215,11 +217,11 @@ void UAetherInventoryPage::Refresh()
         FString Label=FString::Printf(TEXT("%02d · 空"),SlotValue+1);bool Filtered=false;
         if(I&&Def)
         {
-            Label=Def->DisplayName+LINE_TERMINATOR+FString::Printf(TEXT("×%d%s%s%s"),I->Quantity,I->bLocked?TEXT(" 锁"):TEXT(""),I->bFavorite?TEXT(" ★"):TEXT(""),Snapshot.Inventory.IsEquipped(I->InstanceId)?TEXT(" 装备"):TEXT(""));
-            if(Def->MaxDurability>0)Label+=LINE_TERMINATOR+FString::Printf(TEXT("%d/%d"),I->Durability,Def->MaxDurability);
+            Label=Def->DisplayName;
             Filtered=(!CategoryFilter.IsEmpty()&&Def->Category!=CategoryFilter)||(!SearchFilter.IsEmpty()&&!Def->DisplayName.Contains(SearchFilter)&&!Def->Id.Contains(SearchFilter));
         }
         Cells[SlotValue]->Present(AetherInspection::Pin(Snapshot,Target),SlotValue,Label,Def?Def->IconId:FString(),Filtered,I&&I->InstanceId==C->SelectedInstance);
+        Cells[SlotValue]->SetItemState(I,Def,I&&Snapshot.Inventory.IsEquipped(I->InstanceId));
         // Let spatial navigation cross region boundaries; never wrap back into the same grid.
         Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Left,EUINavigationRule::Escape);
         Cells[SlotValue]->SetNavigationRuleBase(EUINavigation::Right,EUINavigationRule::Escape);
@@ -235,6 +237,7 @@ void UAetherInventoryPage::Refresh()
         FString Occupied;for(const auto& Pair:Snapshot.Inventory.Equipment)
             if(const auto* Other=Snapshot.Inventory.Find(Pair.Value))if(const auto* OtherDef=D.Items.Items.Find(Other->DefinitionId);OtherDef&&OtherDef->AdditionalOccupiedSlots.Contains(SlotValue.Id))Occupied=TEXT("双手占用");
         EquipmentCells[N]->Present(R,INDEX_NONE,SlotName(SlotValue.Id)+LINE_TERMINATOR+(Def?Def->DisplayName:Occupied.IsEmpty()?TEXT("空"):Occupied),Def?Def->IconId:FString(),false,false);
+        EquipmentCells[N]->SetItemState(I,Def,I!=nullptr);
     }
     const auto* Container=Snapshot.Container.IsSet()?&Snapshot.Container.GetValue():nullptr;
     ContainerTitle->SetText(FText::FromString(Container?FString::Printf(TEXT("%s · %d / %d"),Container->Kind==EAetherContainerKind::WorldDrop?TEXT("地面掉落"):Container->Kind==EAetherContainerKind::PersonalStorage?TEXT("个人仓储"):TEXT("共享箱子"),Container->Inventory.Items.Num(),Container->Inventory.Capacity):
@@ -247,7 +250,8 @@ void UAetherInventoryPage::Refresh()
         if(auto* Layout=Cast<UUniformGridSlot>(ContainerCells[N]->Slot)){Layout->SetRow(N/Columns);Layout->SetColumn(N%Columns);}
         const auto* Item=Container->Inventory.At(N);const auto* Def=Item?D.Items.Items.Find(Item->DefinitionId):nullptr;
         FAetherInspectTarget T;T.ContainerId=Container->ContainerId;if(Item)T.InstanceId=Item->InstanceId;
-        ContainerCells[N]->Present(AetherInspection::Pin(Snapshot,T),N,Def?Def->DisplayName+LINE_TERMINATOR+FString::Printf(TEXT("×%d"),Item->Quantity):TEXT("空"),Def?Def->IconId:FString(),false,false);
+        ContainerCells[N]->Present(AetherInspection::Pin(Snapshot,T),N,Def?Def->DisplayName:TEXT("空"),Def?Def->IconId:FString(),false,false);
+        ContainerCells[N]->SetItemState(Item,Def);
         ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Left,EUINavigationRule::Escape);
         ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Right,EUINavigationRule::Escape);
         ContainerCells[N]->SetNavigationRuleBase(EUINavigation::Up,EUINavigationRule::Escape);
@@ -287,9 +291,60 @@ void UAetherInventoryPage::RenderDetails()
     const bool Show=Session.GetHover().IsSet()&&!Session.GetDetails().IsSet();
     Hover->SetVisibility(Show?ESlateVisibility::HitTestInvisible:ESlateVisibility::Collapsed);if(Show)Hover->SetModel(Session.GetHover().GetValue());
 }
+bool UAetherInventoryPage::PreviewDrop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 Slot,FString& Hint) const
+{
+    const auto Reject=[&](const TCHAR* Why){Hint=Why;return false;};
+    if(!Snapshot.bCanAct||ModalToken.IsValid())return Reject(TEXT("当前动作或同步尚未完成"));
+    if(!From.Context.Same(Snapshot.Context)||!To.Context.Same(Snapshot.Context)||
+        From.DependencyKey!=AetherInspection::Pin(Snapshot,From.Target).DependencyKey||To.DependencyKey!=AetherInspection::Pin(Snapshot,To.Target).DependencyKey)return Reject(TEXT("对象已变化，请重新拖动"));
+    const auto& D=FAetherV10Definitions::Get().Items;
+    const bool Cross=!From.Target.ContainerId.IsEmpty()||!To.Target.ContainerId.IsEmpty();
+    const auto* Source=From.Target.ContainerId.IsEmpty()?&Snapshot.Inventory:Snapshot.Container.IsSet()?&Snapshot.Container->Inventory:nullptr;
+    const auto* Item=Source?Source->Find(From.Target.InstanceId):nullptr;if(!Item)return Reject(TEXT("原物品已不存在"));
+    if(Cross)
+    {
+        if(!Snapshot.Container.IsSet()||From.Target.Kind!=EAetherInspectTarget::ItemInstance||To.Target.Kind!=EAetherInspectTarget::ItemInstance||From.Target.ContainerId==To.Target.ContainerId||
+            (!From.Target.ContainerId.IsEmpty()&&!To.Target.ContainerId.IsEmpty()))return Reject(TEXT("此处不能跨容器放置"));
+        const bool Into=From.Target.ContainerId.IsEmpty();const auto& Box=Snapshot.Container.GetValue();
+        if((Into?To.Target.ContainerId:From.Target.ContainerId)!=Box.ContainerId)return Reject(TEXT("容器已切换"));
+        if(Into&&Box.Kind==EAetherContainerKind::WorldDrop)return Reject(TEXT("战利品袋只允许取出"));
+        const auto Operation=Box.Kind==EAetherContainerKind::PersonalStorage?EAetherItemOperation::PersonalStorage:EAetherItemOperation::SharedStorage;
+        if(AetherItemEligibility::Query(*Source,Item->InstanceId,Snapshot.Context.OwnerIdentity,Into?Operation:EAetherItemOperation::Withdraw,D)!=EAetherInventoryMutationCode::Applied)return Reject(TEXT("该物品当前不能转移，请查看详情原因"));
+        const auto& Destination=Into?Box.Inventory:Snapshot.Inventory;if(Slot<0||Slot>=Destination.Capacity)return Reject(TEXT("无效目标格"));
+        const auto* Other=Destination.At(Slot);
+        if(!Other){Hint=FString::Printf(TEXT("放入第 %d 格 · 确认数量"),Slot+1);return true;}
+        if(Item->SameStackKey(*Other))
+        {
+            const auto* Def=D.Items.Find(Item->DefinitionId);if(!Def||Other->Quantity>=Def->MaxStack)return Reject(TEXT("目标堆已满"));
+            Hint=FString::Printf(TEXT("合并到第 %d 格 · 最多 %d 件"),Slot+1,Def->MaxStack-Other->Quantity);return true;
+        }
+        if(Box.Kind==EAetherContainerKind::WorldDrop)return Reject(TEXT("战利品袋不能整堆交换"));
+        if(Destination.IsEquipped(Other->InstanceId)||AetherItemEligibility::Query(Destination,Other->InstanceId,Snapshot.Context.OwnerIdentity,Into?EAetherItemOperation::Withdraw:Operation,D)!=EAetherInventoryMutationCode::Applied)return Reject(TEXT("目标物品不能反向交换"));
+        Hint=TEXT("双方整堆交换 · 需确认");return true;
+    }
+    auto Candidate=Snapshot.Inventory;FAetherInventoryMutation Result;
+    if(To.Target.Kind==EAetherInspectTarget::EquipmentSlot)
+    {Result=Candidate.Equip(Item->InstanceId,To.Target.SlotId,Snapshot.Context.OwnerIdentity,D);Hint=TEXT("装备到指定部位");}
+    else if(Slot<0||Slot>=Candidate.Capacity)return Reject(TEXT("无效目标格"));
+    else if(From.Target.Kind==EAetherInspectTarget::EquipmentSlot)
+    {Result=Candidate.UnequipTo(Item->InstanceId,Slot,D);Hint=TEXT("卸装并放入该格");}
+    else if(const auto* Other=Candidate.At(Slot))
+    {
+        if(Item->InstanceId==Other->InstanceId)return Reject(TEXT("物品已在该格"));
+        const auto* Def=D.Items.Find(Item->DefinitionId);
+        if(Def&&Item->SameStackKey(*Other)&&Other->Quantity<Def->MaxStack)
+        {Result=Candidate.Merge(Item->InstanceId,Other->InstanceId,FMath::Min(Item->Quantity,Def->MaxStack-Other->Quantity),D);Hint=TEXT("合并到该堆");}
+        else {Result=Candidate.Swap(Item->InstanceId,Other->InstanceId,D);Hint=TEXT("交换背包格位置");}
+    }
+    else {Result=Candidate.Move(Item->InstanceId,Slot,D);Hint=TEXT("移动到该空格");}
+    if(Result.Code!=EAetherInventoryMutationCode::Applied)return Reject(TEXT("此处不能放置，请查看装备或占格条件"));return true;
+}
 bool UAetherInventoryPage::Drop(const FAetherInspectRequest& From,const FAetherInspectRequest& To,int32 SlotValue)
 {
+    FString Hint;if(!PreviewDrop(From,To,SlotValue,Hint)){Notice->SetText(FText::FromString(Hint));return false;}
     if(!From.Context.Same(Snapshot.Context)||!To.Context.Same(Snapshot.Context)||!Snapshot.bCanAct||ModalToken.IsValid())return false;
+    if(From.DependencyKey!=AetherInspection::Pin(Snapshot,From.Target).DependencyKey||To.DependencyKey!=AetherInspection::Pin(Snapshot,To.Target).DependencyKey)
+    {Notice->SetText(FText::FromString(TEXT("拖动期间对象已变化，请重新选择。")));return false;}
     if(!From.Target.ContainerId.IsEmpty()||!To.Target.ContainerId.IsEmpty())
     {
         if(!Snapshot.Container.IsSet()||From.Target.Kind!=EAetherInspectTarget::ItemInstance||To.Target.Kind!=EAetherInspectTarget::ItemInstance||
@@ -314,7 +369,12 @@ bool UAetherInventoryPage::Drop(const FAetherInspectRequest& From,const FAetherI
     const auto* I=Snapshot.Inventory.Find(From.Target.InstanceId);if(!I)return false;FAetherPlayerCommand C;C.ItemInstanceId=I->InstanceId;
     if(To.Target.Kind==EAetherInspectTarget::EquipmentSlot){C.Type=EAetherCommandType::EquipItem;C.SlotId=To.Target.SlotId;}
     else if(To.Target.Kind!=EAetherInspectTarget::ItemInstance||SlotValue<0)return false;
-    else if(From.Target.Kind==EAetherInspectTarget::EquipmentSlot)C.Type=EAetherCommandType::UnequipItem;
+    else if(From.Target.Kind==EAetherInspectTarget::EquipmentSlot)
+    {
+        if(const auto* Occupant=Snapshot.Inventory.At(SlotValue);Occupant&&Occupant->InstanceId!=I->InstanceId)
+        {Notice->SetText(FText::FromString(TEXT("卸装落格需要空格或物品原格；可在详情中直接卸装。")));return false;}
+        C.Type=EAetherCommandType::UnequipItem;C.DestinationIndex=SlotValue;
+    }
     else if(const auto* Other=Snapshot.Inventory.At(SlotValue))
     {
         if(Other->InstanceId==I->InstanceId)return false;C.OtherInstanceId=Other->InstanceId;
@@ -336,7 +396,13 @@ void UAetherInventoryPage::Action(const FAetherInspectRequest& R,const FAetherIn
 void UAetherInventoryPage::TransferAction(const FAetherInspectRequest& R,const FAetherInspectionAction& A,int32 Destination,FGuid ExpectedTarget,EAetherTransferMode Mode)
 {
     if(!R.Context.Same(Snapshot.Context)||!Client.IsValid()||Client->HasPending())return;
-    const auto Token=Session.BeginAction(A.Kind,A.Argument,Destination,ExpectedTarget,Mode);if(!Token.IsValid())return;
+    FString DestinationLabel;
+    if(ExpectedTarget.IsValid())
+    {
+        const auto& Inventory=A.Kind==EAetherInspectAction::Deposit?Snapshot.Container->Inventory:Snapshot.Inventory;
+        if(const auto* Target=Inventory.Find(ExpectedTarget))if(const auto* Def=FAetherV10Definitions::Get().Items.Items.Find(Target->DefinitionId))DestinationLabel=Def->DisplayName;
+    }
+    const auto Token=Session.BeginAction(A.Kind,A.Argument,Destination,ExpectedTarget,Mode,DestinationLabel);if(!Token.IsValid())return;
     if(A.bNeedsConfirmation||A.MaxQuantity>1)
     {
         if(!Menu.IsValid())return;ModalToken=Menu->PushLayer(TEXT("InventoryConfirmation"));

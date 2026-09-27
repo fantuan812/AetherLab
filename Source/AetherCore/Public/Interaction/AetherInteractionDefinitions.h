@@ -72,6 +72,7 @@ struct FAetherObjectiveGuidance
 };
 namespace AetherInteractionQueries
 {
+    AETHERCORE_API FString ReasonText(const FString& Id,const TMap<FString,FString>& Parameters,const FAetherRules& Rules);
     AETHERCORE_API FAetherObjectiveGuidance Guidance(const FAetherInteractionSnapshot& Snapshot,const FAetherRules& Rules,const FString& PreferredQuest={});
 }
 // 构造后快照不变；客户端展示和服务器复验使用同一值规则，服务器每次执行前重新构造快照。

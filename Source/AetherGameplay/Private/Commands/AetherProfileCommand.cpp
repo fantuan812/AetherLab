@@ -58,7 +58,8 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
     case E::SetItemFavorite:Inventory=Next.Inventory.SetFavorite(C.ItemInstanceId,C.Enabled,Items);break;
     case E::SortInventory:Inventory=Next.Inventory.Sort(C.Enabled,Items);break;
     case E::EquipItem:Inventory=Next.Inventory.Equip(C.ItemInstanceId,C.SlotId,Actor,Items);break;
-    case E::UnequipItem:Inventory=Next.Inventory.Unequip(C.ItemInstanceId,Items);break;
+    case E::UnequipItem:Inventory=C.ProtocolVersion>=4&&C.DestinationIndex>=0?
+        Next.Inventory.UnequipTo(C.ItemInstanceId,C.DestinationIndex,Items):Next.Inventory.Unequip(C.ItemInstanceId,Items);break;
     case E::LearnSkill:case E::UpgradeSkill:case E::ResetSkills:case E::BindSkill:
     {
         IsSkill=true;auto SkillContext=Context.Skill;

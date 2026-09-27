@@ -4,6 +4,7 @@
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/GameInstance.h"
+#include "Networking/AetherCommandRuntime.h"
 
 void AAetherFrontierMode::AdvanceNativeRegions(const TArray<FName>& Unload,const TArray<const FAetherWorldPlacement*>& Load)
 {
@@ -42,6 +43,13 @@ void AAetherFrontierMode::AdvanceNativeRegions(const TArray<FName>& Unload,const
     if(!Unload.IsEmpty())
     {
         if(Store->IsSavingWorld())return;
+        // 场景对象可能仍是已接受事务的目标；等持久事实发布后再冻结。
+        // 游戏线程中检查与冻结连续执行，冻结后 bEnabled 会拒绝新交互。
+        if(const auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>())
+        {
+            const auto Pending=Runtime->Inspect();
+            if(Pending.PendingCommands||Pending.PendingFacts||Pending.DeferredFacts||Pending.ResourceReservations)return;
+        }
         TArray<FReactiveSaveRecord> Capture;if(!W->Capture(Capture))return;
         for(FName Id:Unload)if(auto* A=Prop(Id);A&&A->Reactive->bParticipatesInSimulation)
         {if(!Capture.ContainsByPredicate([&](const auto& R){return R.StableId==Id;})){FrozenRegionBodies.Reset();return;}FrozenRegionBodies.Add(Id);}

@@ -11,6 +11,19 @@
 int32 UAetherCommandClient::PendingIndex() const
 {return Pending.IndexOfByPredicate([&](const auto& P){return P.Realm==Realm&&P.Owner.Equals(Owner,ESearchCase::CaseSensitive);});}
 bool UAetherCommandClient::HasPending() const{return PendingIndex()!=INDEX_NONE;}
+EAetherCommandPresentation UAetherCommandClient::PresentationState() const
+{
+    if(!Channel.IsValid())return EAetherCommandPresentation::Closed;
+    if(!Profile.IsSet())return EAetherCommandPresentation::Loading;
+    const int32 Index=PendingIndex();if(Index==INDEX_NONE)return EAetherCommandPresentation::Ready;
+    const auto& P=Pending[Index];return P.Attempts>=5||P.AuthorizedChannel!=Channel?EAetherCommandPresentation::Recovering:EAetherCommandPresentation::Pending;
+}
+FString UAetherCommandClient::PendingDescription() const
+{
+    const int32 Index=PendingIndex();if(Index==INDEX_NONE)return {};
+    if(Pending[Index].Receipt.IsSet())return TEXT("操作已提交，等待对应角色与容器快照。");
+    return PresentationState()==EAetherCommandPresentation::Recovering?TEXT("原请求结果待恢复；使用同步 / 重试查询同一请求，请勿重复创建操作。"):TEXT("请求正在等待服务器确认。");
+}
 bool UAetherCommandClient::Matches(AAetherPlayerController* C,FGuid Id) const
 {return C&&!C->IsActorBeingDestroyed()&&Controller.Get()==C&&C->GetLocalPlayer()==GetLocalPlayer()&&C->IsLocalController()&&Channel.IsValid()&&Id==Channel;}
 
@@ -72,8 +85,14 @@ void UAetherCommandClient::RequestSnapshot()
 void UAetherCommandClient::RetirePublished()
 {
     const int32 Index=PendingIndex();
-    if(Index!=INDEX_NONE&&Profile.IsSet()&&Pending[Index].Receipt.IsSet()&&
-        Profile->Revision>=Pending[Index].Receipt->FinalProfileRevision)Pending.RemoveAt(Index);
+    if(Index==INDEX_NONE||!Profile.IsSet()||!Pending[Index].Receipt.IsSet()||Profile->Revision<Pending[Index].Receipt->FinalProfileRevision)return;
+    const auto& R=Pending[Index].Receipt.GetValue();const FString Id=R.ReasonParameters.FindRef(TEXT("ContainerId"));
+    if(!Id.IsEmpty()&&ContainerContext.IsValid()&&RequestedContainer.Equals(Id,ESearchCase::CaseSensitive))
+    {
+        int64 Revision=-1;if(!LexTryParseString(Revision,*R.ReasonParameters.FindRef(TEXT("ContainerRevision")))||Revision<0||
+            !Container.IsSet()||Container->Revision<Revision)return;
+    }
+    Pending.RemoveAt(Index);
 }
 void UAetherCommandClient::ReceiveReply(AAetherPlayerController* C,const FAetherV10ReplyPacket& Packet)
 {
@@ -155,7 +174,7 @@ bool UAetherCommandClient::OpenContainer(const FString& Id)
 }
 void UAetherCommandClient::CloseContainer()
 {
-    const FGuid Old=ContainerContext;ResetContainer();
+    const FGuid Old=ContainerContext;ResetContainer();RetirePublished();
     if(Old.IsValid()&&Matches(Controller.Get(),Channel))
     {FAetherV10ContainerQuery Q;Q.Channel=Channel;Q.Context=Old;Controller->ServerV10ContainerQuery(Q);}
     if(Old.IsValid())OnChanged.Broadcast();
@@ -168,7 +187,7 @@ void UAetherCommandClient::RefreshContainer()
     Controller->ServerV10ContainerQuery(Q);
 }
 void UAetherCommandClient::ReceiveContainerClosed(AAetherPlayerController* C,FGuid Id,FGuid Context)
-{if(Matches(C,Id)&&ContainerContext==Context){ResetContainer();OnChanged.Broadcast();}}
+{if(Matches(C,Id)&&ContainerContext==Context){ResetContainer();RetirePublished();OnChanged.Broadcast();}}
 void UAetherCommandClient::ReceiveContainerChunk(const FAetherV10SnapshotChunk& P)
 {
     if(!ContainerContext.IsValid()||P.Context!=ContainerContext||P.WorldRevision<0||P.WorldRevision==MAX_int64||
@@ -187,5 +206,5 @@ void UAetherCommandClient::ReceiveContainerChunk(const FAetherV10SnapshotChunk& 
         AetherContainerCodec::Decode(A.Bytes,D.Items,Candidate,Why)&&Candidate.Revision==A.Revision&&
         Candidate.ContainerId.Equals(RequestedContainer,ESearchCase::CaseSensitive)&&Candidate.Allows(Owner)&&Candidate.bActive;
     A={};if(!Valid){CloseContainer();return;}
-    ContainerWorldRevision=AssemblyWorldRevision;Container=MoveTemp(Candidate);OnChanged.Broadcast();
+    ContainerWorldRevision=AssemblyWorldRevision;Container=MoveTemp(Candidate);RetirePublished();OnChanged.Broadcast();
 }

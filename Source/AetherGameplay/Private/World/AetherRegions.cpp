@@ -62,7 +62,12 @@ void AAetherFrontierMode::UpdateRegions(const TArray<FVector>& Players)
 
 bool AAetherFrontierMode::IsTravelRegionReady(FVector Destination) const
 {
- if(bNativeMode&&(!NativeSceneReady()||bNativeRegionBarrier))return false;
- for(const auto Id:BuildRegionRequirements({Destination}))if(!Prop(Id))return false;
- return true;
+ return TravelRegionBlockReason(Destination).IsEmpty();
+}
+FString AAetherFrontierMode::TravelRegionBlockReason(FVector Destination) const
+{
+ if(bNativeMode&&!NativeSceneReady())return TEXT("等待持久世界恢复");
+ if(bNativeMode&&bNativeRegionBarrier)return TEXT("等待区域冻结事务确认");
+ int32 Missing=0;for(const auto Id:BuildRegionRequirements({Destination}))if(!Prop(Id))++Missing;
+ return Missing?FString::Printf(TEXT("等待 %d 个目的地实体及支撑依赖"),Missing):FString();
 }

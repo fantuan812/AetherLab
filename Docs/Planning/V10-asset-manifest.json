@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "purpose": "v10 authored resource inventory",
+  "runtimeAcceptance": "not_run",
+  "releaseAccepted": false,
+  "engine": "UE 5.8.0 installed editor authoring binary",
+  "resources": [
+    {
+      "path": "Content/Animation/Controlled/A_Push.uasset",
+      "bytes": 158955,
+      "sha256": "e615ef1005cd9ed0c536face4c7433f75157e493e559f0669f0a63937b4fec67"
+    },
+    {
+      "path": "Content/Animation/Controlled/A_PutDown.uasset",
+      "bytes": 156855,
+      "sha256": "c637f60134f506c9bb181af0a12c30912508d3fd83abff8d6dd8b909424dc8aa"
+    },
+    {
+      "path": "Content/Animation/Controlled/A_Throw.uasset",
+      "bytes": 156847,
+      "sha256": "5da73ca52d54314273b10c76d79681396554136f07d9d9f96efd5b0ca68899b3"
+    },
+    {
+      "path": "Content/Animation/Controlled/DA_Actions.uasset",
+      "bytes": 5597,
+      "sha256": "a038a84e652284439f3a2689b16cbb389599100b74b4f0fb16bcdb8b7bb24a0a"
+    },
+    {
+      "path": "Content/UI/PAL_UI.uasset",
+      "bytes": 11884,
+      "sha256": "5fee79b783964dc9a269364d9ed40357ffd366752a0b2017016e67dabe139bc2"
+    },
+    {
+      "path": "Content/UI/Icons/T_Hammer.uasset",
+      "bytes": 11443,
+      "sha256": "a59c1dd187644960f9379bdc98f8be97e4fc6f64f3273e887f05b7ff77f9d122"
+    },
+    {
+      "path": "Content/UI/Icons/T_Herb.uasset",
+      "bytes": 11424,
+      "sha256": "0e0aa73851a956bd6f87897085b47bc8f10acc687f3dfbe8829bdce05ea3f7e7"
+    },
+    {
+      "path": "Content/UI/Icons/T_ManaPotion.uasset",
+      "bytes": 11321,
+      "sha256": "f7b4cda955a6c5e437d3c427b1dffeb56fb2ad948e2051a2f72361013118b84d"
+    },
+    {
+      "path": "Content/UI/Icons/T_Ore.uasset",
+      "bytes": 11502,
+      "sha256": "3ab42e932d324c8b78101fba5474d5d8e67dbba987569ffcd7b473e88e9d4ec9"
+    },
+    {
+      "path": "Content/UI/Icons/T_Quest.uasset",
+      "bytes": 10937,
+      "sha256": "0001a8fdabb9066897bd9dd55377edb879e980fb55893c5e109fb3284fbb0d2b"
+    },
+    {
+      "path": "Content/UI/Icons/T_Ration.uasset",
+      "bytes": 11614,
+      "sha256": "09aec6b19643d83b23145dd94b7047520afa29c3b0c93a2f17e5da9f55fcf6ed"
+    },
+    {
+      "path": "Content/UI/Icons/T_Staff.uasset",
+      "bytes": 11261,
+      "sha256": "8f7d65117890bed1751394387753e1aca39ba1ef0cbb64b1b4ce55ce508c1c3d"
+    },
+    {
+      "path": "Content/UI/Icons/T_Wood.uasset",
+      "bytes": 11700,
+      "sha256": "e8884095b2d0f447ca1bd25bfe1ba47cb3db66e8f0a9fd71514b46e88cbbc80a"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "Scripts/Authoring/PrepareControlledAnimations.py",
+      "sha256": "983e32ca80906dda704fb0b50a81a104269d382ddd7417ba6f84da6e13c698c5"
+    },
+    {
+      "path": "Scripts/Authoring/PrepareV10UI.py",
+      "sha256": "91373307840dfb1b0a868315412c53469ccc28a39c09cbf166fd998ab948534f"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/Items.json",
+      "sha256": "9d8b63f409633a3f8ad1c67f93f99597730cf7a2ae0a0178e957ac337864ef01"
+    }
+  ]
+}
