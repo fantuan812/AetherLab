@@ -32,6 +32,7 @@ foreach($taskJob in $taskBuildTargets){
  $taskVersion=Get-Content -LiteralPath (Join-Path $taskJob.Engine 'Engine/Build/Build.version') -Raw|ConvertFrom-Json
  if($taskVersion.MajorVersion -ne 5 -or $taskVersion.MinorVersion -ne 8){throw 'Engine must remain on the locked UE 5.8 release.'}
  $taskDestination=Join-Path $taskOutput ($taskTarget+'-'+$taskPlatform)
+ $taskJobStartedUtc=[DateTime]::UtcNow
  # 使用引擎支持的文件式 Cook，再制作 IoStore；避免 Stage 依赖本机 Zen HTTP 服务。
  $taskArguments=@('BuildCookRun',"-project=$taskProject",'-noP4','-utf8output','-unattended','-ubtargs=-NoUBA -MaxParallelActions=2','-build','-cook','-AdditionalCookerOptions=-SkipZenStore','-stage','-pak','-iostore','-archive',"-archivedirectory=$taskDestination",'-map=/Game/AetherCore/Maps/L_Frontier')
  if($SkipBuildEditor){$taskArguments+='-skipbuildeditor'}
@@ -40,15 +41,45 @@ foreach($taskJob in $taskBuildTargets){
  & $taskUat @taskArguments
  if($LASTEXITCODE -ne 0){throw "Shipping $taskTarget build failed; no acceptance claimed."}
  $taskFiles=@(Get-ChildItem -LiteralPath $taskDestination -Recurse -File)
- $taskExecutables=@($taskFiles|Where-Object {if($taskPlatform -eq 'Linux'){$_.Name -like 'AetherLabServer*' -and !$_.Extension}else{$_.Extension -eq '.exe'}})
- if(!$taskExecutables){throw "No executable in staged $taskTarget package."}
+ $taskStageFolder=if($taskTarget -eq 'Client'){'Windows'}elseif($taskPlatform -eq 'Win64'){'WindowsServer'}else{'LinuxServer'}
+ $taskExecutableRelative=if($taskTarget -eq 'Client'){'Windows/AetherLab.exe'}elseif($taskPlatform -eq 'Win64'){'WindowsServer/AetherLabServer.exe'}else{'LinuxServer/AetherLabServer'}
+ $taskExecutable=Join-Path $taskDestination $taskExecutableRelative
+ if(!(Test-Path -LiteralPath $taskExecutable -PathType Leaf)){throw "Expected target executable missing: $taskExecutableRelative"}
+ $taskInferencePattern='(?i)(motionbricks|ggml|\.gguf(?:\W|$)|\.mbstyle(?:\W|$)|g1-f32|AetherMotion[/\\]Binaries[/\\]ThirdParty)'
+ $taskEvidence=Join-Path $taskDestination 'build-evidence'
+ [IO.Directory]::CreateDirectory($taskEvidence)|Out-Null
+ $taskStageRoot=Join-Path $taskRoot ('Saved/StagedBuilds/'+$taskStageFolder)
+ $taskStageManifests=@(Get-ChildItem -LiteralPath $taskStageRoot -Recurse -File -ErrorAction SilentlyContinue|Where-Object {$_.Name -match '^Manifest_(UFS|NonUFS|Debug)Files_.*\.txt$' -and $_.LastWriteTimeUtc -ge $taskJobStartedUtc.AddMinutes(-1)})
+ if(!$taskStageManifests){throw "UAT stage manifests missing for $taskTarget/$taskPlatform; content cannot be audited."}
+ $taskStageEvidence=@()
+ foreach($taskManifest in $taskStageManifests){
+  $taskText=Get-Content -LiteralPath $taskManifest -Raw
+  if($taskTarget -eq 'Server' -and $taskText -match $taskInferencePattern){throw "Server stage manifest contains inference payload: $($taskManifest.Name)"}
+  $taskCopy=Join-Path $taskEvidence ($taskPlatform+'-'+$taskManifest.Name)
+  Copy-Item -LiteralPath $taskManifest.FullName -Destination $taskCopy -Force
+  $taskStageEvidence+=@{name=$taskManifest.Name;sha256=(Get-FileHash -LiteralPath $taskCopy -Algorithm SHA256).Hash.ToLowerInvariant()}
+ }
+ $taskUnrealPak=Join-Path $taskJob.Engine 'Engine/Binaries/Win64/UnrealPak.exe'
+ $taskContainers=@($taskFiles|Where-Object {$_.Extension -in @('.pak','.utoc')})
+ if(!$taskContainers){throw "No Pak/IoStore content containers found in $taskTarget/$taskPlatform."}
+ if(!(Test-Path -LiteralPath $taskUnrealPak -PathType Leaf)){throw 'UnrealPak listing tool unavailable; content containers cannot be audited.'}
+ $taskContainerEvidence=@()
+ foreach($taskContainer in $taskContainers){
+  $taskListing=@(& $taskUnrealPak $taskContainer.FullName '-List' 2>&1)
+  if($LASTEXITCODE -ne 0){throw "Container listing failed: $($taskContainer.Name)"}
+  $taskListingText=$taskListing -join [Environment]::NewLine
+  if($taskTarget -eq 'Server' -and $taskListingText -match $taskInferencePattern){throw "Server content container contains inference payload: $($taskContainer.Name)"}
+  $taskListingPath=Join-Path $taskEvidence ($taskContainer.Name+'.listing.txt')
+  [IO.File]::WriteAllText($taskListingPath,$taskListingText)
+  $taskContainerEvidence+=@{path=$taskContainer.FullName.Substring($taskDestination.Length).TrimStart('\','/');sha256=(Get-FileHash -LiteralPath $taskContainer.FullName -Algorithm SHA256).Hash.ToLowerInvariant();listingSha256=(Get-FileHash -LiteralPath $taskListingPath -Algorithm SHA256).Hash.ToLowerInvariant()}
+ }
  if($taskTarget -eq 'Server'){
-  $taskForbidden=@(Get-ChildItem -LiteralPath $taskDestination -Recurse -File | Where-Object {$_.Name -eq 'motionbricks.dll' -or $_.Extension -eq '.gguf' -or $_.Extension -eq '.mbstyle'})
+  $taskForbidden=@($taskFiles|Where-Object {$_.FullName -match $taskInferencePattern})
   if($taskForbidden){throw 'Dedicated server package unexpectedly contains model/native inference payload.'}
  }
  $taskPayload=@($taskFiles|Where-Object {$_.Extension -ne '.log' -and $_.Name -ne 'build-manifest.json'}|ForEach-Object {
   @{path=$_.FullName.Substring($taskDestination.Length).TrimStart('\','/');bytes=$_.Length;sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
  })
- [ordered]@{schema=2;target=$taskTarget;platform=$taskPlatform;sourceCommit=$taskCommit;dirty=$false;engine=$taskVersion;createdUtc=[DateTime]::UtcNow.ToString('o');configuration='Shipping';buildCookStage='completed';runtimeAcceptance='not_run';releaseAccepted=$false;payload=$taskPayload}|ConvertTo-Json -Depth 8|Set-Content -LiteralPath (Join-Path $taskDestination 'build-manifest.json') -Encoding utf8
+ [ordered]@{schema=3;target=$taskTarget;platform=$taskPlatform;sourceCommit=$taskCommit;dirty=$false;engine=$taskVersion;createdUtc=[DateTime]::UtcNow.ToString('o');configuration='Shipping';executable=$taskExecutableRelative;buildCookStage='completed';stageManifests=$taskStageEvidence;contentContainers=$taskContainerEvidence;toolchainEvidence='UAT output and engine Build.version';runtimeAcceptance='not_run';licenseReview='not_run';releaseAccepted=$false;payload=$taskPayload}|ConvertTo-Json -Depth 8|Set-Content -LiteralPath (Join-Path $taskDestination 'build-manifest.json') -Encoding utf8
 }
 Write-Output "Shipping packages built at $taskOutput; packaged runtime and hardware acceptance still required."
