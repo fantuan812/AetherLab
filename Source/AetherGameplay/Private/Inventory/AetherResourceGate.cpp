@@ -124,6 +124,7 @@ bool UAetherResourceGate::Defer(TUniqueFunction<void()> Action,EAetherEffectEven
     if(!IsBlocked())return false;
     if(bFaulted)return true; // 已进入连接终止，不再接受这个 Pawn 的新动作。
     if(!Action)return true;
+    if(Kind==EAetherEffectEventKind::ProjectionRefresh&&Deferred.ContainsByPredicate([](const auto& E){return E.Identity.Kind==EAetherEffectEventKind::ProjectionRefresh;}))return true;
     if(Deferred.Num()>=256)
     {
         // 磁盘长时间不可用时不无限积压，也不解除屏障制造无敌/丢药。

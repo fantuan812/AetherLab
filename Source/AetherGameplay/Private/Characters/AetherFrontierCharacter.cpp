@@ -68,9 +68,8 @@ void AAetherFrontierCharacter::RefreshDerivedHealth()
     if(!HasAuthority()||!P||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this)return;
     // Re-evaluate after the barrier instead of queueing a stale absolute limit or health value.
     const TWeakObjectPtr<AAetherFrontierCharacter> Self=this;
-    if(ResourceGate->IsEnabled()&&ResourceGate->Defer([Self]{if(Self.IsValid())Self->RefreshDerivedHealth();}))return;
-    MaxHealth=AetherDerivedStats::MaximumHealth(P->Experience,Attributes->GearMaxHealth.GetCurrentValue());
-    if(Health()>MaxHealth)SetVitals(MaxHealth,Mana(),Stamina());
+    if(ResourceGate->IsEnabled()&&ResourceGate->Defer([Self]{if(Self.IsValid())Self->RefreshDerivedHealth();},EAetherEffectEventKind::ProjectionRefresh))return;
+    FString Reason;PS->ApplyResolvedAttributes(*P,PS->GetNativeSkillGrants(),Reason);
     ForceNetUpdate();
 }
 void AAetherFrontierCharacter::BeginPlay()
@@ -287,7 +286,8 @@ void AAetherFrontierCharacter::ReceiveEquipmentHit_Implementation(const FAetherE
     if(DeferEquipmentHit(Hit))return;
     if(Reactive->bOwnerOnlyStimuli&&Hit.Source!=GetOwner())return;
     if(auto* Other=Cast<AAetherCharacter>(Hit.Source);Other&&Other->Reactive->bOwnerOnlyStimuli&&Other->GetOwner()!=this)return;
-    const bool Blocked=bBlocking&&Equipment->GuardDefinition()&&Hit.Source&&FVector::DotProduct(GetActorForwardVector(),(Hit.Source->GetActorLocation()-GetActorLocation()).GetSafeNormal())>.25;
+    const bool Blocked=CombatRuntime->DeferredDefense.IsSet()?CombatRuntime->DeferredDefense->bBlocked:
+        bBlocking&&Equipment->GuardDefinition()&&Hit.Source&&FVector::DotProduct(GetActorForwardVector(),(Hit.Source->GetActorLocation()-GetActorLocation()).GetSafeNormal())>.25;
     if(const auto* Source=::Cast<AAetherCharacter>(Hit.Source); Source && Source->Fighter==EAetherFighter::Player && Fighter==EAetherFighter::Player)return;
     Super::ReceiveEquipmentHit_Implementation(Hit);
     if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>())

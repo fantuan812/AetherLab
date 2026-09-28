@@ -97,7 +97,7 @@ void UAetherSpellAbility::FinishCast(FGuid ExpectedExecution)
     const bool OwnsExecution=Payment==PaymentExecution&&PreparedCast.IsSet()&&PreparedCast->ExecutionId==ExpectedExecution;
     const bool Valid=Committed&&OwnsExecution&&IsActive()&&SameLife()&&Avatar->CastExecutionId==ExpectedExecution&&Avatar->Ready()&&ResolveSkill(H,Info,CurrentId,CurrentRank)&&CurrentId==Id&&CurrentRank==Rank;
     Cast.bResultCommitted=Valid&&Avatar->ExecuteCast(Cast);
-    if(OwnsExecution)bResultCommitted=Cast.bResultCommitted;
+    if(Payment==PaymentExecution)bResultCommitted=Cast.bResultCommitted;
     UE_LOG(LogTemp,Verbose,TEXT("AETHER_SPELL_RESULT execution=%s committed=%d cost=%d"),*Cast.ExecutionId.ToString(),Cast.bResultCommitted,Cast.bCostApplied);
     if(!Cast.bResultCommitted&&Cast.bCostApplied&&Payment.IsValid()&&!Payment->bRefunded&&SameLife())
     {

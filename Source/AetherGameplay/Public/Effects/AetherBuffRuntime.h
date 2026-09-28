@@ -5,6 +5,19 @@
 #include "AetherBuffRuntime.generated.h"
 class UAbilitySystemComponent;
 USTRUCT()
+struct FAetherMovementConfig
+{
+    GENERATED_BODY()
+    UPROPERTY() float Speed=1;
+    UPROPERTY() float ActionSpeed=1;
+    UPROPERTY() uint32 Revision=0;
+    UPROPERTY() double Time=0;
+    bool NetSerialize(FArchive& Ar,UPackageMap*,bool& Success)
+    {Ar<<Speed<<ActionSpeed<<Revision<<Time;Success=!Ar.IsError()&&FMath::IsFinite(Speed)&&Speed>=.1f&&Speed<=3&&FMath::IsFinite(ActionSpeed)&&ActionSpeed>=.1f&&ActionSpeed<=3&&FMath::IsFinite(Time);return Success;}
+};
+template<> struct TStructOpsTypeTraits<FAetherMovementConfig>:TStructOpsTypeTraitsBase2<FAetherMovementConfig>
+{enum{WithNetSerializer=true};};
+USTRUCT()
 struct FAetherAttributePresentation
 {
     GENERATED_BODY()
@@ -74,10 +87,12 @@ public:
     float MovementSpeedAt(double ServerTime) const;
     const FAetherBuffState& GetState() const{return State;}
     UPROPERTY(Replicated) FAetherEffectPresentationSnapshot Snapshot;
-    UPROPERTY(Replicated) float MoveSpeedMultiplier=1;
-    UPROPERTY(Replicated) float ActionSpeedMultiplier=1;
-    UPROPERTY(Replicated) uint32 MovementConfigRevision=0;
-    UPROPERTY(Replicated) double MovementConfigTime=0;
+    float MoveSpeedMultiplier=1;
+    float ActionSpeedMultiplier=1;
+    uint32 MovementConfigRevision=0;
+    double MovementConfigTime=0;
+    UPROPERTY(ReplicatedUsing=OnRep_Movement) FAetherMovementConfig MovementConfig;
+    UFUNCTION() void OnRep_Movement();
 private:
     FAetherBuffState State;
     bool bPublishing=false;

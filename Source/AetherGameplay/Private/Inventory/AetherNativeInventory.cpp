@@ -143,7 +143,7 @@ void AetherNativeInventory::StatusEffects(AAetherFrontierCharacter& C,TArray<FAe
         if(Snapshot.LifeId.IsValid())
         {
             FAetherInspectStatusEffect Summary;Summary.InstanceId=Snapshot.LifeId;Summary.DefinitionId=TEXT("Character.Attributes");
-            Summary.DisplayName=TEXT("属性来源");Summary.IconId=TEXT("Water.Ward");Summary.Source=TEXT("服务器已生效属性");
+            Summary.DisplayName=TEXT("属性来源");Summary.IconId=TEXT("Water.Draw");Summary.Source=TEXT("服务器已生效属性");
             Summary.Impacts.Add({TEXT("version"),TEXT("属性 / 授权 / 效果版本"),FString::Printf(TEXT("%llu / %u / %llu"),Snapshot.ProjectionRevision,Snapshot.GrantRevision,Snapshot.EffectRevision)});
             TArray<FString> Keys;Snapshot.Attributes.GetKeys(Keys);Keys.Sort();
             for(const auto& Key:Keys)Summary.Impacts.Add({Key,TEXT("最终 · ")+Key,FString::Printf(TEXT("%.2f"),Snapshot.Attributes.FindChecked(Key))});

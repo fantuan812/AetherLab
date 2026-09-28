@@ -9,7 +9,10 @@ bool FAetherSkillDefinitionTest::RunTest(const FString&)
 {
     const auto& D=FAetherSkillDefinitionsV10::Get();FString Reason;
     if(!TestTrue(*Reason,D.Validate(Reason)))return false;
-    TestEqual(TEXT("Four active and four passive routes"),D.Skills.Num(),8);
+    TestEqual(TEXT("Eight legacy routes and three support routes"),D.Skills.Num(),11);
+    TestNotNull(TEXT("Self buff route"),D.Skills.Find(TEXT("Body.Haste")));
+    TestNotNull(TEXT("Interruptible recovery route"),D.Skills.Find(TEXT("Body.Mend")));
+    TestNotNull(TEXT("Bounded ally recovery route"),D.Skills.Find(TEXT("Body.Aid")));
     for(const auto& Pair:D.Skills)if(!Pair.Value.bActive)
     {TestEqual(TEXT("Passive route has three ranks"),Pair.Value.Ranks.Num(),3);TestFalse(TEXT("Passive rank changes real attributes"),Pair.Value.Ranks.Last().PassiveStats.IsEmpty());}
     for(int32 Bit=0;Bit<4;++Bit)

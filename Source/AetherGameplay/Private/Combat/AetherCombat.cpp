@@ -323,6 +323,8 @@ float AAetherCharacter::SkillCooldownRemaining(const FString& Id) const
 {
     const auto* PS=GetPlayerState<AAetherPlayerState>();const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,Id):nullptr;
     const auto* E=FAetherSkillDefinitionsV10::Get().Effect(Id,Spec?Spec->Level:1);
+    if(!HasAuthority()&&PS&&E&&BuffRuntime->PresentationReady(PS->SkillGrants.ProfileRevision))
+        return float(FMath::Max(0.,FMath::Max(BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Skill.")+Id),BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Group.")+E->CooldownGroup))-CombatTime()));
     return PS&&E?float(PS->CooldownRemaining(Id,E->CooldownGroup,CombatTime())):0;
 }
 bool AAetherCharacter::TrySpell(int32 Spell)

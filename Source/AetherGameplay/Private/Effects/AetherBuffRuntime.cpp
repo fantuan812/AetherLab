@@ -55,9 +55,10 @@ void UAetherBuffRuntime::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 {
     Super::GetLifetimeReplicatedProps(Out);
     DOREPLIFETIME_CONDITION(UAetherBuffRuntime,Snapshot,COND_OwnerOnly);
-    DOREPLIFETIME(UAetherBuffRuntime,MoveSpeedMultiplier);DOREPLIFETIME(UAetherBuffRuntime,ActionSpeedMultiplier);
-    DOREPLIFETIME(UAetherBuffRuntime,MovementConfigRevision);DOREPLIFETIME(UAetherBuffRuntime,MovementConfigTime);
+    DOREPLIFETIME(UAetherBuffRuntime,MovementConfig);
 }
+void UAetherBuffRuntime::OnRep_Movement()
+{MoveSpeedMultiplier=MovementConfig.Speed;ActionSpeedMultiplier=MovementConfig.ActionSpeed;MovementConfigRevision=MovementConfig.Revision;MovementConfigTime=MovementConfig.Time;}
 bool UAetherBuffRuntime::HasTag(const FString& Tag) const
 {
     if(GetOwner()->HasAuthority())return State.HasTag(Tag);
@@ -126,6 +127,7 @@ void UAetherBuffRuntime::RefreshSnapshot()
         while(SpeedHistory.Num()>2&&(SpeedHistory.Num()>64||SpeedHistory[1].Time<C->CombatTime()-2.))SpeedHistory.RemoveAt(0);
     }
     ActionSpeedMultiplier=float(PS->ResolvedAttributes.Values.FindRef(TEXT("ActionSpeed")));
+    MovementConfig.Speed=MoveSpeedMultiplier;MovementConfig.ActionSpeed=ActionSpeedMultiplier;MovementConfig.Revision=MovementConfigRevision;MovementConfig.Time=MovementConfigTime;
     Snapshot=MoveTemp(Next);C->ForceNetUpdate();
 }
 bool UAetherBuffRuntime::HasDue() const
