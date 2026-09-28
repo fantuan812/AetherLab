@@ -1,5 +1,30 @@
 #include "Combat/AetherAttributes.h"
 #include "Net/UnrealNetwork.h"
+#include "Combat/AetherCombat.h"
+#include "GameplayEffectExtension.h"
+void UAetherAttributes::ClampValue(const FGameplayAttribute& Attribute,float& Value) const
+{
+    if(!FMath::IsFinite(Value))Value=0;
+    float Max=100000;
+    const auto* ASC=GetOwningAbilitySystemComponent();
+    const auto* C=ASC?Cast<AAetherCharacter>(ASC->GetAvatarActor()):nullptr;
+    if(Attribute==GetHealthAttribute())Max=C?C->MaxHealth:100;
+    else if(Attribute==GetManaAttribute())Max=C?C->MaximumMana():100;
+    else if(Attribute==GetStaminaAttribute())Max=C?C->MaximumStamina():100;
+    else if(Attribute==GetPostureAttribute())Max=100;
+    Value=FMath::Clamp(Value,0.f,FMath::IsFinite(Max)?FMath::Max(1.f,Max):100.f);
+}
+void UAetherAttributes::PreAttributeChange(const FGameplayAttribute& Attribute,float& Value)
+{Super::PreAttributeChange(Attribute,Value);ClampValue(Attribute,Value);}
+void UAetherAttributes::PreAttributeBaseChange(const FGameplayAttribute& Attribute,float& Value) const
+{Super::PreAttributeBaseChange(Attribute,Value);ClampValue(Attribute,Value);}
+void UAetherAttributes::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+{
+    Super::PostGameplayEffectExecute(Data);
+    const auto A=Data.EvaluatedData.Attribute;auto* ASC=GetOwningAbilitySystemComponent();if(!ASC)return;
+    const float Current=ASC->GetNumericAttribute(A);float Value=Current;ClampValue(A,Value);
+    if(!FMath::IsFinite(Current)||Current!=Value)ASC->SetNumericAttributeBase(A,Value);
+}
 UAetherAttributes::UAetherAttributes()
 { Health.SetBaseValue(100); Health.SetCurrentValue(100); Mana.SetBaseValue(100); Mana.SetCurrentValue(100);
   Stamina.SetBaseValue(100); Stamina.SetCurrentValue(100); Posture.SetBaseValue(0); Posture.SetCurrentValue(0); }

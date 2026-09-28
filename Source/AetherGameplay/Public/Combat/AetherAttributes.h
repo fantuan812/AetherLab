@@ -9,6 +9,9 @@ class AETHERGAMEPLAY_API UAetherAttributes : public UAttributeSet
     GENERATED_BODY()
 public:
     UAetherAttributes();
+    virtual void PreAttributeChange(const FGameplayAttribute& Attribute,float& NewValue) override;
+    virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute,float& NewValue) const override;
+    virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
     UPROPERTY(ReplicatedUsing=OnRep_Health) FGameplayAttributeData Health;
     UPROPERTY(ReplicatedUsing=OnRep_Mana) FGameplayAttributeData Mana;
     UPROPERTY(ReplicatedUsing=OnRep_Stamina) FGameplayAttributeData Stamina;
@@ -39,6 +42,7 @@ public:
     GAMEPLAYATTRIBUTE_PROPERTY_GETTER(UAetherAttributes, Posture)
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:
+    void ClampValue(const FGameplayAttribute& Attribute,float& Value) const;
     UFUNCTION() void OnRep_GearDamage(const FGameplayAttributeData& Old);
     UFUNCTION() void OnRep_GearPosture(const FGameplayAttributeData& Old);
     UFUNCTION() void OnRep_GearArmor(const FGameplayAttributeData& Old);

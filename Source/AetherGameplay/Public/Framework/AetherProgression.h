@@ -5,6 +5,7 @@
 #include "Combat/AetherCombat.h"
 #include "Persistence/AetherProfile.h"
 #include "Profile/AetherProfileState.h"
+#include "Attributes/AetherAttributeResolver.h"
 #include "AetherProgression.generated.h"
 
 // 拥有者只读授权，不把临时来源写进永久技能账本。
@@ -57,6 +58,9 @@ public:
     // 原生技能账本只保存在服务器；拥有者通过有界快照通道接收，避免在 Profile 反射旧格式追加字段。
     bool PublishNativeSkills(const FAetherProfileStateV10& Committed,const TArray<FAetherExternalSkillGrant>& Grants,FString& Reason);
     bool RebindNativeSkills(FString& Reason);
+    bool ApplyResolvedAttributes(const FAetherProfileStateV10& Committed,const TArray<FAetherExternalSkillGrant>& Grants,FString& Reason);
+    FAetherResolvedAttributes ResolvedAttributes;
+    uint64 ProjectionRevision=0;
     bool PublishNativeEquipment(const FAetherProfileStateV10& Committed,FString& Reason);
     // 完整 DTO 是服务器读取入口；旧 Profile 仅保留导航需要的只读兼容投影。
     bool PublishNativeProfile(const FAetherProfileStateV10& Committed,FString& Reason);

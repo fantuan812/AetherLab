@@ -27,14 +27,7 @@ bool AAetherPlayerState::PublishNativeEquipment(const FAetherProfileStateV10& P,
     Loadout.Sort([](const auto& A,const auto& B){return A.Slot.LexicalLess(B.Slot);});
     if(!Pawn->Equipment->ValidateLoadout(Loadout)){Reason=TEXT("Native equipment assets or slot definitions unavailable");return false;}
     TGuardValue<bool> Guard(bPublishingNativeEquipment,true);NativeEquipmentRevision=P.Revision;
-    const float HP=Pawn->Health(),MP=Pawn->Mana(),SP=Pawn->Stamina();
-    if(!AetherEquipmentEffects::Publish(*AbilitySystem,NativeEquipmentSource,P.Inventory.EquippedStats(D.Items),Reason))return false;
-    if(GetPawn()!=Pawn||AbilitySystem->GetAvatarActor()!=Pawn){Reason=TEXT("Avatar changed while equipment effects were publishing");return false;}
-    // 上限下降夹取；上限上升也不补血，换装不能绕过药剂或复活规则。
-    Pawn->MaxHealth=AetherDerivedStats::MaximumHealth(P.Experience,Attributes->GearMaxHealth.GetCurrentValue());
-    if(!(Pawn->ResourceGate->IsRecovering()&&!Pawn->ResourceGate->IsEnabled())&&
-        (Pawn->Health()>Pawn->MaxHealth||Pawn->Mana()>Pawn->MaximumMana()||Pawn->Stamina()>Pawn->MaximumStamina()))
-        Pawn->SetVitals(FMath::Min(HP,Pawn->Health()),FMath::Min(MP,Pawn->Mana()),FMath::Min(SP,Pawn->Stamina()));
+    // Equipment publishes appearance and source facts only. Final attributes have one writer.
     Pawn->Equipment->bProfileManaged=true;
     if(!Pawn->Equipment->RestoreLoadout(Loadout)){Reason=TEXT("Native loadout publication failed");return false;}
     if(GetPawn()!=Pawn||AbilitySystem->GetAvatarActor()!=Pawn){Reason=TEXT("Avatar changed while publishing loadout");return false;}
