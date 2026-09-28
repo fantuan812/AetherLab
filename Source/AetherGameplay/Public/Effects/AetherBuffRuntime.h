@@ -50,9 +50,10 @@ struct FAetherEffectPresentationSnapshot
     UPROPERTY() TArray<FAetherBuffPresentation> Rows;
     UPROPERTY() bool bSilenced=false;
     UPROPERTY() bool bStunned=false;
-    UPROPERTY() TMap<FString,double> Attributes;
+    UPROPERTY() bool bReady=false;
+    UPROPERTY(NotReplicated) TMap<FString,double> Attributes;
     UPROPERTY() TArray<FAetherAttributePresentation> Contributions;
-    UPROPERTY() TMap<FString,double> Cooldowns;
+    UPROPERTY(NotReplicated) TMap<FString,double> Cooldowns;
     UPROPERTY() float Health=0;
     UPROPERTY() float Mana=0;
     UPROPERTY() float Stamina=0;

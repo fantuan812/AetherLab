@@ -42,6 +42,7 @@ public:
     bool Defer(TUniqueFunction<void()> WholeAction,EAetherEffectEventKind Kind=EAetherEffectEventKind::LegacyAction);
     bool DeferInterval(const FAetherResourceAdvanceInterval& Interval,TUniqueFunction<void(double)> Apply);
     bool IsFaulted() const{return bFaulted;}
+    bool IsPresentationSettled() const{return Receiver.IsValid()&&!IsBlocked()&&!bDraining&&Deferred.IsEmpty();}
     bool IsEffectProjection() const{return bEffectProjection;}
     bool Synchronize();
     void Fault(const FString& Reason);

@@ -1,5 +1,6 @@
 #include "Inspection/AetherInspectionService.h"
 #include "Inventory/AetherItemEligibility.h"
+#include "Effects/AetherBuffState.h"
 
 namespace
 {
@@ -98,6 +99,8 @@ void DefinitionFields(FAetherInspectionModel& M,const FAetherV10ItemDefinition& 
         {
             Field(M,TEXT("use"),TEXT("基础恢复"),FString::Printf(TEXT("生命 %.0f / 法力 %.0f / 耐力 %.0f"),Rule->Health,Rule->Mana,Rule->Stamina));
             Field(M,TEXT("cooldown"),TEXT("基础共享冷却"),FString::Printf(TEXT("%.1f 秒"),Rule->Cooldown));
+            if(!Rule->BuffId.IsEmpty())if(const auto* Buff=FAetherBuffDefinitions::Get().Buffs.Find(Rule->BuffId))
+                Field(M,TEXT("useBuff"),TEXT("附加效果 · 自身"),Buff->DisplayName+FString::Printf(TEXT("，持续 %.0f 秒。"),Buff->Duration)+Buff->Description);
             Field(M,TEXT("restriction"),TEXT("基础使用条件"),FString::Printf(TEXT("受击后至少等待 %.1f 秒；仍需满足资源和动作条件"),Rule->SafeSeconds));
         }
         else Field(M,TEXT("use"),TEXT("基础用途"),TEXT("使用规则尚未加载"));
@@ -124,6 +127,7 @@ void DefinitionFields(FAetherInspectionModel& M,const FAetherV10ItemDefinition& 
     }
     if(!D.EquipmentId.IsEmpty())
     {
+        Field(M,TEXT("hitPolicy"),TEXT("命中方式"),D.AttackTrajectory.IsEmpty()?TEXT("前方体积扫掠"):TEXT("沿作者定义的弧线连续扫掠；每次攻击每目标最多命中一次"));
         if(const auto* Equipment=S.EquipmentPreviews.Find(D.EquipmentId))
         {
             if(Equipment->bTwoHanded)Field(M,TEXT("twoHanded"),TEXT("持握"),TEXT("双手；占用副手"));
@@ -315,7 +319,7 @@ void Skill(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FA
     for(int32 Slot=0;Slot<FAetherSkillStateV10::HotbarCapacity;++Slot)
         if(S.Skills.Hotbar.FindRef(Slot)==Def->SkillId)
             Action(M,EAetherInspectAction::UnbindHotbar,FString::Printf(TEXT("Hotbar.%d"),Slot+1),
-                FString::Printf(TEXT("解除快捷位 %d"),Slot+1),true,FString());
+                *FString::Printf(TEXT("解除快捷位 %d"),Slot+1),true,FString());
 }
 }
 FString AetherInspection::InventoryReason(EAetherInventoryMutationCode C)

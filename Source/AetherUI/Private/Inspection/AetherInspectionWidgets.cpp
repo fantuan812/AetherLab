@@ -1,4 +1,5 @@
 #include "Inspection/AetherInspectionWidgets.h"
+#include "Effects/AetherBuffState.h"
 #include "UI/AetherWidgetAssets.h"
 #include "UI/AetherUITheme.h"
 #include "Engine/AssetManager.h"
@@ -104,7 +105,16 @@ void UAetherInspectionCard::AddEffect(const TCHAR* Key,const TCHAR* Label,const 
         for(const auto& Stat:Keys)AddLine(Prefix+TEXT(":passive:")+Stat,FString::Printf(TEXT("被动 %s +%.1f"),*Stat,E.PassiveStats[Stat]));
         return;
     }
-    AddLine(Prefix+TEXT(":cast"),FString::Printf(TEXT("法力 %.1f · 冷却 %.2f 秒 · 距离 %.0f 厘米 · 半径 %.0f 厘米"),E.ManaCost,E.Cooldown,E.RangeCm,E.TargetRadiusCm));
+    AddLine(Prefix+TEXT(":cast"),FString::Printf(TEXT("法力 %.1f · 共享组冷却 %.2f 秒 · 技能冷却 %.2f 秒"),E.ManaCost,E.Cooldown,E.SkillCooldown));
+    AddLine(Prefix+TEXT(":phases"),FString::Printf(TEXT("基础前摇 %.2f 秒 · 后摇 %.2f 秒"),E.WindupSeconds,E.RecoverySeconds<0?E.Cooldown:E.RecoverySeconds));
+    if(E.WindupSeconds>0)AddLine(Prefix+TEXT(":cancel"),TEXT("受击或再次按施法键可中断前摇；提交前中断不扣费。"));
+    if(!E.BuffId.IsEmpty())
+    {
+        if(const auto* Buff=FAetherBuffDefinitions::Get().Buffs.Find(E.BuffId))AddLine(Prefix+TEXT(":buff"),Buff->DisplayName+TEXT("：")+Buff->Description);
+        AddLine(Prefix+TEXT(":target"),E.RangeCm<=1?TEXT("目标：自身"):FString::Printf(TEXT("目标：视线内一个存活友方玩家，距离 %.0f 厘米"),E.RangeCm));
+        return;
+    }
+    AddLine(Prefix+TEXT(":range"),FString::Printf(TEXT("距离 %.0f 厘米 · 半径 %.0f 厘米"),E.RangeCm,E.TargetRadiusCm));
     // 直接呈现公共等级解析结果，不在 UI 重算材料反应或把水输出量当作免费资源。
     AddLine(Prefix+TEXT(":reaction"),FString::Printf(TEXT("热传递 %.1f J · 水转移 %.3f kg · 电刺激 %.1f J"),E.HeatJ,E.WaterKg,E.ElectricalJ));
 }

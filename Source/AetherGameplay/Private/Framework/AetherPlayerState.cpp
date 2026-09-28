@@ -29,7 +29,7 @@ void AAetherPlayerState::CommitCooldown(const FString& Skill,const FString& Grou
         if(Seconds<=0)return;
         if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCooldownLedger>()->Put(Profile.CharacterId,Key,Seconds);
         if(auto* D=SkillCooldowns.FindByPredicate([&](const auto& V){return V.Key==Key;}))D->EndsAt=FMath::Max(D->EndsAt,Now+Seconds);
-        else {FAetherSkillCooldownDeadline D;D.Key=Key;D.EndsAt=Now+Seconds;SkillCooldowns.Add(MoveTemp(D));}
+        else {FAetherSkillCooldownDeadline Entry;Entry.Key=Key;Entry.EndsAt=Now+Seconds;SkillCooldowns.Add(MoveTemp(Entry));}
     };
     Put(TEXT("Skill.")+Skill,SkillSeconds);Put(TEXT("Group.")+Group,GroupSeconds);ForceNetUpdate();
 }

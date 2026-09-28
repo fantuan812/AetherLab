@@ -7,14 +7,25 @@
 #include "Misc/DateTime.h"
 #include "NativeGameplayTags.h"
 #include "Abilities/AetherSpellAbility.h"
+#include "Definitions/AetherV10Definitions.h"
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_AetherBuffSilence,"State.Aether.Buff.Silenced");
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_AetherBuffStun,"State.Aether.Buff.Stunned");
+namespace
+{
+bool CanProject(const AAetherCharacter& C,const FAetherBuffState& Candidate)
+{
+    const auto* PS=C.GetPlayerState<AAetherPlayerState>();const auto* P=PS?PS->GetNativeProfile():nullptr;if(!P)return false;
+    auto Grants=PS->GetNativeSkillGrants();Grants.RemoveAll([](const auto& G){return G.SourceId.StartsWith(TEXT("Buff."));});Grants.Append(Candidate.SkillGrants());
+    const auto& D=FAetherV10Definitions::Get();FAetherResolvedAttributes Out;FString Why;
+    return D.bValid&&FAetherSkillStateV10::ValidateExternalGrants(Grants,D.Skills)&&AetherAttributes::ResolveProfile(*P,D.Items,D.Skills,Grants,Candidate.Attributes(),Out,Why);
+}
+}
 
 UAetherBuffRuntime::UAetherBuffRuntime()
 {SetIsReplicatedByDefault(true);PrimaryComponentTick.bCanEverTick=true;PrimaryComponentTick.TickInterval=.1f;}
 bool FAetherEffectPresentationSnapshot::NetSerialize(FArchive& Ar,UPackageMap*,bool& Success)
 {
-    Ar<<LifeId<<ProfileRevision<<EffectRevision<<ProjectionRevision<<GrantRevision<<bSilenced<<bStunned;
+    Ar<<LifeId<<ProfileRevision<<EffectRevision<<ProjectionRevision<<GrantRevision<<bSilenced<<bStunned<<bReady;
     if(Ar.IsSaving()&&Rows.Num()>64){Success=false;return false;}
     uint8 Count=uint8(Rows.Num());Ar<<Count;if(Count>64){Success=false;return false;}
     if(Ar.IsLoading())Rows.SetNum(Count);
@@ -43,7 +54,7 @@ bool FAetherEffectPresentationSnapshot::NetSerialize(FArchive& Ar,UPackageMap*,b
 bool UAetherBuffRuntime::PresentationReady(int64 Revision) const
 {
     const auto* C=Cast<AAetherCharacter>(GetOwner());const auto* PS=C?C->GetPlayerState<AAetherPlayerState>():nullptr;
-    return PS&&Snapshot.LifeId.IsValid()&&Snapshot.ProfileRevision==Revision&&PS->SkillGrants.ProfileRevision==Revision&&PS->SkillGrants.GrantRevision==Snapshot.GrantRevision;
+    return PS&&Snapshot.bReady&&Snapshot.LifeId.IsValid()&&Snapshot.ProfileRevision==Revision&&PS->SkillGrants.ProfileRevision==Revision&&PS->SkillGrants.GrantRevision==Snapshot.GrantRevision;
 }
 float UAetherBuffRuntime::MovementSpeedAt(double Time) const
 {
@@ -51,9 +62,9 @@ float UAetherBuffRuntime::MovementSpeedAt(double Time) const
     for(const auto& Boundary:SpeedHistory){if(Boundary.Time>Time)break;Speed=Boundary.Speed;}
     return Speed;
 }
-void UAetherBuffRuntime::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const
+void UAetherBuffRuntime::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(Out);
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME_CONDITION(UAetherBuffRuntime,Snapshot,COND_OwnerOnly);
     DOREPLIFETIME(UAetherBuffRuntime,MovementConfig);
 }
@@ -100,15 +111,17 @@ void UAetherBuffRuntime::EndPlay(const EEndPlayReason::Type Reason)
 void UAetherBuffRuntime::RefreshSnapshot()
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority()||bPublicationPending)return;
-    const auto* PS=C->GetPlayerState<AAetherPlayerState>();if(!PS)return;
+    const auto* PS=C->GetPlayerState<AAetherPlayerState>();if(!PS||!PS->GetNativeProfile()||!PS->GetNativeSkills())return;
     FAetherEffectPresentationSnapshot Next;Next.LifeId=State.LifeId;Next.EffectRevision=State.Revision;
     Next.ProjectionRevision=PS->ProjectionRevision;
     Next.GrantRevision=PS->GrantRevision;
     if(const auto* P=PS->GetNativeProfile())Next.ProfileRevision=P->Revision;
     Next.bSilenced=State.HasTag(TEXT("Silence"));Next.bStunned=State.HasTag(TEXT("Stun"));
+    Next.bReady=C->ResourceGate->IsPresentationSettled()&&!HasDue();
     Next.Health=C->Health();Next.Mana=C->Mana();Next.Stamina=C->Stamina();
     Next.MaxHealth=C->MaxHealth;Next.MaxMana=C->MaximumMana();Next.MaxStamina=C->MaximumStamina();
     Next.Attributes=PS->ResolvedAttributes.Values;Next.SpellDenial=uint8(C->QueryAction(EAetherActionKind::Spell));
+    Next.Attributes.Add(TEXT("MaxHealth"),Next.MaxHealth);Next.Attributes.Add(TEXT("MaxMana"),Next.MaxMana);Next.Attributes.Add(TEXT("MaxStamina"),Next.MaxStamina);
     for(const auto& D:PS->SkillCooldowns)Next.Cooldowns.Add(D.Key,D.EndsAt);
     for(const auto& A:PS->ResolvedAttributes.Contributions)
     {FAetherAttributePresentation P;P.AttributeId=A.AttributeId;P.SourceId=A.SourceId;P.Value=A.Value;P.Operation=uint8(A.Operation);Next.Contributions.Add(MoveTemp(P));}
@@ -193,6 +206,7 @@ bool UAetherBuffRuntime::Apply(const FString& Id,const FString& Source,FString& 
     if(Result==EAetherBuffResult::Replayed){Why=TEXT("该效果已经生效。");return true;}
     if(Result!=EAetherBuffResult::Applied&&Result!=EAetherBuffResult::Refreshed)
     {Why=Result==EAetherBuffResult::Immune?TEXT("当前免疫此效果。"):TEXT("效果层数已满或施加条件不满足。");return false;}
+    if(!CanProject(*C,State)){State=Previous;Why=TEXT("效果超出可应用的属性或技能来源范围。");return false;}
     if(!Publish()){State=Previous;Publish();Why=TEXT("效果发布暂不可用。");return false;}
     Why=D->DisplayName+TEXT("已生效。");return true;
 }
@@ -230,7 +244,7 @@ bool UAetherBuffRuntime::CanApply(const FString& Id) const
     auto Candidate=State;Candidate.LifeId=Receiver->State().LifeId;
     const auto* D=FAetherBuffDefinitions::Get().Buffs.Find(Id);if(!D)return false;
     const auto Result=Candidate.Apply(*D,TEXT("Delivery.Preflight"),C->CombatTime(),FGuid::NewGuid());
-    return Result==EAetherBuffResult::Applied||Result==EAetherBuffResult::Refreshed;
+    return (Result==EAetherBuffResult::Applied||Result==EAetherBuffResult::Refreshed)&&CanProject(*C,Candidate);
 }
 bool UAetherBuffRuntime::ApplyDelivery(const FAetherConsumableEffectV10& E)
 {
