@@ -305,6 +305,10 @@ void Skill(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FA
     const bool CanBind=Def->bActive&&M.EffectiveSkillRank>0&&(T.SkillRank==0||T.SkillRank<=M.EffectiveSkillRank);
     for(int32 Slot=0;Slot<FAetherSkillStateV10::HotbarCapacity;++Slot)
         Action(M,EAetherInspectAction::BindHotbar,FString::Printf(TEXT("Hotbar.%d"),Slot+1),TEXT("绑定快捷位"),CanBind,CanBind?FString():TEXT("当前节点尚未获得可用授权。"));
+    for(int32 Slot=0;Slot<FAetherSkillStateV10::HotbarCapacity;++Slot)
+        if(S.Skills.Hotbar.FindRef(Slot)==Def->SkillId)
+            Action(M,EAetherInspectAction::UnbindHotbar,FString::Printf(TEXT("Hotbar.%d"),Slot+1),
+                FString::Printf(TEXT("解除快捷位 %d"),Slot+1),true,FString());
 }
 }
 FString AetherInspection::InventoryReason(EAetherInventoryMutationCode C)

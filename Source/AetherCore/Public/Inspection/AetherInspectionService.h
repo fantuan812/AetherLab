@@ -80,7 +80,7 @@ struct FAetherInspectionSnapshot
     AETHERCORE_API const FAetherV10ItemInstance* Find(FGuid Id,bool bContainer=false) const;
 };
 enum class EAetherInspectionState:uint8 {Ready,Changed,Missing,Invalid};
-enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill,Use,Split,Sell,Buy,Repair,Deposit,Withdraw,ResetSkills};
+enum class EAetherInspectAction:uint8 {Equip,Unequip,Drop,Lock,Unlock,Favorite,Unfavorite,Learn,BindHotbar,TrackQuest,FocusSkill,Use,Split,Sell,Buy,Repair,Deposit,Withdraw,ResetSkills,UnbindHotbar};
 struct FAetherInspectionAction
 {
     EAetherInspectAction Kind=EAetherInspectAction::Equip;

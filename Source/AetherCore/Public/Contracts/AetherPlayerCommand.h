@@ -10,7 +10,7 @@ enum class EAetherCommandType : uint8
     MoveItem = 8, SwapItems = 9, SetItemLock = 10, SortInventory = 11,
     DropItem = 12, PickUpItem = 13, TransferItem = 14, RepairItem = 15,
     LearnSkill = 16, UpgradeSkill = 17, ResetSkills = 18, BindSkill = 19,
-    ExecuteInteraction = 20, ClaimReward = 21, SetItemFavorite = 22
+    ExecuteInteraction = 20, ClaimReward = 21, SetItemFavorite = 22, UnbindSkill = 23
 };
 enum class EAetherTransferDirection : uint8 { IntoContainer, FromContainer };
 enum class EAetherCommandCode : uint8
@@ -63,8 +63,8 @@ struct FAetherCommandResult
 namespace AetherCommands
 {
     inline constexpr uint16 ProtocolVersion = 1; // 保留旧调用者默认值，不改变已保存请求。
-    inline constexpr uint16 LatestProtocolVersion = 4;
-    inline constexpr bool IsSupportedProtocol(int32 Version) { return Version>=1&&Version<=4; }
+    inline constexpr uint16 LatestProtocolVersion = 5;
+    inline constexpr bool IsSupportedProtocol(int32 Version) { return Version>=1&&Version<=5; }
     inline constexpr int32 MaxWireBytes = 1024;
     inline constexpr uint16 ResultSchemaVersion = 2;
     // 这里只检查协议形状；是否持有物品、目标距离、权限和版本仍由权威处理器复验。

@@ -60,7 +60,7 @@ bool AetherProfileCommands::Prepare(const FAetherPlayerCommand& C,const FString&
     case E::EquipItem:Inventory=Next.Inventory.Equip(C.ItemInstanceId,C.SlotId,Actor,Items);break;
     case E::UnequipItem:Inventory=C.ProtocolVersion>=4&&C.DestinationIndex>=0?
         Next.Inventory.UnequipTo(C.ItemInstanceId,C.DestinationIndex,Items):Next.Inventory.Unequip(C.ItemInstanceId,Items);break;
-    case E::LearnSkill:case E::UpgradeSkill:case E::ResetSkills:case E::BindSkill:
+    case E::LearnSkill:case E::UpgradeSkill:case E::ResetSkills:case E::BindSkill:case E::UnbindSkill:
     {
         IsSkill=true;auto SkillContext=Context.Skill;
         // 完成任务始终来自已提交角色，忽略上下文中可能过期的任务集合。

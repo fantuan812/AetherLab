@@ -37,6 +37,7 @@ uint32 Fields(EAetherCommandType Type)
     case E::RepairItem: return Target|Item;
     case E::LearnSkill: case E::UpgradeSkill: return Skill;
     case E::BindSkill: return Skill|Slot;
+    case E::UnbindSkill: return Slot;
     case E::ExecuteInteraction: return Target|Action|World;
     case E::ClaimReward: return Definition;
     default: return MAX_uint32;
@@ -95,6 +96,9 @@ bool AetherCommands::Validate(const FAetherPlayerCommand& C, FString& Reason)
 {
     const auto Reject=[&](const TCHAR* Why){Reason=Why;return false;};
     if(!IsSupportedProtocol(C.ProtocolVersion))return Reject(TEXT("Unsupported protocol version"));
+    if(C.Type==EAetherCommandType::UnbindSkill&&(C.ProtocolVersion<5||
+        (C.SlotId!=TEXT("Hotbar.1")&&C.SlotId!=TEXT("Hotbar.2")&&C.SlotId!=TEXT("Hotbar.3")&&C.SlotId!=TEXT("Hotbar.4"))))
+        return Reject(TEXT("Unbind requires v5 and a valid hotbar slot"));
     uint32 Mask=Fields(C.Type);
     if(Mask==MAX_uint32)return Reject(TEXT("Unknown typed command"));
     if(C.ProtocolVersion>=4&&C.Type==EAetherCommandType::UnequipItem&&C.DestinationIndex>=0)Mask|=Index;
