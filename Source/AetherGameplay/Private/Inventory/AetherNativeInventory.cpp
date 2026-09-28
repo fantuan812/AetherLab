@@ -8,6 +8,7 @@
 #include "Combat/AetherEquipmentMath.h"
 #include "AetherEquipmentComponent.h"
 #include "Inventory/AetherResourceGate.h"
+#include "Effects/AetherBuffRuntime.h"
 #include "Engine/LocalPlayer.h"
 
 namespace
@@ -25,11 +26,18 @@ bool AetherNativeInventory::Snapshot(AAetherFrontierCharacter& C,int64 Revision,
     Out.Container=Net->GetContainer();Out.ContainerContext=Net->GetContainerContext();Out.ContainerWorldRevision=Net->GetContainerWorldRevision();
     Out.ProfileRevision=P.Revision;Out.Inventory=P.Inventory;Out.Skills=P.Skills;Out.Gold=P.Gold;
     Out.ServerTimeSeconds=C.CombatTime();
+    Out.bPresentationReady=C.BuffRuntime->PresentationReady(P.Revision);
+    if(Out.bPresentationReady)
+    {
+        const auto& Projection=C.BuffRuntime->Snapshot;Out.FinalAttributes=Projection.Attributes;
+        for(const auto& A:Projection.Contributions)Out.AttributeSources.Add({A.SourceId,A.AttributeId,FString::Printf(TEXT("%s %+.2f (%s)"),*A.AttributeId,A.Value,*A.SourceId)});
+    }
     StatusEffects(C,Out.StatusEffects);
     if(const auto* PS=C.ProfileState();PS&&PS->SkillGrants.ProfileRevision==P.Revision)Out.ExternalGrants=PS->GetNativeSkillGrants();
-    Out.bCanAct=C.Ready()&&!C.Carried&&!C.ReviveTarget&&!C.bTravelPending&&!Net->HasPending();
+    Out.bCanAct=Out.bPresentationReady&&C.QueryAction(EAetherActionKind::Inventory)==EAetherActionDenial::None&&!C.Carried&&!C.ReviveTarget&&!C.bTravelPending&&!Net->HasPending();
     auto& U=Out.UseSummary;U.bKnown=C.ResourceGate->HasUseSummary();U.bCanAct=Out.bCanAct;
     U.Health=C.Health();U.Mana=C.Mana();U.Stamina=C.Stamina();U.MaxHealth=C.MaxHealth;U.MaxMana=C.MaximumMana();U.MaxStamina=C.MaximumStamina();
+    if(Out.bPresentationReady){const auto& V=C.BuffRuntime->Snapshot;U.Health=V.Health;U.Mana=V.Mana;U.Stamina=V.Stamina;U.MaxHealth=V.MaxHealth;U.MaxMana=V.MaxMana;U.MaxStamina=V.MaxStamina;}
     U.CooldownRemaining=FMath::Max(0.f,C.ResourceGate->UseReadyTime()-C.CombatTime());U.SafeForSeconds=C.TimeSinceDamage();
     for(const auto& Use:FAetherV10Definitions::Get().Rules.Uses)Out.UseRules.Add(Use.Key.ToString(),Use.Value);
     if(C.Equipment&&C.Equipment->Catalog)
@@ -128,17 +136,54 @@ bool AetherNativeInventory::Shortcut(AAetherFrontierCharacter& C,FName Action,FN
 void AetherNativeInventory::StatusEffects(AAetherFrontierCharacter& C,TArray<FAetherInspectStatusEffect>& Out)
 {
     Out.Reset();auto* Net=Client(C);
+    if(C.BuffRuntime)
+    {
+        const auto& Snapshot=C.BuffRuntime->Snapshot;
+        if(Net&&Net->GetProfile().IsSet()&&!C.BuffRuntime->PresentationReady(Net->GetProfile()->Revision))return;
+        if(Snapshot.LifeId.IsValid())
+        {
+            FAetherInspectStatusEffect Summary;Summary.InstanceId=Snapshot.LifeId;Summary.DefinitionId=TEXT("Character.Attributes");
+            Summary.DisplayName=TEXT("属性来源");Summary.IconId=TEXT("Water.Ward");Summary.Source=TEXT("服务器已生效属性");
+            Summary.Impacts.Add({TEXT("version"),TEXT("属性 / 授权 / 效果版本"),FString::Printf(TEXT("%llu / %u / %llu"),Snapshot.ProjectionRevision,Snapshot.GrantRevision,Snapshot.EffectRevision)});
+            TArray<FString> Keys;Snapshot.Attributes.GetKeys(Keys);Keys.Sort();
+            for(const auto& Key:Keys)Summary.Impacts.Add({Key,TEXT("最终 · ")+Key,FString::Printf(TEXT("%.2f"),Snapshot.Attributes.FindChecked(Key))});
+            const TCHAR* Ops[]={TEXT("加值"),TEXT("比例"),TEXT("倍率"),TEXT("覆盖")};
+            for(const auto& A:Snapshot.Contributions)Summary.Impacts.Add({A.SourceId+A.AttributeId,TEXT("来源 · ")+A.AttributeId,FString::Printf(TEXT("%s %.2f · %s"),Ops[FMath::Min<int32>(A.Operation,3)],A.Value,*A.SourceId)});
+            Out.Add(MoveTemp(Summary));
+        }
+        for(const auto& Row:Snapshot.Rows)
+        {
+            const auto* D=FAetherBuffDefinitions::Get().Buffs.Find(Row.BuffId);if(!D)continue;
+            FAetherInspectStatusEffect E;E.InstanceId=Row.InstanceId;E.DefinitionId=Row.BuffId;E.DisplayName=D->DisplayName;
+            E.IconId=D->IconId;E.Source=Row.Source;E.ExpiresAtServerSeconds=Row.ExpiresAt;
+            E.Impacts.Add({TEXT("origin"),TEXT("类型"),TEXT("角色效果")});
+            E.Impacts.Add({TEXT("description"),TEXT("效果"),D->Description});
+            E.Impacts.Add({TEXT("stacks"),TEXT("层数"),FString::FromInt(Row.Stacks)});
+            E.Impacts.Add({TEXT("state"),TEXT("状态"),Row.ExpiresAt<=C.CombatTime()?TEXT("到期，结算中"):Row.bSuppressed?TEXT("被更强同组效果覆盖，当前贡献为零"):TEXT("已生效")});
+            E.Impacts.Add({TEXT("dispel"),TEXT("净化"),D->bDispellable?TEXT("可由对应净化服务移除"):TEXT("不可普通净化")});
+            for(const auto& O:D->Operations)if(O.Kind==EAetherBuffOperation::Skill&&Net&&Net->GetProfile().IsSet())
+            {
+                const auto* PS=C.ProfileState();const int32 Effective=PS?Net->GetProfile()->Skills.EffectiveRank(O.Id,PS->GetNativeSkillGrants()):0;
+                E.Impacts.Add({TEXT("grant"),TEXT("授权等级 / 有效等级"),FString::Printf(TEXT("%.0f / %d%s"),O.Value,Effective,Effective>O.Value?TEXT("；本来源额外贡献为零"):TEXT(""))});
+            }
+            Out.Add(MoveTemp(E));
+        }
+    }
     if(const auto* PS=C.ProfileState();PS&&Net&&Net->GetProfile().IsSet()&&PS->SkillGrants.ProfileRevision==Net->GetProfile()->Revision)
     {
         for(const auto& G:PS->SkillGrants.Rows)
         {
-            if(G.Source!=uint8(EAetherSkillGrantSource::Temporary)||!G.InstanceId.IsValid()||G.ExpiresAtServerSeconds<=C.CombatTime())continue;
+            if(G.Source!=uint8(EAetherSkillGrantSource::Temporary)||!G.InstanceId.IsValid())continue;
             const auto* D=FAetherV10Definitions::Get().Skills.Skills.Find(G.SkillId);if(!D)continue;
             FAetherInspectStatusEffect Effect;Effect.InstanceId=G.InstanceId;Effect.DefinitionId=G.SkillId;
             Effect.DisplayName=D->DisplayName+TEXT(" · 旅舍祝福");Effect.IconId=D->IconId;Effect.Source=TEXT("旅舍休息");
             Effect.ExpiresAtServerSeconds=G.ExpiresAtServerSeconds;
             Effect.Impacts.Add({TEXT("rank"),TEXT("授权等级"),FString::FromInt(G.Rank)});
-            if(const auto* Rank=FAetherV10Definitions::Get().Skills.Effect(G.SkillId,G.Rank))
+            const int32 Effective=Net->GetProfile()->Skills.EffectiveRank(G.SkillId,PS->GetNativeSkillGrants());
+            Effect.Impacts.Add({TEXT("effectiveRank"),TEXT("当前有效等级"),FString::FromInt(Effective)});
+            if(Effective>G.Rank)Effect.Impacts.Add({TEXT("suppressed"),TEXT("实际贡献"),TEXT("授权存在，被更高等级来源覆盖；额外贡献为零")});
+            if(G.ExpiresAtServerSeconds<=C.CombatTime())Effect.Impacts.Add({TEXT("expiry"),TEXT("状态"),TEXT("到期，等待服务器结算")});
+            if(Effective<=G.Rank)if(const auto* Rank=FAetherV10Definitions::Get().Skills.Effect(G.SkillId,G.Rank))
                 for(const auto& Stat:Rank->PassiveStats)Effect.Impacts.Add({Stat.Key,Stat.Key,FString::Printf(TEXT("+%.1f"),Stat.Value)});
             Out.Add(MoveTemp(Effect));
         }

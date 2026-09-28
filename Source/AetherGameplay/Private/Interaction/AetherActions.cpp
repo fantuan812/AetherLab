@@ -2,6 +2,7 @@
 #include "Framework/AetherFrontier.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "NativeGameplayTags.h"
+#include "Inventory/AetherResourceGate.h"
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_MeleeWindup,"Aether.Action.Melee.Windup");
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_MeleeActive,"Aether.Action.Melee.Active");
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_MeleeRecovery,"Aether.Action.Melee.Recovery");
@@ -17,7 +18,7 @@ bool UAetherMeleeAbility::CheckCost(FGameplayAbilitySpecHandle H,const FGameplay
  const auto* C=Info?Cast<AAetherCharacter>(Info->AvatarActor.Get()):nullptr;
  const FName Id=GetAbilityLevel(H,Info)>1?TEXT("Heavy"):TEXT("Light");
  const auto* Item=C?C->Equipment->InSlot(TEXT("MainHand")):nullptr; const auto* D=Item?Item->FindAttack(Id):nullptr;
- return C&&C->HasAuthority()&&C->AbilitySystem==Info->AbilitySystemComponent.Get()&&C->Equipment->CanStartAttack(Id)
+ return C&&C->HasAuthority()&&C->QueryAction(EAetherActionKind::Melee)==EAetherActionDenial::None&&C->AbilitySystem==Info->AbilitySystemComponent.Get()&&C->Equipment->CanStartAttack(Id)
      &&D&&C->Stamina()>=D->StaminaCost&&Super::CheckCost(H,Info,Tags);
 }
 void UAetherMeleeAbility::ApplyCost(FGameplayAbilitySpecHandle,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo) const
@@ -42,7 +43,9 @@ void UAetherMeleeAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
  const bool Committed=CommitAbility(H,Info,A);
  if (!Committed||!IsActive()||!IsValid(C)||!C->AbilitySystem||C->AbilitySystem!=ActiveSystem.Get()||C->AbilitySystem->GetAvatarActor()!=C)
  {
-  if(bCostApplied&&ActiveSystem.IsValid()) {ActiveSystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,PreparedCost);bCostApplied=false;}
+  if(bCostApplied&&ActiveSystem.IsValid()&&IsValid(C)&&C->Alive()&&C->AbilitySystem==ActiveSystem.Get()&&ActiveSystem->GetAvatarActor()==C)
+      ActiveSystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,PreparedCost);
+  bCostApplied=false;
   if(IsActive())EndAbility(H,Info,A,true,true);return;
  }
  FinishedDelegate=E->OnAttackFinished.AddUObject(this,&UAetherMeleeAbility::AttackFinished);
@@ -50,7 +53,9 @@ void UAetherMeleeAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
  ActiveSerial=E->Attack.Serial+1;if(ActiveSerial==0)++ActiveSerial;
  if (!E->BeginCommittedAttack(Id,ItemId,Revision))
  {
-  if(bCostApplied) {ActiveSystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,PreparedCost);bCostApplied=false;}
+  if(bCostApplied&&ActiveSystem.IsValid()&&IsValid(C)&&C->Alive()&&ActiveSystem->GetAvatarActor()==C)
+      ActiveSystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,PreparedCost);
+  bCostApplied=false;
   EndAbility(H,Info,A,true,true);
  }
 }
@@ -95,7 +100,7 @@ UAetherReviveAbility::UAetherReviveAbility()
 void UAetherReviveAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,const FGameplayEventData*)
 {
  Reviver=Info?Cast<AAetherFrontierCharacter>(Info->AvatarActor.Get()):nullptr;
- if(!Reviver||!Reviver->Alive()||!Reviver->ReviveTarget||Reviver->ReviveTarget->Alive())
+ if(!Reviver||Reviver->QueryAction(EAetherActionKind::Revive)!=EAetherActionDenial::None||!Reviver->ReviveTarget||Reviver->ReviveTarget->Alive())
  {EndAbility(H,Info,A,true,true);return;}
  RescueTarget=Reviver->ReviveTarget;
  if((RescueTarget->RescueHolder.IsValid()&&RescueTarget->RescueHolder!=Reviver&&RescueTarget->RescueLeaseUntil>Reviver->CombatTime())||FVector::DistSquared(Reviver->GetActorLocation(),RescueTarget->GetActorLocation())>FMath::Square(220.))
@@ -106,6 +111,10 @@ void UAetherReviveAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FG
 }
 void UAetherReviveAbility::FinishRevive()
 {
+ if(!IsActive()||!IsValid(Reviver)||!CurrentActorInfo||CurrentActorInfo->AvatarActor.Get()!=Reviver||
+    CurrentActorInfo->AbilitySystemComponent.Get()!=Reviver->AbilitySystem||Reviver->AbilitySystem->GetAvatarActor()!=Reviver||
+    Reviver->ResourceGate->IsBlocked()||!IsValid(RescueTarget)||RescueTarget->ResourceGate->IsBlocked())
+ {if(IsActive())EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,true);return;}
  bool Success=false;
  if(IsValid(RescueTarget)&&RescueTarget->RescueHolder==Reviver&&IsValid(Reviver)&&Reviver->ReviveTarget==RescueTarget&&Reviver->Alive()&&IsValid(Reviver->ReviveTarget)&&!Reviver->ReviveTarget->Alive()&&Reviver->CombatTime()-Reviver->ReviveStarted>=2.99f&&Reviver->CombatRuntime->DamageReceivedCount==Reviver->ReviveDamageSerial&&Reviver->CombatTime()>=Reviver->StunUntil&&FVector::DistSquared(Reviver->GetActorLocation(),Reviver->ReviveTarget->GetActorLocation())<=FMath::Square(220.))
  {
@@ -119,6 +128,8 @@ void UAetherReviveAbility::FinishRevive()
 
 void UAetherReviveAbility::EndAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,bool Replicate,bool Cancelled)
 {
+ if(!IsEndAbilityValid(H,Info))return;
+ if(ScopeLockCount>0){WaitingToExecute.Add(FPostLockDelegate::CreateUObject(this,&UAetherReviveAbility::EndAbility,H,Info,A,Replicate,Cancelled));return;}
  if(IsValid(RescueTarget)&&RescueTarget->RescueHolder==Reviver){RescueTarget->RescueHolder.Reset();RescueTarget->RescueLeaseUntil=0;}
  if(IsValid(Reviver)&&Reviver->ReviveTarget==RescueTarget)Reviver->ReviveTarget=nullptr;
  RescueTarget=nullptr;Reviver=nullptr;Super::EndAbility(H,Info,A,Replicate,Cancelled);

@@ -12,7 +12,9 @@ bool AetherReadExtensions(FAetherRules& R,const TSharedPtr<FJsonObject>& Root)
  for(const auto& P:(*Uses)->Values)
  {
   auto O=P.Value->AsObject();FAetherUseRule U;
-  if(!O||P.Key.IsEmpty()||!Number(O,TEXT("Health"),U.Health,1000)||!Number(O,TEXT("Mana"),U.Mana,1000)||!Number(O,TEXT("Stamina"),U.Stamina,1000)||!Number(O,TEXT("Cooldown"),U.Cooldown,3600)||!Number(O,TEXT("SafeSeconds"),U.SafeSeconds,3600)||U.Health+U.Mana+U.Stamina<=0)return Fail(TEXT("Uses.")+FString(*P.Key));
+  if(!O||P.Key.IsEmpty()||!Number(O,TEXT("Health"),U.Health,1000)||!Number(O,TEXT("Mana"),U.Mana,1000)||!Number(O,TEXT("Stamina"),U.Stamina,1000)||!Number(O,TEXT("Cooldown"),U.Cooldown,3600)||!Number(O,TEXT("SafeSeconds"),U.SafeSeconds,3600))return Fail(TEXT("Uses.")+FString(*P.Key));
+  if(O->HasField(TEXT("BuffId"))&&!O->TryGetStringField(TEXT("BuffId"),U.BuffId))return Fail(TEXT("Invalid use BuffId"));
+  if(U.Health+U.Mana+U.Stamina<=0&&U.BuffId.IsEmpty())return Fail(TEXT("Empty use effect"));
   R.Uses.Add(*P.Key,U);
  }
  const auto& Items=Root->GetObjectField(TEXT("Items"));

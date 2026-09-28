@@ -1,12 +1,14 @@
 #pragma once
 #include "CoreMinimal.h"
 
-enum class EAetherSkillMechanic : uint8 { Fire, Water, Frost, Lightning };
+enum class EAetherSkillMechanic : uint8 { Fire, Water, Frost, Lightning, SelfBuff, FriendlyTargetBuff };
 struct FAetherSkillRankEffect
 {
     int32 PointCost=0, RequiredLevel=1;
     double ManaCost=0, Cooldown=0, RangeCm=0, TargetRadiusCm=12;
     double HeatJ=0, WaterKg=0, ElectricalJ=0;
+    double WindupSeconds=0, RecoverySeconds=-1, SkillCooldown=0;
+    FString CooldownGroup=TEXT("LegacyElements"), BuffId;
     TMap<FString,double> PassiveStats; // 有限白名单被动，绝不混作施法输出。
 };
 struct FAetherSkillPrerequisite { FString SkillId; int32 Rank=1; };

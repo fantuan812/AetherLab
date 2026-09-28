@@ -15,6 +15,9 @@ struct FAetherConsumableEffectV10
 {
     FGuid DeliveryId, ItemInstanceId;
     FString DefinitionId;
+    FString BuffId;
+    int32 BuffRevision=0;
+    int64 BuffExpiresAtUnixMs=0;
     int64 ProfileRevision=0;
     FAetherResourceStateV10 Before, After;
 };
@@ -47,6 +50,7 @@ public:
     bool ForgetAcknowledged(FGuid DeliveryId);
     // 发起完整 pending 查询之前取此集合；查询中已不存在的旧 ID 可安全回收去重槽。
     TArray<FGuid> PendingAcknowledgementIds() const;
+    TArray<FAetherConsumableEffectV10> AppliedEffects() const;
     // 明确的“新生命全资源重生”恢复策略，只能在玩家输入/战斗开启前调用。
     // 调用方先等旧写者完成并读取全部 pending；此函数不会把旧生命治疗加到新生命上。
     bool RecoverAtFullRespawn(const TArray<FAetherEffectDelivery>& Pending,const FString& ServerCharacterId);

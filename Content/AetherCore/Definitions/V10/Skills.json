@@ -1,6 +1,9 @@
 {
   "ContentSchemaVersion": 3,
   "Skills": [
+    {"SkillId":"Body.Aid","DisplayName":"援护恢复","IconId":"Water.Ward","RequiredQuest":"Q_Main_02","Active":true,"StoryBase":false,"Mechanic":5,"LegacyBit":-1,"Prerequisites":[],"Ranks":[{"PointCost":1,"RequiredLevel":1,"ManaCost":15,"Cooldown":0.65,"RangeCm":600,"TargetRadiusCm":25,"HeatJ":0,"WaterKg":0,"ElectricalJ":0,"WindupSeconds":0.6,"RecoverySeconds":0.4,"SkillCooldown":15,"CooldownGroup":"Body","BuffId":"Sample.Regeneration"}]},
+    {"SkillId":"Body.Haste","DisplayName":"轻步术","IconId":"Water.Draw","RequiredQuest":"Q_Main_02","Active":true,"StoryBase":false,"Mechanic":4,"LegacyBit":-1,"Prerequisites":[],"Ranks":[{"PointCost":1,"RequiredLevel":1,"ManaCost":12,"Cooldown":0.65,"RangeCm":1,"TargetRadiusCm":0,"HeatJ":0,"WaterKg":0,"ElectricalJ":0,"RecoverySeconds":0.3,"SkillCooldown":25,"CooldownGroup":"Body","BuffId":"Sample.Haste"}]},
+    {"SkillId":"Body.Mend","DisplayName":"凝息恢复","IconId":"Water.Ward","RequiredQuest":"Q_Main_02","Active":true,"StoryBase":false,"Mechanic":4,"LegacyBit":-1,"Prerequisites":[],"Ranks":[{"PointCost":1,"RequiredLevel":1,"ManaCost":15,"Cooldown":0.65,"RangeCm":1,"TargetRadiusCm":0,"HeatJ":0,"WaterKg":0,"ElectricalJ":0,"WindupSeconds":1.5,"RecoverySeconds":0.4,"SkillCooldown":15,"CooldownGroup":"Body","BuffId":"Sample.Regeneration"}]},
     {
       "SkillId": "Fire.Ignite",
       "DisplayName": "引焰",

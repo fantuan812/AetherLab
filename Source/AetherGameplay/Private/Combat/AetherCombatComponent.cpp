@@ -31,22 +31,39 @@ void UAetherCombatComponent::TickComponent(float Delta,ELevelTick Type,FActorCom
 }
 void UAetherCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME(UAetherCombatComponent,StatusEffects);DOREPLIFETIME(UAetherCombatComponent,LastDamageAt);DOREPLIFETIME(UAetherCombatComponent,DamageReceivedCount);}
+FAetherDefenseSnapshot UAetherCombatComponent::CaptureDefense(AActor* Source) const
+{
+    FAetherDefenseSnapshot S;const auto* C=Cast<AAetherCharacter>(GetOwner());if(!C)return S;
+    S.Time=C->CombatTime();S.Armor=C->Attributes->GearArmor.GetCurrentValue();
+    S.Fire=C->Attributes->GearFireResist.GetCurrentValue();S.Water=C->Attributes->GearWaterResist.GetCurrentValue();
+    S.Frost=C->Attributes->GearFrostResist.GetCurrentValue();S.Storm=C->Attributes->GearStormResist.GetCurrentValue();
+    S.bInvulnerable=S.Time<InvulnerableUntil||C->AbilitySystem->HasMatchingGameplayTag(AetherDodge::InvulnerableTag());
+    const auto* Guard=C->Equipment->GuardDefinition();
+    S.bBlocked=C->bBlocking&&Guard&&Source&&FVector::DotProduct(C->GetActorForwardVector(),(Source->GetActorLocation()-C->GetActorLocation()).GetSafeNormal())>.25;
+    if(Guard){S.GuardCost=Guard->GuardStaminaMultiplier;S.bParry=S.bBlocked&&S.Time-BlockStarted<Guard->ParryWindowSeconds;}
+    return S;
+}
 void UAetherCombatComponent::ReceiveHit(float Damage,float PostureDamage,AAetherCharacter* Source,bool CanBlock)
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C)return;
     if(C->ResourceGate->IsBlocked())
     {
         TWeakObjectPtr<AAetherCharacter> Self=C,Other=Source;
-        if(C->ResourceGate->Defer([Self,Other,Damage,PostureDamage,CanBlock]{if(Self.IsValid())Self->ReceiveHit(Damage,PostureDamage,Other.Get(),CanBlock);}))return;
+        const auto Defense=CaptureDefense(Source);
+        if(C->ResourceGate->Defer([Self,Other,Damage,PostureDamage,CanBlock,Defense]{if(Self.IsValid()){
+            TGuardValue<TOptional<FAetherDefenseSnapshot>> Guard(Self->CombatRuntime->DeferredDefense,Defense);
+            Self->ReceiveHit(Damage,PostureDamage,Other.Get(),CanBlock);
+        }},EAetherEffectEventKind::Damage))return;
     }
-    if(!C->HasAuthority()||!C->Alive()||C->CombatTime()<InvulnerableUntil||C->AbilitySystem->HasMatchingGameplayTag(AetherDodge::InvulnerableTag()))return;
-    const float T=C->CombatTime();const bool Front=Source&&FVector::DotProduct(C->GetActorForwardVector(),(Source->GetActorLocation()-C->GetActorLocation()).GetSafeNormal())>.25;
-    const auto* Guard=C->Equipment->GuardDefinition();
-    if(CanBlock&&C->bBlocking&&Front&&Guard)
+    const auto Defense=DeferredDefense.IsSet()?DeferredDefense.GetValue():CaptureDefense(Source);
+    if(!C->HasAuthority()||!C->Alive()||Defense.bInvulnerable)return;
+    TGuardValue<TOptional<FAetherDefenseSnapshot>> Frozen(DeferredDefense,Defense);
+    const float T=C->CombatTime();
+    if(CanBlock&&Defense.bBlocked)
     {
         C->RecordEquipmentWear(false,true);
-        if(T-BlockStarted<Guard->ParryWindowSeconds){Source->StunUntil=T+1.1f;Source->CancelActions();return;}
-        const float Cost=PostureDamage*Guard->GuardStaminaMultiplier;
+        if(Defense.bParry){if(IsValid(Source)&&Source->Alive()){Source->StunUntil=T+1.1f;Source->CancelActions();}return;}
+        const float Cost=PostureDamage*Defense.GuardCost;
         if(C->Stamina()>=Cost){C->AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,-Cost);return;}
         C->bBlocking=false;C->StunUntil=T+1.2f;C->CancelActions();
     }
@@ -72,11 +89,12 @@ float UAetherCombatComponent::ApplyDamage(float Amount,const FDamageEvent& Event
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||C->DeferDamage(Amount,Event,Instigator,Causer))return 0;
     if(!C->HasAuthority()||!C->AbilitySystem||C->AbilitySystem->GetAvatarActor()!=C||!C->Alive()||!FMath::IsFinite(Amount)||Amount<=0)return 0;
     const auto Type=Event.DamageTypeClass;float Applied=Amount;
-    if(Type&&Type->IsChildOf(UAetherFireDamage::StaticClass()))Applied*=AetherEquipmentMath::ElementMultiplier(C->Attributes->GearFireResist.GetCurrentValue());
-    else if(Type&&Type->IsChildOf(UAetherWaterDamage::StaticClass()))Applied*=AetherEquipmentMath::ElementMultiplier(C->Attributes->GearWaterResist.GetCurrentValue());
-    else if(Type&&Type->IsChildOf(UAetherFrostDamage::StaticClass()))Applied*=AetherEquipmentMath::ElementMultiplier(C->Attributes->GearFrostResist.GetCurrentValue());
-    else if(Type&&Type->IsChildOf(UAetherStormDamage::StaticClass()))Applied*=AetherEquipmentMath::ElementMultiplier(C->Attributes->GearStormResist.GetCurrentValue());
-    else Applied=AetherEquipmentMath::PhysicalDamage(Amount,C->Attributes->GearArmor.GetCurrentValue());
+    const auto Defense=DeferredDefense.IsSet()?DeferredDefense.GetValue():CaptureDefense(Causer);
+    if(Type&&Type->IsChildOf(UAetherFireDamage::StaticClass()))Applied*=AetherEquipmentMath::ElementMultiplier(Defense.Fire);
+    else if(Type&&Type->IsChildOf(UAetherWaterDamage::StaticClass()))Applied*=AetherEquipmentMath::ElementMultiplier(Defense.Water);
+    else if(Type&&Type->IsChildOf(UAetherFrostDamage::StaticClass()))Applied*=AetherEquipmentMath::ElementMultiplier(Defense.Frost);
+    else if(Type&&Type->IsChildOf(UAetherStormDamage::StaticClass()))Applied*=AetherEquipmentMath::ElementMultiplier(Defense.Storm);
+    else Applied=AetherEquipmentMath::PhysicalDamage(Amount,Defense.Armor);
     Applied=FMath::Min(C->Health(),Applied);
     C->AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetHealthAttribute(),EGameplayModOp::Additive,-Applied);
     if(Applied>0){
@@ -84,7 +102,8 @@ float UAetherCombatComponent::ApplyDamage(float Amount,const FDamageEvent& Event
         const int32 Wear=Type&&Type->IsChildOf(UAetherHeatExposureDamage::StaticClass())?AetherEquipmentMath::ContinuousWear(Applied,HeatWearRemainder):1;
         for(int32 I=0;I<Wear;++I)C->RecordEquipmentWear(false,false);
     }
-    LastDamager=Causer;++DamageReceivedCount;LastDamageAt=C->CombatTime();
+    LastDamager=Causer;++DamageReceivedCount;LastDamageAt=Defense.Time;
+    if(Applied>0&&C->CastExecutionId.IsValid())C->CancelActions();
     if(Applied>0&&C->Alive())C->PresentAction(TEXT("Hit"),.35f);
     if(!C->Alive()){C->CancelActions();C->bBlocking=C->bWindingUp=false;C->GetCharacterMovement()->StopMovementImmediately();}
     return Applied;

@@ -30,6 +30,7 @@ struct FAetherProfileCommandContext
     FAetherResourceStateV10 Resources;
     int64 ServerUnixMs=0;
     double SafeForSeconds=0;
+    TSet<FString> AdmissibleBuffs;
     // 目标注册表提供现场事实；角色进度/版本/可领取点数由交互处理器从数据库重建。
     FAetherInteractionSnapshot Interaction;
     bool bServiceRequirementsMet=false,bObjectiveFactReady=false;

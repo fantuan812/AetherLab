@@ -27,6 +27,9 @@ struct AETHEREQUIPMENT_API FAetherAttackDefinition
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float WindupSeconds = .08f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float ActiveSeconds = .12f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) float RecoverySeconds = .18f;
+    // 0 = compatible forward volume, 1 = bounded authored local trajectory.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) uint8 HitShapePolicy=0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) TArray<FVector> AuthoredTrajectory;
     bool IsValid() const;
     float Duration() const { return WindupSeconds + ActiveSeconds + RecoverySeconds; }
 };
@@ -113,11 +116,15 @@ struct FAetherReplicatedAttack
     UPROPERTY() FName ItemId;
     UPROPERTY() FName AttackId;
     UPROPERTY() float StartedAt = -100;
+    UPROPERTY() float TimeScale=1;
+    UPROPERTY() FGuid ExecutionId;
     UPROPERTY() bool bCancelled = false;
     UPROPERTY() EAetherAttackPhase Phase = EAetherAttackPhase::Idle;
 };
 DECLARE_DELEGATE_OneParam(FAetherModifyEquipmentHit, FAetherEquipmentHit&);
 DECLARE_DELEGATE_RetVal(bool, FAetherEquipmentCanAct);
+DECLARE_DELEGATE_RetVal(float, FAetherEquipmentActionSpeed);
+DECLARE_DELEGATE(FAetherEquipmentContact);
 DECLARE_DELEGATE_RetVal_OneParam(bool, FAetherEquipmentOwnsItem, FName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAetherLoadoutChanged);
 DECLARE_DELEGATE_RetVal_OneParam(bool, FAetherAttackRequest, FName);
@@ -137,6 +144,12 @@ public:
     UPROPERTY(BlueprintAssignable) FAetherLoadoutChanged OnLoadoutChanged;
     // 战斗属性由角色适配器提供；装备模块不直接读取 ASC 或自行叠加统计。
     FAetherModifyEquipmentHit ModifyHit;
+    FAetherEquipmentContact OnAuthoritativeContact;
+    FAetherEquipmentActionSpeed ActionSpeed;
+    UPROPERTY(Replicated) bool bBrokenAttackDisabled=false;
+    UPROPERTY(Replicated) bool bBrokenGuardDisabled=false;
+    UPROPERTY(Replicated) float BrokenBaseAttackMultiplier=1;
+    TArray<FVector> MainHandTrajectory;
     FAetherEquipmentCanAct CanAct;
     FAetherEquipmentOwnsItem OwnsItem;
     FAetherEquipmentCanAct CanContinueAttack;
@@ -179,6 +192,8 @@ private:
     void SetAttackPhase(EAetherAttackPhase Phase);
     bool bAttackRunning = false;
     UPROPERTY(Transient) FAetherAttackDefinition ActiveDefinition;
+    mutable FAetherAttackDefinition ClientDefinition;
+    FAetherEquipmentHit CommittedHit;
     UPROPERTY(Transient) TObjectPtr<USkinnedMeshComponent> AttachmentTarget;
     UPROPERTY(Transient) TMap<FName,TObjectPtr<UStaticMeshComponent>> Visuals;
     TSet<TWeakObjectPtr<AActor>> HitActors;

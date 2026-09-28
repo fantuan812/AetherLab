@@ -30,6 +30,8 @@ private:
     FVector CommittedDirection=FVector::ZeroVector;
     float CommittedImpulse=0;
     uint32 ActionSerial=0;
+    uint32 OwnedPresentationSerial=0;
+    FGuid ExecutionId;
     uint64 DamageSerial=0;
     UPROPERTY(Replicated) bool bCommitted=false;
     void Cancel();

@@ -37,7 +37,7 @@ bool FAetherSkillDefinitionsV10::Validate(FString& Reason) const
         const auto& D=Pair.Value;
         if(!Id(D.SkillId)||!D.SkillId.Equals(Pair.Key,ESearchCase::CaseSensitive)||D.DisplayName.IsEmpty()||D.DisplayName.Len()>128||!Id(D.IconId)||
             (!D.RequiredQuest.IsEmpty()&&!Id(D.RequiredQuest))||D.Ranks.IsEmpty()||D.Ranks.Num()>3||
-            uint8(D.Mechanic)>3||D.Prerequisites.Num()>16||D.LegacyBit < -1||D.LegacyBit>3)
+            uint8(D.Mechanic)>5||D.Prerequisites.Num()>16||D.LegacyBit < -1||D.LegacyBit>3)
             return Fail(TEXT("Invalid skill definition"));
         if(D.LegacyBit>=0){if(LegacyBits.Contains(D.LegacyBit))return Fail(TEXT("Duplicate legacy skill bit"));LegacyBits.Add(D.LegacyBit);}
         TSet<FString> Seen;
@@ -52,6 +52,11 @@ bool FAetherSkillDefinitionsV10::Validate(FString& Reason) const
         }
         for(const auto& R:D.Ranks)
         {
+            if(!FMath::IsFinite(R.WindupSeconds)||R.WindupSeconds<0||R.WindupSeconds>10||
+                !FMath::IsFinite(R.RecoverySeconds)||R.RecoverySeconds < -1||R.RecoverySeconds>60||
+                !FMath::IsFinite(R.SkillCooldown)||R.SkillCooldown<0||R.SkillCooldown>3600||!Id(R.CooldownGroup)||
+                ((D.Mechanic==EAetherSkillMechanic::SelfBuff||D.Mechanic==EAetherSkillMechanic::FriendlyTargetBuff)?(!D.bActive||!Id(R.BuffId)||R.HeatJ!=0||R.WaterKg!=0||R.ElectricalJ!=0):!R.BuffId.IsEmpty()))
+                return Fail(TEXT("Invalid finite skill execution contract"));
             if(R.PointCost<0||R.PointCost>100||R.RequiredLevel<1||R.RequiredLevel>100||
                 !FMath::IsFinite(R.ManaCost)||R.ManaCost<0||R.ManaCost>100||
                 !FMath::IsFinite(R.Cooldown)||R.Cooldown<0||(D.bActive&&R.Cooldown==0)||R.Cooldown>60||
@@ -104,7 +109,7 @@ FAetherSkillDefinitionsV10 FAetherSkillDefinitionsV10::Parse(const FString& Json
         if(!Value->TryGetObject(O)||!O||!O->IsValid()||!(*O)->TryGetStringField(TEXT("SkillId"),S.SkillId)||
             !(*O)->TryGetStringField(TEXT("DisplayName"),S.DisplayName)||!(*O)->TryGetStringField(TEXT("IconId"),S.IconId)||
             !(*O)->TryGetStringField(TEXT("RequiredQuest"),S.RequiredQuest)||!(*O)->TryGetBoolField(TEXT("Active"),S.bActive)||
-            !(*O)->TryGetBoolField(TEXT("StoryBase"),S.bStoryBase)||!Integer(*O,TEXT("Mechanic"),Mechanic,0,3)||
+            !(*O)->TryGetBoolField(TEXT("StoryBase"),S.bStoryBase)||!Integer(*O,TEXT("Mechanic"),Mechanic,0,5)||
             !Integer(*O,TEXT("LegacyBit"),S.LegacyBit,-1,3))return Fail(TEXT("Incomplete skill definition"));
         S.Mechanic=EAetherSkillMechanic(Mechanic);
         const TArray<TSharedPtr<FJsonValue>> *Ranks=nullptr,*Parents=nullptr;
@@ -119,6 +124,11 @@ FAetherSkillDefinitionsV10 FAetherSkillDefinitionsV10::Parse(const FString& Json
                 !Number(*R,TEXT("RangeCm"),E.RangeCm,0,10000)||!Number(*R,TEXT("TargetRadiusCm"),E.TargetRadiusCm,0,500)||
                 !Number(*R,TEXT("HeatJ"),E.HeatJ,-1000000,1000000)||!Number(*R,TEXT("WaterKg"),E.WaterKg,0,3)||
                 !Number(*R,TEXT("ElectricalJ"),E.ElectricalJ,0,100000))return Fail(TEXT("Incomplete rank effect"));
+            if((*R)->HasField(TEXT("WindupSeconds"))&&!Number(*R,TEXT("WindupSeconds"),E.WindupSeconds,0,10))return Fail(TEXT("Invalid windup"));
+            if((*R)->HasField(TEXT("RecoverySeconds"))&&!Number(*R,TEXT("RecoverySeconds"),E.RecoverySeconds,0,60))return Fail(TEXT("Invalid recovery"));
+            if((*R)->HasField(TEXT("SkillCooldown"))&&!Number(*R,TEXT("SkillCooldown"),E.SkillCooldown,0,3600))return Fail(TEXT("Invalid skill cooldown"));
+            if((*R)->HasField(TEXT("CooldownGroup"))&&!(*R)->TryGetStringField(TEXT("CooldownGroup"),E.CooldownGroup))return Fail(TEXT("Invalid cooldown group"));
+            if((*R)->HasField(TEXT("BuffId"))&&!(*R)->TryGetStringField(TEXT("BuffId"),E.BuffId))return Fail(TEXT("Invalid buff executor"));
             if((*R)->HasField(TEXT("PassiveStats")))
             {
                 const TSharedPtr<FJsonObject>* Stats=nullptr;

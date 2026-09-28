@@ -11,10 +11,12 @@
 #include "AetherEquipmentComponent.h"
 #include "Animation/AetherActionPresentation.h"
 #include "Skills/AetherCastExecution.h"
+#include "Actions/AetherActionPolicy.h"
 #include "AetherCombat.generated.h"
 class UAetherMotionComponent;
 
 class UAetherResourceGate;
+class UAetherBuffRuntime;
 class UCameraComponent;
 class USpringArmComponent;
 class UTextRenderComponent;
@@ -33,6 +35,7 @@ public:
     AAetherCharacter(const FObjectInitializer& ObjectInitializer=FObjectInitializer::Get());
     FOnAetherCharacterAppearanceChanged OnAppearanceChanged;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherResourceGate> ResourceGate;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherBuffRuntime> BuffRuntime;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UAetherCombatComponent> CombatRuntime;
     // 只接收服务器战斗事实；不用客户端耐久数值或显示索引。
     void RecordEquipmentWear(bool Weapon,bool Guard);
@@ -86,6 +89,7 @@ public:
     float MaximumStamina() const {return FMath::Clamp(100.f+Attributes->GearMaxStamina.GetCurrentValue(),1.f,100000.f);}
     bool Alive() const { return Health() > 0 && !bPacified; }
     bool Ready() const;
+    EAetherActionDenial QueryAction(EAetherActionKind Kind,bool IgnoreOwnedDodge=false) const;
     // 仅供持有当前 Dodge 能力实例的提交复验；其他动作仍须使用 Ready()。
     bool ReadyIgnoringDodgeTag() const;
     virtual bool AllowsGeneratedMotion() const;
@@ -99,6 +103,12 @@ public:
     bool ExecuteSkill(const FString& SkillId,int32 Rank);
     bool ExecuteCast(const FAetherCastExecution& Execution);
     bool TrySkill(const FString& SkillId);
+    float SkillCooldownRemaining(const FString& SkillId) const;
+    UPROPERTY(Replicated) FGuid CastExecutionId;
+    float LocalCastStarted=0,LocalCastUntil=0;
+    uint32 LocalCastInputSequence=0,LastServerCastInputSequence=0;
+    UFUNCTION(Server,Reliable) void ServerRequestSkill(const FString& SkillId,uint32 InputSequence,FGuid CancelExecution);
+    UFUNCTION(Client,Reliable) void ClientSkillFeedback(uint32 InputSequence,bool Accepted);
     virtual bool SkillUnlocked(const FString& SkillId) const;
     virtual void GrantSpells();
     virtual bool TrySpell(int32 Spell);
@@ -108,6 +118,7 @@ public:
     bool DeferEquipmentHit(const FAetherEquipmentHit& Hit);
     bool DeferDamage(float Amount,const FDamageEvent& Event,AController* Instigator,AActor* Causer);
     void AdvanceCombatResources(float Delta,double Temperature,TWeakObjectPtr<AActor> HeatSource);
+    double ResourceAdvanceTimeline=0;
     void ResetCombat();
     void ReceiveHit(float Damage, float PostureDamage, AAetherCharacter* Source, bool bCanBlock);
     void PerformMelee(bool bHeavy);

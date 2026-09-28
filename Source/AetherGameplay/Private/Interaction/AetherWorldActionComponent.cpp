@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 #include "Combat/AetherControlledActionDefinition.h"
+#include "Effects/AetherBuffRuntime.h"
 UAetherWorldActionComponent::UAetherWorldActionComponent()
 {PrimaryComponentTick.bCanEverTick=true;SetIsReplicatedByDefault(true);}
 void UAetherWorldActionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -39,6 +40,7 @@ bool UAetherWorldActionComponent::Begin(FName Action,AAetherFrontierProp* Select
     auto* C=Cast<AAetherFrontierCharacter>(GetOwner());
     if(!C||!C->HasAuthority()||IsBusy()||!C->Alive()||C->bTravelPending||C->ResourceGate->IsBlocked()||
        C->CombatTime()<C->StunUntil||C->ReviveTarget||(Action!=TEXT("Push")&&Action!=TEXT("Carry")&&Action!=TEXT("Throw")))return false;
+    if(C->QueryAction(EAetherActionKind::World)!=EAetherActionDenial::None)return false;
     const FName RuleId=Action==TEXT("Carry")?(C->Carried?TEXT("PutDown"):TEXT("Pickup")):Action;
     const auto* Definition=AetherControlledActions::Find(RuleId);
     const int32 Stance=C->Carried?4:C->IsCrouched()?2:1;
@@ -61,9 +63,10 @@ bool UAetherWorldActionComponent::Begin(FName Action,AAetherFrontierProp* Select
         P->Carrier=C;Pending=P;Phase=Action==TEXT("Push")?EAetherWorldActionPhase::Push:EAetherWorldActionPhase::Pickup;
     }
     StartedAt=C->CombatTime();DamageSerial=C->CombatRuntime->DamageReceivedCount;bCommitted=false;
-    CommitAt=StartedAt+Definition->CommitTime;EndsAt=StartedAt+Definition->Duration;
+    const float Speed=FMath::Clamp(C->BuffRuntime->ActionSpeedMultiplier,.1f,3.f);
+    CommitAt=StartedAt+Definition->CommitTime/Speed;EndsAt=StartedAt+Definition->Duration/Speed;
     CommittedImpulse=Definition->Impulse;
-    C->PresentAction(RuleId,Definition->Duration);
+    C->PresentAction(RuleId,Definition->Duration/Speed);OwnedPresentationSerial=C->PresentedAction.Serial;ExecutionId=FGuid::NewGuid();
     CommittedDirection=(Phase==EAetherWorldActionPhase::Push?C->GetActorForwardVector():C->GetControlRotation().Vector()).GetSafeNormal();
     ++ActionSerial;UE_LOG(LogTemp,Verbose,TEXT("AETHER_ACTION_STARTED serial=%u action=%s"),ActionSerial,*Action.ToString());
     C->SetSprintInput(false);C->GetCharacterMovement()->StopMovementImmediately();C->ForceNetUpdate();return true;
@@ -72,7 +75,7 @@ void UAetherWorldActionComponent::Cancel()
 {
     auto* C=Cast<AAetherFrontierCharacter>(GetOwner());
     if(C&&Pending&&Pending->Carrier==C&&C->Carried!=Pending){Pending->Carrier=nullptr;Pending->ForceNetUpdate();}
-    if(C&&(C->PresentedAction.Id==TEXT("Pickup")||C->PresentedAction.Id==TEXT("Throw")||C->PresentedAction.Id==TEXT("PutDown")||C->PresentedAction.Id==TEXT("Push")))C->PresentedAction.Duration=0;
+    if(C&&C->PresentedAction.Serial==OwnedPresentationSerial)C->PresentedAction.Duration=0;
     if(IsBusy())UE_LOG(LogTemp,Verbose,TEXT("AETHER_ACTION_ENDED serial=%u committed=%d"),ActionSerial,bCommitted);
     Pending=nullptr;Phase=EAetherWorldActionPhase::Idle;bCommitted=false;CommittedImpulse=0;
 }
@@ -90,7 +93,7 @@ void UAetherWorldActionComponent::Release()
 void UAetherWorldActionComponent::TickComponent(float Dt,ELevelTick Type,FActorComponentTickFunction* Tick)
 {
     Super::TickComponent(Dt,Type,Tick);auto* C=Cast<AAetherFrontierCharacter>(GetOwner());if(!C||!C->HasAuthority())return;
-    if(!C->Alive()||C->bTravelPending||C->CombatTime()<C->StunUntil||C->ResourceGate->IsBlocked()||
+    if(!C->Alive()||C->bTravelPending||C->CombatTime()<C->StunUntil||C->BuffRuntime->HasTag(TEXT("Stun"))||C->ResourceGate->IsBlocked()||
        ((IsBusy()||C->Carried)&&C->CombatRuntime->DamageReceivedCount!=DamageSerial)){Release();return;}
     if(IsBusy())
     {

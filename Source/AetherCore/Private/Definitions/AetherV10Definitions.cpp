@@ -2,6 +2,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Combat/AetherControlledActionDefinition.h"
+#include "Effects/AetherBuffState.h"
 
 const FAetherV10Definitions& FAetherV10Definitions::Get()
 {
@@ -11,6 +12,12 @@ const FAetherV10Definitions& FAetherV10Definitions::Get()
         for(const auto& Action:AetherControlledActions::All())if(!Action.IsValid())
         {D.Error=TEXT("Invalid controlled action rule");return D;}
         if(!D.Rules.bValid||!D.Skills.Validate(D.Error)){if(D.Error.IsEmpty())D.Error=D.Rules.Error;return D;}
+        if(!FAetherBuffDefinitions::Get().bValid){D.Error=FAetherBuffDefinitions::Get().Error;return D;}
+        for(const auto& Skill:D.Skills.Skills)for(const auto& Rank:Skill.Value.Ranks)
+            if(!Rank.BuffId.IsEmpty()&&!FAetherBuffDefinitions::Get().Buffs.Contains(Rank.BuffId))
+            {D.Error=TEXT("Skill references unknown buff executor result");return D;}
+        for(const auto& Use:D.Rules.Uses)if(!Use.Value.BuffId.IsEmpty()&&!FAetherBuffDefinitions::Get().Buffs.Contains(Use.Value.BuffId))
+        {D.Error=TEXT("Consumable references unknown buff");return D;}
         auto Read=[&](const TCHAR* Name,FString& Text)
         {
             if(FFileHelper::LoadFileToString(Text,*(FPaths::ProjectContentDir()/TEXT("AetherCore/Definitions/V10")/Name)))return true;

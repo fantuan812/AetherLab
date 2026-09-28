@@ -23,7 +23,7 @@ struct FAetherObjectiveRule
 };
 struct FAetherActivityRewardRule { FName DailyClaim,Objective;int32 Gold=0;TMap<FName,int32> Items; };
 struct FAetherDailyRule { FName Id,Service,QuestGate;TMap<FName,int32> Consume,Reward;TArray<FName> Facts;int32 Gold=0;bool bPersonalFires=false; };
-struct FAetherUseRule { double Health=0,Mana=0,Stamina=0,Cooldown=3,SafeSeconds=0; };
+struct FAetherUseRule { double Health=0,Mana=0,Stamina=0,Cooldown=3,SafeSeconds=0; FString BuffId; };
 struct FAetherEncounterRule { FVector Center=FVector::ZeroVector;TArray<uint8> Types;float RespawnSeconds=0;FName LootTable="Camp"; };
 // 玩法定义只读注册表；由规范 JSON 解析，不持有角色或界面状态。
 struct AETHERCORE_API FAetherRules

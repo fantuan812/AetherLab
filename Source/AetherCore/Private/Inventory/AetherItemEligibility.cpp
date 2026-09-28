@@ -6,7 +6,7 @@ EAetherUseAvailability AetherItemEligibility::QueryUse(const FAetherUseRule& Rul
     if(!S.bCanAct||S.Health<=0)return E::Restricted;
     if(S.CooldownRemaining>0)return E::Cooldown;
     if(S.SafeForSeconds<Rule.SafeSeconds)return E::Unsafe;
-    if((Rule.Health<=0||S.Health>=S.MaxHealth)&&(Rule.Mana<=0||S.Mana>=S.MaxMana)&&(Rule.Stamina<=0||S.Stamina>=S.MaxStamina))return E::NoBenefit;
+    if(Rule.BuffId.IsEmpty()&&(Rule.Health<=0||S.Health>=S.MaxHealth)&&(Rule.Mana<=0||S.Mana>=S.MaxMana)&&(Rule.Stamina<=0||S.Stamina>=S.MaxStamina))return E::NoBenefit;
     return E::Allowed;
 }
 FString AetherItemEligibility::UseReason(EAetherUseAvailability R)

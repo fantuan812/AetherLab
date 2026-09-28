@@ -743,6 +743,7 @@
   "SchemaVersion": 2,
   "InventoryCapacity": 32,
   "Uses": {
+    "Haste": {"Health":0,"Mana":0,"Stamina":0,"Cooldown":3,"SafeSeconds":0,"BuffId":"Sample.Haste"},
     "Heal": {
       "Health": 40,
       "Mana": 0,

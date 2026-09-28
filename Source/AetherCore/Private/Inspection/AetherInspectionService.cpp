@@ -202,6 +202,13 @@ void Item(FAetherInspectionModel& M,const FAetherInspectionSnapshot& S,const FAe
     if(Def.MaxDurability>0)
         Field(M,TEXT("durability"),TEXT("耐久"),FString::Printf(TEXT("%d / %d"),I->Durability,Def.MaxDurability));
     else Field(M,TEXT("durability"),TEXT("耐久"),TEXT("不适用"));
+    if(Def.MaxDurability>0)
+    {
+        const TCHAR* Behavior=Def.BrokenBehavior==EAetherBrokenBehavior::DisableAttack?TEXT("损坏后不能攻击"):
+            Def.BrokenBehavior==EAetherBrokenBehavior::DisableGuard?TEXT("损坏后不能格挡"):
+            Def.BrokenBehavior==EAetherBrokenBehavior::ScaleBaseAttack?TEXT("损坏后按配置折减基础攻击"):TEXT("损坏仅折减附加属性，保留基础攻击与格挡");
+        Field(M,TEXT("brokenPolicy"),TEXT("损坏规则"),FString(Behavior)+TEXT("；装备授予技能在损坏时撤销，维修后恢复。"));
+    }
     const auto Sell=S.Inventory.CanRemove(I->InstanceId,S.Context.OwnerIdentity,true,D);
     Field(M,TEXT("trade"),TEXT("交易状态"),Sell==EAetherInventoryMutationCode::Applied?TEXT("允许出售；仍需有效商人报价"):AetherInspection::InventoryReason(Sell));
     M.ComparisonSlots=Def.AllowedSlots;

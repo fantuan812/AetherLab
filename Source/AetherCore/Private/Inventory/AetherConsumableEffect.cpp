@@ -15,7 +15,9 @@ bool Valid(const FAetherConsumableEffectV10& E)
         B.Validate()&&A.Validate()&&B.Health>0&&B.Revision<MAX_int64-1&&A.LifeId==B.LifeId&&A.Revision==B.Revision+1&&
         A.MaxHealth==B.MaxHealth&&A.MaxMana==B.MaxMana&&A.MaxStamina==B.MaxStamina&&
         A.Health>=B.Health&&A.Mana>=B.Mana&&A.Stamina>=B.Stamina&&
-        (A.Health>B.Health||A.Mana>B.Mana||A.Stamina>B.Stamina)&&A.UseReadyAtUnixMs>=B.UseReadyAtUnixMs;
+        (A.Health>B.Health||A.Mana>B.Mana||A.Stamina>B.Stamina||!E.BuffId.IsEmpty())&&A.UseReadyAtUnixMs>=B.UseReadyAtUnixMs&&
+        (E.BuffId.IsEmpty()?(E.BuffRevision==0&&E.BuffExpiresAtUnixMs==0):
+            (Id(E.BuffId)&&E.BuffRevision>0&&E.BuffExpiresAtUnixMs>0&&E.BuffExpiresAtUnixMs<=253402300799999LL));
 }
 struct FWire
 {
@@ -40,13 +42,21 @@ struct FWire
     }
     void Effect(FAetherConsumableEffectV10& E)
     {
-        uint64 Magic=0x46454341,Version=1;UInt(Magic,4);UInt(Version,2);
-        if(Magic!=0x46454341||Version!=1){OK=false;return;}
+        uint64 Magic=0x46454341,Version=E.BuffId.IsEmpty()?1:2;UInt(Magic,4);UInt(Version,2);
+        if(Magic!=0x46454341||(Version!=1&&Version!=2)){OK=false;return;}
         Guid(E.DeliveryId);Guid(E.ItemInstanceId);Long(E.ProfileRevision);
         uint64 Size=E.DefinitionId.Len();UInt(Size,1);if(Size>96){OK=false;return;}
         if(Reading)E.DefinitionId.Reset();
         for(int32 I=0;I<int32(Size)&&OK;++I){uint64 C=Reading?0:uint64(E.DefinitionId[I]);UInt(C,1);if(Reading)E.DefinitionId.AppendChar(TCHAR(C));}
         State(E.Before);State(E.After);
+        if(Version==2)
+        {
+            uint64 BuffSize=E.BuffId.Len();UInt(BuffSize,1);if(BuffSize>96||BuffSize==0){OK=false;return;}
+            if(Reading)E.BuffId.Reset();
+            for(int32 I=0;I<int32(BuffSize)&&OK;++I){uint64 C=Reading?0:uint64(E.BuffId[I]);UInt(C,1);if(Reading)E.BuffId.AppendChar(TCHAR(C));}
+            uint64 Revision=E.BuffRevision;UInt(Revision,4);if(Revision>MAX_int32){OK=false;return;}
+            E.BuffRevision=int32(Revision);Long(E.BuffExpiresAtUnixMs);
+        }
     }
 };
 bool Unpack(const FAetherEffectDelivery& D,const FString& Actor,FAetherConsumableEffectV10& E)
@@ -101,6 +111,12 @@ EAetherEffectApplyCode FAetherConsumableReceiver::Apply(const FAetherEffectDeliv
 bool FAetherConsumableReceiver::ForgetAcknowledged(FGuid Id){return Applied.Remove(Id)>0;}
 TArray<FGuid> FAetherConsumableReceiver::PendingAcknowledgementIds() const
 {TArray<FGuid> Ids;Applied.GetKeys(Ids);return Ids;}
+TArray<FAetherConsumableEffectV10> FAetherConsumableReceiver::AppliedEffects() const
+{
+    TArray<FAetherConsumableEffectV10> Out;
+    for(const auto& P:Applied){FAetherConsumableEffectV10 E;if(AetherConsumableEffects::Decode(P.Value,E))Out.Add(MoveTemp(E));}
+    Out.Sort([](const auto& A,const auto& B){return A.ProfileRevision<B.ProfileRevision;});return Out;
+}
 bool FAetherConsumableReceiver::RecoverAtFullRespawn(const TArray<FAetherEffectDelivery>& Pending,const FString& Actor)
 {
     if(!Actor.Equals(Owner,ESearchCase::CaseSensitive)||Actor.IsEmpty()||Reserved.IsValid()||!Applied.IsEmpty()||!Current.Validate()||Current.Revision!=0||Pending.Num()>128||

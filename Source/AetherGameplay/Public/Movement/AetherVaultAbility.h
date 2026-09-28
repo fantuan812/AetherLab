@@ -25,4 +25,5 @@ private:
     FTimerHandle Watch;
     int32 Phase=0;
     float DamageAtStart=0;
+    uint32 OwnedActionSerial=0;
 };

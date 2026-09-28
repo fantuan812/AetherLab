@@ -3,6 +3,8 @@
 #include "Definitions/AetherV10Definitions.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "Inventory/AetherResourceGate.h"
+#include "Effects/AetherBuffRuntime.h"
 
 bool AAetherPlayerState::GrantRestBlessing(FString& Reason)
 {
@@ -11,30 +13,7 @@ bool AAetherPlayerState::GrantRestBlessing(FString& Reason)
     {Reason=TEXT("角色技能尚未就绪");return false;}
     // 只增强已经获得的引泉，不允许休息跳过故事必需训练。
     if(NativeProfile->Skills.PermanentRank(TEXT("Water.Draw"))<=0){Reason.Reset();return true;}
-    RefreshTemporarySkills();
-    const auto PreviousSources=TemporarySkillSources;const auto PreviousGrants=NativeSkillGrants;
-    auto Grants=NativeSkillGrants;
-    const double End=C->CombatTime()+300;
-    const TPair<const TCHAR*,const TCHAR*> Gifts[]={{TEXT("Inn.WaterTraining"),TEXT("Water.Draw")},{TEXT("Inn.WaterWard"),TEXT("Water.Ward")}};
-    for(const auto& Gift:Gifts)
-    {
-        Grants.RemoveAll([&](const auto& G){return G.Source==EAetherSkillGrantSource::Temporary&&G.SourceId==Gift.Key;});
-        Grants.Add({Gift.Key,Gift.Value,Gift.Value==FString(TEXT("Water.Draw"))?2:1,EAetherSkillGrantSource::Temporary});
-        // 刷新持续时间沿用同一实例；旧详情不会意外指向另一种效果。
-        auto& T=TemporarySkillSources.FindOrAdd(Gift.Key);
-        if(!T.InstanceId.IsValid())T.InstanceId=FGuid::NewGuid();T.ExpiresAt=End;
-    }
-    TemporaryGrantAvatar=C;
-    GetWorld()->GetTimerManager().SetTimer(TemporaryGrantTimer,this,&AAetherPlayerState::RefreshTemporarySkills,.25f,true);
-    if(!PublishNativeSkills(NativeProfile.GetValue(),Grants,Reason))
-    {
-        // 休息授权失败不留下半个新祝福。恢复旧的期望值；若 ASC 也暂不可发布，由计时器重试恢复。
-        TemporarySkillSources=PreviousSources;NativeSkillGrants=PreviousGrants;
-        FString RollbackReason;bTemporaryPublicationPending=!PublishNativeSkills(NativeProfile.GetValue(),PreviousGrants,RollbackReason);
-        return false;
-    }
-    bTemporaryPublicationPending=false;
-    return true;
+    return C->BuffRuntime->ApplyRestBlessing(Reason);
 }
 void AAetherPlayerState::RefreshTemporarySkills()
 {
@@ -44,6 +23,17 @@ void AAetherPlayerState::RefreshTemporarySkills()
     const double Now=C?C->CombatTime():0;
     TSet<FString> Remove;
     for(const auto& Pair:TemporarySkillSources)if(!SameLife||Pair.Value.ExpiresAt<=Now)Remove.Add(Pair.Key);
+    if(C&&C->ResourceGate->IsBlocked()&&(!Remove.IsEmpty()||bTemporaryPublicationPending))
+    {
+        if(!bTemporaryExpiryQueued)
+        {
+            bTemporaryExpiryQueued=true;const TWeakObjectPtr<AAetherPlayerState> Self=this;
+            C->ResourceGate->Defer([Self] {
+                if(!Self.IsValid())return;Self->bTemporaryExpiryQueued=false;Self->RefreshTemporarySkills();
+            });
+        }
+        return;
+    }
     if(Remove.IsEmpty()&&!bTemporaryPublicationPending)
     {
         if(TemporarySkillSources.IsEmpty()){GetWorld()->GetTimerManager().ClearTimer(TemporaryGrantTimer);TemporaryGrantAvatar.Reset();}

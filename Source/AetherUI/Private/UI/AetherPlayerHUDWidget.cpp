@@ -1,4 +1,5 @@
 #include "UI/AetherPlayerHUDWidget.h"
+#include "Effects/AetherBuffRuntime.h"
 #include "UI/AetherInputHints.h"
 #include "UI/AetherHUDSection.h"
 #include "Inventory/AetherNativeInventory.h"
@@ -97,11 +98,15 @@ void UAetherPlayerHUDWidget::Refresh()
     const bool MenuOpen=LP->GetSubsystem<UAetherMenuSubsystem>()->IsOpen();
     SetVisibility(MenuOpen?ESlateVisibility::Collapsed:ESlateVisibility::HitTestInvisible);
     if(MenuOpen)return;
-    const float Value[]={C->Health(),C->Mana(),C->Stamina()},Max[]={C->MaxHealth,C->MaximumMana(),C->MaximumStamina()};
+    float Value[]={C->Health(),C->Mana(),C->Stamina()},Max[]={C->MaxHealth,C->MaximumMana(),C->MaximumStamina()};
+    const auto& ViewProfile=LP->GetSubsystem<UAetherCommandClient>()->GetProfile();
+    const bool ViewReady=ViewProfile.IsSet()&&C->BuffRuntime->PresentationReady(ViewProfile->Revision);
+    if(ViewReady){const auto& V=C->BuffRuntime->Snapshot;Value[0]=V.Health;Value[1]=V.Mana;Value[2]=V.Stamina;Max[0]=V.MaxHealth;Max[1]=V.MaxMana;Max[2]=V.MaxStamina;}
     const TCHAR* Names[]={TEXT("生命"),TEXT("法力"),TEXT("体力")};
     for(int32 I=0;I<3;++I)
-    {Bars[I]->SetPercent(FMath::Clamp(Value[I]/FMath::Max(1.f,Max[I]),0.f,1.f));Vitals[I]->SetText(FText::FromString(FString::Printf(TEXT("%s %.0f / %.0f"),Names[I],Value[I],Max[I])));}
+    {Bars[I]->SetPercent(FMath::Clamp(Value[I]/FMath::Max(1.f,Max[I]),0.f,1.f));Vitals[I]->SetText(FText::FromString(ViewProfile.IsSet()&&!ViewReady?FString(TEXT("属性同步中")):FString::Printf(TEXT("%s %.0f / %.0f"),Names[I],Value[I],Max[I])));}
     TArray<FAetherInspectStatusEffect> Effects;AetherNativeInventory::StatusEffects(*C,Effects);
+    Effects.RemoveAll([](const auto& E){return E.DefinitionId==TEXT("Character.Attributes");});
     TArray<FGuid> EffectIds;for(const auto& E:Effects)EffectIds.Add(E.InstanceId);
     if(EffectIds!=ShownEffects)
     {
@@ -135,8 +140,10 @@ void UAetherPlayerHUDWidget::Refresh()
             if(Path.IsValid())UAssetManager::GetStreamableManager().RequestAsyncLoad(Path,[Self,Path,I,IconId]()
             {if(Self.IsValid()&&Self->ShownIcons.IsValidIndex(I)&&Self->ShownIcons[I]==IconId)Self->SkillIcons[I]->SetBrushFromTexture(Cast<UTexture2D>(Path.ResolveObject()));});
         }
-        const float Remaining=FMath::Max(0.f,C->CastLockUntil-C->CombatTime());
-        Cooldowns[I]->SetPercent(D&&Remaining>0?FMath::Clamp(Remaining/FMath::Max(.01f,C->CastLockUntil-C->CastStartedAt),0.f,1.f):0);
+        const float Remaining=FMath::Max(FMath::Max(0.f,C->CastLockUntil-C->CombatTime()),Id?C->SkillCooldownRemaining(*Id):0.f);
+        const auto* RankEffect=D?Definitions.Effect(D->SkillId,1):nullptr;
+        const float FullCooldown=RankEffect?float(FMath::Max(RankEffect->SkillCooldown,RankEffect->Cooldown)):1;
+        Cooldowns[I]->SetPercent(D&&Remaining>0?FMath::Clamp(Remaining/FMath::Max(.01f,FullCooldown),0.f,1.f):0);
         const FName Actions[]={"One","Two","Three","Four"};
         Skills[I]->SetText(FText::FromString(FString::Printf(TEXT("%s%s %s%s"),C->SelectedSpell==I?TEXT("▸ "):TEXT(""),*AetherInputHints::Label(*C,LP,Actions[I]),D?*D->DisplayName:TEXT("未绑定"),D&&!C->SkillUnlocked(*Id)?TEXT(" · 未授权"):TEXT(""))));
     }

@@ -69,7 +69,7 @@ bool UAetherDodgeAbility::CanCommitDodge(const AAetherCharacter* C,const FGamepl
     if(!Rule||!Rule->IsValid()||Rule->CancelPolicy!=EAetherActionCancelPolicy::AbilityOwned||
         Rule->ContactPolicy!=EAetherActionContactPolicy::Ground)return false;
     if(!C||!Info||!C->AbilitySystem||C->AbilitySystem!=Info->AbilitySystemComponent.Get()||
-        Info->AvatarActor.Get()!=C||C->AbilitySystem->GetAvatarActor()!=C||!C->ReadyIgnoringDodgeTag()||
+        Info->AvatarActor.Get()!=C||C->AbilitySystem->GetAvatarActor()!=C||C->QueryAction(EAetherActionKind::Dodge,true)!=EAetherActionDenial::None||
         !(Rule->AllowedStances&(C->IsCrouched()?2:1))||!C->GetCharacterMovement()||!C->GetCharacterMovement()->IsMovingOnGround())return false;
     if(bOwnDodgeActive)
     {

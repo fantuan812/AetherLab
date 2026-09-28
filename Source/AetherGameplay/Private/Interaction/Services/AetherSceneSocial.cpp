@@ -7,11 +7,19 @@
 #include "Engine/GameInstance.h"
 #include "EngineUtils.h"
 #include "Characters/AetherCompanionComponent.h"
+#include "Effects/AetherBuffRuntime.h"
 FString FAetherSceneServiceHandlers::Rest(const FAetherSceneServiceContext& X)
 {
     auto& M=X.Mode;auto* C=&X.Character;auto* PS=C->ProfileState();const auto* P=PS->GetNativeProfile();
     auto* Target=&X.Target;const auto* Action=&X.Action;const auto& D=FAetherV10Definitions::Get();
     auto* Reactive=M.GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();using K=EAetherInteractionActionKind;
+    if(Action->ServiceId.StartsWith(TEXT("Sample.")))
+    {
+        FString Why;
+        if(Action->ServiceId==TEXT("Sample.Cleanse"))C->BuffRuntime->Dispel(TEXT("Negative"),Why);
+        else C->BuffRuntime->Apply(Action->ServiceId,TEXT("Inn.Practice"),Why);
+        return Why;
+    }
 if(!P->bRegistered||X.SafeForSeconds<8)return TEXT("绑定旅舍且脱离战斗八秒后才能休息。");
         C->SetVitals(C->MaxHealth,C->MaximumMana(),C->MaximumStamina());C->WaterReserveKg=3;
         {FString Why;if(!PS->GrantRestBlessing(Why))return TEXT("资源已恢复，祝福暂不可用：")+Why;}

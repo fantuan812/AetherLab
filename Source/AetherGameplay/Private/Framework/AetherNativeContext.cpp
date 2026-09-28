@@ -3,6 +3,7 @@
 #include "World/AetherNativeContainer.h"
 #include "Interaction/AetherNearbyRegistry.h"
 #include "Inventory/AetherResourceGate.h"
+#include "Effects/AetherBuffRuntime.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "EngineUtils.h"
 #include "Quests/AetherGuide.h"
@@ -25,11 +26,14 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
     auto* C=Cast<AAetherFrontierCharacter>(PC.GetPawn());auto* PS=PC.GetPlayerState<AAetherPlayerState>();
     if(!bNativeSceneReady||bWorldRestoreFailed||!C||!PS||C->ProfileState()!=PS||!C->HasAuthority()||
         !Profile.CharacterId.Equals(PS->Profile.CharacterId,ESearchCase::CaseSensitive))return false;
+    C->BuffRuntime->FlushDue();
     X={};const auto& D=FAetherV10Definitions::Get();if(!D.bValid)return false;
     const auto UTC=FDateTime::UtcNow();X.ServerUnixMs=UTC.ToUnixTimestamp()*1000+UTC.GetMillisecond();
     const bool Busy=C->bTravelPending||C->Carried||C->ReviveTarget||(Encounters&&Encounters->IsChanneling(C));
     X.bCanManageInventory=C->Ready()&&!Busy&&C->ResourceGate&&!C->ResourceGate->IsBlocked();
     if(!X.bCanManageInventory)return false;
+    for(const auto& Buff:FAetherBuffDefinitions::Get().Buffs)
+        if(C->BuffRuntime->CanApply(Buff.Key))X.AdmissibleBuffs.Add(Buff.Key);
     const float Now=C->CombatTime();const bool Combat=C->HasRecentCombat(8);
     bool Threatened=false;
     for(TActorIterator<AAetherCharacter> It(GetWorld());It;++It)

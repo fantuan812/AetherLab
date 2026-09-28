@@ -5,6 +5,11 @@
 class AAetherCharacter;
 class AController;
 struct FDamageEvent;
+struct FAetherDefenseSnapshot
+{
+    float Armor=0,Fire=0,Water=0,Frost=0,Storm=0,GuardCost=1,Time=0;
+    bool bInvulnerable=false,bBlocked=false,bParry=false;
+};
 // 展示实例跟随一次连续身体状态；消失后再次出现必须生成新身份，防止旧详情串到新状态。
 USTRUCT()
 struct FAetherBodyStatusPresentation
@@ -24,6 +29,8 @@ public:
     virtual void TickComponent(float Delta,ELevelTick Type,FActorComponentTickFunction* Function) override;
     UPROPERTY(Replicated) TArray<FAetherBodyStatusPresentation> StatusEffects;
     void ReceiveHit(float Damage,float PostureDamage,AAetherCharacter* Source,bool CanBlock);
+    FAetherDefenseSnapshot CaptureDefense(AActor* Source) const;
+    TOptional<FAetherDefenseSnapshot> DeferredDefense;
     void ApplyPostureDamage(float Amount);
     float ApplyDamage(float Amount,const FDamageEvent& Event,AController* Instigator,AActor* Causer);
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out) const override;

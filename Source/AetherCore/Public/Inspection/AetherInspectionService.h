@@ -64,6 +64,9 @@ struct FAetherInspectionSnapshot
     int64 ContainerWorldRevision=-1;
     int32 Gold=0;
     bool bCanAct=false;
+    bool bPresentationReady=false;
+    TMap<FString,double> FinalAttributes;
+    TArray<FAetherInspectField> AttributeSources;
     FAetherUseSummary UseSummary;
     TMap<FString,FAetherUseRule> UseRules;
     TMap<FString,FAetherEquipmentPreview> EquipmentPreviews;

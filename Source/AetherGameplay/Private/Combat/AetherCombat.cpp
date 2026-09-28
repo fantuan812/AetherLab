@@ -6,6 +6,7 @@
 #include "Combat/AetherEquipmentMath.h"
 #include "Combat/AetherControlledActionDefinition.h"
 #include "Inventory/AetherResourceGate.h"
+#include "Effects/AetherBuffRuntime.h"
 #include "Equipment/AetherElementDamage.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Framework/AetherAdventure.h"
@@ -72,11 +73,11 @@ AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):
     BodyVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surcoat")); BodyVisual->SetupAttachment(RootComponent);
     BodyVisual->SetStaticMesh(Cube.Object); BodyVisual->SetRelativeScale3D(FVector(.5,.6,1.45)); BodyVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ResourceGate=CreateDefaultSubobject<UAetherResourceGate>(TEXT("ResourceGate"));
+    BuffRuntime=CreateDefaultSubobject<UAetherBuffRuntime>(TEXT("BuffRuntime"));
     CombatRuntime=CreateDefaultSubobject<UAetherCombatComponent>(TEXT("CombatRuntime"));
     Motion=CreateDefaultSubobject<UAetherMotionComponent>(TEXT("GeneratedMotion"));
     Equipment = CreateDefaultSubobject<UAetherEquipmentComponent>(TEXT("Equipment"));
     Equipment->ModifyHit.BindWeakLambda(this,[this](FAetherEquipmentHit& Hit){
-        RecordEquipmentWear(true,false);
         if(!Attributes)return;
         Hit.Damage=AetherEquipmentMath::Attack(Hit.Damage,Attributes->GearDamage.GetCurrentValue());
         Hit.PostureDamage=AetherEquipmentMath::Attack(Hit.PostureDamage,Attributes->GearPosture.GetCurrentValue());
@@ -105,6 +106,8 @@ void AAetherCharacter::BeginPlay()
     if(HasAuthority())MaxHealth=Fighter==EAetherFighter::BellKnight?320:Fighter==EAetherFighter::Golem?160:Fighter==EAetherFighter::Player?100:80;
     Super::BeginPlay(); Home = GetActorLocation(); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(), this);
     Equipment->CanAct.BindUObject(this,&AAetherCharacter::Ready);
+    Equipment->OnAuthoritativeContact.BindWeakLambda(this,[this]{RecordEquipmentWear(true,false);});
+    Equipment->ActionSpeed.BindWeakLambda(this,[this]{return BuffRuntime?BuffRuntime->ActionSpeedMultiplier:1.f;});
     Equipment->RequestAttack.BindUObject(this,&AAetherCharacter::RequestMelee);
     Equipment->CanContinueAttack.BindLambda([this](){return Alive()&&CombatTime()>=StunUntil&&AbilitySystem&&AbilitySystem->GetAvatarActor()==this;});
     Equipment->AddTickPrerequisiteActor(this);
@@ -221,6 +224,7 @@ void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(AAetherCharacter, bWindingUp); DOREPLIFETIME(AAetherCharacter, bPacified);
     DOREPLIFETIME(AAetherCharacter, PresentedAction);
     DOREPLIFETIME(AAetherCharacter, WaterReserveKg); DOREPLIFETIME(AAetherCharacter, CastStartedAt); DOREPLIFETIME(AAetherCharacter, CastLockUntil); DOREPLIFETIME(AAetherCharacter, StunUntil);
+    DOREPLIFETIME_CONDITION(AAetherCharacter,CastExecutionId,COND_OwnerOnly);
     DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
 void AAetherCharacter::PossessedBy(AController* C)
@@ -279,9 +283,47 @@ bool AAetherCharacter::SkillUnlocked(const FString& SkillId) const
 }
 bool AAetherCharacter::TrySkill(const FString& SkillId)
 {
+    if(!HasAuthority())
+    {
+        if(LocalCastInputSequence==MAX_uint32||SkillId.Len()>96||!SkillUnlocked(SkillId))return false;
+        if(!CastExecutionId.IsValid()&&QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None)return false;
+        ++LocalCastInputSequence;LocalCastStarted=CombatTime();LocalCastUntil=LocalCastStarted+.35f;
+        UE_LOG(LogTemp,Verbose,TEXT("AETHER_SPELL_INPUT input=%u skill=%s time=%.3f"),LocalCastInputSequence,*SkillId,LocalCastStarted);
+        ServerRequestSkill(SkillId,LocalCastInputSequence,CastExecutionId);return true;
+    }
+    if(HasAuthority())BuffRuntime->FlushDue();
     if(!AbilitySystem||!SkillUnlocked(SkillId))return false;
     const auto* Spec=AetherSkillBinding::Find(*AbilitySystem,SkillId);
+    if(Spec&&Spec->IsActive()&&CastExecutionId.IsValid()){AbilitySystem->CancelAbilityHandle(Spec->Handle);return true;}
     return Spec&&AbilitySystem->TryActivateAbility(Spec->Handle);
+}
+void AAetherCharacter::ServerRequestSkill_Implementation(const FString& Id,uint32 Sequence,FGuid CancelExecution)
+{
+    if(Sequence==0||Sequence<=LastServerCastInputSequence||Id.IsEmpty()||Id.Len()>96)return;
+    LastServerCastInputSequence=Sequence;
+    if(CancelExecution.IsValid())
+    {
+        if(CancelExecution==CastExecutionId&&AbilitySystem)
+        {
+            const auto* Spec=AetherSkillBinding::Find(*AbilitySystem,Id);
+            if(Spec&&Spec->IsActive())AbilitySystem->CancelAbilityHandle(Spec->Handle);
+        }
+        ClientSkillFeedback(Sequence,false);return;
+    }
+    const bool Accepted=QueryAction(EAetherActionKind::Spell)==EAetherActionDenial::None&&TrySkill(Id);
+    ClientSkillFeedback(Sequence,Accepted);
+}
+void AAetherCharacter::ClientSkillFeedback_Implementation(uint32 Sequence,bool Accepted)
+{
+    if(Sequence!=LocalCastInputSequence)return;
+    if(!Accepted)LocalCastUntil=0;
+    UE_LOG(LogTemp,Verbose,TEXT("AETHER_SPELL_ACK input=%u accepted=%d time=%.3f"),Sequence,Accepted,CombatTime());
+}
+float AAetherCharacter::SkillCooldownRemaining(const FString& Id) const
+{
+    const auto* PS=GetPlayerState<AAetherPlayerState>();const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,Id):nullptr;
+    const auto* E=FAetherSkillDefinitionsV10::Get().Effect(Id,Spec?Spec->Level:1);
+    return PS&&E?float(PS->CooldownRemaining(Id,E->CooldownGroup,CombatTime())):0;
 }
 bool AAetherCharacter::TrySpell(int32 Spell)
 {
@@ -290,16 +332,27 @@ bool AAetherCharacter::TrySpell(int32 Spell)
 }
 
 bool AAetherCharacter::Ready() const
-{return ReadyIgnoringDodgeTag()&&!AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag());}
+{return QueryAction(EAetherActionKind::General)==EAetherActionDenial::None;}
 bool AAetherCharacter::ReadyIgnoringDodgeTag() const
-{ const auto* Player=Cast<AAetherFrontierCharacter>(this);
-  if(Player&&Player->WorldActions&&Player->WorldActions->IsBusy())return false;
-  const float T = CombatTime(); return ResourceGate&&!ResourceGate->IsBlocked() && AbilitySystem && AbilitySystem->GetAvatarActor()==this && Alive() && T >= ActionUntil && T >= CastLockUntil && T >= StunUntil && !bBlocking && Equipment&&!Equipment->IsBusy() && !AbilitySystem->HasMatchingGameplayTag(AetherVault::ActiveTag()); }
+{return QueryAction(EAetherActionKind::General,true)==EAetherActionDenial::None;}
+EAetherActionDenial AAetherCharacter::QueryAction(EAetherActionKind Kind,bool IgnoreOwnedDodge) const
+{
+    FAetherActionContext C;const float T=CombatTime();const auto* Player=Cast<AAetherFrontierCharacter>(this);
+    C.bAvatar=AbilitySystem&&AbilitySystem->GetAvatarActor()==this&&Equipment&&ResourceGate;
+    C.bAlive=Alive();C.bStorage=!ResourceGate||ResourceGate->IsBlocked()||(BuffRuntime&&BuffRuntime->HasDue());
+    C.bStunned=T<StunUntil||(BuffRuntime&&BuffRuntime->HasTag(TEXT("Stun")));
+    C.bSilenced=BuffRuntime&&BuffRuntime->HasTag(TEXT("Silence"));C.bRecovery=T<ActionUntil||T<CastLockUntil;
+    C.bBlocking=bBlocking;C.bBusy=!Equipment||Equipment->IsBusy()||(Player&&Player->WorldActions&&Player->WorldActions->IsBusy());
+    C.bDodge=AbilitySystem&&AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag());
+    C.bVault=AbilitySystem&&AbilitySystem->HasMatchingGameplayTag(AetherVault::ActiveTag());C.bCarrying=Player&&Player->Carried;
+    return AetherActionPolicy::Query(Kind,C,IgnoreOwnedDodge);
+}
 float AAetherCharacter::CombatTime() const
 { const auto* GS = GetWorld()->GetGameState(); return GS ? GS->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds(); }
 void AAetherCharacter::SetVitals(float HP, float MP, float SP)
 {
     if (!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this) return;
+    if(!FMath::IsFinite(HP)||!FMath::IsFinite(MP)||!FMath::IsFinite(SP))return;
     if(ResourceGate->IsBlocked())
     {
         TWeakObjectPtr<AAetherCharacter> Self=this;
@@ -336,8 +389,16 @@ bool AAetherCharacter::FindSkillTarget(const FString& SkillId,int32 Rank,FHitRes
     const auto* D=Definitions.Skills.Find(SkillId);const auto* E=Definitions.Effect(SkillId,Rank);
     if(!D||!E||!SkillUnlocked(SkillId))return false;
     Origin=GetActorLocation()+FVector(0,0,55);Direction=GetControlRotation().Vector();
+    if(D->Mechanic==EAetherSkillMechanic::SelfBuff)return true;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(AetherSpell),false,this);
     GetWorld()->SweepSingleByChannel(Hit,Origin,Origin+Direction*E->RangeCm,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(float(E->TargetRadiusCm)),Params);
+    if(D->Mechanic==EAetherSkillMechanic::FriendlyTargetBuff)
+    {
+        auto* Target=Cast<AAetherCharacter>(Hit.GetActor());
+        if(!Target||Target==this||Fighter!=EAetherFighter::Player||Target->Fighter!=EAetherFighter::Player||!Target->Alive())return false;
+        if(HasAuthority()){Target->BuffRuntime->FlushDue();return !Target->ResourceGate->IsBlocked()&&Target->BuffRuntime->CanApply(E->BuffId);}
+        return true;
+    }
     if((D->Mechanic==EAetherSkillMechanic::Frost||D->Mechanic==EAetherSkillMechanic::Lightning)&&Fighter==EAetherFighter::Player)
         if(auto* Other=Cast<AAetherCharacter>(Hit.GetActor());Other&&Other->Fighter==EAetherFighter::Player)return false;
     return D->Mechanic==EAetherSkillMechanic::Fire||(Hit.GetActor()&&Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>());
@@ -353,20 +414,30 @@ bool AAetherCharacter::ExecuteSkill(const FString& SkillId,int32 Rank)
 }
 bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
 {
-    if(!HasAuthority()||!Ready()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this)return false;
+    if(!HasAuthority()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None)return false;
     const auto* E=&Cast.Effect;
     FHitResult Hit;FVector Origin,Direction;
     if(!FindSkillTarget(Cast.SkillId,Cast.Rank,Hit,Origin,Direction))return false;
     bool Accepted=false;
     if(Cast.Mechanic==EAetherSkillMechanic::Fire)
     {
-        FActorSpawnParameters P;P.Owner=this;P.Instigator=this;P.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        if(auto* Projectile=GetWorld()->SpawnActor<AAetherProjectile>(Origin,Direction.Rotation(),P))
+        const FTransform SpawnTransform(Direction.Rotation(),Origin);
+        if(auto* Projectile=GetWorld()->SpawnActorDeferred<AAetherProjectile>(AAetherProjectile::StaticClass(),SpawnTransform,this,this,ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
         {Projectile->VelocityCm=Direction*1300;Projectile->HeatJ=E->HeatJ;
          Projectile->MaxPathCm=E->RangeCm;Projectile->CollisionRadiusCm=float(E->TargetRadiusCm);
-         Projectile->ExecutionId=Cast.ExecutionId;Accepted=true;}
+         Projectile->ExecutionId=Cast.ExecutionId;Projectile->FinishSpawning(SpawnTransform);Accepted=true;}
     }
-    else if(auto* Body=Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>())
+    else if(Cast.Mechanic==EAetherSkillMechanic::SelfBuff)
+    {
+        FString Why;Accepted=BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId,Why);Feedback=Why;
+    }
+    else if(Cast.Mechanic==EAetherSkillMechanic::FriendlyTargetBuff)
+    {
+        auto* Target=::Cast<AAetherCharacter>(Hit.GetActor());const auto* Receiver=Target?Target->ResourceGate->GetReceiver():nullptr;
+        if(!Receiver||Receiver->State().LifeId!=Cast.TargetLifeId)return false;
+        FString Why;Accepted=Target->BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId+TEXT(".")+Cast.LifeId.ToString(EGuidFormats::Digits),Why);Feedback=Why;
+    }
+    else if(auto* Body=Hit.GetActor()?Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>():nullptr)
     {
         if(WaterReserveKg<E->WaterKg)return false;
         FReactiveStimulus S;S.SourceActor=this;S.WaterKg=E->WaterKg;S.HeatJ=E->HeatJ;S.ElectricalJ=E->ElectricalJ;
@@ -374,7 +445,11 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
         // 只扣除模拟接受的水量。等级提升不能凭空造水，也不能在注入失败时丢失水。
         if(Accepted)WaterReserveKg-=float(E->WaterKg);
     }
-    if(Accepted){CastStartedAt=CombatTime();CastLockUntil=CastStartedAt+float(E->Cooldown);}
+    if(Accepted)
+    {
+        CastStartedAt=CombatTime();CastLockUntil=CastStartedAt+float(E->RecoverySeconds<0?E->Cooldown:E->RecoverySeconds);
+        if(auto* PS=GetPlayerState<AAetherPlayerState>())PS->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
+    }
     return Accepted;
 }
 
@@ -557,10 +632,37 @@ void AAetherCharacter::Tick(float Dt)
 }
 void AAetherCharacter::AdvanceCombatResources(float Dt,double Temperature,TWeakObjectPtr<AActor> HeatSource)
 {
+    if(!HasAuthority()||!Alive()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this||!FMath::IsFinite(Dt)||Dt<=0)return;
+    BuffRuntime->FlushDue();
+    const float SampleTime=CombatTime();
+    const float SampleRegen=SampleTime>ActionUntil&&!bBlocking&&!Equipment->IsBusy()?20:4;
+    const float PostureRate=bUseBasicAssets?12.f:-12.f;
+    const double IntervalStart=ResourceAdvanceTimeline;ResourceAdvanceTimeline+=double(Dt);
     if(ResourceGate->IsBlocked())
     {
         const TWeakObjectPtr<AAetherCharacter> Self=this;
-        if(ResourceGate->Defer([Self,Dt,Temperature,HeatSource]{if(Self.IsValid())Self->AdvanceCombatResources(Dt,Temperature,HeatSource);}))return;
+        {
+            FAetherResourceAdvanceInterval I;I.End=ResourceAdvanceTimeline;I.Start=IntervalStart;
+            I.StaminaRate=SampleRegen;I.PostureRate=PostureRate;
+            I.HazardRate=Temperature>55?FMath::Min(25.0,(Temperature-55)*.12):0;
+            I.bPreserveSteps=I.HazardRate>0;I.SourceIdentity=HeatSource.IsValid()?HeatSource->GetUniqueID():0;
+            const auto Defense=CombatRuntime->CaptureDefense(HeatSource.Get());I.Defense=Defense.Fire;
+            if(const auto* PS=GetPlayerState<AAetherPlayerState>())I.Identity.StateRevision=int64(PS->ProjectionRevision);
+            if(const auto* Receiver=ResourceGate->GetReceiver())I.Identity.LifeId=Receiver->State().LifeId;
+            if(ResourceGate->DeferInterval(I,[Self,SampleRegen,PostureRate,Hazard=I.HazardRate,Defense,HeatSource,LogicalStart=double(SampleTime-Dt),Elapsed=0.](double Duration) mutable {
+                if(!Self.IsValid()||!Self->Alive()||Self->AbilitySystem->GetAvatarActor()!=Self.Get())return;
+                Self->SetVitals(Self->Health(),Self->Mana()+float(Duration*5),Self->Stamina()+float(Duration*SampleRegen));
+                const double Start=LogicalStart+Elapsed;Elapsed+=Duration;
+                const double Eligible=FMath::Clamp(Start+Duration-FMath::Max(Start,double(Self->CombatRuntime->LastDamageAt)+2.),0.,Duration);
+                Self->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(),
+                    FMath::Clamp(Self->Attributes->Posture.GetCurrentValue()+float(Eligible*PostureRate),0.f,100.f));
+                if(Hazard>0){
+                    auto StepDefense=Defense;StepDefense.Time=float(LogicalStart+Elapsed);
+                    TGuardValue<TOptional<FAetherDefenseSnapshot>> Guard(Self->CombatRuntime->DeferredDefense,StepDefense);
+                    FDamageEvent E(UAetherHeatExposureDamage::StaticClass());Self->TakeDamage(float(Hazard*Duration),E,nullptr,HeatSource.Get());
+                }
+            }))return;
+        }
     }
     if(!HasAuthority()||!Alive()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this)return;
     const float T=CombatTime(),Regen=T>ActionUntil&&!bBlocking&&!Equipment->IsBusy()?20:4;
@@ -573,21 +675,30 @@ void AAetherCharacter::AdvanceCombatResources(float Dt,double Temperature,TWeakO
 bool AAetherCharacter::DeferEquipmentHit(const FAetherEquipmentHit& Hit)
 {
     if(!ResourceGate->IsBlocked())return false;
+    BuffRuntime->FlushDue();
     const TWeakObjectPtr<AAetherCharacter> Self=this;const TWeakObjectPtr<AActor> Source=Hit.Source;
     auto Copy=Hit;Copy.Source=nullptr;
-    return ResourceGate->Defer([Self,Source,Copy]() mutable {
-        if(!Self.IsValid())return;Copy.Source=Source.Get();Self->ReceiveEquipmentHit_Implementation(Copy);
-    });
+    const auto Defense=CombatRuntime->CaptureDefense(Hit.Source);
+    return ResourceGate->Defer([Self,Source,Copy,Defense]() mutable {
+        if(!Self.IsValid())return;Copy.Source=Source.Get();
+        TGuardValue<TOptional<FAetherDefenseSnapshot>> Guard(Self->CombatRuntime->DeferredDefense,Defense);
+        Self->ReceiveEquipmentHit_Implementation(Copy);
+    },EAetherEffectEventKind::Damage);
 }
 bool AAetherCharacter::DeferDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer)
 {
     if(!ResourceGate->IsBlocked())return false;
+    BuffRuntime->FlushDue();
     const TWeakObjectPtr<AAetherCharacter> Self=this;const TWeakObjectPtr<AController> SourceController=EventInstigator;
     const TWeakObjectPtr<AActor> Source=Causer;const auto DamageClass=Event.DamageTypeClass;
     // 当前项目的伤害消费仅使用 DamageType 与标量 Amount；位置冲击在物理事件入口整体排队。
-    return ResourceGate->Defer([Self,SourceController,Source,DamageClass,Amount]{
-        if(Self.IsValid()){FDamageEvent Copy(DamageClass);Self->TakeDamage(Amount,Copy,SourceController.Get(),Source.Get());}
-    });
+    const auto Defense=CombatRuntime->DeferredDefense.IsSet()?CombatRuntime->DeferredDefense.GetValue():CombatRuntime->CaptureDefense(Causer);
+    return ResourceGate->Defer([Self,SourceController,Source,DamageClass,Amount,Defense]{
+        if(Self.IsValid()){
+            TGuardValue<TOptional<FAetherDefenseSnapshot>> Guard(Self->CombatRuntime->DeferredDefense,Defense);
+            FDamageEvent Copy(DamageClass);Self->TakeDamage(Amount,Copy,SourceController.Get(),Source.Get());
+        }
+    },EAetherEffectEventKind::Damage);
 }
 void AAetherCharacter::NetworkProbe(float Dt)
 {

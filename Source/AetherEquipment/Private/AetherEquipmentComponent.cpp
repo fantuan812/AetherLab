@@ -10,6 +10,8 @@
 
 bool FAetherAttackDefinition::IsValid() const
 {
+    if(HitShapePolicy>1||AuthoredTrajectory.Num()>32||(HitShapePolicy==1&&AuthoredTrajectory.Num()<2))return false;
+    for(const auto& P:AuthoredTrajectory)if(P.ContainsNaN()||P.Size()>1200)return false;
     for (float V : {Damage,PostureDamage,ImpulseNs,CuttingWorkJ,StaminaCost,ReachCm,RadiusCm,WindupSeconds,ActiveSeconds,RecoverySeconds})
         if (!FMath::IsFinite(V) || V<0) return false;
     return !Id.IsNone() && ReachCm>0 && ReachCm<=1000 && RadiusCm>0 && RadiusCm<=200
@@ -48,13 +50,15 @@ void UAetherEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimePrope
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(UAetherEquipmentComponent,Catalog); DOREPLIFETIME(UAetherEquipmentComponent,Slots);
     DOREPLIFETIME(UAetherEquipmentComponent,LoadoutRevision); DOREPLIFETIME(UAetherEquipmentComponent,Attack);
+    DOREPLIFETIME(UAetherEquipmentComponent,bBrokenAttackDisabled);DOREPLIFETIME(UAetherEquipmentComponent,bBrokenGuardDisabled);
+    DOREPLIFETIME(UAetherEquipmentComponent,BrokenBaseAttackMultiplier);
 }
 float UAetherEquipmentComponent::Clock() const
 { const auto* GS=GetWorld()->GetGameState(); return GS?GS->GetServerWorldTimeSeconds():GetWorld()->GetTimeSeconds(); }
 UAetherEquipmentDefinition* UAetherEquipmentComponent::InSlot(FName Slot) const
 { if (Catalog) for (const auto& S:Slots) if (S.Slot==Slot) return Catalog->Find(S.ItemId); return nullptr; }
 UAetherEquipmentDefinition* UAetherEquipmentComponent::GuardDefinition() const
-{ if (Catalog) for (const auto& S:Slots) if (auto* D=Catalog->Find(S.ItemId); D && D->bAllowsGuard) return D; return nullptr; }
+{ if (bBrokenGuardDisabled)return nullptr;if (Catalog) for (const auto& S:Slots) if (auto* D=Catalog->Find(S.ItemId); D && D->bAllowsGuard) return D; return nullptr; }
 bool UAetherEquipmentComponent::ValidateLoadout(const TArray<FAetherEquippedSlot>& Loadout) const
 {
     if (!Catalog || !Catalog->IsValidCatalog() || Loadout.Num()>10) return false;
@@ -97,7 +101,11 @@ void UAetherEquipmentComponent::ServerUnequip_Implementation(FName Slot) { if (!
 const FAetherAttackDefinition* UAetherEquipmentComponent::CurrentAttack() const
 {
     if (GetOwner()->HasAuthority()) return Attack.Serial ? &ActiveDefinition : nullptr;
-    auto* D=Catalog?Catalog->Find(Attack.ItemId):nullptr; return D?D->FindAttack(Attack.AttackId):nullptr;
+    auto* D=Catalog?Catalog->Find(Attack.ItemId):nullptr;const auto* Definition=D?D->FindAttack(Attack.AttackId):nullptr;
+    if(!Definition)return nullptr;ClientDefinition=*Definition;
+    const float Scale=FMath::Clamp(Attack.TimeScale,.1f,3.f);
+    ClientDefinition.WindupSeconds/=Scale;ClientDefinition.ActiveSeconds/=Scale;ClientDefinition.RecoverySeconds/=Scale;
+    return &ClientDefinition;
 }
 bool UAetherEquipmentComponent::IsBusy() const
 {
@@ -108,7 +116,7 @@ bool UAetherEquipmentComponent::IsAttackActive() const
 { const auto* D=CurrentAttack(); const float T=Clock()-Attack.StartedAt; return IsBusy()&&D&&T>=D->WindupSeconds&&T<D->WindupSeconds+D->ActiveSeconds; }
 bool UAetherEquipmentComponent::CanStartAttack(FName Id) const
 {
-    if (!GetOwner()->HasAuthority() || IsBusy() || (CanAct.IsBound()&&!CanAct.Execute())) return false;
+    if (!GetOwner()->HasAuthority() || bBrokenAttackDisabled || IsBusy() || (CanAct.IsBound()&&!CanAct.Execute())) return false;
     const auto* Item=InSlot(TEXT("MainHand")); const auto* D=Item?Item->FindAttack(Id):nullptr;
     return D&&D->IsValid();
 }
@@ -119,6 +127,13 @@ bool UAetherEquipmentComponent::BeginCommittedAttack(FName Id,FName ExpectedItem
     if (!CanStartAttack(Id) || LoadoutRevision!=ExpectedRevision) return false;
     auto* Item=InSlot(TEXT("MainHand")); if (!Item||Item->ItemId!=ExpectedItem) return false;
     ActiveDefinition=*Item->FindAttack(Id);
+    Attack.TimeScale=ActionSpeed.IsBound()?FMath::Clamp(ActionSpeed.Execute(),.1f,3.f):1;
+    ActiveDefinition.WindupSeconds/=Attack.TimeScale;ActiveDefinition.ActiveSeconds/=Attack.TimeScale;ActiveDefinition.RecoverySeconds/=Attack.TimeScale;
+    CommittedHit={};CommittedHit.Source=GetOwner();CommittedHit.ItemId=Item->ItemId;CommittedHit.AttackId=Id;
+    if(MainHandTrajectory.Num()>=2){ActiveDefinition.HitShapePolicy=1;ActiveDefinition.AuthoredTrajectory=MainHandTrajectory;}
+    CommittedHit.Damage=ActiveDefinition.Damage*BrokenBaseAttackMultiplier;CommittedHit.PostureDamage=ActiveDefinition.PostureDamage;
+    CommittedHit.CuttingWorkJ=ActiveDefinition.CuttingWorkJ;ModifyHit.ExecuteIfBound(CommittedHit);
+    Attack.ExecutionId=FGuid::NewGuid();
     Attack.ItemId=Item->ItemId; Attack.AttackId=Id; Attack.StartedAt=Clock(); Attack.bCancelled=false;Attack.InputSequence=0;
     if (++Attack.Serial==0) ++Attack.Serial;
     bAttackRunning=true; HitActors.Reset(); LastAttackElapsed=-1; ++AcceptedAttackCount;
@@ -143,7 +158,26 @@ void UAetherEquipmentComponent::ResolveHits(const FAetherAttackDefinition& D)
     FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherEquipmentSweep),false,GetOwner());
     FCollisionObjectQueryParams Types; Types.AddObjectTypesToQuery(ECC_Pawn); Types.AddObjectTypesToQuery(ECC_WorldDynamic); Types.AddObjectTypesToQuery(ECC_WorldStatic);
     TArray<FHitResult> Hits;
-    GetWorld()->SweepMultiByObjectType(Hits,Start,Start+Forward*D.ReachCm,FQuat::Identity,Types,FCollisionShape::MakeSphere(D.RadiusCm),Q);
+    if(D.HitShapePolicy==0)GetWorld()->SweepMultiByObjectType(Hits,Start,Start+Forward*D.ReachCm,FQuat::Identity,Types,FCollisionShape::MakeSphere(D.RadiusCm),Q);
+    else
+    {
+        const float From=FMath::Clamp((LastAttackElapsed-D.WindupSeconds)/D.ActiveSeconds,0.f,1.f);
+        const float To=FMath::Clamp((Clock()-Attack.StartedAt-D.WindupSeconds)/D.ActiveSeconds,0.f,1.f);
+        const int32 Count=D.AuthoredTrajectory.Num();const FTransform Transform=GetOwner()->GetActorTransform();
+        const auto At=[&](float Alpha) {
+            const float P=Alpha*(Count-1);const int32 I=FMath::Min(FMath::FloorToInt(P),Count-2);
+            return Transform.TransformPosition(FMath::Lerp(D.AuthoredTrajectory[I],D.AuthoredTrajectory[I+1],P-I));
+        };
+        // Visit every authored knot crossed by the interval, including a whole skipped active window.
+        float Previous=From;
+        for(int32 I=1;I<=Count;++I)
+        {
+            const float Next=FMath::Min(To,float(I)/float(Count-1));if(Next<=Previous)continue;
+            TArray<FHitResult> Segment;
+            GetWorld()->SweepMultiByObjectType(Segment,At(Previous),At(Next),FQuat::Identity,Types,FCollisionShape::MakeSphere(D.RadiusCm),Q);
+            Hits.Append(Segment);Previous=Next;if(Previous>=To)break;
+        }
+    }
     for (const auto& H:Hits)
     {
         // A parry/death callback may cancel this attack during hit dispatch.
@@ -153,8 +187,9 @@ void UAetherEquipmentComponent::ResolveHits(const FAetherAttackDefinition& D)
         if (GetWorld()->LineTraceSingleByChannel(Block,Start,Point,ECC_Visibility,Q) && Block.GetActor()!=Target) continue;
         HitActors.Add(Target); FAetherEquipmentHit Hit; Hit.Source=GetOwner(); Hit.ItemId=Attack.ItemId; Hit.AttackId=Attack.AttackId;
         UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_CONTACT input=%u attack=%u server_time=%.3f"),Attack.InputSequence,Attack.Serial,Clock());
-        Hit.Damage=D.Damage; Hit.PostureDamage=D.PostureDamage; Hit.ImpulseNs=Forward*D.ImpulseNs; Hit.CuttingWorkJ=D.CuttingWorkJ;
-        ModifyHit.ExecuteIfBound(Hit);
+        Hit.Damage=CommittedHit.Damage; Hit.PostureDamage=CommittedHit.PostureDamage; Hit.ImpulseNs=Forward*D.ImpulseNs; Hit.CuttingWorkJ=CommittedHit.CuttingWorkJ;
+        OnAuthoritativeContact.ExecuteIfBound();
+        if(Attack.Serial!=Serial||!IsBusy())break;
         IAetherHitReceiver::Execute_ReceiveEquipmentHit(Target,Hit); ++AppliedHitCount;
     }
 }

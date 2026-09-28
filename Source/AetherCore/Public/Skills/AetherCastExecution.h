@@ -5,6 +5,7 @@
 struct FAetherCastExecution
 {
     FGuid ExecutionId=FGuid::NewGuid(), LifeId;
+    FGuid TargetLifeId;
     FString SkillId;
     int32 Rank=0, DefinitionRevision=0;
     EAetherSkillMechanic Mechanic=EAetherSkillMechanic::Fire;

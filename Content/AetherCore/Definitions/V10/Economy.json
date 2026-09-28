@@ -4,6 +4,7 @@
     {
       "Id": "Shop",
       "Products": [
+        "HastePotion",
         "Potion",
         "ManaPotion",
         "Ration"
@@ -18,6 +19,8 @@
     {
       "Id": "Armorer",
       "Products": [
+        "BrittleSword",
+        "BrittleShield",
         "LeatherCap",
         "LeatherVest",
         "LeatherGloves",

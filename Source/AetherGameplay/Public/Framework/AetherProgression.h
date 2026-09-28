@@ -27,6 +27,7 @@ struct FAetherSkillGrantSnapshot
     GENERATED_BODY()
     UPROPERTY() int64 ProfileRevision=-1;
     UPROPERTY() uint32 Sequence=0;
+    UPROPERTY() uint32 GrantRevision=0;
     UPROPERTY() TArray<FAetherSkillGrantPresentation> Rows;
     bool NetSerialize(FArchive& Ar,UPackageMap* Map,bool& Success);
 };
@@ -38,6 +39,13 @@ struct FAetherTemporarySkillSource
     double ExpiresAt=0;
 };
 DECLARE_MULTICAST_DELEGATE(FOnAetherProfilePublished);
+USTRUCT()
+struct FAetherSkillCooldownDeadline
+{
+    GENERATED_BODY()
+    UPROPERTY() FString Key;
+    UPROPERTY() double EndsAt=0;
+};
 
 // Player-owned persistent gameplay state and ASC survive avatar replacement.
 UCLASS()
@@ -61,6 +69,11 @@ public:
     bool ApplyResolvedAttributes(const FAetherProfileStateV10& Committed,const TArray<FAetherExternalSkillGrant>& Grants,FString& Reason);
     FAetherResolvedAttributes ResolvedAttributes;
     uint64 ProjectionRevision=0;
+    uint32 GrantRevision=0;
+    FString LastGrantSignature;
+    UPROPERTY(Replicated) TArray<FAetherSkillCooldownDeadline> SkillCooldowns;
+    double CooldownRemaining(const FString& Skill,const FString& Group,double Now) const;
+    void CommitCooldown(const FString& Skill,const FString& Group,double SkillSeconds,double GroupSeconds,double Now);
     bool PublishNativeEquipment(const FAetherProfileStateV10& Committed,FString& Reason);
     // 完整 DTO 是服务器读取入口；旧 Profile 仅保留导航需要的只读兼容投影。
     bool PublishNativeProfile(const FAetherProfileStateV10& Committed,FString& Reason);
@@ -81,6 +94,7 @@ private:
     TWeakObjectPtr<APawn> TemporaryGrantAvatar;
     FTimerHandle TemporaryGrantTimer;
     bool bTemporaryPublicationPending=false;
+    bool bTemporaryExpiryQueued=false;
     TOptional<FAetherProfileStateV10> NativeProfile;
     FActiveGameplayEffectHandle NativeEquipmentSource;
     int64 NativeEquipmentRevision=-1;

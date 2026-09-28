@@ -58,14 +58,17 @@ bool UAetherVaultAbility::FindPath(AAetherFrontierCharacter& C,TArray<FVector>& 
 bool UAetherVaultAbility::CanActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,const FGameplayTagContainer* S,const FGameplayTagContainer* T,FGameplayTagContainer* R) const
 {
     auto* C=Info?Cast<AAetherFrontierCharacter>(Info->AvatarActor.Get()):nullptr;TArray<FVector> Candidate;
-    return C&&C->CanStartLocomotion()&&(!C->IsLocallyControlled()||!C->bPanel)&&FindPath(*C,Candidate)&&Super::CanActivateAbility(H,Info,S,T,R);
+    return C&&C->QueryAction(EAetherActionKind::Vault)==EAetherActionDenial::None&&C->CanStartLocomotion()&&(!C->IsLocallyControlled()||!C->bPanel)&&FindPath(*C,Candidate)&&Super::CanActivateAbility(H,Info,S,T,R);
 }
 void UAetherVaultAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,const FGameplayEventData*)
 {
     auto* C=Info?Cast<AAetherFrontierCharacter>(Info->AvatarActor.Get()):nullptr;
     FVector Contact;
-    if(!C||!FindPath(*C,Path,&Contact)||!CommitAbility(H,Info,A)){EndAbility(H,Info,A,true,true);return;}
+    if(!C||!FindPath(*C,Path,&Contact)||!CommitAbility(H,Info,A)||!IsActive()||!IsValid(C)||
+        Info->AvatarActor.Get()!=C||Info->AbilitySystemComponent.Get()!=C->AbilitySystem||C->AbilitySystem->GetAvatarActor()!=C)
+    {if(IsActive())EndAbility(H,Info,A,true,true);return;}
     C->PresentAction(TEXT("Vault"),AetherActionTiming::VaultDuration);C->PresentedAction.bHasContact=true;C->PresentedAction.Contact=Contact;
+    OwnedActionSerial=C->PresentedAction.Serial;
     Character=C;DamageAtStart=C->CombatRuntime->LastDamageAt;Phase=0;C->SetSprintInput(false);C->StopJumping();
     C->GetCharacterMovement()->StopMovementImmediately();C->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
     // Flying 仅是受控 root source 的运动阶段，仍由 CharacterMovement 扫掠碰撞；结束必恢复重力。
@@ -103,8 +106,11 @@ void UAetherVaultAbility::EndAbility(FGameplayAbilitySpecHandle H,const FGamepla
     if(ScopeLockCount>0){WaitingToExecute.Add(FPostLockDelegate::CreateUObject(this,&UAetherVaultAbility::EndAbility,H,Info,A,Replicate,Cancelled));return;}
     auto* C=Character.Get();if(C)C->GetWorldTimerManager().ClearTimer(Watch);
     Super::EndAbility(H,Info,A,Replicate,Cancelled);
-    if(C&&C->PresentedAction.Id==TEXT("Vault"))C->PresentedAction.Duration=0;
-    if(C&&!C->bTravelPending){C->GetCharacterMovement()->StopMovementImmediately();C->GetCharacterMovement()->SetMovementMode(C->Alive()?MOVE_Falling:MOVE_None);}
+    if(C&&C->PresentedAction.Serial==OwnedActionSerial)
+    {
+        C->PresentedAction.Duration=0;
+        if(!C->bTravelPending){C->GetCharacterMovement()->StopMovementImmediately();C->GetCharacterMovement()->SetMovementMode(C->Alive()?MOVE_Falling:MOVE_None);}
+    }
     Character.Reset();Path.Reset();
 }
 void UAetherVaultAbility::OnAvatarSet(const FGameplayAbilityActorInfo* Info,const FGameplayAbilitySpec& Spec)

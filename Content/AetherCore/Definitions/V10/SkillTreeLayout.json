@@ -1,6 +1,9 @@
 {
   "Version": 1,
   "Nodes": [
+    {"SkillId":"Body.Haste","Rank":1,"X":0,"Y":1200},
+    {"SkillId":"Body.Mend","Rank":1,"X":220,"Y":1200},
+    {"SkillId":"Body.Aid","Rank":1,"X":440,"Y":1200},
     {
       "SkillId": "Fire.Ignite",
       "Rank": 1,

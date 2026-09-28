@@ -64,6 +64,9 @@
     }
   ],
   "Items": [
+    {"Id":"BrittleSword","DisplayName":"易损练习剑","Category":"Weapon","IconId":"Weapon","EquipmentId":"TrainingSword","UseId":"","MaxStack":1,"BuyPrice":30,"SellPrice":5,"MaxDurability":3,"Sellable":true,"Droppable":true,"QuestLocked":false,"BrokenStatMultiplier":0.25,"BrokenBehavior":"ScaleBaseAttack","BrokenAttackMultiplier":0.5,"AttackTrajectory":[[45,-75,35],[95,-45,35],[120,0,35],[95,45,35],[45,75,35]],"AllowedSlots":["MainHand"],"AdditionalOccupiedSlots":[],"Stats":{"Damage":2},"SkillGrants":{}},
+    {"Id":"BrittleShield","DisplayName":"易损练习盾","Category":"Shield","IconId":"Shield","EquipmentId":"TrainingShield","UseId":"","MaxStack":1,"BuyPrice":30,"SellPrice":5,"MaxDurability":3,"Sellable":true,"Droppable":true,"QuestLocked":false,"BrokenStatMultiplier":0.25,"BrokenBehavior":"DisableGuard","AllowedSlots":["OffHand"],"AdditionalOccupiedSlots":[],"Stats":{"Armor":2},"SkillGrants":{}},
+    {"Id":"HastePotion","DisplayName":"轻步药剂","Category":"Consumable","IconId":"ManaPotion","EquipmentId":"","UseId":"Haste","MaxStack":20,"BuyPrice":25,"SellPrice":6,"MaxDurability":0,"Sellable":true,"Droppable":true,"QuestLocked":false,"BrokenStatMultiplier":0.25,"AllowedSlots":[],"AdditionalOccupiedSlots":[],"Stats":{},"SkillGrants":{}},
     {
       "Id": "Potion",
       "DisplayName": "生命药剂",

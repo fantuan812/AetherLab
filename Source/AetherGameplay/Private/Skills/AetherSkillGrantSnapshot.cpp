@@ -3,7 +3,7 @@ bool FAetherSkillGrantSnapshot::NetSerialize(FArchive& Ar,UPackageMap*,bool& Suc
 {
     Success=false;uint16 Count=uint16(Rows.Num());
     if(Ar.IsSaving()&&Rows.Num()>256){Ar.SetError();return false;}
-    Ar<<ProfileRevision<<Sequence<<Count;
+    Ar<<ProfileRevision<<Sequence<<GrantRevision<<Count;
     if(Count>256||ProfileRevision < -1||ProfileRevision==MAX_int64){Ar.SetError();return false;}
     if(Ar.IsLoading())Rows.SetNum(Count);
     for(auto& Row:Rows)

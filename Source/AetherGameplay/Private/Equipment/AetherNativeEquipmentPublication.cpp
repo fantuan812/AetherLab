@@ -30,6 +30,21 @@ bool AAetherPlayerState::PublishNativeEquipment(const FAetherProfileStateV10& P,
     // Equipment publishes appearance and source facts only. Final attributes have one writer.
     Pawn->Equipment->bProfileManaged=true;
     if(!Pawn->Equipment->RestoreLoadout(Loadout)){Reason=TEXT("Native loadout publication failed");return false;}
+    Pawn->Equipment->bBrokenAttackDisabled=false;Pawn->Equipment->bBrokenGuardDisabled=false;Pawn->Equipment->BrokenBaseAttackMultiplier=1;
+    Pawn->Equipment->MainHandTrajectory.Reset();
+    for(const auto& Binding:P.Inventory.Equipment)
+    {
+        const auto* Item=P.Inventory.Find(Binding.Value);if(!Item)continue;
+        const auto& Def=D.Items.Items.FindChecked(Item->DefinitionId);
+        if(Binding.Key==TEXT("MainHand"))Pawn->Equipment->MainHandTrajectory=Def.AttackTrajectory;
+        if(Def.MaxDurability<=0||Item->Durability!=0)continue;
+        if(Binding.Key==TEXT("MainHand"))
+        {
+            Pawn->Equipment->bBrokenAttackDisabled=Def.BrokenBehavior==EAetherBrokenBehavior::DisableAttack;
+            if(Def.BrokenBehavior==EAetherBrokenBehavior::ScaleBaseAttack)Pawn->Equipment->BrokenBaseAttackMultiplier=float(Def.BrokenAttackMultiplier);
+        }
+        Pawn->Equipment->bBrokenGuardDisabled|=Def.BrokenBehavior==EAetherBrokenBehavior::DisableGuard;
+    }
     if(GetPawn()!=Pawn||AbilitySystem->GetAvatarActor()!=Pawn){Reason=TEXT("Avatar changed while publishing loadout");return false;}
     // 从已提交装备重建来源，同一实例占多个槽也只能授予一次。
     NativeSkillGrants.RemoveAll([](const auto& G){return G.Source==EAetherSkillGrantSource::Equipment;});

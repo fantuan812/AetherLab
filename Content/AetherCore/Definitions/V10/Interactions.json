@@ -194,6 +194,30 @@
           "HideLocked": false
         },
         {
+          "Id": "PracticeHaste", "Kind": "Rest", "Verb": "轻步练习", "IconId": "Rest", "Priority": 90, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Haste", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+        },
+        {
+          "Id": "PracticeWeakness", "Kind": "Rest", "Verb": "虚弱适应练习", "IconId": "Rest", "Priority": 89, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Weakness", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+        },
+        {
+          "Id": "PracticeRecovery", "Kind": "Rest", "Verb": "持续恢复", "IconId": "Rest", "Priority": 88, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Regeneration", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+        },
+        {
+          "Id": "PracticePoison", "Kind": "Rest", "Verb": "毒性适应练习", "IconId": "Rest", "Priority": 87, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Poison", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+        },
+        {
+          "Id": "PracticeSilence", "Kind": "Rest", "Verb": "沉默适应练习", "IconId": "Rest", "Priority": 86, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Silence", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+        },
+        {
+          "Id": "PracticeVitality", "Kind": "Rest", "Verb": "强身祝福", "IconId": "Rest", "Priority": 85, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Vitality", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+        },
+        {
+          "Id": "PracticeAntitoxin", "Kind": "Rest", "Verb": "抗毒祝福", "IconId": "Rest", "Priority": 84, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Antitoxin", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+        },
+        {
+          "Id": "PracticeCleanse", "Kind": "Rest", "Verb": "净化减益", "IconId": "Rest", "Priority": 83, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Cleanse", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+        },
+        {
           "Id": "Rest",
           "Kind": "Rest",
           "Verb": "休息恢复",

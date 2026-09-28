@@ -14,6 +14,7 @@ public:
     UPROPERTY(EditDefaultsOnly,Category="Aether|Movement") float SprintSpeed=625;
     UPROPERTY(EditDefaultsOnly,Category="Aether|Movement") float CrouchSpeed=190;
     bool bWantsSprint=false;
+    float ReplaySpeed=-1;
     bool CanSprint() const;
     bool TryStand();
     virtual float GetMaxSpeed() const override;
@@ -21,6 +22,10 @@ public:
     virtual void UpdateFromCompressedFlags(uint8 Flags) override;
     virtual void UpdateCharacterStateBeforeMovement(float DeltaSeconds) override;
     virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
+    virtual void MoveAutonomous(float ClientTimeStamp,float DeltaTime,uint8 CompressedFlags,const FVector& NewAccel) override;
+private:
+    double ClientClockOffset=0;
+    float LastClientStamp=-1,ServerReplaySpeed=-1;
 };
 
 class FAetherSavedMove final : public FSavedMove_Character
@@ -28,6 +33,8 @@ class FAetherSavedMove final : public FSavedMove_Character
 public:
     using Super=FSavedMove_Character;
     bool bSavedWantsSprint=false;
+    float SavedSpeed=1;
+    uint32 SavedRevision=0;
     virtual void Clear() override;
     virtual uint8 GetCompressedFlags() const override;
     virtual bool CanCombineWith(const FSavedMovePtr& NewMove,ACharacter* Character,float MaxDelta) const override;

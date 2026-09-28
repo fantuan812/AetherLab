@@ -382,6 +382,7 @@ bool UAetherCommandRuntime::AuthorizeSceneInput(AAetherPlayerController* C,const
     auto* Found=Impl->Bindings.Find(C);if(!Found)return false;auto& B=**Found;
     if(!B.bReady||Packet.Channel!=B.Channel||!Impl->Current(B)||Sequence<=B.SceneSequence||
         !B.Requests.Consume(FPlatformTime::Seconds(),Packet.Bytes.Num()))return false;
+    if(const auto* G=Impl->Gate(B);!G||G->IsFaulted())return false;
     FString Why;if(!AetherCommands::Decode(Packet.Bytes,Command,Why)||Command.Type!=EAetherCommandType::ExecuteInteraction||
         Command.ProtocolVersion!=AetherCommands::LatestProtocolVersion)return false;
     // 消耗序号后即使条件失败也不自动重做；下一次操作必须来自新的明确输入。
@@ -395,6 +396,8 @@ void UAetherCommandRuntime::Receive(AAetherPlayerController* C,const FAetherV10C
     FAetherPlayerCommand Command;FString Reason;
     if(!AetherCommands::Decode(Packet.Bytes,Command,Reason))return;
     FAetherCommandResult Rejection;Rejection.CommandId=Command.CommandId;
+    if(const auto* G=Impl->Gate(B);!G||G->IsFaulted())
+    {Rejection.Code=EAetherCommandCode::NotReady;Impl->Reply(B,Rejection);return;}
     // 协调者按同一个完整请求查持久回执，重试不会在这里换 ID、价格或当前版本。
     if(!Impl->Coordinator->Submit(B.Session,Command,Rejection))Impl->Reply(B,Rejection);
 }

@@ -1,5 +1,6 @@
 #include "AetherProfileConsumable.h"
 #include "Inventory/AetherItemEligibility.h"
+#include "Effects/AetherBuffState.h"
 EAetherCommandCode AetherProfileConsumable::Apply(const FAetherPlayerCommand& C,FAetherProfileStateV10& Next,
     const FAetherProfileCommandContext& Context,const FAetherV10ItemDefinitions& Items,const FAetherRules& Rules,
     FAetherEffectDelivery& Delivery,FAetherCommandResult& Result)
@@ -26,12 +27,19 @@ EAetherCommandCode AetherProfileConsumable::Apply(const FAetherPlayerCommand& C,
     if(AetherItemEligibility::QueryUse(*Use,Summary)!=EAetherUseAvailability::Allowed)return R::NotAllowed;
     FAetherConsumableEffectV10 Effect;Effect.DeliveryId=C.CommandId;Effect.ItemInstanceId=I->InstanceId;
     Effect.DefinitionId=I->DefinitionId;Effect.ProfileRevision=Next.Revision+1;Effect.Before=Before;Effect.After=Before;
+    if(!Use->BuffId.IsEmpty())
+    {
+        const auto& Catalog=FAetherBuffDefinitions::Get();const auto* Buff=Catalog.bValid?Catalog.Buffs.Find(Use->BuffId):nullptr;
+        if(!Buff||!Context.AdmissibleBuffs.Contains(Use->BuffId))return R::NotAllowed;
+        Effect.BuffId=Buff->Id;Effect.BuffRevision=Buff->Revision;
+        Effect.BuffExpiresAtUnixMs=Context.ServerUnixMs+FMath::CeilToInt64(Buff->Duration*1000);
+    }
     auto& After=Effect.After;++After.Revision;
     After.Health=FMath::Min(After.MaxHealth,After.Health+Use->Health);
     After.Mana=FMath::Min(After.MaxMana,After.Mana+Use->Mana);
     After.Stamina=FMath::Min(After.MaxStamina,After.Stamina+Use->Stamina);
     // 满资源不会白白扣药；只要本物品实际恢复一种资源即可使用。
-    if(After.Health==Before.Health&&After.Mana==Before.Mana&&After.Stamina==Before.Stamina)return R::NotAllowed;
+    if(Effect.BuffId.IsEmpty()&&After.Health==Before.Health&&After.Mana==Before.Mana&&After.Stamina==Before.Stamina)return R::NotAllowed;
     After.UseReadyAtUnixMs=Context.ServerUnixMs+FMath::CeilToInt64(Use->Cooldown*1000);
     FAetherEffectDelivery Candidate;Candidate.Id=C.CommandId;Candidate.ActorId=Next.CharacterId;
     if(!AetherConsumableEffects::Encode(Effect,Candidate.Payload))return R::Invalid;

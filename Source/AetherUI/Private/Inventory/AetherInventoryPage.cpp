@@ -177,6 +177,8 @@ void UAetherInventoryPage::Refresh()
     {++Generation;SeenContainerContext=Next.ContainerContext;SeenContainerRevision=ContainerRevision;SeenContainerWorld=Next.ContainerWorldRevision;}
     FString StatusKey;
     for(const auto& Effect:Next.StatusEffects)StatusKey+=Effect.InstanceId.ToString()+FString::SanitizeFloat(Effect.ExpiresAtServerSeconds.Get(0));
+    StatusKey+=Next.bPresentationReady?TEXT("ready"):TEXT("sync");
+    for(const auto& Pair:Next.FinalAttributes)StatusKey+=Pair.Key+FString::SanitizeFloat(Pair.Value);
     if(StatusKey!=SeenStatuses){SeenStatuses=StatusKey;++Generation;}
     if(BeforeGeneration==Generation&&!bDirty)
     {
@@ -208,6 +210,7 @@ void UAetherInventoryPage::Refresh()
         }));
     }
     Summary->SetText(FText::FromString(FString::Printf(TEXT("背包 %d / %d · 金币 %d%s"),Snapshot.Inventory.Items.Num(),Snapshot.Inventory.Capacity,Snapshot.Gold,Snapshot.Shop.IsSet()?TEXT(" · 商店服务已开启"):TEXT(""))));
+    if(!Snapshot.bPresentationReady)Summary->SetText(FText::FromString(TEXT("角色属性与技能正在同步，请稍候")));
     const auto MakeCell=[&](UUniformGridPanel* Parent,int32 Index,int32 ColumnCount)
     {
         auto* Cell=CreateWidget<UAetherInventoryCell>(this,AetherWidgetAssets::Class<UAetherInventoryCell>(Parent==Equipment?TEXT("WBP_EquipmentSlot"):nullptr));auto* CellSlot=Parent->AddChildToUniformGrid(Cell,Index/ColumnCount,Index%ColumnCount);

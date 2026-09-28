@@ -3,6 +3,11 @@
 #include "Contracts/AetherTransferMode.h"
 
 // 定义与实例分离。v9 反射 profile 保持冻结；v10 使用这些显式值对象构建持久 DTO。
+enum class EAetherBrokenBehavior:uint8 { ReduceBonusOnly, DisableGrantedAbilities, ScaleBaseAttack, DisableGuard, DisableAttack };
+struct FAetherCompiledItemCapabilities
+{
+    bool Equippable=false,Consumable=false,SkillGrant=false,DurabilityPolicy=false,QuestProtection=false,Presentation=true;
+};
 struct FAetherV10ItemDefinition
 {
     FString Id, DisplayName, Category, IconId, EquipmentId, UseId;
@@ -14,6 +19,11 @@ struct FAetherV10ItemDefinition
     TMap<FString,double> Stats;
     TMap<FString,int32> SkillGrants; // 装备来源授权；卸装/损坏时移除，不写永久学习。
     double BrokenStatMultiplier=0.25;
+    EAetherBrokenBehavior BrokenBehavior=EAetherBrokenBehavior::ReduceBonusOnly;
+    double BrokenAttackMultiplier=1;
+    TArray<FVector> AttackTrajectory;
+    FAetherCompiledItemCapabilities Capabilities() const
+    {return {!AllowedSlots.IsEmpty(),!UseId.IsEmpty(),!SkillGrants.IsEmpty(),MaxDurability>0,bQuestLocked,true};}
 };
 struct FAetherEquipmentSlotDefinition
 {

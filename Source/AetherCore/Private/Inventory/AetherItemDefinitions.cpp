@@ -47,6 +47,10 @@ bool FAetherV10ItemDefinitions::Validate(FString& Reason) const
     for(const auto& Pair:Items)
     {
         const auto& I=Pair.Value;
+        if(!I.AttackTrajectory.IsEmpty()&&(I.AttackTrajectory.Num()<2||I.AttackTrajectory.Num()>32||!I.AllowedSlots.Contains(TEXT("MainHand"))))return Reject(TEXT("Invalid item attack trajectory"));
+        for(const auto& Point:I.AttackTrajectory)if(Point.ContainsNaN()||Point.Size()>1200)return Reject(TEXT("Invalid trajectory point"));
+        if(uint8(I.BrokenBehavior)>4||!FMath::IsFinite(I.BrokenAttackMultiplier)||I.BrokenAttackMultiplier<0||I.BrokenAttackMultiplier>1||
+            (I.BrokenBehavior!=EAetherBrokenBehavior::ScaleBaseAttack&&I.BrokenAttackMultiplier!=1))return Reject(TEXT("Invalid broken behavior policy"));
         if(!Id(I.Id)||!Pair.Key.Equals(I.Id,ESearchCase::CaseSensitive)||I.DisplayName.IsEmpty()||I.DisplayName.Len()>128||!Id(I.Category)||!Id(I.IconId)||
             I.MaxStack<1||I.MaxStack>1000||I.BuyPrice<0||I.BuyPrice>10000000||I.SellPrice<0||I.SellPrice>10000000||
             (I.BuyPrice>0&&I.SellPrice>=I.BuyPrice)||I.MaxDurability<0||I.MaxDurability>1000000||
@@ -112,6 +116,25 @@ FAetherV10ItemDefinitions FAetherV10ItemDefinitions::Parse(const FString& Json,F
             !Names(*O,TEXT("AllowedSlots"),I.AllowedSlots)||!Names(*O,TEXT("AdditionalOccupiedSlots"),I.AdditionalOccupiedSlots))
             return Reject(TEXT("Incomplete item definition"));
         if(D.Items.Contains(I.Id))return Reject(TEXT("Duplicate item definition ID"));
+        if((*O)->HasField(TEXT("AttackTrajectory")))
+        {
+            const TArray<TSharedPtr<FJsonValue>>* Points=nullptr;
+            if(!(*O)->TryGetArrayField(TEXT("AttackTrajectory"),Points)||Points->Num()>32)return Reject(TEXT("Invalid trajectory array"));
+            for(const auto& Point:*Points)
+            {
+                const TArray<TSharedPtr<FJsonValue>>* Values=nullptr;double X=0,Y=0,Z=0;
+                if(!Point->TryGetArray(Values)||Values->Num()!=3||!(*Values)[0]->TryGetNumber(X)||!(*Values)[1]->TryGetNumber(Y)||!(*Values)[2]->TryGetNumber(Z))return Reject(TEXT("Invalid trajectory coordinate"));
+                I.AttackTrajectory.Add(FVector(X,Y,Z));
+            }
+        }
+        if((*O)->HasField(TEXT("BrokenBehavior")))
+        {
+            FString Policy;if(!(*O)->TryGetStringField(TEXT("BrokenBehavior"),Policy))return Reject(TEXT("Invalid broken behavior"));
+            const TArray<FString> Names={TEXT("ReduceBonusOnly"),TEXT("DisableGrantedAbilities"),TEXT("ScaleBaseAttack"),TEXT("DisableGuard"),TEXT("DisableAttack")};
+            const int32 Index=Names.Find(Policy);if(Index==INDEX_NONE)return Reject(TEXT("Unknown broken behavior"));
+            I.BrokenBehavior=EAetherBrokenBehavior(Index);
+        }
+        if((*O)->HasField(TEXT("BrokenAttackMultiplier"))&&!(*O)->TryGetNumberField(TEXT("BrokenAttackMultiplier"),I.BrokenAttackMultiplier))return Reject(TEXT("Invalid broken attack multiplier"));
         const TSharedPtr<FJsonObject>* Stats=nullptr;
         if(!(*O)->TryGetObjectField(TEXT("Stats"),Stats)||(*Stats)->Values.Num()>10)return Reject(TEXT("Invalid equipment stats object"));
         for(const auto& Pair:(*Stats)->Values){double N=0;if(!Pair.Value->TryGetNumber(N))return Reject(TEXT("Invalid stat value"));I.Stats.Add(FString(*Pair.Key),N);}

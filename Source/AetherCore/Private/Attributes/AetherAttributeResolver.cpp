@@ -50,7 +50,16 @@ bool AetherAttributes::ResolveProfile(const FAetherProfileStateV10& P,const FAet
     const TArray<FAetherAttributeContribution>& Additional,FAetherResolvedAttributes& Out,FString& Reason)
 {
     TArray<FAetherAttributeContribution> Sources=Additional;
-    for(const auto& S:P.Inventory.EquippedStats(Items))Sources.Add({S.Key,TEXT("Equipment"),EAetherAttributeOperation::Add,S.Value});
+    if(!P.Inventory.Validate(Items,Reason))return false;
+    TSet<FGuid> Seen;
+    for(const auto& Slot:P.Inventory.Equipment)
+    {
+        if(Seen.Contains(Slot.Value))continue;Seen.Add(Slot.Value);
+        const auto* I=P.Inventory.Find(Slot.Value);const auto* D=I?Items.Items.Find(I->DefinitionId):nullptr;
+        if(!D)return false;
+        for(const auto& S:FAetherInventoryStateV10::EvaluateItemStats(*I,*D))
+            Sources.Add({S.Key,TEXT("Equipment.")+I->InstanceId.ToString(EGuidFormats::Digits),EAetherAttributeOperation::Add,S.Value});
+    }
     for(const auto& Pair:Skills.Skills)if(!Pair.Value.bActive)
         if(const auto* Effect=Skills.Effect(Pair.Key,P.Skills.EffectiveRank(Pair.Key,Grants)))
             for(const auto& S:Effect->PassiveStats)Sources.Add({S.Key,TEXT("Skill.")+Pair.Key,EAetherAttributeOperation::Add,S.Value});
