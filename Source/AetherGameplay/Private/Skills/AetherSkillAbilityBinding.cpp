@@ -90,7 +90,7 @@ bool Publish(UAbilitySystemComponent& ASC,const FAetherSkillStateV10& State,cons
             if(Spec->Level!=Rank||Spec->InputID!=Input)
             {
                 // 等级/授权变化结束旧执行，不能让旧实例继续用原来已失效的等级计算效果。
-                ASC.CancelAbilityHandle(*ExistingHandle);
+                if(Spec->Level!=Rank)ASC.CancelAbilityHandle(*ExistingHandle);
                 Spec=ASC.FindAbilitySpecFromHandle(*ExistingHandle);if(!Spec){Reason=TEXT("Skill removed during cancellation");return false;}
                 Spec->Level=Rank;Spec->InputID=Input;ASC.MarkAbilitySpecDirty(*Spec);
             }

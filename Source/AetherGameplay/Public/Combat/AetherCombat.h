@@ -10,6 +10,7 @@
 #include "ReactiveBodyComponent.h"
 #include "AetherEquipmentComponent.h"
 #include "Animation/AetherActionPresentation.h"
+#include "Skills/AetherCastExecution.h"
 #include "AetherCombat.generated.h"
 class UAetherMotionComponent;
 
@@ -96,6 +97,7 @@ public:
     // 旧编号接口仅供尚未迁移的快捷键/任务调用，内部立即转换为稳定身份。
     bool FindSkillTarget(const FString& SkillId,int32 Rank,FHitResult& Hit,FVector& Origin,FVector& Direction) const;
     bool ExecuteSkill(const FString& SkillId,int32 Rank);
+    bool ExecuteCast(const FAetherCastExecution& Execution);
     bool TrySkill(const FString& SkillId);
     virtual bool SkillUnlocked(const FString& SkillId) const;
     virtual void GrantSpells();

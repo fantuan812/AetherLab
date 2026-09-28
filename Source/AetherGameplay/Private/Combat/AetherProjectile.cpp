@@ -33,12 +33,17 @@ void AAetherProjectile::Tick(float Dt)
 {
     Super::Tick(Dt); Visual->SetRelativeScale3D(FVector(.08 + .2 * FMath::Clamp(HeatJ / 60000, 0.0, 1.0)));
     if (!HasAuthority()) return;
+    if(!FMath::IsFinite(Dt)||Dt<=0)return;
+    if(!FMath::IsFinite(MaxPathCm)||MaxPathCm<=0||!FMath::IsFinite(CollisionRadiusCm)||CollisionRadiusCm<=0||VelocityCm.ContainsNaN()){Destroy();return;}
     Age += Dt;
     if (const auto* S = GetWorld()->GetSubsystem<UReactiveWorldSubsystem>()) IntegrateWeather(HeatJ, VelocityCm, S->GetSimulation()->GetEnvironment(), Dt);
-    if (Age > 4 || HeatJ < 500) { Destroy(); return; }
-    FHitResult Hit; const FVector End = GetActorLocation() + VelocityCm * Dt;
+    if (Age > MaxLifetimeSeconds || HeatJ < 500) { Destroy(); return; }
+    const double Remaining=FMath::Max(0.,MaxPathCm-TravelledCm);
+    if(Remaining<=UE_SMALL_NUMBER){Destroy();return;}
+    const FVector Step=(VelocityCm*Dt).GetClampedToMaxSize(Remaining);
+    FHitResult Hit; const FVector End = GetActorLocation() + Step;
     FCollisionQueryParams P(SCENE_QUERY_STAT(AetherProjectile), false, this); P.AddIgnoredActor(GetOwner());
-    if (GetWorld()->SweepSingleByChannel(Hit,GetActorLocation(),End,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(12),P))
+    if (GetWorld()->SweepSingleByChannel(Hit,GetActorLocation(),End,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(CollisionRadiusCm),P))
     {
         if(auto* Source=Cast<AAetherCharacter>(GetOwner());Source&&Source->Fighter==EAetherFighter::Player)if(auto* Other=Cast<AAetherCharacter>(Hit.GetActor());Other&&Other->Fighter==EAetherFighter::Player){Destroy();return;}
         if (AActor* A = Hit.GetActor()) if (auto* B = A->FindComponentByClass<UReactiveBodyComponent>())
@@ -46,4 +51,6 @@ void AAetherProjectile::Tick(float Dt)
         Destroy(); return;
     }
     SetActorLocation(End);
+    TravelledCm+=Step.Size();
+    if(TravelledCm>=MaxPathCm-UE_SMALL_NUMBER)Destroy();
 }

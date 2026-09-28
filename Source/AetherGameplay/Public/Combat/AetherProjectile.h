@@ -14,6 +14,9 @@ public:
     UPROPERTY(Replicated) double HeatJ = 60000;
     FVector VelocityCm = FVector::ZeroVector;
     float Age = 0;
+    double MaxPathCm=1800, TravelledCm=0;
+    float CollisionRadiusCm=12, MaxLifetimeSeconds=4;
+    FGuid ExecutionId;
     virtual void BeginPlay() override;
     virtual void Tick(float Dt) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

@@ -344,17 +344,27 @@ bool AAetherCharacter::FindSkillTarget(const FString& SkillId,int32 Rank,FHitRes
 }
 bool AAetherCharacter::ExecuteSkill(const FString& SkillId,int32 Rank)
 {
-    if(!HasAuthority()||!Alive())return false;
     const auto& Definitions=FAetherSkillDefinitionsV10::Get();
     const auto* D=Definitions.Skills.Find(SkillId);const auto* E=Definitions.Effect(SkillId,Rank);
+    if(!D||!E)return false;
+    FAetherCastExecution Cast;Cast.SkillId=SkillId;Cast.Rank=Rank;Cast.DefinitionRevision=Definitions.ContentSchemaVersion;
+    Cast.Mechanic=D->Mechanic;Cast.Effect=*E;
+    return ExecuteCast(Cast);
+}
+bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
+{
+    if(!HasAuthority()||!Ready()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this)return false;
+    const auto* E=&Cast.Effect;
     FHitResult Hit;FVector Origin,Direction;
-    if(!D||!E||!FindSkillTarget(SkillId,Rank,Hit,Origin,Direction))return false;
+    if(!FindSkillTarget(Cast.SkillId,Cast.Rank,Hit,Origin,Direction))return false;
     bool Accepted=false;
-    if(D->Mechanic==EAetherSkillMechanic::Fire)
+    if(Cast.Mechanic==EAetherSkillMechanic::Fire)
     {
         FActorSpawnParameters P;P.Owner=this;P.Instigator=this;P.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
         if(auto* Projectile=GetWorld()->SpawnActor<AAetherProjectile>(Origin,Direction.Rotation(),P))
-        {Projectile->VelocityCm=Direction*1300;Projectile->HeatJ=E->HeatJ;Accepted=true;}
+        {Projectile->VelocityCm=Direction*1300;Projectile->HeatJ=E->HeatJ;
+         Projectile->MaxPathCm=E->RangeCm;Projectile->CollisionRadiusCm=float(E->TargetRadiusCm);
+         Projectile->ExecutionId=Cast.ExecutionId;Accepted=true;}
     }
     else if(auto* Body=Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>())
     {
