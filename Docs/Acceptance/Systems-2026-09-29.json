@@ -1,0 +1,864 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-29T01:11:42.1417489+08:00",
+  "localDate": "2026-09-29",
+  "timezone": "Asia/Hong_Kong",
+  "planDocument": {
+    "path": "C:/Users/fantuan/Downloads/AetherLab_三大系统深度审查与执行方案_2026-09-28.md",
+    "bytes": 119359,
+    "sha256": "6a9b2a8aad0a2c45577e8d1083924d2da993fb72c224ce4c516974ebe3b15498"
+  },
+  "baseline": "88818279e8a252b79c97e3ce4080720b61d7a85f",
+  "codeCandidate": "5f46f41d3a00f7d03dc4d1dda195a76e4eb6f148",
+  "branch": "main",
+  "releaseAccepted": false,
+  "implementationStatus": "delivered_with_partial_light_evidence",
+  "w12": "selected_checks_passed_not_full_P1_matrix",
+  "w13": "not_run",
+  "sourceTrees": {
+    "Source": "99ec3a1b514fd3915468ec12e18279445239642d",
+    "Content": "b8604098ecf77cf8b1be0ea9da2d6caa9d98874f",
+    "Plugins": "8e16cc4214847c37d9d23945bf828e67d02f2282",
+    "Scripts": "db96046a25cb6944dc04f856973ceffd79109064"
+  },
+  "definitions": [
+    {
+      "path": "Content/AetherCore/Definitions/V10/Buffs.json",
+      "bytes": 4164,
+      "sha256": "5f5a014db8b60cb6fb37f216cf3e9fe94dca8f05c39b51a0664495544b99f9d3"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/Containers.json",
+      "bytes": 497,
+      "sha256": "26b5ca9949cba8b8894e3ab3a9886598957d56949460bb6e6284477f21e40881"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/Economy.json",
+      "bytes": 1119,
+      "sha256": "1be388a8f5e60c85884daf0c931135c526b28e5e99e7526d6d0a6ab08893d296"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/Interactions.json",
+      "bytes": 46349,
+      "sha256": "f6573233163a1cf04a80198e9c4ef8b9cc8d0cd4cd26947e20343f8e227e87dc"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/Items.json",
+      "bytes": 18438,
+      "sha256": "829c532360e515885eb8848a2c64ef28bf0b25f5d0b7c9947a1d7050a400bfd9"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/Map.json",
+      "bytes": 1808,
+      "sha256": "f21f1562e8c3fdeb4bdbf939fcab30af356eea748cd552352871fff13a0d44c1"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/Progression.json",
+      "bytes": 226,
+      "sha256": "8b2c1d32576e75c8ceb081974d6ae6b3a3eb1c39eb46986eed7847b44ece5b32"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/Skills.json",
+      "bytes": 11830,
+      "sha256": "6e7176b04654181af067fa485a638f797d59364cc91d577265c5ed9364a47e19"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/SkillTreeLayout.json",
+      "bytes": 2552,
+      "sha256": "67b97fa74787baa2f6a28c24d5c56cd1ecda993b79e35ce5d5416fe74aa6e488"
+    },
+    {
+      "path": "Content/AetherCore/Definitions/V10/WidgetLayouts.json",
+      "bytes": 47107,
+      "sha256": "f94d0c2253f279175555c37c502aa65d8e99a69abd96bca94948e580c9abc641"
+    }
+  ],
+  "reusedAssets": [
+    {
+      "path": "Content/AetherCore/Maps/L_Frontier.umap",
+      "bytes": 13936,
+      "sha256": "72e0a1d3ae8b2b934d0f275b7e5a948526b69044b66f134ad927ea70bbaa17cb"
+    },
+    {
+      "path": "Content/Characters/Mannequins/Meshes/SKM_Manny_Simple.uasset",
+      "bytes": 15825101,
+      "sha256": "be9f011191ee1887b97cd13bce09886a6066c2fd62c619991070ec142184e1bf"
+    },
+    {
+      "path": "Content/Characters/Mannequins/Meshes/SKM_Quinn_Simple.uasset",
+      "bytes": 16252577,
+      "sha256": "1ef45d92507a76d74a5e06737f94cad40eb7d5f5769dfbb63f7f74e784a178c6"
+    }
+  ],
+  "localConfiguration": {
+    "path": "Config/DefaultEngine.ini",
+    "userModified": true,
+    "committed": false,
+    "fingerprint": {
+      "path": "Config/DefaultEngine.ini",
+      "bytes": 1284,
+      "sha256": "4fe3f63b437735d9e7b491ddc2a0b3b59d1fd47c4014b9ffd14b6e7dbb30f456"
+    },
+    "note": "Local tests used the preserved user configuration. Its content is not exported."
+  },
+  "engine": {
+    "version": "5.8.0",
+    "changelist": 55116800,
+    "target": "AetherLabEditor Win64 Development",
+    "msvc": "14.44.35211",
+    "windowsSdk": "10.0.22621.0"
+  },
+  "build": {
+    "state": "passed",
+    "command": "Build.bat AetherLabEditor Win64 Development C:/ueproject/test/AetherLab.uproject -WaitMutex -NoHotReloadFromIDE -NoUBA -MaxParallelActions=2",
+    "lastActions": 10,
+    "lastDurationSeconds": 13.69,
+    "evidence": "Tool execution exit_code=0, Result: Succeeded; UBT log later replaced by engine SDK discovery.",
+    "binaries": [
+      {
+        "path": "Binaries/Win64/UnrealEditor-AetherAnimationEditor.dll",
+        "bytes": 84480,
+        "sha256": "ae76d39ed141be113608e4b88384977997db694d0033f4500afaa53cbddec1c6"
+      },
+      {
+        "path": "Binaries/Win64/UnrealEditor-AetherCore.dll",
+        "bytes": 1422848,
+        "sha256": "e3cae9d74cd3459888344941a89a2ac903392301360d68311c69f272db643fc7"
+      },
+      {
+        "path": "Binaries/Win64/UnrealEditor-AetherEditor.dll",
+        "bytes": 358400,
+        "sha256": "5057e34d0ec7ef04db22a4f969c50af623e1dd4f5300d469a9a53dc7be65133c"
+      },
+      {
+        "path": "Binaries/Win64/UnrealEditor-AetherEquipment.dll",
+        "bytes": 234496,
+        "sha256": "410335532f1da3a7626f1e71de380341ef8e0cf759151912bd4ccd94dfce4ac4"
+      },
+      {
+        "path": "Binaries/Win64/UnrealEditor-AetherGameplay.dll",
+        "bytes": 5096960,
+        "sha256": "83d70a40991fa134ca088a7bb690b371bb347c15780540201a98ce20ed7d69a7"
+      },
+      {
+        "path": "Binaries/Win64/UnrealEditor-AetherLab.dll",
+        "bytes": 221696,
+        "sha256": "83aa3ebfb6b0ec9fc3378b48a7e87fa8d5f59d0d6512dcab6f4a2345ee23cc72"
+      },
+      {
+        "path": "Binaries/Win64/UnrealEditor-AetherUI.dll",
+        "bytes": 1398784,
+        "sha256": "dff8f5b80bb8b16b5c0307b5cfb962c502434c61e082a4b3b6b33ab2e99947fe"
+      }
+    ]
+  },
+  "initialBuildFailures": [
+    "Reflected TMap replication rejected by UHT; explicit NetSerialize retained and fields marked NotReplicated.",
+    "Inspection action FString argument and lifetime replication parameter name corrected.",
+    "Reflection header changed during build; stopped build and regenerated UHT output.",
+    "Cooldown local variable shadowing corrected."
+  ],
+  "rules": [
+    {
+      "filter": "Aether.Systems.",
+      "report": {
+        "path": "Saved/Automation/Rules-8dc9ceee3c114ba9b1399252b81af5be/index.json",
+        "bytes": 5096,
+        "sha256": "a41585a7d3e3963b7f1787d5e1e3cda1dae61d3f41c89c90e4c160c7760c25d0"
+      },
+      "engineLog": {
+        "path": "Saved/Automation/Rules-8dc9ceee3c114ba9b1399252b81af5be/Engine.log",
+        "bytes": 280166,
+        "sha256": "3b3d8f39e682740f764b9ed0b468c236dd9fee9efc6e8c49d1c8814552384fe8"
+      },
+      "utcReportCreatedOn": "2026.09.28-17.04.13",
+      "succeeded": 7,
+      "succeededWithWarnings": 1,
+      "failed": 0,
+      "notRun": 0,
+      "inProcess": 0,
+      "durationSeconds": 0.14010919630527496,
+      "tests": [
+        {
+          "name": "Aether.Systems.Attributes.PolicyAndIntervals",
+          "state": "Success",
+          "durationSeconds": 0.015311498194932938,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.Systems.Buff.FrameRateAndExpiry",
+          "state": "Success",
+          "durationSeconds": 0.01503479853272438,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.Systems.Buff.LifecycleSourcesAndImmunity",
+          "state": "Success",
+          "durationSeconds": 0.015486299991607666,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.Systems.Protocol.UnbindAndBuffDelivery",
+          "state": "Success",
+          "durationSeconds": 0.008122600615024567,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.Systems.Runtime.BoundedQueueAndCapturedDefense",
+          "state": "Success",
+          "durationSeconds": 0.03402769938111305,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.Systems.Runtime.BuffProjectionCapsTagsAndDeath",
+          "state": "Success",
+          "durationSeconds": 0.018497399985790253,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.Systems.Runtime.ProjectilePathBound",
+          "state": "Success",
+          "durationSeconds": 0.02059520035982132,
+          "warnings": 3,
+          "errors": 0,
+          "messages": [
+            "LogSpawn: UWorld::DestroyActor: World has no context! World: Untitled, Actor: /Temp/Untitled_3.Untitled:PersistentLevel.AetherProjectile_0",
+            "LogSpawn: UWorld::DestroyActor: World has no context! World: Untitled, Actor: /Temp/Untitled_3.Untitled:PersistentLevel.AetherProjectile_1",
+            "LogSpawn: UWorld::DestroyActor: World has no context! World: Untitled, Actor: /Temp/Untitled_3.Untitled:PersistentLevel.AetherProjectile_2"
+          ]
+        },
+        {
+          "name": "Aether.Systems.Runtime.ReentrantCostCancellation",
+          "state": "Success",
+          "durationSeconds": 0.013033699244260788,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        }
+      ]
+    },
+    {
+      "filter": "Aether.V10.Skills.+Aether.V10.Commands.+Aether.V10.Consumables.+Aether.V10.Inventory.+Aether.V10.Profile.FullExplicitDTOAndBounds",
+      "report": {
+        "path": "Saved/Automation/Rules-36c8b8cfcc824654a115f8f66293a492/index.json",
+        "bytes": 11249,
+        "sha256": "6c241d37cd9ce153e03f3e087146237a490ae0f5da9d017bee718221bd83c87f"
+      },
+      "engineLog": {
+        "path": "Saved/Automation/Rules-36c8b8cfcc824654a115f8f66293a492/Engine.log",
+        "bytes": 296575,
+        "sha256": "f9f6decc005bc2b51e0a6021f5b3b8a29b97362e1a3defcbfeeafc14c6f3806d"
+      },
+      "utcReportCreatedOn": "2026.09.28-17.04.49",
+      "succeeded": 26,
+      "succeededWithWarnings": 0,
+      "failed": 0,
+      "notRun": 0,
+      "inProcess": 0,
+      "durationSeconds": 1.6378183364868164,
+      "tests": [
+        {
+          "name": "Aether.V10.Commands.BoundedResult",
+          "state": "Success",
+          "durationSeconds": 0.011639300733804703,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Commands.CanonicalWire",
+          "state": "Success",
+          "durationSeconds": 0.014915302395820618,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Commands.ContainerCoordinatorAuthorizationAndCompetition",
+          "state": "Success",
+          "durationSeconds": 0.6506842970848083,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Commands.DurableV2ReceiptAndCrossVersionConflict",
+          "state": "Success",
+          "durationSeconds": 0.06326869875192642,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Commands.ProfileCandidateAuthorityAndFailure",
+          "state": "Success",
+          "durationSeconds": 0.014944199472665787,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Commands.ProfileCommitReplayAndEpoch",
+          "state": "Success",
+          "durationSeconds": 0.42987409234046936,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Commands.UntrustedShape",
+          "state": "Success",
+          "durationSeconds": 0.015081100165843964,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Commands.V2InteractionRevisionAndV1WireCompatibility",
+          "state": "Success",
+          "durationSeconds": 0.014926701784133911,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Consumables.AsyncDeliveryAndEpoch",
+          "state": "Success",
+          "durationSeconds": 0.15477339923381805,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Consumables.AuthorityAndVersionedEffect",
+          "state": "Success",
+          "durationSeconds": 0.015323098748922348,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Consumables.RollbackLostReplyAndRespawn",
+          "state": "Success",
+          "durationSeconds": 0.03075850009918213,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Inventory.AtomicCrossContainerIdentity",
+          "state": "Success",
+          "durationSeconds": 0.014992799609899521,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Inventory.DefinitionValidation",
+          "state": "Success",
+          "durationSeconds": 0.014972701668739319,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Inventory.FixedGridIdentityAndAtomicity",
+          "state": "Success",
+          "durationSeconds": 0.015774201601743698,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Inventory.StackKeyAndRemovalPolicy",
+          "state": "Success",
+          "durationSeconds": 0.015004999935626984,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Inventory.TenSlotsFullBagAndDurability",
+          "state": "Success",
+          "durationSeconds": 0.014993701130151749,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Inventory.VersionedBinarySnapshot",
+          "state": "Success",
+          "durationSeconds": 0.00830410048365593,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Profile.FullExplicitDTOAndBounds",
+          "state": "Success",
+          "durationSeconds": 0.018671099096536636,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Skills.DependencyResetAndPointInvariants",
+          "state": "Success",
+          "durationSeconds": 0.015060897916555405,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Skills.ExplicitDTOAndCorruptionRejection",
+          "state": "Success",
+          "durationSeconds": 0.01494859904050827,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Skills.GASStableIdentityAndRankExecution",
+          "state": "Success",
+          "durationSeconds": 0.018549799919128418,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Skills.IndependentGrantSourcesAndHotbar",
+          "state": "Success",
+          "durationSeconds": 0.001612100750207901,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Skills.LegacyMasksPreserveStoryWithoutRefund",
+          "state": "Success",
+          "durationSeconds": 0.015192501246929169,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Skills.PointLedgerLearningAndHistoricalRefund",
+          "state": "Success",
+          "durationSeconds": 0.015354696661233902,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Skills.RankDefinitionsAndPrerequisiteValidation",
+          "state": "Success",
+          "durationSeconds": 0.015168700367212296,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        },
+        {
+          "name": "Aether.V10.Skills.UpgradedWaterConservationAndRejectedInjection",
+          "state": "Success",
+          "durationSeconds": 0.023028802126646042,
+          "warnings": 0,
+          "errors": 0,
+          "messages": []
+        }
+      ]
+    }
+  ],
+  "menu": {
+    "state": "passed",
+    "command": "Scripts/Validate/TestMenuInteraction.ps1 -ClosureLight",
+    "log": {
+      "path": "Saved/Logs/AetherV10Menu_d224c80ee63f.log",
+      "bytes": 237220,
+      "sha256": "7e4ca4cf34a3ebff4474c4d0cbe723d05c561c575eccd0473e2c1b777e097d7a"
+    },
+    "markers": [
+      "[2026.09.28-17.05.32:092][ 83]LogTemp: Display: V10_MENU_CHECK PASS stage=1 Enhanced I opens visible inventory without pausing world",
+      "[2026.09.28-17.05.32:926][103]LogTemp: Display: V10_MENU_CHECK PASS stage=2 Idle inventory does not rebuild snapshot every frame",
+      "[2026.09.28-17.05.32:926][103]LogTemp: Display: V10_MENU_CHECK PASS stage=2 Native durable profile and owner snapshot agree",
+      "[2026.09.28-17.05.32:926][103]LogTemp: Display: V10_MENU_CHECK PASS stage=2 Formal authored Designer widget is active",
+      "[2026.09.28-17.05.32:931][103]LogTemp: Display: V10_MENU_CHECK PASS stage=2 Focused button forwards journal shortcut through Slate",
+      "[2026.09.28-17.05.33:765][123]LogTemp: Display: V10_MENU_CHECK PASS stage=3 Focused J switches page",
+      "[2026.09.28-17.05.33:766][123]LogTemp: Display: V10_MENU_CHECK PASS stage=3 Focused Escape is handled",
+      "[2026.09.28-17.05.34:600][144]LogTemp: Display: V10_MENU_CHECK PASS stage=4 Escape closes current page and restores game input",
+      "[2026.09.28-17.05.35:418][165]LogTemp: Display: V10_MENU_CHECK PASS stage=5 Collapsed widget reopens from menu event",
+      "[2026.09.28-17.05.35:419][165]LogTemp: Display: V10_MENU_CHECK PASS stage=5 Same focused shortcut closes page",
+      "[2026.09.28-17.05.36:250][186]LogTemp: Display: V10_MENU_CHECK PASS stage=6 Repeated same shortcut closes",
+      "[2026.09.28-17.05.37:051][206]LogTemp: Display: V10_MENU_CHECK PASS stage=7 Escape from gameplay opens system page",
+      "[2026.09.28-17.05.37:052][206]LogTemp: Display: V10_MENU_CHECK PASS stage=7 Focused map shortcut accepted",
+      "[2026.09.28-17.05.37:885][227]LogTemp: Display: V10_MENU_CHECK PASS stage=8 Formal map shares menu input ownership",
+      "[2026.09.28-17.05.37:885][227]LogTemp: Display: V10_MENU_CHECK PASS stage=8 Map blocks local jump and sprint",
+      "[2026.09.28-17.05.38:708][248]LogTemp: Display: V10_MENU_CHECK PASS stage=9 Map Escape restores game input",
+      "[2026.09.28-17.05.39:528][269]LogTemp: Display: V10_MENU_CHECK PASS stage=10 Unpossess collapses UI and unsubscribes old Pawn and PlayerState",
+      "[2026.09.28-17.05.41:158][310]LogTemp: Display: V10_MENU_CHECK PASS stage=12 Replacement Pawn binds fresh UI context and can reopen inventory",
+      "[2026.09.28-17.05.48:517][493]LogTemp: Display: V10_MENU_CHECK PASS stage=21 Gamepad View opens inventory through Enhanced Input",
+      "[2026.09.28-17.05.48:521][493]LogTemp: Display: V10_MENU_CHECK PASS stage=21 Gamepad shoulder handled by focused menu",
+      "[2026.09.28-17.05.49:351][514]LogTemp: Display: V10_MENU_CHECK PASS stage=22 Gamepad shoulder cycles actual six pages",
+      "[2026.09.28-17.05.49:351][514]LogTemp: Display: V10_MENU_CHECK PASS stage=22 Gamepad next page",
+      "[2026.09.28-17.05.50:180][535]LogTemp: Display: V10_MENU_CHECK PASS stage=23 Gamepad shoulder cycles actual six pages",
+      "[2026.09.28-17.05.50:181][535]LogTemp: Display: V10_MENU_CHECK PASS stage=23 Gamepad next page",
+      "[2026.09.28-17.05.51:021][556]LogTemp: Display: V10_MENU_CHECK PASS stage=24 Gamepad shoulder cycles actual six pages",
+      "[2026.09.28-17.05.51:021][556]LogTemp: Display: V10_MENU_CHECK PASS stage=24 Gamepad next page",
+      "[2026.09.28-17.05.51:837][577]LogTemp: Display: V10_MENU_CHECK PASS stage=25 Gamepad shoulder cycles actual six pages",
+      "[2026.09.28-17.05.51:837][577]LogTemp: Display: V10_MENU_CHECK PASS stage=25 Gamepad next page",
+      "[2026.09.28-17.05.52:676][598]LogTemp: Display: V10_MENU_CHECK PASS stage=26 Gamepad shoulder cycles actual six pages",
+      "[2026.09.28-17.05.52:691][598]LogTemp: Display: V10_MENU_CHECK PASS stage=26 Gamepad next page",
+      "[2026.09.28-17.05.53:497][619]LogTemp: Display: V10_MENU_CHECK PASS stage=27 Gamepad page cycle wraps to inventory",
+      "[2026.09.28-17.05.53:500][619]LogTemp: Display: V10_MENU_CHECK PASS stage=27 Gamepad previous page",
+      "[2026.09.28-17.05.54:332][640]LogTemp: Display: V10_MENU_CHECK PASS stage=28 Gamepad reverse page cycle wraps to system",
+      "[2026.09.28-17.05.54:332][640]LogTemp: Display: V10_MENU_CHECK PASS stage=28 Gamepad back closes system",
+      "[2026.09.28-17.05.55:148][661]LogTemp: Display: V10_MENU_CHECK PASS stage=29 Gamepad back restores game input",
+      "[2026.09.28-17.05.55:952][681]LogTemp: Display: V10_MENU_CHECK PASS stage=30 Gamepad Menu opens system through Enhanced Input",
+      "[2026.09.28-17.05.55:952][681]LogTemp: Display: V10_MENU_CHECK PASS stage=30 Gamepad Menu return",
+      "[2026.09.28-17.05.57:133][711]LogTemp: Display: CLOSURE_LIGHT_PASS step=1 LB modifier has no crouch side effect",
+      "[2026.09.28-17.05.57:493][720]LogTemp: Display: CLOSURE_LIGHT_PASS step=2 LB+DPad does not select base skill or crouch",
+      "[2026.09.28-17.05.57:884][730]LogTemp: Display: CLOSURE_LIGHT_PASS step=3 LB+B crouches without dodge cost",
+      "[2026.09.28-17.05.58:670][750]LogTemp: Display: CLOSURE_LIGHT_PASS step=5 Second LB+B safely stands",
+      "[2026.09.28-17.05.59:418][769]LogTemp: Display: CLOSURE_LIGHT_PASS step=7 B without LB remains dodge",
+      "[2026.09.28-17.06.00:171][788]LogTemp: Display: CLOSURE_LIGHT_PASS step=9 Production inventory search and grid available",
+      "[2026.09.28-17.06.00:171][788]LogTemp: Display: CLOSURE_LIGHT_PASS step=9 Inventory cell owns focus before filtering",
+      "[2026.09.28-17.06.00:522][797]LogTemp: Display: CLOSURE_LIGHT_PASS step=9 Production inventory search and grid available",
+      "[2026.09.28-17.06.00:523][797]LogTemp: Display: CLOSURE_LIGHT_PASS step=9 Filtering every slot restores search focus",
+      "[2026.09.28-17.06.01:256][815]LogTemp: Display: CLOSURE_LIGHT_PASS step=11 Downed layer owns focus during server wait",
+      "[2026.09.28-17.06.01:620][823]LogTemp: Display: CLOSURE_LIGHT_PASS step=12 Early recovery input cannot bypass server wait",
+      "[2026.09.28-17.06.01:620][823]LogTemp: Display: CLOSURE_LIGHT_PASS step=12 Escape and gamepad B cannot dismiss downed layer",
+      "[2026.09.28-17.06.03:922][881]LogTemp: Display: CLOSURE_LIGHT_PASS step=13 Gamepad Y reaches recovery through Slate",
+      "[2026.09.28-17.06.04:278][890]LogTemp: Display: CLOSURE_LIGHT_PASS step=14 Recovery replaces pawn and restores game input exactly once",
+      "[2026.09.28-17.06.04:672][900]LogTemp: Display: CLOSURE_LIGHT_PASS step=15 Late old-layer confirmation cannot affect new pawn",
+      "[2026.09.28-17.06.05:066][910]LogTemp: Display: CLOSURE_LIGHT_PASS step=16 Second downed life opens a fresh layer",
+      "[2026.09.28-17.06.05:416][919]LogTemp: Display: CLOSURE_LIGHT_PASS step=17 Rescue state closes layer without respawning",
+      "[2026.09.28-17.06.05:777][928]LogTemp: Display: CLOSURE_LIGHT_PASS step=18 Stale rescue confirmation is ignored",
+      "[2026.09.28-17.06.05:777][928]LogTemp: Display: V10_MENU_INTERACTION_PASS closure=1 cycles=0 native=1"
+    ],
+    "resolution": "1280x720",
+    "screenshots": [
+      {
+        "path": "Saved/Automation/AetherV10Menu_d224c80ee63f/Inventory.png",
+        "bytes": 370865,
+        "sha256": "24c9545a6ee4d0d6eb2ab32ab34ebd082460056642c6fa95e01eccee8e344c98"
+      },
+      {
+        "path": "Saved/Automation/AetherV10Menu_d224c80ee63f/Journal.png",
+        "bytes": 367535,
+        "sha256": "18ddafac52aca5b186d3f6e5d44d86178b979df78eac020ce83411d97978a368"
+      },
+      {
+        "path": "Saved/Automation/AetherV10Menu_d224c80ee63f/Map.png",
+        "bytes": 223076,
+        "sha256": "fdf884dfebb5599158b6e3bc2fc9aa9b90ff8cef9e627921677053801317d685"
+      },
+      {
+        "path": "Saved/Automation/AetherV10Menu_d224c80ee63f/NewPawn.png",
+        "bytes": 323009,
+        "sha256": "840691e51174b8cacd5b0e7d6a0f931bcedc6ec3060ee35643f7e015630ecc52"
+      },
+      {
+        "path": "Saved/Automation/AetherV10Menu_d224c80ee63f/Skills.png",
+        "bytes": 237473,
+        "sha256": "ab131b061c18327acbdd258e1aaa847e0d65d57cb1677a8fdf1c715a7c119237"
+      },
+      {
+        "path": "Saved/Automation/AetherV10Menu_d224c80ee63f/Party.png",
+        "bytes": 298594,
+        "sha256": "b3ac3150fe0c686309b92b83947f0b7968d31f7b28c77d67647850179f7ec5bd"
+      },
+      {
+        "path": "Saved/Automation/AetherV10Menu_d224c80ee63f/Settings.png",
+        "bytes": 296892,
+        "sha256": "0dd53b6550e577a38997ecbf5cb33230312590a0b101ec2bfb7ac1d5d355d600"
+      },
+      {
+        "path": "Saved/Automation/AetherV10Menu_d224c80ee63f/ClosureDowned.png",
+        "bytes": 696657,
+        "sha256": "7601484751e4bc13ec1a0b92e344c499513e2f99f48253899162a058d157d1f6"
+      }
+    ],
+    "visuallyInspected": [
+      "Inventory",
+      "Skills"
+    ],
+    "scope": "Automated formal-menu input routes with temporary isolated profile; not full human controller journey."
+  },
+  "content": {
+    "state": "passed",
+    "command": "Scripts/Validate/ValidateContent.ps1",
+    "log": {
+      "path": "Saved/Automation/Content-3bf3f7f92c0c43e19f7b5d4c2fd120c1/Content.log",
+      "bytes": 230466,
+      "sha256": "23add48ad43db64fc06b79fcad11ab1147b8c477644ae323659e5dd28b2c118d"
+    },
+    "marker": "V10_CONTENT_RESULT errors=0"
+  },
+  "matrix": [
+    {
+      "id": "T01",
+      "status": "partial",
+      "scope": "库存规则覆盖守恒、StackKey 和身份；未执行完整连续玩家输入组合。"
+    },
+    {
+      "id": "T02",
+      "status": "partial",
+      "scope": "跨容器原子性与落点规则通过；未穷举预览弹窗输入组合。"
+    },
+    {
+      "id": "T03",
+      "status": "partial",
+      "scope": "容器协调器授权与竞争规则通过；未运行两名网络玩家。"
+    },
+    {
+      "id": "T04",
+      "status": "partial",
+      "scope": "十装备槽与满包规则通过；未执行完整正式界面序列。"
+    },
+    {
+      "id": "T05",
+      "status": "partial",
+      "scope": "旧耐久规则通过，新损坏定义验证通过；新策略完整实战破损/修复未采样。"
+    },
+    {
+      "id": "T06",
+      "status": "partial",
+      "scope": "库存移除政策规则通过；未穷举全部权限组合。"
+    },
+    {
+      "id": "T07",
+      "status": "partial",
+      "scope": "旧资源消耗品恢复及新 Buff 编码/去重通过；新 Buff 药剂断线时序未运行。"
+    },
+    {
+      "id": "T08",
+      "status": "partial",
+      "scope": "旧规范编码/回执兼容和 v5 解绑往返、v4 新类型拒绝通过；非全部历史报文集合。"
+    },
+    {
+      "id": "T09",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T10",
+      "status": "partial",
+      "scope": "短菜单模拟手柄翻页、背包无结果焦点通过；非完整纯手柄人工可达性验收。"
+    },
+    {
+      "id": "T11",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T12",
+      "status": "partial",
+      "scope": "菜单换 Pawn 和旧倒地层输入隔离通过；不含待提交网络命令的全部交错。"
+    },
+    {
+      "id": "T13",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T14",
+      "status": "partial",
+      "scope": "相同技能投影重绑定100次仅一个属性GE；未完整覆盖装备/Pawn交错来源数量。"
+    },
+    {
+      "id": "T15",
+      "status": "passed",
+      "evidence": "Aether.Systems.Runtime.BuffProjectionCapsTagsAndDeath",
+      "scope": "60/100→60/120，110/120→100/100；未制造补血。"
+    },
+    {
+      "id": "T16",
+      "status": "partial",
+      "scope": "合法负修饰、非法持续资源与现有定义边界检查通过；未穷举新属性所有NaN/Inf路径。"
+    },
+    {
+      "id": "T17",
+      "status": "partial",
+      "scope": "独立技能来源取高与快捷位规则通过；新Buff详情被压制来源未作完整玩家流程。"
+    },
+    {
+      "id": "T18",
+      "status": "partial",
+      "scope": "依赖、点数、历史退款、损坏DTO规则通过；未执行全部配置变更组合。"
+    },
+    {
+      "id": "T19",
+      "status": "partial",
+      "scope": "新解绑协议及旧快捷位身份规则通过；未执行解绑持久化的完整手柄流程。"
+    },
+    {
+      "id": "T20",
+      "status": "partial",
+      "scope": "1800/1900/2000 cm 大帧路径截短及销毁通过；未放置边界内外实际目标。"
+    },
+    {
+      "id": "T21",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T22",
+      "status": "partial",
+      "scope": "扣费委托同步取消，不产生弹体且退款一次；移除授予/替换Avatar分支未单独测试。"
+    },
+    {
+      "id": "T23",
+      "status": "partial",
+      "scope": "既有GAS身份与等级执行规则通过；新冷却的完整换槽/卸装/重连未运行。"
+    },
+    {
+      "id": "T24",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T25",
+      "status": "partial",
+      "scope": "纯状态刷新保持实例和期限规则通过；旅舍300秒自然到期未实际等待。"
+    },
+    {
+      "id": "T26",
+      "status": "partial",
+      "scope": "纯状态移除单来源保留另一来源通过；完整外部来源销毁未运行。"
+    },
+    {
+      "id": "T27",
+      "status": "partial",
+      "scope": "弱来源保留、强来源先到期后恢复通过；等优先级和弱先过期未全部枚举。"
+    },
+    {
+      "id": "T28",
+      "status": "partial",
+      "scope": "三种溢出策略、层上限与Delivery去重通过；没有网络重放流程。"
+    },
+    {
+      "id": "T29",
+      "status": "partial",
+      "scope": "30/60/120 FPS恢复、严格到期、大帧补结算通过；伤害周期及刷新同刻未穷举。"
+    },
+    {
+      "id": "T30",
+      "status": "partial",
+      "scope": "净化、免疫与沉默动作策略及GAS镜像通过；未执行同刻网络输入竞态。"
+    },
+    {
+      "id": "T31",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T32",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T33",
+      "status": "partial",
+      "scope": "2秒30/60/120 FPS恢复区间合并与240热伤害子步有界排空通过；未包含长等待全部跨系统事件。"
+    },
+    {
+      "id": "T34",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T35",
+      "status": "partial",
+      "scope": "Buff实例和自有GAS标签在死亡后清理通过，旧资源投递/换Pawn回归通过；全部周期、救援和重连组合未运行。"
+    },
+    {
+      "id": "T36",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T37",
+      "status": "partial",
+      "scope": "纯策略沉默/存储屏障和运行时沉默镜像通过；未穷举所有动作与姿态。"
+    },
+    {
+      "id": "T38",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T39",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T40",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T41",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T42",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T43",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T44",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T45",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T46",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    },
+    {
+      "id": "T47",
+      "status": "partial",
+      "scope": "正式菜单键鼠/模拟手柄及倒地恢复短流程通过；非新档全旅程或真人手柄通关。"
+    },
+    {
+      "id": "T48",
+      "status": "not_run",
+      "scope": "本轮无足以关闭该场景的证据；不引用历史结果。"
+    }
+  ],
+  "modelAndNativeQuality": {
+    "status": "not_sampled",
+    "modelFingerprints": [],
+    "note": "No model inference/quality acceptance is claimed. Existing fallback paths and UE placeholder assets reused."
+  },
+  "excludedValidation": [
+    "Four-player and weak-network matrix",
+    "Long-duration resource/performance observation",
+    "Motion contact/model quality",
+    "Full Cook",
+    "Shipping client and target dedicated-server packaged execution"
+  ],
+  "repositoryPolicy": "Raw logs, Saved, Intermediate, Binaries, personal saves and configuration credentials are not committed. Only normalized evidence and selected screenshots are archived."
+}
