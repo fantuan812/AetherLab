@@ -6,7 +6,7 @@
 enum class EAetherAggregateKind : uint8 { Profile, World, Container, Migration };
 enum class EAetherStoreCode : uint8
 {
-    Ready, Found, Missing, Committed, Replayed, Conflict, Expired, Invalid, Busy, Unavailable, Corrupt, UnsupportedSchema
+    Ready, Found, Missing, Committed, Replayed, Conflict, Expired, Invalid, Busy, Unavailable, Corrupt, UnsupportedSchema, Capacity
 };
 
 struct FAetherAggregateKey

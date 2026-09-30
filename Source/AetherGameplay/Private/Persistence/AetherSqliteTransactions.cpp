@@ -74,6 +74,18 @@ FAetherStoreResult CommitTransaction(sqlite3* DB, const FAetherTransaction& T, c
         const int64 Revision=Existing.Value.IsSet()?Existing.Value->Revision:-1;
         if (Revision!=W.ExpectedRevision) { R.Code=EAetherStoreCode::Conflict; R.Detail=TEXT("Aggregate version changed"); return R; }
     }
+    // Snapshot admission alone races with independent bootstrap inserts. Recheck
+    // the complete batch while BEGIN IMMEDIATE owns the SQLite writer lock.
+    int32 NewContainers=0;
+    for(const auto& W:T.Writes)
+        if(W.Value.Key.Kind==EAetherAggregateKind::Container&&W.ExpectedRevision==-1)++NewContainers;
+    if(NewContainers)
+    {
+        FStatement Count(DB,"SELECT count(*) FROM aggregates WHERE kind=2");
+        if(Count.Step()!=SQLITE_ROW)return Failure();
+        if(Count.ColumnInt(0)+NewContainers>AetherContainerLimits::DropAdmission)
+        {R.Code=EAetherStoreCode::Capacity;R.Detail=TEXT("Container capacity reserved for bootstrap");return R;}
+    }
     if (!T.Effects.IsEmpty())
     {
         FStatement Count(DB,"SELECT count(*) FROM effects WHERE actor=?");

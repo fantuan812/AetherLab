@@ -2,7 +2,7 @@
 
 UE 5.8 C++ 开放世界灰盒。人物使用官方 Manny，场景和六种装备使用 Engine BasicShapes。旧试验台及 SwordMagic 美术已移除；旧工具与历史文档保留供追溯，不再作为当前入口。
 
-当前收尾状态见 [121242c 完整性方案实施记录](Docs/Planning/Closure-121242c-implementation.zh-CN.md) 和 [候选状态](Docs/Acceptance/Closure-status.json)。本轮新增代码未编译、未测试；等待用户运行并允许后再做简单功能测试，完整旅程、多人、动作质量和正式包门槛仍待验收。
+当前收尾状态见 [121242c 完整性方案实施记录](Docs/Planning/Closure-121242c-implementation.zh-CN.md) 和 [候选状态](Docs/Acceptance/Closure-status.json)。9月29日候选已有增量编译、34项局部规则/回归及短菜单验证，见 [系统验证记录](Docs/Acceptance/Systems-2026-09-29.zh-CN.md)；其48项广泛验收仍为1通过、28部分覆盖、19未运行，不能视作完整发布验收。本分支9月30日审查修复见 [修复范围与验证边界](Docs/Planning/Demo-audit-fixes-2026-09-30.zh-CN.md)：修复新增代码尚未在 UE 编译/运行，历史通过不覆盖新改动。
 
 ## 运行
 
@@ -30,7 +30,7 @@ UE 5.8 C++ 开放世界灰盒。人物使用官方 Manny，场景和六种装备
 
 WASD 移动，Shift 冲刺，Space 跳跃，Left Ctrl 下蹲，Left Alt 闪避；左键短按松开轻击、按住 0.35 秒后松开重击，右键格挡。1–4 选元素，鼠标中键施法，F 锁定；E 交互，G 搬运/放下，C 投掷，V 推物。Q 生命药、Z 法力药；R/T 装备。I/J/K/M/P/Esc 打开背包/任务/技能/地图/队伍/菜单。背包 Tab/Shift+Tab 或手柄左右扳机切换操作区域，肩键切换大页；确认先关闭，再返回详情、页面。游戏内重绑后的提示以当前映射为准。F5 保存、倒地后 F8 回据点；开发模式 F10 反应调试、F11 晴雨。
 
-轻量验证：`Scripts/TestLight.ps1` 仅运行 9 个小型规则测试；本轮不跑 `TestFrontierNetwork.ps1`、规模压力测试和旧模式回归。如需短启动/重启检查，运行 `Scripts/CheckFrontier.ps1`，使用独立测试存档。完整报告见 [Verification-v5.json](Docs/Verification-v5.json)。
+当前轻量规则入口为 `Scripts/Validate/TestRules.ps1`，默认包含 `Aether.Systems.`、`Aether.V10.`、`Aether.V9.` 与 `Aether.V802.`；新增修复回归须在 UE 构建后运行。`Scripts/TestLight.ps1` 是历史 v5 的9项小规则入口，不能覆盖当前 v10。规模压力和完整多人验收另行安排。如需短启动/重启检查，运行 `Scripts/CheckFrontier.ps1`，使用独立测试存档。完整报告见 [Verification-v5.json](Docs/Verification-v5.json)。
 
 v10 历史整改见 [整改记录](Docs/Planning/V10-remediation-execution.zh-CN.md) 和 [上一轮局部验证](Docs/Planning/V10-review-repair-2026-09-27.zh-CN.md)。这些记录及 v5～v9 的通过项只对应各自历史候选，不代表当前收尾改动已验收。
 
