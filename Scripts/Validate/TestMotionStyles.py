@@ -35,17 +35,17 @@ def check(name, clip, seed):
 try:
     for style, speed in [("idle", 0), ("crouch", 1.5), ("crouch_idle", 0)]:
         for seed in [10, 37, 991]:
-            check(style, native.bake(style, 6, [0, 0, 1], speed, seed), seed)
+            check(style, native.bake(style=style, seconds=6, movement=[0, 0, 1], facing=[0, 0, 1], speed=speed, seed=seed), seed)
     # 已加载模型与 DLL，不改实际 Stage：临时目录只接收新写出的风格，让往返测试独立。
     a.output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="style-roundtrip-", dir=a.output.parent) as folder:
-        idle = native.bake("idle", 2, [0, 0, 1], 0, 10)
+        idle = native.bake(style="idle", seconds=2, movement=[0, 0, 1], facing=[0, 0, 1], speed=0, seed=10)
         source = Path(folder) / "idle.json"
         atomic_json(source, idle)
         target = Path(folder) / "styles/roundtrip.mbstyle"
         make_style(source, target, "roundtrip", 0, 6, native)
         native.root = Path(folder)
-        check("idle_roundtrip", native.bake("roundtrip", 6, [0, 0, 1], 0, 10), 10)
+        check("idle_roundtrip", native.bake(style="roundtrip", seconds=6, movement=[0, 0, 1], facing=[0, 0, 1], speed=0, seed=10), 10)
     atomic_json(a.output, dict(passed=True, backend="CPU", visualQualityApproved=False, samples=rows))
     print("Real model style/roundtrip regression PASS:", a.output)
 finally:
