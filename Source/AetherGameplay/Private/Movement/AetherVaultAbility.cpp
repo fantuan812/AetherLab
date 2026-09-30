@@ -98,8 +98,9 @@ void UAetherVaultAbility::NextPhase()
     const auto* Rule=AetherControlledActions::Find(TEXT("Vault"));
     if(!Rule||!Rule->PhaseDurations.IsValidIndex(Phase)){Abort();return;}
     const float Duration=Rule->PhaseDurations[Phase];
+    // 不给待移除的旧源留下 SetVelocity 写入；只有 ReleaseMovement 仍持有模式时才主动停车。
     auto* Task=UAbilityTask_ApplyRootMotionMoveToForce::ApplyRootMotionMoveToForce(this,FName(*FString::Printf(TEXT("Aether.Vault.%d"),Phase)),
-        Path[Phase++],Duration,false,MOVE_Flying,true,nullptr,ERootMotionFinishVelocityMode::SetVelocity,FVector::ZeroVector,0);
+        Path[Phase++],Duration,false,MOVE_Flying,true,nullptr,ERootMotionFinishVelocityMode::MaintainLastRootMotionVelocity,FVector::ZeroVector,0);
     if(!Task){Abort();return;}MotionTask=Task;
     Task->OnTimedOutAndDestinationReached.AddDynamic(this,&UAetherVaultAbility::NextPhase);
     Task->OnTimedOut.AddDynamic(this,&UAetherVaultAbility::Abort);Task->ReadyForActivation();

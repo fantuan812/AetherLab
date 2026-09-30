@@ -76,10 +76,18 @@ bool FAetherVaultLifecycleTest::RunTest(const FString&)
     TestEqual(TEXT("Death never restores movable mode"),Downed->GetCharacterMovement()->MovementMode.GetValue(),MOVE_None);
 
     auto* ExternalAbility=Start(External);if(!ExternalAbility)return false;
-    External->GetCharacterMovement()->SetMovementMode(MOVE_Swimming);CheckEnded(External,ExternalAbility);
-    TestEqual(TEXT("External mode is not overwritten"),External->GetCharacterMovement()->MovementMode.GetValue(),MOVE_Swimming);
-    External->GetCharacterMovement()->SetMovementMode(MOVE_Flying);ExternalAbility->Abort();
-    TestEqual(TEXT("Later external flying is not owned by ended vault"),External->GetCharacterMovement()->MovementMode.GetValue(),MOVE_Flying);
+    auto* ExternalMovement=External->GetCharacterMovement();
+    // Move the pending production source into the active group, then exercise only its real cleanup.
+    // A full swimming physics tick would also apply water/friction rules unrelated to ownership.
+    ExternalMovement->CurrentRootMotion.PrepareRootMotion(.01f,*External,*ExternalMovement,true);
+    ExternalMovement->SetMovementMode(MOVE_Swimming);CheckEnded(External,ExternalAbility);
+    TestEqual(TEXT("External mode is not overwritten"),ExternalMovement->MovementMode.GetValue(),MOVE_Swimming);
+    const FVector ExternalVelocity(150,40,-25);ExternalMovement->Velocity=ExternalVelocity;
+    ExternalMovement->CurrentRootMotion.CleanUpInvalidRootMotion(.01f,*External,*ExternalMovement);
+    TestTrue(TEXT("Deferred vault source cleanup preserves new owner's velocity"),ExternalMovement->Velocity.Equals(ExternalVelocity));
+    TestFalse(TEXT("Movement cleanup consumes removed vault source"),ExternalMovement->GetRootMotionSource(TEXT("Aether.Vault.0")).IsValid());
+    ExternalMovement->SetMovementMode(MOVE_Flying);ExternalAbility->Abort();
+    TestEqual(TEXT("Later external flying is not owned by ended vault"),ExternalMovement->MovementMode.GetValue(),MOVE_Flying);
 
     auto* SwappedAbility=Start(Swapped);if(!SwappedAbility)return false;
     auto* System=Swapped->AbilitySystem.Get();auto* Replacement=MakeCharacter(650);
