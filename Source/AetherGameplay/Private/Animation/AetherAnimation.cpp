@@ -63,7 +63,11 @@ void UAetherAnimInstance::NativeUpdateAnimation(float Dt)
 void UAetherAnimInstance::UpdateLocomotion(const FAetherAnimationSnapshot& Frame,float Dt)
 {
  const float Now=Frame.Time;const bool Falling=Frame.bFalling;
- if(WasFalling&&!Falling){LandingId=LastVerticalSpeed<-700?TEXT("LandHeavy"):TEXT("Land");LandUntil=Now+(LastVerticalSpeed<-700?.45f:.18f);}
+ if(WasFalling&&!Falling)
+ {
+  LandingId=LastVerticalSpeed<-700?TEXT("LandHeavy"):TEXT("Land");LandStarted=Now;
+  const auto* Rule=AetherControlledActions::Find(LandingId);LandUntil=Now+(Rule?Rule->Duration:0);
+ }
  LastVerticalSpeed=Frame.Velocity.Z;WasFalling=Falling;
  if(WasAlive&&!Frame.bAlive)DownedAt=Now;
  if(!WasAlive&&Frame.bAlive)RevivedAt=Now;

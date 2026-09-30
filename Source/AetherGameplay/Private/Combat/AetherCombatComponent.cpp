@@ -104,7 +104,7 @@ float UAetherCombatComponent::ApplyDamage(float Amount,const FDamageEvent& Event
     }
     LastDamager=Causer;++DamageReceivedCount;LastDamageAt=Defense.Time;
     if(Applied>0&&C->CastExecutionId.IsValid())C->CancelActions();
-    if(Applied>0&&C->Alive())C->PresentAction(TEXT("Hit"),.35f);
+    if(Applied>0&&C->Alive())C->PresentAction(TEXT("Hit"));
     if(!C->Alive()){C->CancelActions();C->bBlocking=C->bWindingUp=false;C->GetCharacterMovement()->StopMovementImmediately();}
     return Applied;
 }

@@ -31,7 +31,7 @@
 #include "Misc/Parse.h"
 #include "HAL/PlatformMisc.h"
 #include "ReactiveWorldSubsystem.h"
-#include "Combat/AetherActionTiming.h"
+#include "Combat/AetherControlledActionDefinition.h"
 #include "Characters/AetherCompanionComponent.h"
 #include "Combat/AetherDerivedStats.h"
 
@@ -142,7 +142,7 @@ void AAetherFrontierCharacter::Yaw(float V){if(!bPanel)AddControllerYawInput(V*G
 void AAetherFrontierCharacter::Pitch(float V){const auto* P=GetDefault<UAetherPlayerPreferences>();if(!bPanel)AddControllerPitchInput((P->bInvertLook?V:-V)*P->MouseSensitivity);}
 void AAetherFrontierCharacter::PressAttack()
 {
-    if(bAttackHeld||bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget||AttackInputSequence==MAX_uint32)return;
+    if(!FAetherControlledActionCatalog::Get().bValid||bAttackHeld||bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget||AttackInputSequence==MAX_uint32)return;
     ++AttackInputSequence;
     bBufferedAttack=false; // 新按下替换上一条尚未提交的短缓冲。
     bAttackHeld=true;bAttackCharged=false;PressedAt=GetWorld()->GetTimeSeconds();
@@ -151,16 +151,16 @@ void AAetherFrontierCharacter::PressAttack()
 }
 void AAetherFrontierCharacter::ReleaseAttack()
 {
-    const bool Attack=bAttackHeld,Heavy=GetWorld()->GetTimeSeconds()-PressedAt>=AetherActionTiming::AttackCharge;
+    const bool Attack=bAttackHeld,Heavy=GetWorld()->GetTimeSeconds()-PressedAt>=FAetherControlledActionCatalog::Get().AttackCharge;
     bAttackHeld=false;bAttackCharged=false;
-    if(!Attack||bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget){CancelAttackInput();return;}
+    if(!FAetherControlledActionCatalog::Get().bValid||!Attack||bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget){CancelAttackInput();return;}
     UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_RELEASED input=%u synchronized_time=%.3f heavy=%d"),AttackInputSequence,CombatTime(),Heavy);
     if(Ready()){bBufferedAttack=false;ServerMeleeInput(Heavy,AttackInputSequence);}
-    else {bBufferedAttack=true;bBufferedHeavy=Heavy;BufferedAttackSequence=AttackInputSequence;BufferedAttackUntil=CombatTime()+AetherActionTiming::AttackBuffer;}
+    else {bBufferedAttack=true;bBufferedHeavy=Heavy;BufferedAttackSequence=AttackInputSequence;BufferedAttackUntil=CombatTime()+FAetherControlledActionCatalog::Get().AttackBuffer;}
 }
 void AAetherFrontierCharacter::ServerMeleeInput_Implementation(bool Heavy,uint32 Sequence)
 {
-    if(!Sequence||Sequence<=LastAttackInputSequence)return;LastAttackInputSequence=Sequence;
+    if(!FAetherControlledActionCatalog::Get().bValid||!Sequence||Sequence<=LastAttackInputSequence)return;LastAttackInputSequence=Sequence;
     if(!RequestMelee(Heavy?TEXT("Heavy"):TEXT("Light")))return;
     Equipment->Attack.InputSequence=Sequence;ForceNetUpdate();
     UE_LOG(LogTemp,Verbose,TEXT("AETHER_ATTACK_ACCEPTED input=%u attack=%u server_time=%.3f"),Sequence,Equipment->Attack.Serial,CombatTime());
@@ -315,7 +315,7 @@ void AAetherFrontierCharacter::Tick(float Dt)
     if(bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget)CancelAttackInput();
     if(IsLocallyControlled())
     {
-        if(bAttackHeld&&!bAttackCharged&&GetWorld()->GetTimeSeconds()-PressedAt>=AetherActionTiming::AttackCharge)
+        if(bAttackHeld&&!bAttackCharged&&GetWorld()->GetTimeSeconds()-PressedAt>=FAetherControlledActionCatalog::Get().AttackCharge)
         {bAttackCharged=true;Feedback=TEXT("重击就绪 · 松开执行");OnPresentationChanged.Broadcast();}
         if(bBufferedAttack)
         {

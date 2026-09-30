@@ -56,11 +56,12 @@ int32 UAetherValidateV10ContentCommandlet::Main(const FString&)
         Check(BP&&BP->Status!=BS_Error&&Connected,FString(Path)+TEXT(" connected native pose output"));
     }
     auto* Actions=LoadObject<UAetherActionSet>(nullptr,TEXT("/Game/Animation/Controlled/DA_Actions.DA_Actions"));
-    Check(Actions!=nullptr,TEXT("Controlled action set"));
-    if(Actions)for(const TCHAR* Name:{TEXT("Death"),TEXT("GetUp"),TEXT("Stun"),TEXT("Hit"),TEXT("Land"),TEXT("LandHeavy"),TEXT("CrouchIdle"),TEXT("CrouchWalk"),TEXT("CrouchBack"),TEXT("CrouchLeft"),TEXT("CrouchRight"),TEXT("CarryIdle"),TEXT("CarryWalk"),TEXT("Pickup"),TEXT("PutDown"),TEXT("Throw"),TEXT("Rescue"),TEXT("Vault"),TEXT("Cast"),TEXT("Guard"),TEXT("DodgeForward"),TEXT("DodgeBack"),TEXT("DodgeLeft"),TEXT("DodgeRight")})
+    Check(Actions&&Actions->bDefinitionValid,TEXT("Controlled action set canonical timing/skeleton contract"));
+    if(Actions)for(const auto& Rule:AetherControlledActions::All())
     {
-        const auto* Clip=Actions->Clips.Find(Name);
-        Check(Clip&&Clip->Get()&&(*Clip)->GetSkeleton()&&(*Clip)->GetPlayLength()>0,FString(TEXT("Controlled clip: "))+Name);
+        const auto* Clip=Actions->Clips.Find(Rule.ActionId);
+        Check(Clip&&Clip->Get()&&(*Clip)->GetSkeleton()&&FMath::IsNearlyEqual((*Clip)->GetPlayLength(),Rule.Duration,.04f),
+            FString(TEXT("Controlled clip: "))+Rule.ActionId.ToString());
     }
     for(const TCHAR* Body:{TEXT("Manny"),TEXT("Quinn")})
     {

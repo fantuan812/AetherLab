@@ -66,7 +66,7 @@ bool UAetherWorldActionComponent::Begin(FName Action,AAetherFrontierProp* Select
     const float Speed=FMath::Clamp(C->BuffRuntime->ActionSpeedMultiplier,.1f,3.f);
     CommitAt=StartedAt+Definition->CommitTime/Speed;EndsAt=StartedAt+Definition->Duration/Speed;
     CommittedImpulse=Definition->Impulse;
-    C->PresentAction(RuleId,Definition->Duration/Speed);OwnedPresentationSerial=C->PresentedAction.Serial;ExecutionId=FGuid::NewGuid();
+    C->PresentAction(RuleId,Speed);OwnedPresentationSerial=C->PresentedAction.Serial;ExecutionId=FGuid::NewGuid();
     CommittedDirection=(Phase==EAetherWorldActionPhase::Push?C->GetActorForwardVector():C->GetControlRotation().Vector()).GetSafeNormal();
     ++ActionSerial;UE_LOG(LogTemp,Verbose,TEXT("AETHER_ACTION_STARTED serial=%u action=%s"),ActionSerial,*Action.ToString());
     C->SetSprintInput(false);C->GetCharacterMovement()->StopMovementImmediately();C->ForceNetUpdate();return true;

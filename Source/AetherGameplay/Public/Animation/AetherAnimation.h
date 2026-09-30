@@ -53,7 +53,7 @@ private:
  FName ControlledActionId;
  UPROPERTY(Transient) TObjectPtr<UAnimMontage> AttackMontage;
  uint32 LastAttack=0;
- float LandUntil=0,TraceAt=0;
+ float LandStarted=0,LandUntil=0,TraceAt=0;
  bool WasFalling=false,bFeetValid=false,WasAlive=true;
  float LastVerticalSpeed=0,RevivedAt=-100,DownedAt=0;
  FName LandingId=TEXT("Land");

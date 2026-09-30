@@ -132,7 +132,8 @@ void UAetherDodgeAbility::StartMotion(const FVector& Direction)
     const FVector Local=C->GetActorTransform().InverseTransformVectorNoScale(Direction);
     const FName Action=FMath::Abs(Local.X)>=FMath::Abs(Local.Y)?(Local.X>=0?TEXT("DodgeForward"):TEXT("DodgeBack")):(Local.Y>=0?TEXT("DodgeRight"):TEXT("DodgeLeft"));
     const auto* Rule=AetherControlledActions::Find(Action);
-    if(!Rule||!Rule->IsValid()){EndAbility(H,Info,Activation,true,true);return;}
+    if(!Rule||!Rule->IsValid()||!(Rule->AllowedStances&(C->IsCrouched()?2:1)))
+    {EndAbility(H,Info,Activation,true,true);return;}
     bMotionStarted=true;
     // 提交只发生一次，预测失败由 GAS 回滚成本。服务器拒绝时能力取消同时移除根运动。
     if(!CommitAbility(H,Info,Activation)||!IsActive()||!ActiveCharacter.IsValid()||
@@ -146,7 +147,7 @@ void UAetherDodgeAbility::StartMotion(const FVector& Direction)
     if(auto* Player=Cast<AAetherFrontierCharacter>(C))Player->SetSprintInput(false);
     // 本地预测与服务器使用相同的单次输入方向，不能等待下一帧加速度改变动作方向。
     // IgnoreZ 保留重力；不调用 LaunchCharacter，也不强制保持 Walking，越过边缘自然下落。
-    C->PresentAction(Action,Rule->Duration);
+    C->PresentAction(Action);
     auto* Motion=UAbilityTask_ApplyRootMotionConstantForce::ApplyRootMotionConstantForce(this,TEXT("Aether.Dodge"),
         Direction,Rule->MotionSpeed,Rule->MotionTime,false,nullptr,ERootMotionFinishVelocityMode::ClampVelocity,FVector::ZeroVector,0,true);
     Motion->ReadyForActivation();

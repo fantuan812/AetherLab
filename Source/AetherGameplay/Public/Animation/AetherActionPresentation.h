@@ -21,10 +21,8 @@ class AETHERGAMEPLAY_API UAetherActionSet : public UDataAsset
 {
     GENERATED_BODY()
 public:
-    UAetherActionSet();
     virtual void PostLoad() override;
-    bool bDefinitionValid=true;
+    bool bDefinitionValid=false;
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly) int32 DefinitionVersion=1;
-    UPROPERTY(VisibleAnywhere,BlueprintReadOnly) TMap<FName,FAetherControlledActionDefinition> Rules;
     UPROPERTY(EditAnywhere,BlueprintReadOnly) TMap<FName,TObjectPtr<UAnimSequence>> Clips;
 };
