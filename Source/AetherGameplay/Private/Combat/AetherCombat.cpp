@@ -523,28 +523,55 @@ void AAetherCharacter::Reaction(EReactiveReaction Kind, double Magnitude, FVecto
 void AAetherCharacter::ElectricalWindow(const FReactiveElectricalWindow& Window)
 {
     if(!HasAuthority()||!Alive()||Window.DurationSeconds<.001)return;
+    BuffRuntime->FlushDue();
+    const float EventTime=CombatTime();
+    const double Wetness=Reactive->State.ElectricalWetness01;
+    struct FExposureSnapshot
+    {
+        TWeakObjectPtr<AActor> Source;
+        TWeakObjectPtr<AController> Controller;
+        FAetherDefenseSnapshot Defense;
+        float Damage=0;
+    };
+    TArray<FExposureSnapshot> Exposures;
+    for(const auto& E:Window.Contributions)
+    {
+        AActor* Source=E.Source;auto* Pawn=Cast<APawn>(Source);
+        FExposureSnapshot Snapshot;Snapshot.Source=Source;
+        Snapshot.Controller=Pawn?Pawn->GetController():Source?Source->GetInstigatorController():nullptr;
+        Snapshot.Defense=CombatRuntime->CaptureDefense(Source);Snapshot.Defense.Time=EventTime;
+        Snapshot.Damage=float(E.DeliveredJ/140*(1+Wetness*.25));Exposures.Add(Snapshot);
+    }
+    const bool Strong=Window.DeliveredJ/Window.DurationSeconds>6000;
+    const TWeakObjectPtr<AAetherCharacter> Self=this;
+    // The same captured event is used immediately or after the resource barrier.
+    // Never re-enter ElectricalWindow and resample later wetness/gear/time.
+    auto Apply=[Self,Exposures=MoveTemp(Exposures),EventTime,Strong]()
+    {
+        if(!Self.IsValid()||!Self->HasAuthority())return;
+        for(const auto& E:Exposures)
+        {
+            if(!Self->Alive())break;
+            TGuardValue<TOptional<FAetherDefenseSnapshot>> Guard(Self->CombatRuntime->DeferredDefense,E.Defense);
+            FDamageEvent Damage(UAetherStormDamage::StaticClass());
+            Self->TakeDamage(E.Damage,Damage,E.Controller.Get(),E.Source.Get());
+        }
+        if(Strong&&EventTime>Self->NextShockStun&&Self->Alive())
+        {
+            Self->NextShockStun=EventTime+3;
+            // Expired historical stuns must not cancel a newly started action.
+            if(EventTime+.7f>Self->CombatTime())
+            {
+                Self->StunUntil=FMath::Max(Self->StunUntil,EventTime+.7f);
+                Self->CancelActions();Self->bBlocking=false;
+            }
+        }
+    };
     if(ResourceGate->IsBlocked())
     {
-        const TWeakObjectPtr<AAetherCharacter> Self=this;auto Copy=Window;
-        TArray<TWeakObjectPtr<AActor>> Sources;
-        for(auto& E:Copy.Contributions){Sources.Add(E.Source);E.Source=nullptr;E.Receiver=nullptr;}
-        if(ResourceGate->Defer([Self,Copy=MoveTemp(Copy),Sources=MoveTemp(Sources)]() mutable {
-            if(!Self.IsValid())return;
-            for(int32 I=0;I<Copy.Contributions.Num();++I){Copy.Contributions[I].Source=Sources[I].Get();Copy.Contributions[I].Receiver=Self.Get();}
-            Self->ElectricalWindow(Copy);
-        }))return;
+        ResourceGate->Defer(MoveTemp(Apply),EAetherEffectEventKind::Damage);return;
     }
-    for(const auto& Exposure:Window.Contributions)
-    {
-        if(!Alive())break;
-        FDamageEvent Event(UAetherStormDamage::StaticClass());AActor* Source=Exposure.Source;
-        auto* Pawn=Cast<APawn>(Source);auto* SourceController=Pawn?Pawn->GetController():Source?Source->GetInstigatorController():nullptr;
-        TakeDamage(float(Exposure.DeliveredJ/140*(1+Reactive->State.ElectricalWetness01*.25)),Event,SourceController,Source);
-    }
-    const float T=CombatTime();
-    // 300 J in the old 50 ms window is 6000 W. Sum all sources before comparing exposure power.
-    if(Window.DeliveredJ/Window.DurationSeconds>6000&&T>NextShockStun&&Alive())
-    {StunUntil=T+.7f;CancelActions();NextShockStun=T+3;bBlocking=false;}
+    Apply();
 }
 void AAetherCharacter::Pacify() { if (HasAuthority()) { bPacified = true; CancelActions(); bBlocking = bWindingUp = false; GetCharacterMovement()->StopMovementImmediately(); } }
 void AAetherCharacter::Think(float Dt)

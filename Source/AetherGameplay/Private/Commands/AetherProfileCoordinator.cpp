@@ -10,7 +10,7 @@ EAetherCommandCode Code(EAetherStoreCode C)
 {
     using E=EAetherStoreCode;using R=EAetherCommandCode;
     switch(C){case E::Expired:return R::Expired;case E::Conflict:return R::Conflict;case E::Missing:return R::Missing;
-    case E::Invalid:return R::Invalid;case E::Busy:return R::Busy;default:return R::StorageUnavailable;}
+    case E::Capacity:return R::Capacity;case E::Invalid:return R::Invalid;case E::Busy:return R::Busy;default:return R::StorageUnavailable;}
 }
 bool CharacterId(const FString& S)
 {
@@ -203,7 +203,7 @@ TArray<FAetherProfileCompletion> FAetherProfileCoordinator::Poll(const FAetherRe
             if(R.Code==EAetherStoreCode::Replayed||R.Code==EAetherStoreCode::Committed)
                 J.Certainty=EAetherCommitCertainty::Committed;
             else if(J.Stage==E::Commit&&(R.Code==EAetherStoreCode::Conflict||R.Code==EAetherStoreCode::Invalid||
-                R.Code==EAetherStoreCode::Busy||R.Code==EAetherStoreCode::Expired))
+                R.Code==EAetherStoreCode::Busy||R.Code==EAetherStoreCode::Capacity||R.Code==EAetherStoreCode::Expired))
                 J.Certainty=EAetherCommitCertainty::NotCommitted;
             if(!Impl->Current(J.Session)&&J.Certainty!=EAetherCommitCertainty::Committed){J.Result.Code=EAetherCommandCode::Unauthorized;Finish();continue;}
             if(R.Code==EAetherStoreCode::Replayed||R.Code==EAetherStoreCode::Committed)

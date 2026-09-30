@@ -1,6 +1,6 @@
 param(
  [string]$EngineRoot='C:\Program Files\Epic Games\UE_5.8',
- [string]$Filter='Aether.V10.+Aether.V9.+Aether.V802.'
+ [string]$Filter='Aether.Systems.+Aether.V10.+Aether.V9.+Aether.V802.'
 )
 $ErrorActionPreference='Stop'
 $taskRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)

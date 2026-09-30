@@ -1,4 +1,6 @@
 #include "Characters/AetherFrontierCharacter.h"
+#include "Persistence/AetherNativePersistence.h"
+#include "Engine/GameInstance.h"
 #include "Quests/AetherGuide.h"
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Interaction/AetherNearbyRegistry.h"
@@ -257,7 +259,7 @@ void AAetherFrontierCharacter::EndPlay(const EEndPlayReason::Type Reason)
 void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 Index)
 {
     if(Action=="Recover"){ServerRecover_Implementation(RecoveryLife);return;}
-    if(ResourceGate->IsBlocked())return; // 新操作可拒绝，已经接受的资源动作由屏障保留。
+    if(ResourceGate->IsBlocked()){if(Action=="Save")Notify(TEXT("保存暂忙：角色事务尚未确认，请稍后按 F5 重试。"));return;} // 新操作可拒绝，已经接受的资源动作由屏障保留。
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>(); auto* PS=ProfileState(); if(!Mode||!PS)return;
     if(bTravelPending&&Action!="Save")return;
     if(CombatTime()<NextServerAction)return;NextServerAction=CombatTime()+.12f;
@@ -269,7 +271,19 @@ void AAetherFrontierCharacter::ServerAction_Implementation(FName Action,int32 In
 #endif
         return;
     }
-    if(Action=="Save"){Notify(Mode->SaveWorld()?TEXT("World and profiles saved."):TEXT("Save deferred: world has pending reactions."));return;}
+    if(Action=="Save")
+    {
+        if(!Mode->IsNativeMode())Notify(Mode->SaveWorld()?TEXT("World and profiles saved."):TEXT("Save deferred: world has pending reactions."));
+        else if(!Mode->NativeSceneReady())Notify(TEXT("世界尚未就绪，请稍后按 F5 重试。"));
+        else if(ManualWorldSave.IsPending())Notify(TEXT("保存请求仍在确认中，请稍候。"));
+        else if(auto* Persistence=GetGameInstance()?GetGameInstance()->GetSubsystem<UAetherNativePersistence>():nullptr)
+        {
+            ManualWorldSave.Start([Persistence]{return Persistence->SaveLoadedPhysics();});
+            Notify(TEXT("正在保存世界检查点，请等待确认。"));
+        }
+        else Notify(TEXT("保存服务不可用，请稍后重试。"));
+        return;
+    }
     if(!Alive())return;
     // 客户端必须提交所见目标；旧的无目标字符串入口不能重新选择邻近对象。
     if(Action=="Interact"){Notify(TEXT("请重新选择交互目标。"));return;}
@@ -296,6 +310,7 @@ void AAetherFrontierCharacter::ReceiveEquipmentHit_Implementation(const FAetherE
 void AAetherFrontierCharacter::Tick(float Dt)
 {
     Super::Tick(Dt);
+    if(HasAuthority())if(const auto Message=ManualWorldSave.Poll();Message.IsSet())Notify(Message.GetValue());
     UpdateRecoveryState();
     if(bPanel||bTravelPending||!Alive()||CombatTime()<StunUntil||Carried||ReviveTarget)CancelAttackInput();
     if(IsLocallyControlled())

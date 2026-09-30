@@ -6,6 +6,7 @@
 #include "Quests/AetherGuide.h"
 #include "Interaction/AetherLiveTradeSession.h"
 #include "Contracts/AetherInteraction.h"
+#include "Persistence/AetherManualWorldSave.h"
 #include "AetherFrontierCharacter.generated.h"
 
 class AAetherFrontierProp;
@@ -202,6 +203,7 @@ public:
     float ClosureClientTime=0;
     int32 ClosureSeenPhase=0;
 private:
+    FAetherManualWorldSave ManualWorldSave;
     void PressAttack(); void ReleaseAttack();
     void CancelAttackInput(){bAttackHeld=false;bAttackCharged=false;bBufferedAttack=false;BufferedAttackUntil=0;}
     void SprintOn(){SetSprintInput(true);} void SprintOff(){SetSprintInput(false);}

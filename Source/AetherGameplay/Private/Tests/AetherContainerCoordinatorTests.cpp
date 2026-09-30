@@ -5,6 +5,7 @@
 #include "Profile/AetherProfileCodec.h"
 #include "World/AetherWorldCodec.h"
 #include "World/AetherContainerCodec.h"
+#include "World/AetherDropSlots.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "HAL/PlatformProcess.h"
@@ -61,13 +62,20 @@ bool FAetherContainerCoordinatorTest::RunTest(const FString&)
     Context.Container.ContainerId=TEXT("Drop.Slot0");Context.Container.TargetStableId=TEXT("Drop.Actor");Context.Container.RegionId=TEXT("Town");
     Context.Container.bAuthorized=true;Context.Container.bTargetReady=true;Context.Container.bValidDropLocation=true;
     Context.Container.bInventoryPickup=true;Context.Container.bCanWithdraw=true;Context.Container.bSafeToStore=true;Context.Container.DropLocation=FVector(100,200,300);
-    int32 Evaluations=0;
-    const FAetherResolveProfileContext Resolve=[&](const auto&,const auto&,const auto&,auto& Out){++Evaluations;Out=Context;return true;};
+    int32 Evaluations=0;FAetherDropSlots ProductionSlots;
+    const auto PublishSlot=[&](const FAetherContainerStateV10& C)
+    {ProductionSlots.Observe({C.ContainerId,C.OwnerCharacterId,C.RegionId,C.Kind,C.Location,C.bActive,C.Revision});};
+    // Use the exact slot resolver wired by ResolveNativeContext, not a fixed ID
+    // fixture that can accidentally hide a production GUID-allocation leak.
+    const FAetherResolveProfileContext Resolve=[&](const auto&,const auto& Command,const auto&,auto& Out)
+    {++Evaluations;Out=Context;if(Command.Type==EAetherCommandType::DropItem)Out.Container.ContainerId=ProductionSlots.Resolve(Command.CommandId);return true;};
     FAetherCommandResult Rejection;auto Drop=ContainerCommand(EAetherCommandType::DropItem,0,0,Original.InstanceId,4);
     Service.Submit(SessionA,Drop,Rejection);auto Done=Drain(Service,Resolve);
     if(!TestTrue(TEXT("Drop service returns three committed snapshots"),Done.Num()==1&&Done[0].Result.Code==EAetherCommandCode::Applied&&Done[0].Snapshot.IsSet()&&Done[0].WorldSnapshot.IsSet()&&Done[0].ContainerSnapshot.IsSet()))
     {DB.Store->Close();return false;}
     auto FirstDrop=Done[0].ContainerSnapshot.GetValue();const FGuid DropItem=FirstDrop.Inventory.Items[0].InstanceId;
+    PublishSlot(FirstDrop);Context.Container.ContainerId=FirstDrop.ContainerId;
+    Query.Keys.Last()={EAetherAggregateKind::Container,FirstDrop.ContainerId};
     TestTrue(TEXT("Partial drop preserves metadata and location with a new split identity"),DropItem!=Original.InstanceId&&FirstDrop.Inventory.Items[0].Quantity==4&&FirstDrop.Inventory.Items[0].SameStackKey(Original)&&FirstDrop.Location==Context.Container.DropLocation&&Done[0].Snapshot->Inventory.Find(Original.InstanceId)->Quantity==6);
     TestTrue(TEXT("All aggregate versions exposed after durable readback"),Done[0].Snapshot->Revision==1&&Done[0].WorldSnapshot->Revision==1&&FirstDrop.Revision==0);
     Context.Container.bValidDropLocation=false;auto Invalid=ContainerCommand(EAetherCommandType::DropItem,1,1,Original.InstanceId,1);
@@ -91,6 +99,7 @@ bool FAetherContainerCoordinatorTest::RunTest(const FString&)
     Service.Submit(WinningSession,WinningCommand,Rejection);Done=Drain(Service,Resolve);
     TestTrue(TEXT("Committed pickup replays even after the interaction session closes"),Done.Num()==1&&Done[0].Result.Code==EAetherCommandCode::Replayed&&Done[0].ContainerSnapshot.IsSet()&&!Done[0].ContainerSnapshot->bActive);
     TestEqual(TEXT("Replay does not reevaluate live collection permissions"),Evaluations,BeforeReplay);Context.Container.bAuthorized=true;
+    if(Done.Num()==1&&Done[0].ContainerSnapshot.IsSet())PublishSlot(Done[0].ContainerSnapshot.GetValue());
     auto Latest=DB.Store->ReadSnapshot(Query).Get();
     AetherProfileCodec::Decode(Latest.Values.FindChecked({EAetherAggregateKind::Profile,TEXT("Alice")}).Payload,Items,Skills,Rules,Alice,Reason);
     AetherProfileCodec::Decode(Latest.Values.FindChecked({EAetherAggregateKind::Profile,TEXT("Bob")}).Payload,Items,Skills,Rules,Bob,Reason);
@@ -101,6 +110,8 @@ bool FAetherContainerCoordinatorTest::RunTest(const FString&)
     Service.Submit(SessionA,Reuse,Rejection);Done=Drain(Service,Resolve);
     if(!TestTrue(TEXT("Inactive server-selected drop slot is reusable"),Done.Num()==1&&Done[0].Result.Code==EAetherCommandCode::Applied&&Done[0].ContainerSnapshot.IsSet())){DB.Store->Close();return false;}
     Alice=Done[0].Snapshot.GetValue();
+    TestEqual(TEXT("Different production command GUID reuses the picked slot"),Done[0].ContainerSnapshot->ContainerId,FirstDrop.ContainerId);
+    PublishSlot(Done[0].ContainerSnapshot.GetValue());
     TestTrue(TEXT("Reuse advances tombstone revision and keeps registry bounded"),Done[0].ContainerSnapshot->Revision==2&&Done[0].ContainerSnapshot->Inventory.Items[0].InstanceId!=DropItem&&DB.Store->ReadRevisions(EAetherAggregateKind::Container).Get().Revisions.Num()==2);
     // 在读事务等待期间目标卸载：第二次现场复验阻止发起写事务。
     auto Withdraw=ContainerCommand(EAetherCommandType::PickUpItem,Bob.Revision,3,Done[0].ContainerSnapshot->Inventory.Items[0].InstanceId,1);Withdraw.TargetStableId=TEXT("Drop.Actor");Withdraw.ExpectedContainerRevision=2;

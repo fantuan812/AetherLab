@@ -5,9 +5,11 @@
 #include "Effects/AetherBuffRuntime.h"
 #include "Inventory/AetherResourceGate.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
 #include "EngineUtils.h"
 #include "Engine/DamageEvents.h"
 #include "Misc/ScopeExit.h"
+#include "Persistence/AetherManualWorldSave.h"
 #if WITH_DEV_AUTOMATION_TESTS
 namespace
 {
@@ -114,6 +116,68 @@ bool FAetherSystemsBuffRuntimeTest::RunTest(const FString&)
     C->SetVitals(0,100,100);C->BuffRuntime->TickComponent(.1f,LEVELTICK_All,nullptr);
     TestTrue(TEXT("Death clears life effects"),C->BuffRuntime->GetState().Instances.IsEmpty());
     TestFalse(TEXT("Death removes owned GAS tag"),C->AbilitySystem->HasMatchingGameplayTag(Tag));
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherElectricalSnapshotTest,"Aether.Systems.Runtime.ElectricalWindowSnapshot",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FAetherElectricalSnapshotTest::RunTest(const FString&)
+{
+    auto* W=UWorld::CreateWorld(EWorldType::Game,false);if(!W)return false;
+    ON_SCOPE_EXIT {W->EndPlay(EEndPlayReason::Quit);W->DestroyWorld(false);};
+    GEngine->CreateNewWorldContext(EWorldType::Game).SetCurrentWorld(W);
+    ON_SCOPE_EXIT {GEngine->DestroyWorldContext(W);};
+    auto* Immediate=MakeBasic(W);auto* Queued=MakeBasic(W);auto* Gate=Queued->ResourceGate.Get();
+    TestTrue(TEXT("Establish electrical life"),Gate->BeginFullRespawn(TEXT("ElectricalFixture"))&&Gate->FinishRecovery());
+    FGuid Command=FGuid::NewGuid();FAetherResourceStateV10 Before;
+    TestTrue(TEXT("Reserve electrical resources"),Gate->Reserve(Command,Before));
+    FReactiveElectricalWindow Window;Window.DurationSeconds=.05;Window.DeliveredJ=700;
+    FReactiveElectricalExposure Exposure;Exposure.DeliveredJ=350;Exposure.Source=Immediate;Window.Contributions.Add(Exposure);
+    Exposure.Source=Queued;Window.Contributions.Add(Exposure);
+    Immediate->Reactive->State.ElectricalWetness01=Queued->Reactive->State.ElectricalWetness01=.8;
+    W->SetBegunPlay(true);W->Tick(LEVELTICK_TimeOnly,.1f);
+    const float FirstTime=Queued->CombatTime();
+    TestTrue(TEXT("World fixture advances the actual combat clock"),FirstTime>0);
+    Immediate->ElectricalWindow(Window);Queued->ElectricalWindow(Window);
+    Immediate->Reactive->State.ElectricalWetness01=Queued->Reactive->State.ElectricalWetness01=0;
+    Immediate->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetGearStormResistAttribute(),80);
+    Queued->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetGearStormResistAttribute(),80);
+    // The second strong event is outside the first event's three-second cooldown.
+    for(int32 I=0;I<31;++I)W->Tick(LEVELTICK_TimeOnly,.1f);
+    const float SecondTime=Queued->CombatTime();
+    TestTrue(TEXT("Two exposures are actually over three seconds apart"),SecondTime-FirstTime>3);
+    Immediate->ElectricalWindow(Window);Queued->ElectricalWindow(Window);
+    // Change both defenses and wetness again before any queued event drains.
+    Queued->Reactive->State.ElectricalWetness01=1;
+    Queued->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetGearStormResistAttribute(),0);
+    Gate->CancelKnownUncommitted(Command);Gate->TickComponent(.01f,LEVELTICK_All,nullptr);
+    TestTrue(TEXT("Queue latency preserves wetness and per-source resistance damage"),FMath::IsNearlyEqual(Queued->Health(),Immediate->Health(),.001f));
+    TestTrue(TEXT("Separated windows preserve cooldown at event time"),FMath::IsNearlyEqual(Queued->NextShockStun,SecondTime+3,.001f));
+    TestTrue(TEXT("Event time rather than first-drain cooldown is used"),Queued->NextShockStun>FirstTime+6);
+    TestTrue(TEXT("Damage bookkeeping preserves last event timestamp"),FMath::IsNearlyEqual(Queued->CombatRuntime->LastDamageAt,SecondTime,.001f));
+    TestEqual(TEXT("Both sources in both windows are settled"),Queued->CombatRuntime->DamageReceivedCount,uint64(4));
+    TestFalse(TEXT("Electrical queue fully drains"),Gate->IsBlocked());
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherManualWorldSaveTest,"Aether.Systems.Persistence.ManualSaveConfirmation",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FAetherManualWorldSaveTest::RunTest(const FString&)
+{
+    for(const auto Code:{EAetherStoreCode::Committed,EAetherStoreCode::Replayed,EAetherStoreCode::Busy,EAetherStoreCode::Unavailable})
+    {
+        FAetherManualWorldSave Request;TPromise<FAetherWorldCheckpointResult> Promise;int32 Starts=0;
+        TestTrue(TEXT("Manual F5 request begins"),Request.Start([&]{++Starts;return Promise.GetFuture();}));
+        TestFalse(TEXT("No success feedback before durable confirmation"),Request.Poll().IsSet());
+        TestFalse(TEXT("Repeated F5 cannot replace outstanding request"),Request.Start([&]{++Starts;return TFuture<FAetherWorldCheckpointResult>();}));
+        TestEqual(TEXT("Exactly one checkpoint requested"),Starts,1);
+        FAetherWorldCheckpointResult Result;Result.Code=Code;
+        if(Code==EAetherStoreCode::Committed||Code==EAetherStoreCode::Replayed){Result.World=FAetherWorldStateV10();Result.World->Revision=42;}
+        Promise.SetValue(MoveTemp(Result));const auto Feedback=Request.Poll();
+        TestTrue(TEXT("Completion produces feedback and allows retry"),Feedback.IsSet()&&!Request.IsPending());
+        if(Feedback.IsSet())TestEqual(TEXT("Success feedback requires commit/replay proof"),Feedback->Contains(TEXT("修订 42")),Code==EAetherStoreCode::Committed||Code==EAetherStoreCode::Replayed);
+        TestFalse(TEXT("Completion feedback is emitted once"),Request.Poll().IsSet());
+        TPromise<FAetherWorldCheckpointResult> Retry;
+        TestTrue(TEXT("Busy or failure permits a fresh user retry"),Request.Start([&]{return Retry.GetFuture();}));
+        FAetherWorldCheckpointResult MissingProof;MissingProof.Code=EAetherStoreCode::Committed;Retry.SetValue(MoveTemp(MissingProof));
+        TestTrue(TEXT("Missing committed world is not reported saved"),Request.Poll()->Contains(TEXT("保存未确认")));
+    }
     return true;
 }
 #endif

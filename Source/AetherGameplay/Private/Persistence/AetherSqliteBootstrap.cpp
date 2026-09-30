@@ -85,7 +85,7 @@ FAetherStoreReadResult CreateEmptyContainer(sqlite3* DB,const FAetherStoredAggre
     if(Step!=SQLITE_DONE){R.Detail=Error(DB);return R;}
     const auto Existing=ReadAggregate(DB,Container.Key);
     if(Existing.Code!=EAetherStoreCode::Missing)return Existing;
-    if(Count>=4096){R.Code=EAetherStoreCode::Conflict;return R;}
+    if(Count>=AetherContainerLimits::Registry){R.Code=EAetherStoreCode::Capacity;R.Detail=TEXT("Container registry capacity reached");return R;}
     // 空容器没有实例，不改变物品总量；唯一 ID 和数量上限仍在同一写事务内检查。
     if(!Insert(DB,Container)||!Tx.Commit()){R.Detail=Error(DB);return R;}
     R.Code=EAetherStoreCode::Found;R.Value=Container;return R;

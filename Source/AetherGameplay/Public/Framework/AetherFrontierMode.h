@@ -8,6 +8,7 @@
 #include "Persistence/AetherWorldBootstrap.h"
 #include "Persistence/AetherWorldCheckpoint.h"
 #include "Commands/AetherProfileCommand.h"
+#include "World/AetherDropSlots.h"
 #include "AetherFrontierMode.generated.h"
 
 class AAetherPlayerController;
@@ -88,6 +89,7 @@ public:
     void CreditHit(AAetherCharacter* Target,AAetherCharacter* Source);
     AAetherFrontierProp* Make(FName Id,FName Service,FVector Location,FVector Scale,EAetherObjectKind Kind,const FString& Label);
 private:
+    friend class FAetherContainerCapacitySceneTest;
     // 只有服务器启动装配持有这些值；旧 Database 是导航/流送的只读投影，不能提交它。
     bool bNativeMode=true,bNativeSceneReady=false,bNativeBaselineReady=false,bNativeFailureReported=false;
     TFuture<FAetherWorldCheckpointResult> NativeBaseline;
@@ -97,6 +99,7 @@ private:
     TSet<TWeakObjectPtr<AAetherPlayerController>> NativePlayersReady,NativeLoginRejected;
     TMap<TWeakObjectPtr<AAetherPlayerController>,TWeakObjectPtr<AAetherNativeContainer>> NativeContainerSessions;
     UPROPERTY() TMap<FString,TObjectPtr<AAetherNativeContainer>> NativeContainers;
+    FAetherDropSlots NativeDropSlots;
     void TickNativeStartup();
     void BeginNativeLogin(AAetherPlayerController* PC);
     bool RestoreNativeScene(const FAetherWorldStateV10& World,const TMap<FString,int64>& Profiles,const TArray<FAetherContainerRestoreDescriptor>& Containers,FString& Reason);
@@ -106,6 +109,7 @@ private:
     struct FContainerCreation {FAetherContainerStateV10 Expected;TFuture<FAetherStoreReadResult> Future;};
     TMap<FString,FContainerCreation> NativeContainerCreates;
     TMap<FString,double> NativeContainerRetry;
+    TSet<FString> NativeContainerCapacityWarned;
     bool PublishNativeState(AAetherPlayerController& PC,const FAetherProfileStateV10& Profile,const FAetherWorldStateV10* World,const FAetherContainerStateV10* Container);
     bool ResolveNativeContext(AAetherPlayerController& PC,const FAetherPlayerCommand& Command,const FAetherProfileStateV10& Profile,FAetherProfileCommandContext& Context);
     void FailNativeScene(const FString& Reason);

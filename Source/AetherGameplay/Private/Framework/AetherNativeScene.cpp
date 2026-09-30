@@ -102,6 +102,8 @@ bool AAetherFrontierMode::RestoreNativeScene(const FAetherWorldStateV10& W,const
     if(!W.Validate(D.Items,D.Rules,Profiles,Reason)||!AetherNativeWorldPhysics::RestoreLoaded(*GetWorld(),W,Reason))return false;
     PublishNativeWorld(W);
     if(!Encounters->RestoreNative(W.Abbey,W.Relay,Reason))return false;
+    NativeDropSlots.Reset();
+    for(const auto& C:Containers)NativeDropSlots.Observe(C);
     for(const auto& C:Containers)if(C.bActive)
     {
         if(NativeContainers.Contains(C.Id)){Reason=TEXT("Duplicate native container scene identity");return false;}
@@ -213,7 +215,7 @@ void AAetherFrontierMode::EndPlay(const EEndPlayReason::Type Reason)
     {
         bNativeSceneReady=false;
         if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherNativePersistence>()->ReleaseScene(GetWorld());
-        NativeContainerCreates.Reset();NativeContainerRetry.Reset();NativeLogins.Reset();NativePlayersReady.Reset();NativeContainerSessions.Reset();NativeRegionSave={};
+        NativeContainerCreates.Reset();NativeContainerRetry.Reset();NativeContainerCapacityWarned.Reset();NativeDropSlots.Reset();NativeLogins.Reset();NativePlayersReady.Reset();NativeContainerSessions.Reset();NativeRegionSave={};
     }
     Super::EndPlay(Reason);
 }

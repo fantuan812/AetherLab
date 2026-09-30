@@ -1,5 +1,12 @@
 #pragma once
 #include "Inventory/AetherInventoryState.h"
+namespace AetherContainerLimits
+{
+    inline constexpr int32 Registry = 4096;
+    // 128 supported profiles plus the shared chest retain room for bootstrap.
+    // Admission is deliberately conservative: existing static rows also count.
+    inline constexpr int32 DropAdmission = Registry - 129;
+}
 enum class EAetherContainerKind:uint8 {SharedChest,PersonalStorage,WorldDrop};
 struct AETHERCORE_API FAetherContainerStateV10
 {

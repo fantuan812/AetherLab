@@ -10,6 +10,7 @@
 void AAetherFrontierMode::PublishNativeContainer(const FAetherContainerStateV10& C)
 {
     if(!NativeSceneReady())return;
+    if(!NativeDropSlots.Observe({C.ContainerId,C.OwnerCharacterId,C.RegionId,C.Kind,C.Location,C.bActive,C.Revision}))return;
     auto* Found=NativeContainers.Find(C.ContainerId);auto* A=Found?Found->Get():nullptr;
     if(IsValid(A)&&C.Revision<A->Revision)return;
     if(!IsValid(A)&&C.bActive)
@@ -37,7 +38,22 @@ void AAetherFrontierMode::TickNativeContainers()
         if(R.Code==EAetherStoreCode::Found&&R.Value.IsSet()&&R.Value->SchemaVersion==10&&
             AetherContainerCodec::Decode(R.Value->Payload,FAetherV10Definitions::Get().Items,C,Why)&&C.Revision==R.Value->Revision&&
             C.ContainerId.Equals(E.ContainerId,ESearchCase::CaseSensitive)&&C.Kind==E.Kind&&C.OwnerCharacterId.Equals(E.OwnerCharacterId,ESearchCase::CaseSensitive))
-        {PublishNativeContainer(C);NativeContainerRetry.Remove(Pair.Key);}
+        {PublishNativeContainer(C);NativeContainerRetry.Remove(Pair.Key);NativeContainerCapacityWarned.Remove(Pair.Key);}
+        else if(R.Code==EAetherStoreCode::Capacity)
+        {
+            // A full legacy registry is a local service limitation, not corrupt
+            // world data. Keep everyone connected and retry without log flooding.
+            NativeContainerRetry.Add(Pair.Key,Now+30);
+            if(!NativeContainerCapacityWarned.Contains(Pair.Key))
+            {
+                NativeContainerCapacityWarned.Add(Pair.Key);
+                UE_LOG(LogTemp,Warning,TEXT("AETHER_CONTAINER_CAPACITY %s"),*Pair.Key);
+                for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)
+                    if(auto* Player=Cast<AAetherFrontierCharacter>(It->Get()->GetPawn());Player&&Player->ProfileState()&&
+                        Player->ProfileState()->Profile.CharacterId.Equals(E.OwnerCharacterId,ESearchCase::CaseSensitive))
+                        Player->Notify(TEXT("个人仓储暂不可用：世界容器容量已满，其他玩法仍可继续。"));
+            }
+        }
         else if(R.Code==EAetherStoreCode::Busy||R.Code==EAetherStoreCode::Unavailable)NativeContainerRetry.Add(Pair.Key,Now+2);
         else {FailNativeScene(TEXT("Configured container conflicts with persistent data"));return;}
     }

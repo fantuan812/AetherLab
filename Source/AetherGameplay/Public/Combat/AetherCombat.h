@@ -145,6 +145,7 @@ public:
     UFUNCTION(Server, Reliable) void ServerInteract(bool bAlternate);
     UFUNCTION(Server, Reliable) void ServerSave(bool bLoad);
 private:
+    friend class FAetherElectricalSnapshotTest;
     void MoveForward(float V);
     void MoveRight(float V);
     void Turn(float V) { AddControllerYawInput(V); }

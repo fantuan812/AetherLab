@@ -97,7 +97,7 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
         FCollisionQueryParams Q(SCENE_QUERY_STAT(NativeDrop),false,C);
         const bool Ground=GetWorld()->LineTraceSingleByChannel(Hit,Start,Start-FVector(0,0,300),ECC_Visibility,Q)&&Hit.ImpactNormal.Z>.6;
         auto& A=X.Container;A.bAuthorized=true;A.bTargetReady=true;A.bValidDropLocation=Ground;
-        A.ContainerId=TEXT("Drop_")+Command.CommandId.ToString(EGuidFormats::Digits);
+        A.ContainerId=NativeDropSlots.Resolve(Command.CommandId);
         A.DropLocation=Hit.ImpactPoint+FVector(0,0,25);
         A.RegionId=FString::Printf(TEXT("%d_%d"),FMath::FloorToInt(A.DropLocation.X/7000),FMath::FloorToInt(A.DropLocation.Y/7000));
     }

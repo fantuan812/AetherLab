@@ -89,7 +89,7 @@ bool AetherContainerCommands::Prepare(const FAetherPlayerCommand& C,const FStrin
     {
         // 只复用服务器选定的非活动掉落墓碑，不覆盖活动掉落或个人仓储；新容器还需全局数量预算。
         if(Existing&&(Container.Kind!=EAetherContainerKind::WorldDrop||Container.bActive||!Container.Inventory.Items.IsEmpty()))return Fail(R::Conflict);
-        if(!Existing&&(Snapshot.ContainerCount<0||Snapshot.ContainerCount>=4096))return Fail(R::Capacity);
+        if(!Existing&&(Snapshot.ContainerCount<0||Snapshot.ContainerCount>=AetherContainerLimits::DropAdmission))return Fail(R::Capacity);
         const auto Removable=P.Inventory.CanRemove(C.ItemInstanceId,Actor,false,Items);
         if(Removable!=EAetherInventoryMutationCode::Applied)return Fail(MutationCode(Removable));
         if(!Existing){Container.ContainerId=Key;Container.Kind=EAetherContainerKind::WorldDrop;Container.Inventory.Capacity=1;}
