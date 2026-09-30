@@ -60,7 +60,7 @@ bool UAetherVaultAbility::FindPath(AAetherFrontierCharacter& C,TArray<FVector>& 
 bool UAetherVaultAbility::CanActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,const FGameplayTagContainer* S,const FGameplayTagContainer* T,FGameplayTagContainer* R) const
 {
     auto* C=Info?Cast<AAetherFrontierCharacter>(Info->AvatarActor.Get()):nullptr;TArray<FVector> Candidate;
-    return !bEndingVault&&C&&C->AbilitySystem==Info->AbilitySystemComponent.Get()&&C->AbilitySystem->GetAvatarActor()==C&&
+    return !bEndingVault&&C&&C->AbilitySystem&&C->AbilitySystem==Info->AbilitySystemComponent.Get()&&C->AbilitySystem->GetAvatarActor()==C&&
         C->QueryAction(EAetherActionKind::Vault)==EAetherActionDenial::None&&C->CanStartLocomotion()&&
         (!C->IsLocallyControlled()||!C->bPanel)&&FindPath(*C,Candidate)&&Super::CanActivateAbility(H,Info,S,T,R);
 }
@@ -89,6 +89,9 @@ void UAetherVaultAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
 void UAetherVaultAbility::NextPhase()
 {
     if(bEndingVault)return;
+    // MoveToForce 的完成广播可能早于 EndTask（UE-181073）；先结束上一阶段，
+    // 再替换唯一任务引用，确保它的 root source/结束速度已清理。
+    if(auto* PreviousTask=MotionTask.Get())PreviousTask->EndTask();MotionTask.Reset();
     auto* C=Character.Get();if(!HasActivationAvatar()||!bOwnsFlyingMode){Abort();return;}
     if(Phase>0&&FVector::DistSquared(C->GetActorLocation(),Path[Phase-1])>FMath::Square(12.f)){Abort();return;}
     if(Phase==Path.Num()){EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,false);return;}

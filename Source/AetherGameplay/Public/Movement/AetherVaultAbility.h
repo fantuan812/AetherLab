@@ -18,6 +18,7 @@ public:
     virtual void EndAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo Activation,bool Replicate,bool Cancelled) override;
     virtual void OnAvatarSet(const FGameplayAbilityActorInfo* Info,const FGameplayAbilitySpec& Spec) override;
 private:
+    friend class FAetherVaultLifecycleTest;
     static bool FindPath(AAetherFrontierCharacter& C,TArray<FVector>& Points,FVector* Contact=nullptr);
     UFUNCTION() void NextPhase();
     UFUNCTION() void Abort();
