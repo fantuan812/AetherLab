@@ -60,7 +60,9 @@ bool UAetherVaultAbility::FindPath(AAetherFrontierCharacter& C,TArray<FVector>& 
 bool UAetherVaultAbility::CanActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,const FGameplayTagContainer* S,const FGameplayTagContainer* T,FGameplayTagContainer* R) const
 {
     auto* C=Info?Cast<AAetherFrontierCharacter>(Info->AvatarActor.Get()):nullptr;TArray<FVector> Candidate;
-    return C&&C->QueryAction(EAetherActionKind::Vault)==EAetherActionDenial::None&&C->CanStartLocomotion()&&(!C->IsLocallyControlled()||!C->bPanel)&&FindPath(*C,Candidate)&&Super::CanActivateAbility(H,Info,S,T,R);
+    return !bEndingVault&&C&&C->AbilitySystem==Info->AbilitySystemComponent.Get()&&C->AbilitySystem->GetAvatarActor()==C&&
+        C->QueryAction(EAetherActionKind::Vault)==EAetherActionDenial::None&&C->CanStartLocomotion()&&
+        (!C->IsLocallyControlled()||!C->bPanel)&&FindPath(*C,Candidate)&&Super::CanActivateAbility(H,Info,S,T,R);
 }
 void UAetherVaultAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,const FGameplayEventData*)
 {
@@ -72,15 +74,22 @@ void UAetherVaultAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
     {if(IsActive())EndAbility(H,Info,A,true,true);return;}
     C->PresentAction(TEXT("Vault"));C->PresentedAction.bHasContact=true;C->PresentedAction.Contact=Contact;
     OwnedActionSerial=C->PresentedAction.Serial;
-    Character=C;DamageAtStart=C->CombatRuntime->LastDamageAt;Phase=0;C->SetSprintInput(false);C->StopJumping();
-    C->GetCharacterMovement()->StopMovementImmediately();C->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+    Character=C;Movement=C->GetCharacterMovement();ActiveSystem=Info->AbilitySystemComponent;
+    DamageAtStart=C->CombatRuntime->LastDamageAt;Phase=0;C->SetSprintInput(false);C->StopJumping();
+    // 物理模式归本次能力管理；展示动作可被 Hit 等覆盖，不代表物理责任转移。
+    bOwnsFlyingMode=true;
+    C->MovementModeChangedDelegate.AddDynamic(this,&UAetherVaultAbility::MovementModeChanged);
+    Movement->StopMovementImmediately();Movement->SetMovementMode(MOVE_Flying);
+    // 模式通知可同步取消能力，不能在取消后重新安装计时器或根运动。
+    if(!HasActivationAvatar()||!bOwnsFlyingMode){Abort();return;}
     // Flying 仅是受控 root source 的运动阶段，仍由 CharacterMovement 扫掠碰撞；结束必恢复重力。
     C->GetWorldTimerManager().SetTimer(Watch,this,&UAetherVaultAbility::CheckInterruption,.025f,true);
     NextPhase();
 }
 void UAetherVaultAbility::NextPhase()
 {
-    auto* C=Character.Get();if(!C||!IsActive()){Abort();return;}
+    if(bEndingVault)return;
+    auto* C=Character.Get();if(!HasActivationAvatar()||!bOwnsFlyingMode){Abort();return;}
     if(Phase>0&&FVector::DistSquared(C->GetActorLocation(),Path[Phase-1])>FMath::Square(12.f)){Abort();return;}
     if(Phase==Path.Num()){EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,false);return;}
     const auto* Rule=AetherControlledActions::Find(TEXT("Vault"));
@@ -88,14 +97,16 @@ void UAetherVaultAbility::NextPhase()
     const float Duration=Rule->PhaseDurations[Phase];
     auto* Task=UAbilityTask_ApplyRootMotionMoveToForce::ApplyRootMotionMoveToForce(this,FName(*FString::Printf(TEXT("Aether.Vault.%d"),Phase)),
         Path[Phase++],Duration,false,MOVE_Flying,true,nullptr,ERootMotionFinishVelocityMode::SetVelocity,FVector::ZeroVector,0);
+    if(!Task){Abort();return;}MotionTask=Task;
     Task->OnTimedOutAndDestinationReached.AddDynamic(this,&UAetherVaultAbility::NextPhase);
     Task->OnTimedOut.AddDynamic(this,&UAetherVaultAbility::Abort);Task->ReadyForActivation();
 }
 void UAetherVaultAbility::CheckInterruption()
 {
+    if(bEndingVault)return;
     auto* C=Character.Get();
-    if(!C||!C->Alive()||C->bTravelPending||C->ResourceGate->IsBlocked()||C->CombatTime()<C->StunUntil||
-       C->CombatRuntime->LastDamageAt>DamageAtStart||!CurrentActorInfo||CurrentActorInfo->AvatarActor.Get()!=C){Abort();return;}
+    if(!HasActivationAvatar()||!bOwnsFlyingMode||!C->Alive()||C->bTravelPending||C->ResourceGate->IsBlocked()||C->CombatTime()<C->StunUntil||
+       C->CombatRuntime->LastDamageAt>DamageAtStart){Abort();return;}
     if(Phase>0&&Path.IsValidIndex(Phase-1))
     {
         FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherVaultRemainingPath),false,C);FHitResult Hit;
@@ -104,19 +115,51 @@ void UAetherVaultAbility::CheckInterruption()
             FCollisionShape::MakeCapsule(Capsule->GetScaledCapsuleRadius(),Capsule->GetScaledCapsuleHalfHeight()),Q))Abort();
     }
 }
-void UAetherVaultAbility::Abort(){if(IsActive())EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,true);}
+bool UAetherVaultAbility::HasActivationAvatar() const
+{
+    const auto* C=Character.Get();const auto* System=ActiveSystem.Get();
+    return IsActive()&&C&&Movement.IsValid()&&Movement.Get()==C->GetCharacterMovement()&&System&&
+        CurrentActorInfo&&CurrentActorInfo->AvatarActor.Get()==C&&CurrentActorInfo->AbilitySystemComponent.Get()==System&&
+        C->AbilitySystem==System&&System->GetAvatarActor()==C;
+}
+void UAetherVaultAbility::MovementModeChanged(ACharacter* ChangedCharacter,EMovementMode PreviousMode,uint8)
+{
+    if(bEndingVault||ChangedCharacter!=Character.Get()||!Movement.IsValid())return;
+    // 首次 Walking -> Flying 是本能力的写入。此后任何离开 Flying 的转换都释放责任，
+    // 即使外部随后又切回 Flying，也不能再恢复/覆盖外部模式。
+    if(PreviousMode==MOVE_Flying||Movement->MovementMode!=MOVE_Flying)
+    {bOwnsFlyingMode=false;Abort();}
+}
+void UAetherVaultAbility::ReleaseMovement()
+{
+    auto* C=Character.Get();auto* M=Movement.Get();
+    if(C)
+    {
+        C->GetWorldTimerManager().ClearTimer(Watch);
+        C->MovementModeChangedDelegate.RemoveDynamic(this,&UAetherVaultAbility::MovementModeChanged);
+    }
+    // 先移除本能力的 root source，再恢复模式；不能让任务迟到的清理覆盖恢复后的速度。
+    if(auto* Task=MotionTask.Get())Task->EndTask();MotionTask.Reset();
+    const bool Restore=bOwnsFlyingMode&&C&&M&&C->GetCharacterMovement()==M&&M->MovementMode==MOVE_Flying&&!C->bTravelPending;
+    bOwnsFlyingMode=false;
+    if(C&&C->PresentedAction.Serial==OwnedActionSerial)C->PresentedAction.Duration=0;
+    Character.Reset();Movement.Reset();ActiveSystem.Reset();Path.Reset();Phase=0;OwnedActionSerial=0;
+    // 只影响保存的旧 Pawn/移动组件，绝不通过更新后的 ActorInfo 操作新 Avatar。
+    if(Restore){M->StopMovementImmediately();M->SetMovementMode(C->Alive()?MOVE_Falling:MOVE_None);}
+}
+void UAetherVaultAbility::Abort()
+{
+    if(bEndingVault)return;
+    if(IsActive())EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,true);
+}
 void UAetherVaultAbility::EndAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,bool Replicate,bool Cancelled)
 {
-    if(!IsEndAbilityValid(H,Info))return;
+    if(bEndingVault||!IsEndAbilityValid(H,Info))return;
     if(ScopeLockCount>0){WaitingToExecute.Add(FPostLockDelegate::CreateUObject(this,&UAetherVaultAbility::EndAbility,H,Info,A,Replicate,Cancelled));return;}
-    auto* C=Character.Get();if(C)C->GetWorldTimerManager().ClearTimer(Watch);
+    TGuardValue<bool> Ending(bEndingVault,true);
+    ReleaseMovement();
+    // 本地状态已清理；基类的能力结束回调不能使旧清理触碰新的激活。
     Super::EndAbility(H,Info,A,Replicate,Cancelled);
-    if(C&&C->PresentedAction.Serial==OwnedActionSerial)
-    {
-        C->PresentedAction.Duration=0;
-        if(!C->bTravelPending){C->GetCharacterMovement()->StopMovementImmediately();C->GetCharacterMovement()->SetMovementMode(C->Alive()?MOVE_Falling:MOVE_None);}
-    }
-    Character.Reset();Path.Reset();
 }
 void UAetherVaultAbility::OnAvatarSet(const FGameplayAbilityActorInfo* Info,const FGameplayAbilitySpec& Spec)
 {
