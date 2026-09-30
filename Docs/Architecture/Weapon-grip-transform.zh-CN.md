@@ -38,7 +38,9 @@ schema 1 顶层字段只能是 `schema`、`coordinates`、`source`、`bindings`�
 
 发布影响：`ValidateLoadout` 先要求整个 `Catalog::IsValidCatalog` 有效。因此任一旧双手资产缺合同会阻断整个装备目录的恢复/切换，也会影响单手装备与防具，并非仅关闭副手IK。必须一次备齐所用目录的全部真实完整合同和重新作者化资产后才能考虑合并；不能用fallback弱化门禁。
 
-Quaternius 原65骨最新版 `.blend`、rest 合同、主副握点矩阵/手指姿态的原始 manifest 尚未恢复。展示视频不含这些可编辑数据。现有计划输出路径不是资源存在证明。
+2026-09-30已从官方源重建Quaternius原65骨Peasant可编辑基线，并读取原始骨合同：65骨，`hand_l/r` 分别属于 `lowerarm_l/r`，rest未改，Female_Peasant与Superhero_Female的rest矩阵最大差为0。该次合同SHA-256为 `7b5a02ca4f568bf781df640831c19914e3b64aa291be53d84ba125bb894b9f8b`。这证明身体基线已恢复，不能替代丢失的武器握持版本。
+
+历史v2手指姿态、主副武器握点矩阵、UE导入后的目标mesh与轴验证仍缺。展示视频不含这些可编辑数据，恢复身体基线也不会自动补出它们。现有计划输出路径不是UE资源存在证明。
 
 ## 验证设计
 
