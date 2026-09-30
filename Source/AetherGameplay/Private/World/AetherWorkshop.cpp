@@ -7,7 +7,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "Sound/SoundWaveProcedural.h"
+#include "AetherAudioSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "UnrealClient.h"
 #include "Misc/Paths.h"
@@ -33,15 +33,16 @@ void AAetherFrontierProp::UpdateReactionFeedback()
     Label->SetWorldSize(12);
     if(auto* Viewer=GetWorld()->GetFirstPlayerController();Viewer&&Viewer->GetPawn())Label->SetVisibility(FVector::DistSquared(Viewer->GetPawn()->GetActorLocation(),GetActorLocation())<FMath::Square(600.));
     Label->SetText(FText::FromString(Spec.Label+(Text.IsEmpty()?TEXT(""):TEXT("\n")+Text)));
-    // Short locally generated cues; no imported art/audio and no duplicated server sound events.
-    auto* PC=GetWorld()->GetFirstPlayerController();
-    if(LastFeedback!=255&&LastFeedback!=Feedback&&Feedback&&PC&&PC->GetPawn()&&FVector::DistSquared(PC->GetPawn()->GetActorLocation(),GetActorLocation())<FMath::Square(900.))
+    // Transitions only: unavailable audio is not retried every tick or replaced with a beep.
+    if (LastFeedback != 255 && LastFeedback != Feedback)
     {
-        auto* Sound=NewObject<USoundWaveProcedural>(this);Sound->SetSampleRate(16000);Sound->NumChannels=1;Sound->Duration=.12f;
-        TArray<int16> PCM;PCM.SetNumUninitialized(1920);const float Hz=Feedback==3?880.f:Feedback==1?140.f:440.f;
-        for(int I=0;I<PCM.Num();++I)PCM[I]=int16(1600.f*(1.f-float(I)/PCM.Num())*FMath::Sin(2*PI*Hz*I/16000));
-        Sound->QueueAudio(reinterpret_cast<const uint8*>(PCM.GetData()),PCM.Num()*sizeof(int16));
-        UGameplayStatics::PlaySoundAtLocation(this,Sound,GetActorLocation(),.3f);
+        FName EventId;
+        if (Feedback == 1) EventId = AetherAudioEvents::Break;
+        else if (Feedback == 5) EventId = AetherAudioEvents::Freeze;
+        else if (Feedback == 8) EventId = AetherAudioEvents::Extinguish;
+        if (!EventId.IsNone())
+            if (auto* Audio = GetWorld()->GetSubsystem<UAetherAudioSubsystem>())
+                Audio->PlayEvent(EventId, GetActorLocation());
     }
     LastFeedback=Feedback;
 }
