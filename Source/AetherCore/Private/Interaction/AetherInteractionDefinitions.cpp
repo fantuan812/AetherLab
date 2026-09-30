@@ -90,6 +90,8 @@ bool FAetherInteractionDefinitions::Validate(const FAetherRules& Rules,const FAe
             {if(!Rules.Dailies.ContainsByPredicate([&](const auto& V){return V.Id.ToString().Equals(A.ServiceId,ESearchCase::CaseSensitive);}))return Fail(TEXT("Unknown daily service"));}
             else if(A.Kind==K::Rest&&!A.ServiceId.IsEmpty())
             {if(A.ServiceId!=TEXT("Sample.Cleanse")&&!FAetherBuffDefinitions::Get().Buffs.Contains(A.ServiceId))return Fail(TEXT("Unknown buff practice service"));}
+            else if(A.Kind==K::RecruitGuard||A.Kind==K::RecruitHealer)
+            {if(!Id(A.ServiceId))return Fail(TEXT("Recruitment requires an NPC capability definition"));}
             else if(!A.ServiceId.IsEmpty())return Fail(TEXT("Unexpected service"));
             if((A.Kind==K::CollectSupply||A.Kind==K::ObserveObjective)&&A.ObjectiveId.IsEmpty())return Fail(TEXT("Objective service requires a fact"));
             if(A.Kind==K::ClaimQuest&&A.QuestId.IsEmpty())return Fail(TEXT("Claim requires quest"));

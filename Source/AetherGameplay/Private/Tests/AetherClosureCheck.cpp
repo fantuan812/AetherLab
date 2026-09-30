@@ -419,7 +419,7 @@ void AAetherFrontierMode::CheckClosure()
         auto* Fire=Make("ClosurePrivate","TrainingExtinguished",FVector(4800,4600,50),FVector(.6),EAetherObjectKind::Timber,TEXT(""));Fire->SetOwner(A);
         FReactiveStimulus Hit;Hit.SourceActor=B;Hit.HeatJ=60000;Check(!Fire->Reactive->Inject(Hit),TEXT("AUD8-21 foreign private stimulus rejected"));
         Hit.SourceActor=A;Check(Fire->Reactive->Inject(Hit),TEXT("AUD8-21 owner private stimulus accepted"));
-        ClosureBuddy=SpawnFighter(FVector(4800,4900,110),EAetherFighter::Player,"ClosureBuddy");ClosureBuddy->CompanionOwner=A;Companions.Add(ClosureBuddy.Get());
+        ClosureBuddy=SpawnFighter(FVector(4800,4900,110),EAetherFighter::Player,"ClosureBuddy");if(!ClosureBuddy.IsValid()){Check(false,TEXT("Companion production spawn available"));return;}ClosureBuddy->CompanionOwner=A;Companions.Add(ClosureBuddy.Get());
         Act(B,"PartyCommand",B->GetActorLocation());Next(4);return;
     }
     if(ClosureStage==4)

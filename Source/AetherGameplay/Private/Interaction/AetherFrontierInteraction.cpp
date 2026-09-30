@@ -19,7 +19,7 @@ FString AAetherFrontierMode::RecruitCompanion(AAetherFrontierCharacter* C,bool H
     if(GuardTaken&&HealerTaken)return TEXT("Both named companions are already recruited.");
     Healer=GuardTaken||(!HealerTaken&&Healer);
     if(Companions.Num()+GetNumPlayers()>=4)return TEXT("Party capacity: four humans and AI combined.");
-    auto* B=SpawnFighter(C->GetActorLocation()+FVector(0,150,20),EAetherFighter::Player,NAME_None);B->CompanionOwner=C;B->bHealer=Healer;B->CompanionId=Healer?FName("Muhe"):FName("Lishi");
+    auto* B=SpawnFighter(C->GetActorLocation()+FVector(0,150,20),EAetherFighter::Player,NAME_None);if(!B)return TEXT("Companion capability/spawn unavailable.");B->CompanionOwner=C;B->bHealer=Healer;B->CompanionId=Healer?FName("Muhe"):FName("Lishi");
     B->SpawnDefaultController();if(!B->CompanionDecision->BeginCompanionControl()){B->Destroy();return TEXT("Companion controller unavailable.");}Companions.Add(B);auto Next=PS->Profile;Next.bCompanion=true;Next.Observe("Companion");Next.TryAutoClaim("Q_Main_06");
     if(!Commit(PS,Next)){B->Destroy();return TEXT("Storage unavailable; recruitment cancelled.");}
     return TEXT("Companion follows, fights, and revives. P shows party.");
@@ -60,7 +60,7 @@ FString AAetherFrontierMode::InteractTarget(AAetherFrontierCharacter* C,const FA
             Fire->SetOwner(C);FReactiveStimulus H;H.HeatJ=80000;Fire->Reactive->Inject(H);
             const FName Tag=*FString(TEXT("Trainer_")+Next.CharacterId);bool Exists=false;
             for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Tags.Contains(Tag)&&It->Alive())Exists=true;
-            if(!Exists){auto* Guard=SpawnFighter(C->GetActorLocation()+FVector(300,200,0),EAetherFighter::ShieldGuard,NAME_None);Guard->Tags.Add(Tag);Guard->SetOwner(C);Guard->Reactive->bOwnerOnlyStimuli=true;Guard->SetVitals(40,100,100);}
+            if(!Exists){auto* Guard=SpawnFighter(C->GetActorLocation()+FVector(300,200,0),EAetherFighter::ShieldGuard,NAME_None);if(!Guard)return TEXT("Training capability/spawn unavailable.");Guard->Tags.Add(Tag);Guard->SetOwner(C);Guard->Reactive->bOwnerOnlyStimuli=true;Guard->SetVitals(40,100,100);}
         }
         return TEXT("Abilities learned. R equip sword. Hit dummy 3 times, block trainer, extinguish your fire.");
     }

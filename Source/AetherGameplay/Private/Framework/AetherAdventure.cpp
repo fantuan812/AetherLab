@@ -1,5 +1,6 @@
 #include "Framework/AetherAdventure.h"
 #include "Combat/AetherCombat.h"
+#include "Skills/AetherNpcSkillDefinitions.h"
 #include "Assets/AetherContent.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Camera/PlayerCameraManager.h"
@@ -142,6 +143,29 @@ void AAetherModularAdventureMode::InitGame(const FString& MapName,const FString&
     if (!LevelDefinition) ErrorMessage=TEXT("Missing SwordMagic content. Run the asset import first.");
     Super::InitGame(MapName,Options,ErrorMessage);
 }
+void AAetherAdventureMode::FailCharacterAssembly()
+{
+    bCharacterAssemblyFailed=true;
+    for(const auto& Enemy:Enemies)if(IsValid(Enemy))Enemy->Destroy();Enemies.Reset();Boss=nullptr;
+    UE_LOG(LogTemp,Error,TEXT("AETHER_ADVENTURE_ASSEMBLY_FAILED character/skill definition unavailable; progression stopped"));
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherAdventureSmoke"))||FParse::Param(FCommandLine::Get(),TEXT("AetherEquipmentSmoke")))
+        FPlatformMisc::RequestExitWithStatus(false,1);
+}
+AAetherCharacter* AAetherAdventureMode::SpawnConfiguredCharacter(UClass* ActorClass,const FTransform& Transform,EAetherFighter Type,UAetherCharacterDefinition* Visual,AController* Owner)
+{
+    const auto* Loadout=FAetherNpcSkillDefinitions::Get().ForFighter(StaticEnum<EAetherFighter>()->GetNameStringByValue(int64(Type)));
+    if(!Loadout||!ActorClass||!ActorClass->IsChildOf(AAetherCharacter::StaticClass())){FailCharacterAssembly();return nullptr;}
+    auto* C=GetWorld()->SpawnActorDeferred<AAetherCharacter>(ActorClass,Transform,Owner,nullptr,ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+    if(!C){FailCharacterAssembly();return nullptr;}
+    C->Fighter=Type;C->SkillAuthority=EAetherSkillAuthority::Definition;C->SkillLoadoutId=Loadout->Id;C->CharacterDefinition=Visual;
+    return C; // Caller sets remaining scene identity before FinishSpawning; no BeginPlay grant uses an empty definition.
+}
+APawn* AAetherAdventureMode::SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer,const FTransform& SpawnTransform)
+{
+    if(bCharacterAssemblyFailed)return nullptr;
+    auto* Pawn=SpawnConfiguredCharacter(GetDefaultPawnClassForController(NewPlayer),SpawnTransform,EAetherFighter::Player,nullptr,NewPlayer);
+    if(Pawn)UGameplayStatics::FinishSpawningActor(Pawn,SpawnTransform);return Pawn;
+}
 void AAetherAdventureMode::RestartPlayer(AController* C)
 {
     if (!C) return;
@@ -211,8 +235,9 @@ void AAetherAdventureMode::BuildAbbey()
     for (int32 I=0; I<3; ++I)
     {
         const FVector P = I==0 ? FVector(2070,-90,100) : I==1 ? FVector(2640,500,100) : FVector(5090,-100,100);
-        auto* C=GetWorld()->SpawnActorDeferred<AAetherCharacter>(AAetherCharacter::StaticClass(),FTransform(FRotator(0,180,0),P),nullptr,nullptr,ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-        C->Fighter = I==0 ? EAetherFighter::ShieldGuard : I==1 ? EAetherFighter::FireCaster : EAetherFighter::BellKnight;
+        const auto Type=I==0?EAetherFighter::ShieldGuard:I==1?EAetherFighter::FireCaster:EAetherFighter::BellKnight;
+        auto* C=SpawnConfiguredCharacter(AAetherCharacter::StaticClass(),FTransform(FRotator(0,180,0),P),Type);
+        if(!C)return;
         C->Reactive->StableId = I==0 ? TEXT("Guard") : I==1 ? TEXT("Caster") : TEXT("Olen");
         UGameplayStatics::FinishSpawningActor(C,FTransform(FRotator(0,180,0),P)); Enemies.Add(C); if (I==2) Boss=C;
     }
@@ -244,8 +269,8 @@ void AAetherAdventureMode::BuildArtAbbey()
     }
     for (const auto& Entry:LevelDefinition->Enemies)
     {
-        auto* C=GetWorld()->SpawnActorDeferred<AAetherCharacter>(AAetherCharacter::StaticClass(),Entry.Transform,nullptr,nullptr,ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-        C->Fighter=EAetherFighter(Entry.Archetype); C->CharacterDefinition=Entry.Definition; C->Reactive->StableId=Entry.Id;
+        auto* C=SpawnConfiguredCharacter(AAetherCharacter::StaticClass(),Entry.Transform,EAetherFighter(Entry.Archetype),Entry.Definition);
+        if(!C)return;C->Reactive->StableId=Entry.Id;
         UGameplayStatics::FinishSpawningActor(C,Entry.Transform); Enemies.Add(C); if (C->Fighter==EAetherFighter::BellKnight) Boss=C;
     }
 }
@@ -256,7 +281,7 @@ void AAetherAdventureMode::BeginPlay()
     bCapture=FParse::Param(FCommandLine::Get(),TEXT("AetherAdventureCapture"));
     if (FParse::Param(FCommandLine::Get(),TEXT("AetherArtLevel"))) if (auto* Content=UAetherGameContent::Load()) LevelDefinition=Content->Abbey;
     if (bSmoke) SaveSlot=bEquipmentSmoke?TEXT("AetherSmoke_Equipment_v2"):TEXT("AetherSmoke_BCDE_v2");
-    BuildAbbey(); UE_LOG(LogTemp,Display,TEXT("AETHER_ADVENTURE_READY objects=%d enemies=%d"),Objects.Num(),Enemies.Num());
+    BuildAbbey();if(bCharacterAssemblyFailed)return;UE_LOG(LogTemp,Display,TEXT("AETHER_ADVENTURE_READY objects=%d enemies=%d"),Objects.Num(),Enemies.Num());
 }
 void AAetherAdventureMode::UpdateWorld(float Dt)
 {
@@ -287,6 +312,7 @@ void AAetherAdventureMode::UpdateWorld(float Dt)
 }
 FString AAetherAdventureMode::Interact(AAetherCharacter* P, bool Alternate)
 {
+    if(bCharacterAssemblyFailed)return TEXT("AETHER_ADVENTURE_UNAVAILABLE: character assembly failed; progression and save/load are blocked. Existing saves are unchanged.");
     if (!P || !P->Alive()) return TEXT("You cannot interact while downed. F9 loads the last save.");
     AAetherWorldObject* Target=nullptr; double Best=FMath::Square(230.0);
     for (const auto& O:Objects)
@@ -335,6 +361,7 @@ FString AAetherAdventureMode::Interact(AAetherCharacter* P, bool Alternate)
 }
 FString AAetherAdventureMode::SaveAdventure(AAetherCharacter* P)
 {
+    if(bCharacterAssemblyFailed)return TEXT("AETHER_ADVENTURE_UNAVAILABLE: character assembly failed; progression and save/load are blocked. Existing saves are unchanged.");
     if (GetNetMode()!=NM_Standalone) return TEXT("This prototype saves standalone games only.");
     if (!P || !P->Alive() || !P->Ready()) return TEXT("Save while alive and outside an action.");
     for (const auto& C:Enemies) if (C->Alive() && FVector::DistSquared(C->GetActorLocation(),P->GetActorLocation())<FMath::Square(1100.0)) return TEXT("Move out of combat before saving.");
@@ -351,6 +378,7 @@ FString AAetherAdventureMode::SaveAdventure(AAetherCharacter* P)
 }
 FString AAetherAdventureMode::LoadAdventure(AAetherCharacter* P)
 {
+    if(bCharacterAssemblyFailed)return TEXT("AETHER_ADVENTURE_UNAVAILABLE: character assembly failed; progression and save/load are blocked. Existing saves are unchanged.");
     if (GetNetMode()!=NM_Standalone) return TEXT("This prototype loads standalone games only.");
     auto* Save=Cast<UAetherAdventureSave>(UGameplayStatics::LoadGameFromSlot(SaveSlot,0));
     if (!Save || Save->Version!=2 || Save->Layout!=(LevelDefinition?LevelDefinition->LayoutId:FName(TEXT("BrokenBell_01"))) || Save->Quest.Phase>5 || Save->Quest.Resolution>3) return TEXT("No compatible save was found.");
@@ -437,7 +465,7 @@ void AAetherAdventureMode::SmokeStep()
 }
 void AAetherAdventureMode::Tick(float Dt)
 {
-    Super::Tick(Dt); Elapsed+=Dt; UpdateWorld(Dt);
+    Super::Tick(Dt);if(bCharacterAssemblyFailed)return;Elapsed+=Dt;UpdateWorld(Dt);
     if (bEquipmentSmoke) EquipmentSmokeStep(); else if (bSmoke) SmokeStep();
     if (FParse::Param(FCommandLine::Get(),TEXT("AetherNetServer")))
     {

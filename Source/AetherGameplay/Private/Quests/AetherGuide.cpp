@@ -83,7 +83,7 @@ FAetherInteractionTarget QueryTarget(AAetherFrontierCharacter* C,AActor* Actor)
  if(!Registry||!Registry->Contains(Actor))return R;
  auto* Target=Cast<AAetherFrontierProp>(Actor);auto* Downed=Cast<AAetherFrontierCharacter>(Actor);
  const bool Rescue=Downed&&Downed->Fighter==EAetherFighter::Player&&!Downed->Alive();
- auto* Container=C->UsesNativeSkills()?Cast<AAetherNativeContainer>(Actor):nullptr;
+ auto* Container=(C->SkillAuthority==EAetherSkillAuthority::Profile)?Cast<AAetherNativeContainer>(Actor):nullptr;
  if(!Target&&!Rescue&&!Container)return R;
  if(Target&&(!Target->bEnabled||Target->Service.IsNone()||((IsPersonalFire(Target->Service)||Target->Reactive->bOwnerOnlyStimuli)&&Target->GetOwner()!=C)))return R;
  const double Radius=Rescue?200.:250.;
@@ -100,7 +100,7 @@ FAetherInteractionTarget QueryTarget(AAetherFrontierCharacter* C,AActor* Actor)
  }
  if(Rescue){R.Rescue=Downed;R.ActionId="Revive";R.bExecutable=true;R.Prompt=Key+TEXT("救援队友：保持靠近 3 秒");return R;}
  R.Prop=Target;R.StableId=Target->Spec.Id;R.ActionId=Target->Service;const FName S=Target->Service;
- if(C->UsesNativeSkills())if(auto Native=AetherNativeInteraction::Provider(*C,*Target);Native.IsSet())
+ if((C->SkillAuthority==EAetherSkillAuthority::Profile))if(auto Native=AetherNativeInteraction::Provider(*C,*Target);Native.IsSet())
  {
   const auto Offers=Native->Query({C->ProfileState()->Profile.CharacterId,Target->Spec.Id.ToString()});
   for(const auto& Offer:Offers)if(Offer.bPreferred)

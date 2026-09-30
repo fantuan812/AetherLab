@@ -3,6 +3,7 @@
 #include "Misc/Paths.h"
 #include "Combat/AetherControlledActionDefinition.h"
 #include "Effects/AetherBuffState.h"
+#include "Skills/AetherNpcSkillDefinitions.h"
 
 const FAetherV10Definitions& FAetherV10Definitions::Get()
 {
@@ -13,6 +14,7 @@ const FAetherV10Definitions& FAetherV10Definitions::Get()
         for(const auto& Action:AetherControlledActions::All())if(!Action.IsValid())
         {D.Error=TEXT("Invalid controlled action rule");return D;}
         if(!D.Rules.bValid||!D.Skills.Validate(D.Error)){if(D.Error.IsEmpty())D.Error=D.Rules.Error;return D;}
+        if(!FAetherNpcSkillDefinitions::Get().bValid){D.Error=FAetherNpcSkillDefinitions::Get().Error;return D;}
         if(!FAetherBuffDefinitions::Get().bValid){D.Error=FAetherBuffDefinitions::Get().Error;return D;}
         for(const auto& Skill:D.Skills.Skills)for(const auto& Rank:Skill.Value.Ranks)
             if(!Rank.BuffId.IsEmpty()&&!FAetherBuffDefinitions::Get().Buffs.Contains(Rank.BuffId))
@@ -38,6 +40,10 @@ const FAetherV10Definitions& FAetherV10Definitions::Get()
         if(!Read(TEXT("Interactions.json"),Text))return D;
         D.Interactions=FAetherInteractionDefinitions::Parse(Text,D.Rules,D.Economy,D.Error);
         if(!D.Interactions.Validate(D.Rules,D.Economy,D.Error))return D;
+        for(const auto& Target:D.Interactions.Targets)for(const auto& Action:Target.Value.Actions)
+            if((Action.Kind==EAetherInteractionActionKind::RecruitGuard||Action.Kind==EAetherInteractionActionKind::RecruitHealer)&&
+                !FAetherNpcSkillDefinitions::Get().Find(Action.ServiceId))
+            {D.Error=TEXT("Recruitment references an unknown NPC capability loadout");return D;}
         if(!Read(TEXT("Progression.json"),Text))return D;
         D.Progression=FAetherQuestProgressionDefinitions::Parse(Text,D.Rules,D.Error);
         D.bValid=D.Progression.Validate(D.Rules,D.Error);return D;

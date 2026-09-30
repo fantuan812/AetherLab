@@ -21,7 +21,7 @@ bool FAetherSkillIdentityTest::RunTest(const FString&)
     // 隔离世界没有执行整张地图 BeginPlay，显式注册生产角色自带的属性集。
     C->AbilitySystem->AddAttributeSetSubobject(C->Attributes.Get());
     C->AbilitySystem->InitAbilityActorInfo(C,C);
-    C->GrantSpells();
+    C->SkillLoadoutId=TEXT("TrainingElementalist");C->GrantSpells();
     const auto& D=FAetherSkillDefinitionsV10::Get();
     auto* Fire=AetherSkillBinding::Find(*C->AbilitySystem,TEXT("Fire.Ignite"));
     auto* Storm=AetherSkillBinding::Find(*C->AbilitySystem,TEXT("Storm.Strike"));
@@ -32,7 +32,7 @@ bool FAetherSkillIdentityTest::RunTest(const FString&)
     Fire->Level=3;Fire->InputID=3;
     TestEqual(TEXT("Changing rank/input never changes identity"),AetherSkillBinding::Identify(*Fire),FString(TEXT("Fire.Ignite")));
     const auto Count=C->AbilitySystem->GetActivatableAbilities().Num();
-    C->GrantSpells();
+    C->SkillLoadoutId=TEXT("TrainingElementalist");C->GrantSpells();
     Fire=AetherSkillBinding::Find(*C->AbilitySystem,TEXT("Fire.Ignite"));
     if(!TestNotNull(TEXT("Still exactly one fire spec"),Fire))return false;
     TestTrue(TEXT("Repeated grant preserves handle"),Fire->Handle==FireHandle);
@@ -73,7 +73,7 @@ bool FAetherSkillWaterTest::RunTest(const FString&)
     auto* C=World->SpawnActor<AAetherCharacter>();
     if(!TestNotNull(TEXT("Caster"),C))return false;
     C->AbilitySystem->AddAttributeSetSubobject(C->Attributes.Get());
-    C->AbilitySystem->InitAbilityActorInfo(C,C);C->GrantSpells();C->SetVitals(100,100,100);
+    C->AbilitySystem->InitAbilityActorInfo(C,C);C->SkillLoadoutId=TEXT("Companion.Healer");C->GrantSpells();C->SetVitals(100,100,100);
     auto* Spec=AetherSkillBinding::Find(*C->AbilitySystem,TEXT("Water.Draw"));
     if(!TestNotNull(TEXT("Water spec"),Spec))return false;
     Spec->Level=3;

@@ -25,6 +25,9 @@ class UAetherCharacterDefinition;
 DECLARE_MULTICAST_DELEGATE(FOnAetherCharacterAppearanceChanged);
 
 UENUM()
+enum class EAetherSkillAuthority : uint8 { Profile, Definition };
+
+UENUM()
 enum class EAetherFighter : uint8 { Player, ShieldGuard, FireCaster, BellKnight, Wolf, Golem };
 
 UCLASS()
@@ -50,6 +53,9 @@ public:
     UPROPERTY(VisibleAnywhere) TObjectPtr<UCameraComponent> Camera;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UTextRenderComponent> Nameplate;
     UPROPERTY(Replicated) EAetherFighter Fighter = EAetherFighter::Player;
+    // Set by the authoritative spawn path before BeginPlay, never selected by client input.
+    UPROPERTY(Replicated) EAetherSkillAuthority SkillAuthority=EAetherSkillAuthority::Definition;
+    UPROPERTY(Replicated) FString SkillLoadoutId;
     UPROPERTY(Replicated) bool bBlocking = false;
     UPROPERTY(Replicated) bool bWindingUp = false;
     UPROPERTY(Replicated) bool bPacified = false;
@@ -111,8 +117,11 @@ public:
     UFUNCTION(Client,Reliable) void ClientSkillFeedback(uint32 InputSequence,bool Accepted);
     virtual bool SkillUnlocked(const FString& SkillId) const;
     virtual void GrantSpells();
+    void GrantCoreAbilities();
+    bool GrantDefinitionSkills(FString& Reason);
+    FString SkillAtInputSlot(int32 Slot) const;
     virtual bool TrySpell(int32 Spell);
-    virtual bool SpellUnlocked(int32 Spell) const { return true; }
+    virtual bool SpellUnlocked(int32 Spell) const;
     UPROPERTY(Replicated) bool bUseBasicAssets = false;
     void SetVitals(float HP, float MP, float SP);
     bool DeferEquipmentHit(const FAetherEquipmentHit& Hit);
@@ -171,7 +180,6 @@ private:
     UFUNCTION() void Reaction(EReactiveReaction Kind, double Magnitude, FVector Vector);
     UFUNCTION() void ElectricalWindow(const FReactiveElectricalWindow& Window);
     UFUNCTION(Client, Reliable) void ClientFeedback(const FString& Message);
-    TArray<FGameplayAbilitySpecHandle> SpellHandles;
     float ActionUntil = 0;
     float NextAI = 0;
     float NextShockStun = 0;

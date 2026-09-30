@@ -90,7 +90,7 @@ void AAetherFrontierCharacter::RefreshInteractionFocus()
     AActor* Previous=InteractionFocus.Prop.IsValid()?static_cast<AActor*>(InteractionFocus.Prop.Get()):static_cast<AActor*>(InteractionFocus.Rescue.Get());
     if(InteractionFocus.Container.IsValid())Previous=InteractionFocus.Container.Get();
     InteractionFocus=AetherGuide::SelectInteraction(this,Previous);bHasInteractionFocus=true;NativeInteractionFocus.Reset();
-    if(UsesNativeSkills())if(auto* Target=InteractionFocus.Prop.Get())
+    if((SkillAuthority==EAetherSkillAuthority::Profile))if(auto* Target=InteractionFocus.Prop.Get())
         if(auto Provider=AetherNativeInteraction::Provider(*this,*Target);Provider.IsSet())
         {
             const auto Offers=Provider->Query({ProfileState()->Profile.CharacterId,Target->Spec.Id.ToString()});
@@ -109,14 +109,14 @@ void AAetherFrontierCharacter::InteractV4()
     if(!bHasInteractionFocus)RefreshInteractionFocus();
     // 输入使用最近一次真正显示的快照；失效时只刷新，不在同一次按键偷偷执行新目标。
     const auto Selection=InteractionFocus;
-    if(UsesNativeSkills()&&Selection.Container.IsValid())
+    if((SkillAuthority==EAetherSkillAuthority::Profile)&&Selection.Container.IsValid())
     {
         if(!AetherGuide::ValidateSelection(this,Selection)){RefreshInteractionFocus();return;}
         auto* PC=Cast<APlayerController>(GetController());auto* LP=PC?PC->GetLocalPlayer():nullptr;
         if(LP)LP->GetSubsystem<UAetherCommandClient>()->OpenContainer(Selection.Container->StableId);
         return;
     }
-    if(UsesNativeSkills()&&NativeInteractionFocus.IsSet())
+    if((SkillAuthority==EAetherSkillAuthority::Profile)&&NativeInteractionFocus.IsSet())
     {
         auto* Shown=Selection.Prop.Get();
         if(!Shown||Shown->Spec.Id.ToString()!=NativeInteractionFocus->TargetStableId||Shown->InteractionRevision!=NativeInteractionFocus->InteractionRevision)
@@ -125,7 +125,7 @@ void AAetherFrontierCharacter::InteractV4()
         AetherNativeInteraction::Submit(*this,NativeInteractionFocus.GetValue(),Why);Feedback=Why;
         OnPresentationChanged.Broadcast();return;
     }
-    if(UsesNativeSkills()&&Selection.Prop.IsValid()){Feedback=TEXT("没有可执行的当前动作，请查看目标提示。");RefreshInteractionFocus();OnPresentationChanged.Broadcast();return;}
+    if((SkillAuthority==EAetherSkillAuthority::Profile)&&Selection.Prop.IsValid()){Feedback=TEXT("没有可执行的当前动作，请查看目标提示。");RefreshInteractionFocus();OnPresentationChanged.Broadcast();return;}
     if(!AetherGuide::ValidateSelection(this,Selection)){RefreshInteractionFocus();return;}
     auto* Target=Selection.Prop.Get();
     if(!Target||!AetherServices::IsService(Selection.ActionId))

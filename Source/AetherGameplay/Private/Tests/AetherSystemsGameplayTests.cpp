@@ -17,7 +17,7 @@ AAetherCharacter* MakeBasic(UWorld* W)
 {
     FActorSpawnParameters Params;Params.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
     auto* C=W->SpawnActor<AAetherCharacter>(FVector::ZeroVector,FRotator::ZeroRotator,Params);
-    C->AbilitySystem->AddAttributeSetSubobject(C->Attributes.Get());C->AbilitySystem->InitAbilityActorInfo(C,C);C->GrantSpells();C->SetVitals(100,100,100);return C;
+    C->AbilitySystem->AddAttributeSetSubobject(C->Attributes.Get());C->AbilitySystem->InitAbilityActorInfo(C,C);C->SkillLoadoutId=TEXT("FireCaster");C->GrantSpells();C->SetVitals(100,100,100);return C;
 }
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherSystemsCommitTest,"Aether.Systems.Runtime.ReentrantCostCancellation",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
