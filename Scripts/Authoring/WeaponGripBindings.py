@@ -89,24 +89,24 @@ def prepare_grips(ue, root, required_items, output_folder='/Game/AetherCore/Data
     prepared = {}
     for item_id in required_items:
         output = output_folder + '/DA_' + item_id
-        key = output.casefold()
-        require(key in rows, 'Missing full grip for ' + item_id)
-        row = rows[key]
+        output_key = output.casefold()
+        require(output_key in rows, 'Missing full grip for ' + item_id)
+        row = rows[output_key]
         require(row['item_id'] == item_id and row['equipment_asset'] == output,
                 'Author output does not match explicit grip identity: ' + item_id)
         target = ue.EditorAssetLibrary.load_asset(row['target_mesh'])
         weapon = ue.EditorAssetLibrary.load_asset(row['weapon_mesh'])
         require(isinstance(target, ue.SkeletalMesh) and isinstance(weapon, ue.StaticMesh),
                 'Import declared body and weapon before grip authoring: ' + item_id)
-        for key, asset in [('target_mesh', target), ('weapon_mesh', weapon)]:
-            expected = row[key] + '.' + row[key].rsplit('/', 1)[1]
-            require(asset.get_path_name().casefold() == expected.casefold(), 'Redirected grip asset identity: ' + row[key])
+        for field, asset in [('target_mesh', target), ('weapon_mesh', weapon)]:
+            expected = row[field] + '.' + row[field].rsplit('/', 1)[1]
+            require(asset.get_path_name().casefold() == expected.casefold(), 'Redirected grip asset identity: ' + row[field])
         require(ue.AetherEquipmentDefinition.validate_grip_target(target, row['socket'], row['main_bone'], row['support_bone']),
                 'Grip bones/socket/reference scale are invalid: ' + item_id)
         if ue.EditorAssetLibrary.does_asset_exist(output):
             require(isinstance(ue.EditorAssetLibrary.load_asset(output), ue.AetherEquipmentDefinition),
                     'Equipment output class conflict: ' + output)
-        prepared[key] = (row, target, weapon, source_hash)
+        prepared[output_key] = (row, target, weapon, source_hash)
     return prepared
 
 

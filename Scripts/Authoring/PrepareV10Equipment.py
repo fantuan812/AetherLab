@@ -1,6 +1,9 @@
 """十槽官方基础几何体装备。全部代码完成并具备新 UClass 后才运行；脚本不等于已制作资产。"""
 import unreal as ue
 from pathlib import Path
+import sys
+ROOT = Path(ue.Paths.project_dir()).resolve()
+sys.path.insert(0, str(ROOT / 'Scripts/Authoring'))
 from WeaponGripBindings import prepare_grips, apply_grip
 
 def load_optional(path):
@@ -37,7 +40,7 @@ rows += [
 ]
 existing = list(catalog.get_editor_property("items"))
 # Preflight every two-hand output before the first create/update/save in this batch.
-grips = prepare_grips(ue, Path(ue.Paths.project_dir()),
+grips = prepare_grips(ue, ROOT,
                       [str(item.get_editor_property("item_id")) for item in existing
                        if item.get_editor_property("occupies_both_hands")])
 for name, slots, socket, position, scale, invisible in rows:

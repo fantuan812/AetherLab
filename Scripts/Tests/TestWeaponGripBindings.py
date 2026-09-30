@@ -8,10 +8,11 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'Authoring'))
-from WeaponGripBindings import load_grips, transform, prepare_grips
+from WeaponGripBindings import load_grips, transform, prepare_grips, apply_grip
 
 
 class WeaponGripBindingsTests(unittest.TestCase):
@@ -97,6 +98,46 @@ class WeaponGripBindingsTests(unittest.TestCase):
                 raise AssertionError('Editor access before whole-contract validation: ' + name)
         with self.assertRaisesRegex(ValueError, 'missing'):
             prepare_grips(EditorMustNotBeCalled(), self.root, ['TestWeapon'])
+
+    def test_batch_keys_and_apply_match_exact_output(self):
+        # Fake UE objects exercise the successful batch path without importing or running Unreal.
+        other = copy.deepcopy(self.row)
+        other['item_id'] = 'OtherWeapon'
+        other['equipment_asset'] = '/Game/AetherCore/Data/DA_OtherWeapon'
+        other['support_hand_to_weapon']['translation_cm'] = [9, 8, 7]
+        self.data['bindings'].append(other)
+        directory = self.root / 'ContentSource/Equipment'; directory.mkdir(parents=True)
+        (directory / 'WeaponGrips.json').write_text(json.dumps(self.data))
+        (directory / self.data['source']['path']).write_bytes((self.root / self.data['source']['path']).read_bytes())
+        class Asset:
+            def __init__(self, package): self.package = package
+            def get_path_name(self): return self.package + '.' + self.package.rsplit('/', 1)[1]
+        class SkeletalMesh(Asset): pass
+        class StaticMesh(Asset): pass
+        class Definition(Asset):
+            def __init__(self, row):
+                super().__init__(row['equipment_asset']); self.values = {'item_id': row['item_id']}
+            def get_editor_property(self, key): return self.values[key]
+            def set_editor_property(self, key, value): self.values[key] = value
+            @staticmethod
+            def validate_grip_target(*args): return True
+        class Quat:
+            def __init__(self, *values): self.values = values
+            def rotator(self): return self.values
+        outputs = [Definition(self.row), Definition(other)]
+        assets = {self.row['target_mesh']: SkeletalMesh(self.row['target_mesh']),
+                  self.row['weapon_mesh']: StaticMesh(self.row['weapon_mesh'])}
+        assets.update({value.package: value for value in outputs})
+        ue = SimpleNamespace(SkeletalMesh=SkeletalMesh, StaticMesh=StaticMesh, AetherEquipmentDefinition=Definition,
+                             EditorAssetLibrary=SimpleNamespace(load_asset=assets.get, does_asset_exist=lambda path: path in assets),
+                             Quat=Quat, Vector=lambda *values: values, Transform=lambda **values: values)
+        prepared = prepare_grips(ue, self.root, ['TestWeapon', 'OtherWeapon'])
+        self.assertEqual(set(prepared), {value.package.casefold() for value in outputs})
+        self.assertTrue(all(value.values == {'item_id': row['item_id']} for value, row in zip(outputs, self.data['bindings'])))
+        for value in outputs: apply_grip(ue, value, prepared)
+        self.assertEqual(outputs[0].values['support_hand_transform']['location'], (1, 2, 3))
+        self.assertEqual(outputs[1].values['support_hand_transform']['location'], (9, 8, 7))
+        self.assertTrue(all(value.values['support_hand_transform_configured'] for value in outputs))
 
 
 if __name__ == '__main__':

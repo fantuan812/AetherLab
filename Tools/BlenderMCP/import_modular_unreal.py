@@ -5,7 +5,11 @@ ROOT=Path(ue.Paths.project_dir()).resolve();ART=ROOT/'Art/SwordMagic/Modular';PA
 sys.path.insert(0,str(ROOT/'Scripts/Authoring'))
 from WeaponGripBindings import prepare_grips, apply_grip
 # A missing real contract stops before material/import/data mutations. Import source meshes separately first.
+if '-AetherDataOnly' not in ue.SystemLibrary.get_command_line().split():
+    raise RuntimeError('Full grip authoring requires -AetherDataOnly; import meshes separately before validating the grip contract')
 GRIPS=prepare_grips(ue,ROOT,['TrainingHammer','BellHammer'],PACK+'/Data')
+GRIP_ASSETS={row[key].casefold():asset for row,target,weapon,_ in GRIPS.values()
+             for key,asset in [('target_mesh',target),('weapon_mesh',weapon)]}
 MAN=json.loads((ART/'manifest.json').read_text(encoding='utf-8'))
 LIB=ue.EditorAssetLibrary;TOOLS=ue.AssetToolsHelpers.get_asset_tools();ME=ue.MaterialEditingLibrary
 REPORT={'stage':'starting','assets':[],'errors':[]}
@@ -48,6 +52,12 @@ def material_pack():
     return mats
 def import_fbx(name,folder,kind='static',skeleton=None):
     existing=PACK+'/'+folder+'/'+name
+    # Preflight pins these objects. Never replace/reimport them after validation, including on a missing-file path.
+    if existing.casefold() in GRIP_ASSETS:
+        if not LIB.does_asset_exist(existing):raise RuntimeError('Validated grip asset disappeared: '+existing)
+        result=LIB.load_asset(existing)
+        if result!=GRIP_ASSETS[existing.casefold()]:raise RuntimeError('Validated grip asset changed after preflight: '+existing)
+        REPORT['assets'].append(result.get_path_name());return result
     if 'AetherDataOnly' in ue.SystemLibrary.get_command_line() and LIB.does_asset_exist(existing) and 'Apprentice' not in name:
         result=LIB.load_asset(existing);REPORT['assets'].append(result.get_path_name());return result
     task=ue.AssetImportTask();task.filename=str(ART/'FBX'/f'{name}.fbx');task.destination_path=PACK+'/'+folder;task.destination_name=name

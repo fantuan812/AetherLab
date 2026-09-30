@@ -32,7 +32,11 @@ schema 1 顶层字段只能是 `schema`、`coordinates`、`source`、`bindings`�
 
 缺字段、未知字段、重复JSON key、位置旧格式、错单位/坐标标记、源哈希变化、异常旋转/scale均拒绝。作者写入新 `SupportHandTransform`、身体/手骨身份、`GripSourceSha256` 和显式已配置标志。运行时与作者使用一致数值约束；`SecondarySocket` 仍专供成对装备，双手武器不允许混用。数据预校验不声称能回滚磁盘故障或其他旧作者逻辑的失败；本轮三个入口均未在UE执行或改写二进制。
 
+旧 `Tools/BlenderMCP/import_modular_unreal.py` 现在仅允许显式 `-AetherDataOnly` 进入该握持绑定流程。整批预检已经引用的身体/武器网格按完整包路径锁定，不得在同一次流程中 `replace_existing` 重导；资源缺失或对象发生变化即报错，没有缺失即导入的旁路。原始FBX先单独导入，核对实际导入坐标并建立真实合同后，再运行此绑定步骤。
+
 确认需重作者化的双手资产：`/Game/AetherCore/Data/DA_TrainingHammer`、`DA_TideStaff`、`DA_BellHammer`，以及旧模块导入入口的 `/Game/SwordMagic/Data/DA_TrainingHammer`、`DA_BellHammer`。这是从源作者脚本确认的清单，不宣称读取了全部 uasset 序列化内容。它们缺完整副手朝向与身体身份绑定；基础几何版本还含非uniform scale，需烘入网格后提供新合同。其他二进制若包含双手配置，同样必须重作者化。旧二进制会明确失败，不能把本分支直接合入运行主线。
+
+发布影响：`ValidateLoadout` 先要求整个 `Catalog::IsValidCatalog` 有效。因此任一旧双手资产缺合同会阻断整个装备目录的恢复/切换，也会影响单手装备与防具，并非仅关闭副手IK。必须一次备齐所用目录的全部真实完整合同和重新作者化资产后才能考虑合并；不能用fallback弱化门禁。
 
 Quaternius 原65骨最新版 `.blend`、rest 合同、主副握点矩阵/手指姿态的原始 manifest 尚未恢复。展示视频不含这些可编辑数据。现有计划输出路径不是资源存在证明。
 
