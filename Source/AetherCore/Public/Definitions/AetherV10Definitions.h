@@ -4,6 +4,7 @@
 #include "Skills/AetherSkillDefinitions.h"
 #include "Interaction/AetherInteractionDefinitions.h"
 #include "Quests/AetherQuestProgression.h"
+#include "Quests/AetherGuidanceDefinitions.h"
 
 // 运行时与网络解码共用这一份规范定义；不在 UI、RPC 或存储各自维护不同的价格/技能参数。
 struct AETHERCORE_API FAetherV10Definitions
@@ -15,6 +16,7 @@ struct AETHERCORE_API FAetherV10Definitions
     FAetherEconomyDefinitionsV10 Economy;
     FAetherInteractionDefinitions Interactions;
     FAetherQuestProgressionDefinitions Progression;
+    FAetherGuidanceDefinitions Guidance;
     bool bValid=false;
     FString Error;
     static const FAetherV10Definitions& Get();

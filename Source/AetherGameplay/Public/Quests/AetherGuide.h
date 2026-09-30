@@ -1,6 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
-struct FAetherProfile;
+struct FAetherProfileStateV10;
 class AActor;
 class AAetherFrontierCharacter;
 class AAetherFrontierProp;
@@ -11,7 +11,8 @@ struct FAetherGuidance
  FName Objective;
  FString Title,Label,Hint;
  FVector Position=FVector::ZeroVector;
- bool bHasTarget=false,bRewardReady=false;
+ int64 ProfileRevision=-1;
+ bool bReady=false,bHasTarget=false,bRewardReady=false;
 };
 struct FAetherInteractionTarget
 {
@@ -25,9 +26,9 @@ struct FAetherInteractionTarget
 };
 namespace AetherGuide
 {
- AETHERGAMEPLAY_API FName SelectQuest(const FAetherProfile& Profile,FName Preferred,bool Cycle=false);
+ AETHERGAMEPLAY_API FName SelectQuest(const FAetherProfileStateV10& Profile,FName Preferred,bool Cycle=false);
  AETHERGAMEPLAY_API FString ObjectiveLabel(FName Id);
- AETHERGAMEPLAY_API FAetherGuidance Resolve(AAetherFrontierCharacter* Character);
+ AETHERGAMEPLAY_API FAetherGuidance Resolve(AAetherFrontierCharacter* Character,const FAetherProfileStateV10* Snapshot);
  AETHERGAMEPLAY_API FAetherInteractionTarget SelectInteraction(AAetherFrontierCharacter* Character,AActor* Previous=nullptr);
  // 检查指定实例的范围、遮挡和私有归属，绝不选择替代目标。物理提示可显示但不响应 E。
  AETHERGAMEPLAY_API FAetherInteractionTarget QueryTarget(AAetherFrontierCharacter* Character,AActor* Target);

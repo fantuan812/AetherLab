@@ -2,6 +2,7 @@
 #include "UI/AetherWidgetAssets.h"
 #include "UI/AetherPageWidgets.h"
 #include "Definitions/AetherMapDefinition.h"
+#include "Definitions/AetherV10Definitions.h"
 #include "Definitions/AetherWorldDefinition.h"
 #include "Framework/AetherFrontier.h"
 #include "Quests/AetherGuide.h"
@@ -122,7 +123,13 @@ UWidget* UAetherMapPage::InitialFocus() const{return Map?Map.Get():Super::Initia
 void UAetherMapPage::RefreshPage(){LiveRefresh();}
 void UAetherMapPage::LiveRefresh()
 {
-    auto* C=Player();const auto* P=Profile();if(!C||!P||!Map)return;Map->Markers.Reset();
+    auto* C=Player();const auto* P=Profile();if(!Map)return;Map->Markers.Reset();
+    if(!C||!P)
+    {
+        SelectedBeacon=NAME_None;if(TravelButton)TravelButton->SetIsEnabled(false);
+        if(Detail)Detail->SetText(FText::FromString(FAetherV10Definitions::Get().Guidance.LoadingTitle));
+        Map->InvalidateLayoutAndVolatility();return;
+    }
     for(const auto& B:FAetherMapDefinitions::Get().Beacons)
     {
         const bool Unlocked=B.RequiredQuest.IsNone()||P->Claims.Contains(B.RequiredQuest.ToString());
@@ -131,7 +138,7 @@ void UAetherMapPage::LiveRefresh()
     if(bServices)for(const auto& O:FAetherWorldDefinitions::Get().Objects)
         if(!O.Service.IsNone()&&(O.Section=="Town"||O.Service=="Teacher"||O.Service=="Inn"||O.Service=="Shop"||O.Service=="Register"))
             Map->Markers.Add({O.Id.ToString(),O.Label,O.Location,FLinearColor(.3,.7,1)});
-    if(bQuests){const auto Guidance=AetherGuide::Resolve(C);if(Guidance.bHasTarget)Map->Markers.Add({TEXT("TrackedQuest"),Guidance.Label,Guidance.Position,FLinearColor(1,.5,.15)});}
+    if(bQuests){const auto Guidance=AetherGuide::Resolve(C,P);if(Guidance.bHasTarget)Map->Markers.Add({TEXT("TrackedQuest"),Guidance.Label,Guidance.Position,FLinearColor(1,.5,.15)});}
     Map->Markers.Add({TEXT("Self"),TEXT("你"),C->GetActorLocation(),FLinearColor(.2,1,.5),NAME_None,true,float(C->GetActorRotation().Yaw)});
     if(bParty)for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(*It!=C&&It->Fighter==EAetherFighter::Player)
     {

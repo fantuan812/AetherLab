@@ -1,0 +1,24 @@
+{
+  "SchemaVersion": 1,
+  "Messages": {
+    "LoadingTitle": "任务同步中",
+    "LoadingHint": "等待当前角色的已提交任务快照",
+    "RewardReadyLabel": "目标完成，可领取任务奖励",
+    "RewardReadyHint": "在任务日志确认奖励；满包物品会进入待领取列表，不阻止任务进度",
+    "PendingRewardHint": "还有待领取物品或金币，可在任务日志单独领取"
+  },
+  "Preparations": [
+    {"QuestId":"Q_Main_03","AnchorId":"Teacher","RequiredPermanentSkills":["Fire.Ignite","Water.Draw"],"RequiredLiveObjectives":["TrainingExtinguished","Block"],"Label":"拜访导师，准备个人训练","Hint":"与导师交谈，学习引焰和引泉，并准备尚未完成的训练目标"}
+  ],
+  "DynamicObjectives": [
+    {"ObjectiveId":"TrainingExtinguished","Kind":"OwnedService","SelectorId":"TrainingExtinguished"},
+    {"ObjectiveId":"Block","Kind":"OwnedFighter","SelectorId":"ShieldGuard"}
+  ],
+  "EncounterPhases": [
+    {"EncounterId":"Abbey","Phase":"Front","AnchorId":"","EncounterDefinitionId":"AbbeyFront","Label":"击败前庭守卫","Hint":"与同行者清理前庭，保护生命与体力"},
+    {"EncounterId":"Abbey","Phase":"Channel","AnchorId":"AbbeyValve","EncounterDefinitionId":"","Label":"保护并引导水道阀门","Hint":"在阀门旁交互，或指挥同行者引导"},
+    {"EncounterId":"Abbey","Phase":"Elite","AnchorId":"","EncounterDefinitionId":"AbbeyElite","Label":"清除侧廊精英","Hint":"配合同行者清理精英后再前往钟炉"},
+    {"EncounterId":"Abbey","Phase":"Boss","AnchorId":"","EncounterDefinitionId":"AbbeyBoss","Label":"击败铸钟守卫","Hint":"破坏架势，过热时用水，抓住暴露窗口"}
+  ],
+  "Completion":{"Title":"主线已完成","Label":"镇上委托与中继防守已开放","Hint":"到公告板查看已解锁的日常委托","AnchorId":"DailyBoard"}
+}

@@ -82,6 +82,25 @@ FAetherRules FAetherRules::Parse(const FString& Text)
             Visiting.Remove(Id);Visited.Add(Id);return true;
         };
         for(const auto& Q:R.Quests)if(!Visit(Q.Id)){R.Error=TEXT("Unknown prerequisite or quest cycle");return R;}
+        // The actual personal-training spawner and guidance must share one declared service identity.
+        const TSharedPtr<FJsonObject>* Training=nullptr;FString TrainingQuest,RequiredQuest,FireObjective;
+        if(!Root->TryGetObjectField(TEXT("PersonalTraining"),Training)||!Training||!Training->IsValid()||(*Training)->Values.Num()!=3)
+        {R.Error=TEXT("Missing personal training definition");return R;}
+        for(const auto& Pair:(*Training)->Values)
+            if(!Pair.Key.Equals(TEXT("QuestId"),ESearchCase::CaseSensitive)&&!Pair.Key.Equals(TEXT("RequiredQuestId"),ESearchCase::CaseSensitive)&&
+               !Pair.Key.Equals(TEXT("FireObjectiveId"),ESearchCase::CaseSensitive))
+            {R.Error=TEXT("Unknown personal training field");return R;}
+        if(!(*Training)->TryGetStringField(TEXT("QuestId"),TrainingQuest)||!(*Training)->TryGetStringField(TEXT("RequiredQuestId"),RequiredQuest)||
+           !(*Training)->TryGetStringField(TEXT("FireObjectiveId"),FireObjective))
+        {R.Error=TEXT("Invalid personal training identities");return R;}
+        const auto* TrainingRule=R.Quest(FName(*TrainingQuest));const auto* RequiredRule=R.Quest(FName(*RequiredQuest));
+        const auto* FireRule=R.Objectives.Find(FName(*FireObjective));
+        if(!TrainingRule||!RequiredRule||!FireRule||!TrainingRule->Id.ToString().Equals(TrainingQuest,ESearchCase::CaseSensitive)||
+           !RequiredRule->Id.ToString().Equals(RequiredQuest,ESearchCase::CaseSensitive)||
+           !TrainingRule->Prerequisites.Contains(RequiredRule->Id)||FireRule->Scope!=EAetherObjectiveScope::Personal||FireRule->bInspectableFire||
+           !TrainingRule->Objectives.ContainsByPredicate([&](FName Id){return Id.ToString().Equals(FireObjective,ESearchCase::CaseSensitive);}))
+        {R.Error=TEXT("Personal training requires a declared prerequisite and its own personal fire objective");return R;}
+        R.PersonalTraining={TrainingRule->Id,RequiredRule->Id,FName(*FireObjective)};
         const TSharedPtr<FJsonObject>* Container=nullptr;
         if(!Root->TryGetObjectField(TEXT("Container"),Container)||!(*Container)->TryGetNumberField(TEXT("PourKg"),R.PourKg)||!(*Container)->TryGetNumberField(TEXT("RangeCm"),R.PourRangeCm)
             ||!FMath::IsFinite(R.PourKg)||R.PourKg<=0||R.PourKg>10||!FMath::IsFinite(R.PourRangeCm)||R.PourRangeCm<=0||R.PourRangeCm>1000)

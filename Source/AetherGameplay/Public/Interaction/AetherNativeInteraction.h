@@ -8,5 +8,6 @@ namespace AetherNativeInteraction
     AETHERGAMEPLAY_API TOptional<FAetherInteractionProvider> Provider(AAetherFrontierCharacter& Player,AAetherFrontierProp& Target);
     AETHERGAMEPLAY_API bool IsSceneService(EAetherInteractionActionKind Kind);
     AETHERGAMEPLAY_API bool IsPersistent(EAetherInteractionActionKind Kind);
-    AETHERGAMEPLAY_API bool Submit(AAetherFrontierCharacter& Player,const FAetherInteractionSelection& Selection,FString& Reason);
+    // Optional receipt identity is set before transport (including synchronous local-server replies); invalid on failure/local-only actions.
+    AETHERGAMEPLAY_API bool Submit(AAetherFrontierCharacter& Player,const FAetherInteractionSelection& Selection,FString& Reason,FGuid* SubmittedCommandId=nullptr);
 }

@@ -50,13 +50,15 @@ FString AAetherFrontierMode::InteractTarget(AAetherFrontierCharacter* C,const FA
     }
     else if(Service=="Teacher")
     {
-        if(!Next.Claims.Contains(FName("Q_Main_02")))return TEXT("Register and bind the inn first.");
+        const auto& Training=FAetherRules::Get().PersonalTraining;
+        if(!Next.Claims.Contains(Training.RequiredQuestId))return TEXT("Register and bind the inn first.");
         for(const auto& Unlock:FAetherRules::Get().SpellUnlocks)if(Next.Claims.Contains(Unlock.Key))Next.LearnedSpells|=Unlock.Value;
         if(!Commit(PS,Next))return TEXT("Storage unavailable; try again.");
-        if(Next.Available("Q_Main_03"))
+        if(Next.Available(Training.QuestId))
         {
             FName Id=*FString(TEXT("Training_" )+Next.CharacterId);auto* Fire=Prop(Id);
-            if(!Fire)Fire=Make(Id,"TrainingExtinguished",C->GetActorLocation()+FVector(220,0,-50),{.6,.6,.6},EAetherObjectKind::Timber,TEXT("PERSONAL FIRE / 2 THEN MIDDLE MOUSE TO EXTINGUISH"));
+            if(!Fire)Fire=Make(Id,Training.FireObjectiveId,C->GetActorLocation()+FVector(220,0,-50),{.6,.6,.6},EAetherObjectKind::Timber,TEXT("PERSONAL FIRE / 2 THEN MIDDLE MOUSE TO EXTINGUISH"));
+            if(!Fire)return TEXT("Training fire spawn unavailable.");
             Fire->SetOwner(C);FReactiveStimulus H;H.HeatJ=80000;Fire->Reactive->Inject(H);
             const FName Tag=*FString(TEXT("Trainer_")+Next.CharacterId);bool Exists=false;
             for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->Tags.Contains(Tag)&&It->Alive())Exists=true;

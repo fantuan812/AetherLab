@@ -10,6 +10,7 @@
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/ScrollBox.h"
 #include "Quests/AetherGuide.h"
+#include "Quests/AetherQuestProgression.h"
 #include "World/AetherFrontierState.h"
 #include "GameFramework/GameStateBase.h"
 using namespace AetherPageWidgets;
@@ -42,8 +43,8 @@ UWidget* UAetherJournalPage::InitialFocus() const{return First?First.Get():Super
 void UAetherJournalPage::RefreshPage()
 {
     if(!List||!Details||!Rewards)return;List->ClearChildren();Rewards->ClearChildren();First=nullptr;
-    const auto* P=Profile();if(!P){Details->ClearChildren();Text(*WidgetTree,*Details,TEXT("等待任务同步"));return;}
     const auto& D=FAetherV10Definitions::Get();
+    const auto* P=Profile();if(!P){Details->ClearChildren();Selected=NAME_None;Text(*WidgetTree,*Details,D.Guidance.LoadingTitle);return;}
     if(Filter==1)
     {
         for(const auto& Daily:D.Rules.Dailies)
@@ -62,7 +63,7 @@ void UAetherJournalPage::RefreshPage()
     else for(const auto& Q:D.Rules.Quests)
     {
         const bool Done=P->Claims.Contains(Q.Id.ToString());if((Filter==2)!=Done)continue;
-        bool Available=true;for(FName Pre:Q.Prerequisites)Available&=P->Claims.Contains(Pre.ToString());
+        const bool Available=AetherQuestProgression::Available(*P,Q.Id.ToString(),D.Rules);
         auto* Row=Card(*WidgetTree,*List);
         const FString Status=Done?TEXT("已完成"):Available?TEXT("进行中"):TEXT("未开放");
         auto* B=Button(*WidgetTree,*Row,Q.Title+TEXT(" · ")+Status,FSimpleDelegate::CreateWeakLambda(this,[this,Id=Q.Id](){Select(Id);}));
@@ -106,7 +107,12 @@ void UAetherJournalPage::ShowDetails()
             Button(*WidgetTree,*Details,FString::Printf(TEXT("%s × %d"),Def?*Def->DisplayName:*Item.Key.ToString(),Item.Value),
                 FSimpleDelegate::CreateWeakLambda(this,[this,Id=Item.Key.ToString()](){Inspect(Id);}));
         }
-        Button(*WidgetTree,*Details,TEXT("追踪此任务"),FSimpleDelegate::CreateWeakLambda(this,[this](){if(auto* C=Player()){C->TrackedQuest=Selected;C->OnPresentationChanged.Broadcast();}}),!P->Claims.Contains(Selected.ToString()));
+        const FName ShownQuest=Q->Id;
+        Button(*WidgetTree,*Details,TEXT("追踪此任务"),FSimpleDelegate::CreateWeakLambda(this,[this,ShownQuest](){
+            const auto* Current=Profile();
+            if(Current&&AetherQuestProgression::Available(*Current,ShownQuest.ToString(),FAetherV10Definitions::Get().Rules))
+                if(auto* C=Player()){C->TrackedQuest=ShownQuest;C->OnPresentationChanged.Broadcast();}
+        }),AetherQuestProgression::Available(*P,ShownQuest.ToString(),D.Rules));
     }
     else if(Filter==1)
     {

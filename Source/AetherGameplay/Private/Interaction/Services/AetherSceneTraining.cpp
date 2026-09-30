@@ -12,14 +12,16 @@ FString FAetherSceneServiceHandlers::Train(const FAetherSceneServiceContext& X)
     auto* Target=&X.Target;const auto* Action=&X.Action;const auto& D=FAetherV10Definitions::Get();
     auto* Reactive=M.GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();using K=EAetherInteractionActionKind;
 
-        if(!P->Claims.Contains(TEXT("Q_Main_02")))return TEXT("请先完成登记和旅舍绑定。");
+        if(!D.bValid)return TEXT("训练定义尚未就绪。");
+        const auto& Training=D.Rules.PersonalTraining;
+        if(!P->Claims.Contains(Training.RequiredQuestId.ToString()))return TEXT("请先完成登记和旅舍绑定。");
         // 个人训练实体在同一生命中唯一；重复对话不能重新点燃已熄灭火点。
-        if(!P->Claims.Contains(TEXT("Q_Main_03")))
+        if(!P->Claims.Contains(Training.QuestId.ToString()))
         {
             const FName Id(*(TEXT("Training_")+P->CharacterId));
-            if(!P->Evidence.Contains(TEXT("TrainingExtinguished"))&&!M.Prop(Id))
+            if(!P->Evidence.Contains(Training.FireObjectiveId.ToString())&&!M.Prop(Id))
             {
-                auto* Fire=M.Make(Id,"TrainingExtinguished",C->GetActorLocation()+FVector(220,0,-50),{.6,.6,.6},EAetherObjectKind::Timber,TEXT("个人训练：使用引泉灭火"));
+                auto* Fire=M.Make(Id,Training.FireObjectiveId,C->GetActorLocation()+FVector(220,0,-50),{.6,.6,.6},EAetherObjectKind::Timber,TEXT("个人训练：使用引泉灭火"));
                 if(!Fire)return TEXT("训练场景暂时无法创建。");
                 Fire->SetOwner(C);FReactiveStimulus Heat;Heat.HeatJ=80000;Fire->Reactive->Inject(Heat);
             }

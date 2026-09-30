@@ -1,4 +1,5 @@
 {
+  "PersonalTraining": {"QuestId":"Q_Main_03","RequiredQuestId":"Q_Main_02","FireObjectiveId":"TrainingExtinguished"},
   "Version": 2,
   "Items": {
     "Potion": {

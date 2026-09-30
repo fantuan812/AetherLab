@@ -94,7 +94,14 @@ void UAetherPlayerHUDWidget::NativeDestruct()
 void UAetherPlayerHUDWidget::Refresh()
 {
     auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());auto* LP=GetOwningLocalPlayer();
-    if(!C||!LP||Bars.Num()!=3)return;
+    if(!LP||Bars.Num()!=3)return;
+    if(!C)
+    {
+        SetVisibility(ESlateVisibility::Collapsed);
+        if(Interaction)Interaction->SetText(FText::GetEmpty());
+        if(Guidance)Guidance->SetText(FText::FromString(FAetherV10Definitions::Get().Guidance.LoadingTitle));
+        if(TargetPanel)TargetPanel->SetVisibility(ESlateVisibility::Collapsed);return;
+    }
     const bool MenuOpen=LP->GetSubsystem<UAetherMenuSubsystem>()->IsOpen();
     SetVisibility(MenuOpen?ESlateVisibility::Collapsed:ESlateVisibility::HitTestInvisible);
     if(MenuOpen)return;
@@ -161,7 +168,7 @@ void UAetherPlayerHUDWidget::Refresh()
     auto* Target=C->LockedTarget.Get();
     TargetPanel->SetVisibility(Target&&Target->Alive()?ESlateVisibility::HitTestInvisible:ESlateVisibility::Collapsed);
     if(Target&&Target->Alive()){TargetName->SetText(FText::FromString(Target->Fighter==EAetherFighter::Player?TEXT("锁定角色"):TEXT("锁定敌人")));TargetHealth->SetPercent(Target->Health()/FMath::Max(1.f,Target->MaxHealth));}
-    const auto G=AetherGuide::Resolve(C);
+    const auto G=AetherGuide::Resolve(C,ViewProfile.IsSet()?&ViewProfile.GetValue():nullptr);
     Guidance->SetText(FText::FromString(G.Title+LINE_TERMINATOR+G.Label+LINE_TERMINATOR+G.Hint+
         (G.bHasTarget?LINE_TERMINATOR+FString::Printf(TEXT("目标 %.0f 米 · %s 查看"),FVector::Dist2D(G.Position,C->GetActorLocation())/100,*AetherInputHints::Label(*C,LP,"J")):FString())));
     C->RefreshInteractionFocus();
