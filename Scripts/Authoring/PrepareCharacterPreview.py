@@ -2,6 +2,11 @@
 只使用项目已包含的 UE 官方 Manny/Quinn 和基础资源，不导入第三方模型。
 """
 import unreal as ue
+import pathlib
+import sys
+ROOT=pathlib.Path(ue.Paths.project_dir()).resolve()
+sys.path.insert(0,str(ROOT / "Scripts/Authoring"))
+from MotionBindings import load_bindings, configured_binding, apply_character_binding
 
 def load_optional(path):
     # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
@@ -73,9 +78,10 @@ def prepare_material():
 
 
 def prepare_body_definitions():
-    idle = require("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle")
+    bindings=load_bindings(ROOT / "Content/AetherCore/Definitions/MotionBindings.json")
+    idle = require(configured_binding(bindings,"Manny")["preview_idle"])
     manny = require("/Game/AetherCore/Data/DA_Character_Player")
-    manny.set_editor_property("preview_idle_animation", idle)
+    apply_character_binding(ue,manny,configured_binding(bindings,"Manny"))
     library.save_loaded_asset(manny)
     target = "/Game/AetherCore/Data/DA_Character_Player_Quinn"
     if not library.does_asset_exist(target):
@@ -83,9 +89,9 @@ def prepare_body_definitions():
         if not quinn:
             raise RuntimeError("无法制作 Quinn 外观配置")
         quinn.set_editor_property("character_id", "UE_PlayerQuinn")
-        quinn.set_editor_property("body_mesh", require("/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple"))
-        quinn.set_editor_property("preview_idle_animation", idle)
-        library.save_loaded_asset(quinn)
+    quinn=require(target)
+    apply_character_binding(ue,quinn,configured_binding(bindings,"Quinn"))
+    library.save_loaded_asset(quinn)
     return manny, require(target), idle
 
 

@@ -1,6 +1,7 @@
 #include "Assets/AetherAssetPreload.h"
 #include "Assets/AetherContent.h"
 #include "Engine/AssetManager.h"
+#include "AetherMotionBinding.h"
 void UAetherAssetPreload::Initialize(FSubsystemCollectionBase& C)
 {
  Super::Initialize(C);
@@ -15,8 +16,10 @@ void UAetherAssetPreload::Tick(float)
  for(auto* D:{Content->Player.Get(),Content->Guard.Get(),Content->Caster.Get(),Content->Boss.Get()})if(D)
  {Paths.AddUnique(D->BodyMesh.ToSoftObjectPath());Paths.AddUnique(D->AnimationClass.ToSoftObjectPath());Paths.AddUnique(D->WalkAnimation.ToSoftObjectPath());Paths.AddUnique(D->AttackAnimation.ToSoftObjectPath());}
  for(const auto& D:Content->EquipmentCatalog->Items)if(D){Paths.AddUnique(D->Mesh.ToSoftObjectPath());for(const auto& A:D->Attacks)Paths.AddUnique(A.Animation.ToSoftObjectPath());}
- Paths.AddUnique(FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle.MM_Idle")));
- Paths.AddUnique(FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple")));
+ FString BindingError;
+ const auto& Bindings=AetherMotionBindings::All(BindingError);
+ if(!BindingError.IsEmpty()){bFailed=true;UE_LOG(LogTemp,Error,TEXT("AETHER_MOTION_BINDINGS_INVALID %s"),*BindingError);return;}
+ for(const auto& B:Bindings)for(const auto& Path:B.RuntimeAssets())Paths.AddUnique(Path);
  Paths.RemoveAll([](const auto& P){return P.IsNull();});
  SharedHandle=UAssetManager::GetStreamableManager().RequestAsyncLoad(Paths);
 }

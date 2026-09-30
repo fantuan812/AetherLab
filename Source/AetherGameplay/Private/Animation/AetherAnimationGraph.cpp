@@ -102,7 +102,7 @@ struct FAetherAnimProxy : FAnimInstanceProxy
  virtual FAnimNode_Base* GetCustomRootNode() override {return &ToLocal;}
  virtual void Initialize(UAnimInstance* Instance) override
  {
-  auto* A=CastChecked<UAetherAnimInstance>(Instance);Ground.SetBlendSpace(A->Locomotion);Air.SetSequence(A->FallClip);
+  auto* A=CastChecked<UAetherAnimInstance>(Instance);A->LoadBoundAnimations();Ground.SetBlendSpace(A->Locomotion);Air.SetSequence(A->FallClip);
   Generated.RetargetFrom=ERetargetSourceMode::CustomSkeletalMeshComponent;
   GeneratedBlend.A.SetLinkNode(&Ground);GeneratedBlend.B.SetLinkNode(&Generated);GeneratedBlend.Alpha=0;
   Travel.A.SetLinkNode(&GeneratedBlend);Travel.B.SetLinkNode(&Air);Action.Source.SetLinkNode(&Travel);Action.SlotName="DefaultSlot";Action.bAlwaysUpdateSourcePose=true;

@@ -13,9 +13,9 @@ public:
     UFUNCTION(BlueprintCallable,Category="Aether|Motion Authoring")
     static USkeletalMesh* CreateSource(const FString& SkeletonJson,FString& Reason);
     UFUNCTION(BlueprintCallable,Category="Aether|Motion Authoring")
-    static bool CreateRetargetAssets(USkeletalMesh* Source,USkeletalMesh* Target,const FString& BodyId,FString& Reason);
+    static bool CreateRetargetAssets(USkeletalMesh* Source,USkeletalMesh* Target,const FString& BindingJson,const FString& BodyId,FString& Reason);
     UFUNCTION(BlueprintCallable,Category="Aether|Motion Authoring")
-    static bool CalibrateRetarget(UIKRetargeter* Retargeter,USkeletalMesh* G1,bool Reverse,FString& Reason);
+    static bool CalibrateRetarget(UIKRetargeter* Retargeter,USkeletalMesh* G1,bool Reverse,const FString& BindingJson,const FString& BodyId,FString& Reason);
     UFUNCTION(BlueprintCallable,Category="Aether|Motion Authoring")
     static UAnimSequence* ImportClip(const FString& ClipJson,USkeletalMesh* Source,const FString& AssetPath,FString& Reason);
     UFUNCTION(BlueprintCallable,Category="Aether|Motion Authoring")

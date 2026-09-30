@@ -1,5 +1,10 @@
 """制作正式人物/G1 动画蓝图；原生代理提供图逻辑，资产记录骨架和可编辑继承边界。"""
 import unreal as ue
+import pathlib
+import sys
+ROOT=pathlib.Path(ue.Paths.project_dir()).resolve()
+sys.path.insert(0,str(ROOT / "Scripts/Authoring"))
+from MotionBindings import load_bindings
 
 def load_optional(path):
     # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
@@ -7,12 +12,12 @@ def load_optional(path):
 
 lib = ue.EditorAssetLibrary
 tools = ue.AssetToolsHelpers.get_asset_tools()
-definitions = [
-    ("/Game/Animation/ABP_AetherCharacter", ue.AetherAnimInstance,
-     "/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple"),
-    ("/Game/Animation/Motion/ABP_G1MotionSource", ue.AetherMotionSourceAnimInstance,
-     "/Game/Animation/Motion/SK_G1MotionSource"),
-]
+bindings=load_bindings(ROOT / "Content/AetherCore/Definitions/MotionBindings.json")
+definitions=[]
+for row in bindings.values():
+    if row['state'] != 'configured':continue
+    definitions.append((row['animation_class'].split('.')[0],ue.AetherAnimInstance,row['target_mesh']))
+    definitions.append((row['source_animation_class'].split('.')[0],ue.AetherMotionSourceAnimInstance,"/Game/Animation/Motion/SK_G1MotionSource"))
 assets = []
 for path, parent, mesh_path in definitions:
     mesh = load_optional(mesh_path)
@@ -27,6 +32,8 @@ for path, parent, mesh_path in definitions:
         asset = tools.create_asset(name, path.rsplit("/", 1)[0], ue.AnimBlueprint, factory)
     if not isinstance(asset, ue.AnimBlueprint):
         raise RuntimeError("动画蓝图资产冲突：" + path)
+    if asset.get_editor_property('target_skeleton') != mesh.get_editor_property('skeleton'):
+        raise RuntimeError('动画蓝图与显式绑定骨架不匹配：'+path)
     # UE Python 将 bool 返回值作为成功标志：成功返回 out Reason（空字符串），失败返回 None。
     reason = ue.AetherAnimationAuthoring.connect_native_pose(asset, parent == ue.AetherMotionSourceAnimInstance)
     if reason is None or reason:

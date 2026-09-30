@@ -1,5 +1,7 @@
 #include "AetherMotionComponent.h"
 #include "AetherMotionProfile.h"
+#include "AetherMotionBinding.h"
+#include "Misc/PackageName.h"
 #include "AetherMotionBoundaryAsset.h"
 #include "AetherMotionWorld.h"
 #include "AetherMotionSourceAnimInstance.h"
@@ -18,23 +20,38 @@ static TAutoConsoleVariable<int32> CVarAetherMotionBackend(TEXT("aether.Motion.B
 UAetherMotionComponent::UAetherMotionComponent()
 {
     PrimaryComponentTick.bCanEverTick=true;PrimaryComponentTick.TickGroup=TG_PostPhysics;
-    ProfileAsset=TSoftObjectPtr<UAetherMotionProfile>(FSoftObjectPath(TEXT("/Game/Animation/Motion/DA_MotionManny.DA_MotionManny")));
 }
 void UAetherMotionComponent::BeginPlay()
 {
     Super::BeginPlay();if(GetNetMode()==NM_DedicatedServer){SetComponentTickEnabled(false);return;}
     Stamp.WorldEpoch=GetWorld()->GetSubsystem<UAetherMotionWorld>()->Epoch;Stamp.PawnEpoch=FGuid::NewGuid();
-    Agent=AetherMotionScheduler().Register();LastPosition=GetOwner()->GetActorLocation();LoadAssets();
+    Agent=AetherMotionScheduler().Register();LastPosition=GetOwner()->GetActorLocation();
+    if(const auto* C=Cast<ACharacter>(GetOwner()))SetTargetMesh(FSoftObjectPath(C->GetMesh()->GetSkeletalMeshAsset()));
+}
+void UAetherMotionComponent::SetTargetMesh(const FSoftObjectPath& Mesh)
+{
+    ++AssetGeneration;InvalidateMotion();
+    if(Loading){Loading->CancelHandle();Loading.Reset();}
+    if(SourceMesh){SourceMesh->DestroyComponent();SourceMesh=nullptr;}
+    Profile=nullptr;ProfileAsset.Reset();BoundTarget=Mesh;
+    const auto* Binding=AetherMotionBindings::ForMesh(Mesh,Message);
+    if(!Binding)return;
+    ProfileAsset=TSoftObjectPtr<UAetherMotionProfile>(FSoftObjectPath(Binding->Profile+TEXT(".")+FPackageName::GetLongPackageAssetName(Binding->Profile)));
+    Message=TEXT("动作资源准备中");if(Agent)LoadAssets();
 }
 void UAetherMotionComponent::LoadAssets()
 {
-    if(ProfileAsset.IsNull())return;const TWeakObjectPtr<UAetherMotionComponent> Self=this;
+    if(ProfileAsset.IsNull()){Message=TEXT("角色未配置生成动作档案");return;}const TWeakObjectPtr<UAetherMotionComponent> Self=this;
     const uint64 Generation=++AssetGeneration;
     Loading=UAssetManager::GetStreamableManager().RequestAsyncLoad(ProfileAsset.ToSoftObjectPath(),[Self,Generation]()
     {
         if(!Self.IsValid()||!Self->Agent||Self->AssetGeneration!=Generation)return;
         Self->Profile=Self->ProfileAsset.Get();FString Why;
         if(!Self->Profile||!Self->Profile->Validate(Why)){Self->Message=Why.IsEmpty()?TEXT("动作配置资产缺失"):Why;return;}
+        const auto* Binding=AetherMotionBindings::ForMesh(Self->BoundTarget,Why);
+        if(!Binding||Self->Profile->Retargeter.ToSoftObjectPath().GetLongPackageName()!=Binding->Forward||
+           Self->Profile->SourceAnimationClass.ToSoftObjectPath().ToString()!=Binding->SourceAnimationClass)
+        {Self->Message=TEXT("动作档案的重定向/源动画与绑定目录不一致");Self->Profile=nullptr;return;}
         TArray<FSoftObjectPath> Paths={Self->Profile->SourceMesh.ToSoftObjectPath(),Self->Profile->Retargeter.ToSoftObjectPath(),Self->Profile->SourceAnimationClass.ToSoftObjectPath()};
         for(const auto& Pair:Self->Profile->TransitionBoundaries)Paths.Add(Pair.Value.ToSoftObjectPath());
         Self->Loading=UAssetManager::GetStreamableManager().RequestAsyncLoad(Paths,[Self,Generation](){if(Self.IsValid()&&Self->Agent&&Self->AssetGeneration==Generation)Self->AssetsReady();});
@@ -42,9 +59,11 @@ void UAetherMotionComponent::LoadAssets()
 }
 void UAetherMotionComponent::AssetsReady()
 {
-    if(!Profile||!Profile->SourceMesh.Get()||!Profile->Retargeter.Get())return;
+    if(!Profile||!Profile->SourceMesh.Get()||!Profile->Retargeter.Get()){Message=TEXT("动作源网格或原生 Retargeter 缺失");return;}
     if(!Profile->SourceAnimationClass.Get()){Message=TEXT("G1 动画蓝图资源缺失");return;}
     auto* Character=Cast<ACharacter>(GetOwner());if(!Character)return;
+    if(BoundTarget!=FSoftObjectPath(Character->GetMesh()->GetSkeletalMeshAsset()))
+    {Message=TEXT("生成动作档案与角色网格不匹配");return;}
     // 身体切换后旧组件可能仍等待渲染线程/GC；唯一名称避免同步覆盖旧 UObject。
     SourceMesh=NewObject<USkeletalMeshComponent>(Character,MakeUniqueObjectName(Character,USkeletalMeshComponent::StaticClass(),TEXT("GeneratedMotionSource")));
     SourceMesh->SetupAttachment(Character->GetRootComponent());SourceMesh->SetAbsolute(false,false,false);
@@ -73,21 +92,8 @@ void UAetherMotionComponent::TickComponent(float Dt,ELevelTick Type,FActorCompon
     ON_SCOPE_EXIT{RecordBridgeSeconds(FPlatformTime::Seconds()-TickStarted);};
     Super::TickComponent(Dt,Type,Function);if(!Agent)return;
     auto* C=Cast<ACharacter>(GetOwner());if(!C)return;
-    // 只有内置双体型配置参与自动切换；作者显式指定的动作档案保持权威。
-    const FString ProfilePath=ProfileAsset.ToSoftObjectPath().ToString();
-    const bool BuiltInProfile=ProfilePath==TEXT("/Game/Animation/Motion/DA_MotionManny.DA_MotionManny")||
-        ProfilePath==TEXT("/Game/Animation/Motion/DA_MotionQuinn.DA_MotionQuinn");
-    if(const auto* Mesh=C->GetMesh()->GetSkeletalMeshAsset();Mesh&&BuiltInProfile)
-    {
-        const FName Body=Mesh->GetName().Contains(TEXT("Quinn"))?FName(TEXT("Quinn")):FName(TEXT("Manny"));
-        if(BodyProfile!=Body)
-        {
-            BodyProfile=Body;InvalidateMotion();if(Loading)Loading->CancelHandle();
-            if(SourceMesh){SourceMesh->DestroyComponent();SourceMesh=nullptr;}Profile=nullptr;
-            const FString Name=TEXT("DA_Motion")+Body.ToString();
-            ProfileAsset=TSoftObjectPtr<UAetherMotionProfile>(FSoftObjectPath(TEXT("/Game/Animation/Motion/")+Name+TEXT(".")+Name));LoadAssets();
-        }
-    }
+    const FSoftObjectPath Mesh(C->GetMesh()->GetSkeletalMeshAsset());
+    if(BoundTarget!=Mesh){SetTargetMesh(Mesh);return;}
     if(!Profile||!SourceMesh)return;
     const int32 Requested=CVarAetherMotionBackend.GetValueOnGameThread();
     const int32 Backend=Requested<0?int32(EAetherMotionBackend::Automatic):FMath::Clamp(Requested,0,2);
