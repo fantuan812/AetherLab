@@ -1,0 +1,138 @@
+{
+  "application": "Blender 4.3.2",
+  "acceptance_scope": "Blender file/readability and export reimport; not UE integration",
+  "files": [
+    {
+      "file": "SM_BarrelWater.fbx",
+      "status": "reimport_pass",
+      "objects": 1,
+      "meshes": 1,
+      "dimensions_m": [
+        0.86,
+        0.86,
+        0.02
+      ],
+      "separate_water_meshes": 1
+    },
+    {
+      "file": "SM_BrokenCart.fbx",
+      "status": "reimport_pass",
+      "objects": 70,
+      "meshes": 69,
+      "dimensions_m": [
+        3.275,
+        4.1066,
+        1.815
+      ],
+      "separate_water_meshes": 0
+    },
+    {
+      "file": "SM_Fence_4m.fbx",
+      "status": "reimport_pass",
+      "objects": 6,
+      "meshes": 6,
+      "dimensions_m": [
+        0.2,
+        4.17,
+        1.32
+      ],
+      "separate_water_meshes": 0
+    },
+    {
+      "file": "SM_LanternPost.fbx",
+      "status": "reimport_pass",
+      "objects": 11,
+      "meshes": 11,
+      "dimensions_m": [
+        0.9,
+        0.4,
+        3.0
+      ],
+      "separate_water_meshes": 0
+    },
+    {
+      "file": "SM_Path_4m.fbx",
+      "status": "reimport_pass",
+      "objects": 25,
+      "meshes": 25,
+      "dimensions_m": [
+        5.7728,
+        4.4831,
+        0.31
+      ],
+      "separate_water_meshes": 0
+    },
+    {
+      "file": "SM_RestStop.fbx",
+      "status": "reimport_pass",
+      "objects": 438,
+      "meshes": 438,
+      "dimensions_m": [
+        6.1159,
+        6.58,
+        5.425
+      ],
+      "separate_water_meshes": 0
+    },
+    {
+      "file": "SM_ShelteredBrazierFire.fbx",
+      "status": "reimport_pass",
+      "objects": 23,
+      "meshes": 23,
+      "dimensions_m": [
+        0.94,
+        0.94,
+        1.4542
+      ],
+      "separate_water_meshes": 0
+    },
+    {
+      "file": "SM_SouthGate.fbx",
+      "status": "reimport_pass",
+      "objects": 129,
+      "meshes": 129,
+      "dimensions_m": [
+        15.5,
+        6.799,
+        8.8
+      ],
+      "separate_water_meshes": 0
+    },
+    {
+      "file": "SM_Wall_4m.fbx",
+      "status": "reimport_pass",
+      "objects": 14,
+      "meshes": 14,
+      "dimensions_m": [
+        1.1297,
+        4.35,
+        1.43
+      ],
+      "separate_water_meshes": 0
+    },
+    {
+      "file": "SM_WaterBarrel.fbx",
+      "status": "reimport_pass",
+      "objects": 25,
+      "meshes": 24,
+      "dimensions_m": [
+        1.236,
+        1.236,
+        1.4
+      ],
+      "separate_water_meshes": 1
+    },
+    {
+      "file": "SCN_01_Assembled.glb",
+      "status": "reimport_pass",
+      "objects": 1798,
+      "meshes": 1796,
+      "dimensions_m": [
+        21.2216,
+        32.0995,
+        11.7
+      ],
+      "separate_water_meshes": 1
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+[
+  {
+    "file": "docs/README.md",
+    "bytes": 3788,
+    "sha256": "6bfc854ff3f651bb0539a1d764eea70d4ed549328a457b517e21ded2df77347c"
+  },
+  {
+    "file": "docs/export_reimport_check.json",
+    "bytes": 2689,
+    "sha256": "54d31046d698c9391108de9ed21784cc690184432e0856cf09b6f51b2d42d02d"
+  },
+  {
+    "file": "docs/geometry_check.json",
+    "bytes": 457,
+    "sha256": "0e757c383f73e0bb661ff294c5c7690cb249e7fef544e9fb31bcba173a49c60e"
+  },
+  {
+    "file": "docs/module_manifest.json",
+    "bytes": 2453,
+    "sha256": "24d7a7e2d4dc68df9376327256713ce9eb33a351d6370359231607bcdf443126"
+  },
+  {
+    "file": "exports/SCN_01_Assembled.glb",
+    "bytes": 3975048,
+    "sha256": "0f37c6cf3f8f1dc40c39f80eb3c407d2d947a8ee0c932a403701432029c02e2c"
+  },
+  {
+    "file": "exports/fbx/SM_BarrelWater.fbx",
+    "bytes": 26572,
+    "sha256": "d082008b6ce8306c84c379afaf37b89394eb3b97597950e2b83e8a14c675b3e9"
+  },
+  {
+    "file": "exports/fbx/SM_BrokenCart.fbx",
+    "bytes": 412284,
+    "sha256": "a617aa88118740de8e9d88b59a8fff1a737df84efbe627da23af4d2e6da553b7"
+  },
+  {
+    "file": "exports/fbx/SM_Fence_4m.fbx",
+    "bytes": 43196,
+    "sha256": "8c9ebb6cf5f33abc61228cfe1d72af5c921d846d0f99ed594fc5eeed1e58aa00"
+  },
+  {
+    "file": "exports/fbx/SM_LanternPost.fbx",
+    "bytes": 74780,
+    "sha256": "d51d727cddd84326e066424f5f422d4e3533fd804359dde490c2f4c846769e32"
+  },
+  {
+    "file": "exports/fbx/SM_Path_4m.fbx",
+    "bytes": 136796,
+    "sha256": "50d8696f0013c349cecb59d55e22ea4c8f8e4dfeacbb50f076b15ffda119fbb2"
+  },
+  {
+    "file": "exports/fbx/SM_RestStop.fbx",
+    "bytes": 2501932,
+    "sha256": "61c31ed6c0c2043fb1eb8e2ee35333d33e1331d394ca7dcc2b77020382be705c"
+  },
+  {
+    "file": "exports/fbx/SM_ShelteredBrazierFire.fbx",
+    "bytes": 125484,
+    "sha256": "ab11b973c85f4a3d6de1fb80501252803925f1aeb91471bd0e70e5e77bf30e15"
+  },
+  {
+    "file": "exports/fbx/SM_SouthGate.fbx",
+    "bytes": 678124,
+    "sha256": "d9cc8e9c1670334bfcb421161212e46768a8a4b3a0171664e96cbd49a7a3e5ab"
+  },
+  {
+    "file": "exports/fbx/SM_Wall_4m.fbx",
+    "bytes": 86124,
+    "sha256": "dbd0f55d6fb7ab7e44a7070f7b0fbeb50c69882cc5e0a3ecb3f1b93906490a4a"
+  },
+  {
+    "file": "exports/fbx/SM_WaterBarrel.fbx",
+    "bytes": 101628,
+    "sha256": "f7aac055bbba795d12664327c2e10d585839314a57408fd75486f57d74a5fa76"
+  },
+  {
+    "file": "previews/SCN_01_Overview.png",
+    "bytes": 2851720,
+    "sha256": "d1a6cda877da42633bb9e550f2f2da5796e2422c085b64d8a8f8a71daa6b94e7"
+  },
+  {
+    "file": "previews/SCN_01_Shelter_Detail.png",
+    "bytes": 3004263,
+    "sha256": "44a21e84ae902cf561e52696f20c6c3a84a64893a1ee749334a099c6a1f7cf60"
+  },
+  {
+    "file": "source/SCN_01_Rain_Mountain_Path.blend",
+    "bytes": 12404804,
+    "sha256": "029df356aa83329c6370465d88a330a836396854a1561454f3658b4ffb1f5d2a"
+  },
+  {
+    "file": "source/build_SCN_01.py",
+    "bytes": 20595,
+    "sha256": "952af1b78a60e7c23cf53d852824028df51823707aae2621cd0af3fdba6e52a8"
+  },
+  {
+    "file": "source/refine_SCN_01.py",
+    "bytes": 2877,
+    "sha256": "2dce04260aedad0aa167e72697590169f3e977c9a57b7b8bc2de405d2bfcf664"
+  },
+  {
+    "file": "source/validate_SCN_01.py",
+    "bytes": 1489,
+    "sha256": "329581a4ec22e08fef2cf64da709365a84ef01b31461d0a3e55f3f683d470004"
+  }
+]

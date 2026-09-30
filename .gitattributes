@@ -5,3 +5,6 @@
 *.blend binary
 *.png binary
 *.jpg binary
+
+# Blender exchange previews are binary source artifacts.
+*.glb binary

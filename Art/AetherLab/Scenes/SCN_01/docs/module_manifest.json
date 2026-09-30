@@ -1,0 +1,75 @@
+{
+  "scene": "SCN_01",
+  "units": "meters",
+  "modules": [
+    {
+      "name": "SM_RestStop",
+      "objects": 437,
+      "collision_proxy": true,
+      "origin": "Scene-space placement preserved; assembly roots present for interactives"
+    },
+    {
+      "name": "SM_BrokenCart",
+      "objects": 69,
+      "collision_proxy": true,
+      "origin": "Scene-space placement preserved; assembly roots present for interactives"
+    },
+    {
+      "name": "SM_WaterBarrel",
+      "objects": 24,
+      "collision_proxy": true,
+      "origin": "Scene-space placement preserved; assembly roots present for interactives"
+    },
+    {
+      "name": "SM_Path_4m",
+      "objects": 24,
+      "collision_proxy": true,
+      "origin": "Scene-space placement preserved; assembly roots present for interactives"
+    },
+    {
+      "name": "SM_Wall_4m",
+      "objects": 13,
+      "collision_proxy": true,
+      "origin": "Scene-space placement preserved; assembly roots present for interactives"
+    },
+    {
+      "name": "SM_Fence_4m",
+      "objects": 5,
+      "collision_proxy": true,
+      "origin": "Scene-space placement preserved; assembly roots present for interactives"
+    },
+    {
+      "name": "SM_LanternPost",
+      "objects": 10,
+      "collision_proxy": true,
+      "origin": "Scene-space placement preserved; assembly roots present for interactives"
+    },
+    {
+      "name": "SM_SouthGate",
+      "objects": 129,
+      "collision_proxy": false,
+      "origin": "Scene-space placement preserved; assembly roots present for interactives"
+    },
+    {
+      "name": "SM_ShelteredBrazierFire",
+      "objects": 23,
+      "collision_proxy": false,
+      "note": "Flames, logs and brazier remain separate meshes"
+    },
+    {
+      "name": "SM_BarrelWater",
+      "objects": 1,
+      "collision_proxy": false,
+      "note": "Extracted water surface; also present in barrel group"
+    }
+  ],
+  "limitations": [
+    "Prototype geometry; no production topology certification",
+    "Procedural Blender material noise may not transfer in FBX/GLB; base colors remain",
+    "Collision proxies are simple placeholders, not verified in UE",
+    "No gameplay interaction, physics, LODs, lightmaps, navmesh or animation",
+    "Gate and backdrop are scenic geometry; collision absent",
+    "Individual FBXs preserve scene-space placement"
+  ],
+  "blender_acceptance": "All ten FBX exports and assembled GLB reimported successfully. See export_reimport_check.json."
+}
