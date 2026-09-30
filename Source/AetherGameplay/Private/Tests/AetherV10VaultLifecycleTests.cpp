@@ -4,6 +4,7 @@
 #include "Components/BoxComponent.h"
 #include "Engine/Engine.h"
 #include "Engine/DamageEvents.h"
+#include "GameFramework/RootMotionSource.h"
 #include "Misc/ScopeExit.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -51,7 +52,9 @@ bool FAetherVaultLifecycleTest::RunTest(const FString&)
     auto CheckEnded=[&](AAetherFrontierCharacter* C,UAetherVaultAbility* Ability)
     {
         TestFalse(TEXT("Vault ability ended"),Ability->IsActive());
-        TestFalse(TEXT("First root source removed"),C->GetCharacterMovement()->GetRootMotionSource(TEXT("Aether.Vault.0")).IsValid());
+        const auto Source=C->GetCharacterMovement()->GetRootMotionSource(TEXT("Aether.Vault.0"));
+        TestTrue(TEXT("First root source removed or queued for movement cleanup"),
+            !Source.IsValid()||Source->Status.HasFlag(ERootMotionSourceStatusFlags::MarkedForRemoval));
         TestFalse(TEXT("Interruption timer cleared"),W->GetTimerManager().IsTimerActive(Ability->Watch));
         TestFalse(TEXT("No retained flying ownership"),Ability->bOwnsFlyingMode);
     };

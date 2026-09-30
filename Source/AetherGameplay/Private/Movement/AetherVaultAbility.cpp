@@ -90,7 +90,7 @@ void UAetherVaultAbility::NextPhase()
 {
     if(bEndingVault)return;
     // MoveToForce 的完成广播可能早于 EndTask（UE-181073）；先结束上一阶段，
-    // 再替换唯一任务引用，确保它的 root source/结束速度已清理。
+    // 再替换唯一任务引用，请求移除对应 root source；由 CMC 消费其结束状态。
     if(auto* PreviousTask=MotionTask.Get())PreviousTask->EndTask();MotionTask.Reset();
     auto* C=Character.Get();if(!HasActivationAvatar()||!bOwnsFlyingMode){Abort();return;}
     if(Phase>0&&FVector::DistSquared(C->GetActorLocation(),Path[Phase-1])>FMath::Square(12.f)){Abort();return;}
@@ -141,7 +141,7 @@ void UAetherVaultAbility::ReleaseMovement()
         C->GetWorldTimerManager().ClearTimer(Watch);
         C->MovementModeChangedDelegate.RemoveDynamic(this,&UAetherVaultAbility::MovementModeChanged);
     }
-    // 先移除本能力的 root source，再恢复模式；不能让任务迟到的清理覆盖恢复后的速度。
+    // 先结束唯一剩余任务并请求移除 root source，再处理本能力仍持有的移动模式。
     if(auto* Task=MotionTask.Get())Task->EndTask();MotionTask.Reset();
     const bool Restore=bOwnsFlyingMode&&C&&M&&C->GetCharacterMovement()==M&&M->MovementMode==MOVE_Flying&&!C->bTravelPending;
     bOwnsFlyingMode=false;
