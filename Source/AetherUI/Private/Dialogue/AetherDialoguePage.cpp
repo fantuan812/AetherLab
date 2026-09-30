@@ -21,6 +21,9 @@ FString DisabledReason(const FAetherDialogueChoiceView& C)
 void UAetherDialogueChoiceButton::BindChoice(int32 Index,uint64 Version)
 {ChoiceIndex=Index;ShownVersion=Version;OnClicked.AddUniqueDynamic(this,&UAetherDialogueChoiceButton::Select);}
 void UAetherDialogueChoiceButton::Select(){OnChoice.ExecuteIfBound(ChoiceIndex,ShownVersion);}
+void UAetherDialoguePlaybackButton::BindPlayback(bool Skip,uint64 Version)
+{bSkip=Skip;ShownVersion=Version;OnClicked.AddUniqueDynamic(this,&UAetherDialoguePlaybackButton::ActivatePlayback);}
+void UAetherDialoguePlaybackButton::ActivatePlayback(){OnPlayback.ExecuteIfBound(bSkip,ShownVersion);}
 TSharedRef<SWidget> UAetherDialoguePage::RebuildWidget()
 {
     if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
@@ -52,14 +55,27 @@ void UAetherDialoguePage::Refresh()
 {
     const auto* View=Session.IsValid()&&Session->GetView().IsSet()?&Session->GetView().GetValue():nullptr;
     const bool Opening=GetVisibility()==ESlateVisibility::Collapsed;SetVisibility(View?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
-    if(!View||!Choices)return;
+    if(!View||!Choices){PreferredFocus.Reset();return;}
     auto* Current=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());
     if(Player.Get()!=Current){if(Player.IsValid())Player->OnPresentationChanged.RemoveAll(this);Player=Current;if(Current)Current->OnPresentationChanged.AddUObject(this,&UAetherDialoguePage::RefreshFeedback);}
     int32 FocusIndex=INDEX_NONE;
     for(int32 I=0;I<Choices->GetChildrenCount();++I)if(Choices->GetChildAt(I)->HasUserFocus(GetOwningPlayer()))FocusIndex=I;
-    Speaker->SetText(FText::FromString(View->Speaker));Speech->SetText(FText::FromString(View->Text));Choices->ClearChildren();
+    Speaker->SetText(FText::FromString(View->Speaker));Speech->SetText(FText::FromString(Session->GetSubtitle()));Choices->ClearChildren();
     UWidget* Focus=nullptr;
-    for(int32 I=0;I<View->Choices.Num();++I)
+    if(Session->GetPlaybackPhase()==EAetherDialoguePlaybackPhase::Speaking)
+    {
+        if(const auto* P=Session->GetPresentation())
+        {
+            const auto Add=[&](bool Skip,const FString& Caption)
+            {
+                auto* B=WidgetTree->ConstructWidget<UAetherDialoguePlaybackButton>();B->BindPlayback(Skip,Session->GetVersion());B->OnPlayback.BindUObject(this,&UAetherDialoguePage::Playback);
+                auto* Label=WidgetTree->ConstructWidget<UTextBlock>();Label->SetText(FText::FromString(Caption));B->SetContent(Label);
+                Choices->AddChildToVerticalBox(B)->SetPadding(FMargin(0,5));if(!Focus)Focus=B;
+            };
+            if(P->bAllowAdvance)Add(false,P->AdvanceLabel);if(P->bAllowSkip)Add(true,P->SkipLabel);
+        }
+    }
+    else for(int32 I=0;I<View->Choices.Num();++I)
     {
         const auto& Choice=View->Choices[I];auto* B=WidgetTree->ConstructWidget<UAetherDialogueChoiceButton>();
         B->BindChoice(I,Session->GetVersion());B->OnChoice.BindUObject(this,&UAetherDialoguePage::Choose);
@@ -69,8 +85,11 @@ void UAetherDialoguePage::Refresh()
         Choices->AddChildToVerticalBox(B)->SetPadding(FMargin(0,5));
         if(Enabled&&(!Focus||I==FocusIndex))Focus=B;
     }
+    PreferredFocus=Focus;
     if((Opening||FocusIndex!=INDEX_NONE)&&Focus)Focus->SetUserFocus(GetOwningPlayer());
 }
+void UAetherDialoguePage::Playback(bool Skip,uint64 Version)
+{if(Session.IsValid()){if(Skip)Session->Skip(Version);else Session->Advance(Version);}}
 void UAetherDialoguePage::Choose(int32 Index,uint64 Version)
 {
     FString Why;if(Session.IsValid())Session->Choose(Index,Version,Why);
@@ -84,3 +103,6 @@ FReply UAetherDialoguePage::NativeOnKeyDown(const FGeometry& G,const FKeyEvent& 
 
 TOptional<FUIInputConfig> UAetherDialoguePage::GetDesiredInputConfig() const
 {FUIInputConfig C(ECommonInputMode::Menu,EMouseCaptureMode::NoCapture,EMouseLockMode::DoNotLock,false);C.bIgnoreMoveInput=true;C.bIgnoreLookInput=true;return C;}
+
+UWidget* UAetherDialoguePage::NativeGetDesiredFocusTarget() const
+{return PreferredFocus.IsValid()?PreferredFocus.Get():const_cast<UAetherDialoguePage*>(this);}

@@ -153,6 +153,7 @@ private:
     void SmokeStep();
     void CheckAnimation();
     void CheckGuidance();
+    void CheckDialogue();
     void CheckReactions();
     void CheckServices();
     void CheckDataContracts();

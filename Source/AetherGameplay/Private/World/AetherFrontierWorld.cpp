@@ -470,6 +470,7 @@ void AAetherFrontierMode::Tick(float Dt)
     }
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherAnimationCheck"))&&Elapsed>2)CheckAnimation();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherGuidanceCheck"))&&Elapsed>2)CheckGuidance();
+    if(FParse::Param(FCommandLine::Get(),TEXT("AetherDialogueCheck"))&&Elapsed>2)CheckDialogue();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherReactionCheck"))&&Elapsed>2)CheckReactions();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherServiceCheck"))&&Elapsed>2)CheckServices();
     if(FParse::Param(FCommandLine::Get(),TEXT("AetherDataCheck"))&&Elapsed>2)CheckDataContracts();

@@ -1,5 +1,7 @@
 # v10 只读交互与对话查询
 
+> 当前对话表现已切换 Interactions schema 2（Lines/PresentationId），不读取旧节点 Text；参见[本地对话表现契约](../Planning/Dialogue-presentation-2026-09-30.zh-CN.md)。下文保留原查询单元的历史范围和验证记录，不表示新修改已运行。
+
 ## 实际新增内容
 
 Core 的交互 Offer 包含目标/动作 ID、Profile/World/Interaction 三种版本、动词、图标 ID、优先级、Hidden/TalkOnly/Available/DisabledWithReason、公开原因参数、对话/任务/目标/服务引用。查询不生成 Actor、不发奖、不授技能、不修改档案。
