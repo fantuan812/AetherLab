@@ -1,0 +1,553 @@
+{
+  "schema": 1,
+  "bindings": [
+    {
+      "id": "Manny",
+      "target_mesh": "/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple",
+      "source_rig": "/Game/Animation/Motion/IK_G1",
+      "target_rig": "/Game/Animation/Motion/IK_Manny",
+      "forward_retargeter": "/Game/Animation/Motion/RTG_G1_Manny",
+      "reverse_retargeter": "/Game/Animation/Motion/RTG_Manny_G1",
+      "profile": "/Game/Animation/Motion/DA_MotionManny",
+      "source_animation_class": "/Game/Animation/Motion/ABP_G1MotionSource.ABP_G1MotionSource_C",
+      "source_root": "pelvis_skel",
+      "target_pelvis": "pelvis",
+      "target_root": "root",
+      "target_head": "head",
+      "source_heading_degrees": 90,
+      "chains": [
+        {
+          "name": "Spine",
+          "source_start": "waist_yaw_skel",
+          "source_end": "waist_pitch_skel",
+          "target_start": "spine_01",
+          "target_end": "spine_05"
+        },
+        {
+          "name": "LeftArm",
+          "source_start": "left_shoulder_pitch_skel",
+          "source_end": "left_shoulder_yaw_skel",
+          "target_start": "upperarm_l",
+          "target_end": "upperarm_l"
+        },
+        {
+          "name": "LeftElbow",
+          "source_start": "left_elbow_skel",
+          "source_end": "left_elbow_skel",
+          "target_start": "lowerarm_l",
+          "target_end": "lowerarm_l"
+        },
+        {
+          "name": "LeftWrist",
+          "source_start": "left_wrist_roll_skel",
+          "source_end": "left_wrist_yaw_skel",
+          "target_start": "hand_l",
+          "target_end": "hand_l"
+        },
+        {
+          "name": "LeftLeg",
+          "source_start": "left_hip_pitch_skel",
+          "source_end": "left_hip_yaw_skel",
+          "target_start": "thigh_l",
+          "target_end": "thigh_l"
+        },
+        {
+          "name": "LeftKnee",
+          "source_start": "left_knee_skel",
+          "source_end": "left_knee_skel",
+          "target_start": "calf_l",
+          "target_end": "calf_l"
+        },
+        {
+          "name": "LeftAnkle",
+          "source_start": "left_ankle_pitch_skel",
+          "source_end": "left_ankle_roll_skel",
+          "target_start": "foot_l",
+          "target_end": "foot_l"
+        },
+        {
+          "name": "LeftToe",
+          "source_start": "left_toe_base",
+          "source_end": "left_toe_base",
+          "target_start": "ball_l",
+          "target_end": "ball_l"
+        },
+        {
+          "name": "RightArm",
+          "source_start": "right_shoulder_pitch_skel",
+          "source_end": "right_shoulder_yaw_skel",
+          "target_start": "upperarm_r",
+          "target_end": "upperarm_r"
+        },
+        {
+          "name": "RightElbow",
+          "source_start": "right_elbow_skel",
+          "source_end": "right_elbow_skel",
+          "target_start": "lowerarm_r",
+          "target_end": "lowerarm_r"
+        },
+        {
+          "name": "RightWrist",
+          "source_start": "right_wrist_roll_skel",
+          "source_end": "right_wrist_yaw_skel",
+          "target_start": "hand_r",
+          "target_end": "hand_r"
+        },
+        {
+          "name": "RightLeg",
+          "source_start": "right_hip_pitch_skel",
+          "source_end": "right_hip_yaw_skel",
+          "target_start": "thigh_r",
+          "target_end": "thigh_r"
+        },
+        {
+          "name": "RightKnee",
+          "source_start": "right_knee_skel",
+          "source_end": "right_knee_skel",
+          "target_start": "calf_r",
+          "target_end": "calf_r"
+        },
+        {
+          "name": "RightAnkle",
+          "source_start": "right_ankle_pitch_skel",
+          "source_end": "right_ankle_roll_skel",
+          "target_start": "foot_r",
+          "target_end": "foot_r"
+        },
+        {
+          "name": "RightToe",
+          "source_start": "right_toe_base",
+          "source_end": "right_toe_base",
+          "target_start": "ball_r",
+          "target_end": "ball_r"
+        }
+      ],
+      "alignments": [
+        {
+          "source_bone": "left_shoulder_yaw_skel",
+          "source_child": "left_elbow_skel",
+          "target_bone": "upperarm_l",
+          "target_child": "lowerarm_l"
+        },
+        {
+          "source_bone": "left_elbow_skel",
+          "source_child": "left_wrist_roll_skel",
+          "target_bone": "lowerarm_l",
+          "target_child": "hand_l"
+        },
+        {
+          "source_bone": "right_shoulder_yaw_skel",
+          "source_child": "right_elbow_skel",
+          "target_bone": "upperarm_r",
+          "target_child": "lowerarm_r"
+        },
+        {
+          "source_bone": "right_elbow_skel",
+          "source_child": "right_wrist_roll_skel",
+          "target_bone": "lowerarm_r",
+          "target_child": "hand_r"
+        }
+      ],
+      "styles": {
+        "Idle": "idle",
+        "Walk": "walk",
+        "Injured": "injured_walk",
+        "StrafeLeft": "walk_left",
+        "StrafeRight": "walk_right",
+        "Combat": "walk_boxing",
+        "Crouch": "crouch",
+        "CrouchIdle": "crouch_idle"
+      },
+      "character_definitions": [
+        "/Game/AetherCore/Data/DA_Character_Player",
+        "/Game/AetherCore/Data/DA_Character_Guard",
+        "/Game/AetherCore/Data/DA_Character_Caster",
+        "/Game/AetherCore/Data/DA_Character_Boss"
+      ],
+      "animation_class": "/Game/Animation/ABP_AetherCharacter.ABP_AetherCharacter_C",
+      "preview_idle": "/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle",
+      "walk_animation": "/Game/Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd",
+      "attack_animation": "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_01",
+      "state": "configured",
+      "source_geometry": null,
+      "animations": {
+        "actions": "/Game/Animation/Controlled/DA_Actions",
+        "locomotion": "/Game/Characters/Mannequins/Anims/Unarmed/BS_Idle_Walk_Run",
+        "jump": "/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Jump",
+        "fall": "/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Fall_Loop",
+        "land": "/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Land",
+        "heavy": "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_ChargedAttack",
+        "light": [
+          "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_01",
+          "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_02",
+          "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_03"
+        ]
+      }
+    },
+    {
+      "id": "Quinn",
+      "target_mesh": "/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple",
+      "source_rig": "/Game/Animation/Motion/IK_G1",
+      "target_rig": "/Game/Animation/Motion/IK_Quinn",
+      "forward_retargeter": "/Game/Animation/Motion/RTG_G1_Quinn",
+      "reverse_retargeter": "/Game/Animation/Motion/RTG_Quinn_G1",
+      "profile": "/Game/Animation/Motion/DA_MotionQuinn",
+      "source_animation_class": "/Game/Animation/Motion/ABP_G1MotionSource.ABP_G1MotionSource_C",
+      "source_root": "pelvis_skel",
+      "target_pelvis": "pelvis",
+      "target_root": "root",
+      "target_head": "head",
+      "source_heading_degrees": 90,
+      "chains": [
+        {
+          "name": "Spine",
+          "source_start": "waist_yaw_skel",
+          "source_end": "waist_pitch_skel",
+          "target_start": "spine_01",
+          "target_end": "spine_05"
+        },
+        {
+          "name": "LeftArm",
+          "source_start": "left_shoulder_pitch_skel",
+          "source_end": "left_shoulder_yaw_skel",
+          "target_start": "upperarm_l",
+          "target_end": "upperarm_l"
+        },
+        {
+          "name": "LeftElbow",
+          "source_start": "left_elbow_skel",
+          "source_end": "left_elbow_skel",
+          "target_start": "lowerarm_l",
+          "target_end": "lowerarm_l"
+        },
+        {
+          "name": "LeftWrist",
+          "source_start": "left_wrist_roll_skel",
+          "source_end": "left_wrist_yaw_skel",
+          "target_start": "hand_l",
+          "target_end": "hand_l"
+        },
+        {
+          "name": "LeftLeg",
+          "source_start": "left_hip_pitch_skel",
+          "source_end": "left_hip_yaw_skel",
+          "target_start": "thigh_l",
+          "target_end": "thigh_l"
+        },
+        {
+          "name": "LeftKnee",
+          "source_start": "left_knee_skel",
+          "source_end": "left_knee_skel",
+          "target_start": "calf_l",
+          "target_end": "calf_l"
+        },
+        {
+          "name": "LeftAnkle",
+          "source_start": "left_ankle_pitch_skel",
+          "source_end": "left_ankle_roll_skel",
+          "target_start": "foot_l",
+          "target_end": "foot_l"
+        },
+        {
+          "name": "LeftToe",
+          "source_start": "left_toe_base",
+          "source_end": "left_toe_base",
+          "target_start": "ball_l",
+          "target_end": "ball_l"
+        },
+        {
+          "name": "RightArm",
+          "source_start": "right_shoulder_pitch_skel",
+          "source_end": "right_shoulder_yaw_skel",
+          "target_start": "upperarm_r",
+          "target_end": "upperarm_r"
+        },
+        {
+          "name": "RightElbow",
+          "source_start": "right_elbow_skel",
+          "source_end": "right_elbow_skel",
+          "target_start": "lowerarm_r",
+          "target_end": "lowerarm_r"
+        },
+        {
+          "name": "RightWrist",
+          "source_start": "right_wrist_roll_skel",
+          "source_end": "right_wrist_yaw_skel",
+          "target_start": "hand_r",
+          "target_end": "hand_r"
+        },
+        {
+          "name": "RightLeg",
+          "source_start": "right_hip_pitch_skel",
+          "source_end": "right_hip_yaw_skel",
+          "target_start": "thigh_r",
+          "target_end": "thigh_r"
+        },
+        {
+          "name": "RightKnee",
+          "source_start": "right_knee_skel",
+          "source_end": "right_knee_skel",
+          "target_start": "calf_r",
+          "target_end": "calf_r"
+        },
+        {
+          "name": "RightAnkle",
+          "source_start": "right_ankle_pitch_skel",
+          "source_end": "right_ankle_roll_skel",
+          "target_start": "foot_r",
+          "target_end": "foot_r"
+        },
+        {
+          "name": "RightToe",
+          "source_start": "right_toe_base",
+          "source_end": "right_toe_base",
+          "target_start": "ball_r",
+          "target_end": "ball_r"
+        }
+      ],
+      "alignments": [
+        {
+          "source_bone": "left_shoulder_yaw_skel",
+          "source_child": "left_elbow_skel",
+          "target_bone": "upperarm_l",
+          "target_child": "lowerarm_l"
+        },
+        {
+          "source_bone": "left_elbow_skel",
+          "source_child": "left_wrist_roll_skel",
+          "target_bone": "lowerarm_l",
+          "target_child": "hand_l"
+        },
+        {
+          "source_bone": "right_shoulder_yaw_skel",
+          "source_child": "right_elbow_skel",
+          "target_bone": "upperarm_r",
+          "target_child": "lowerarm_r"
+        },
+        {
+          "source_bone": "right_elbow_skel",
+          "source_child": "right_wrist_roll_skel",
+          "target_bone": "lowerarm_r",
+          "target_child": "hand_r"
+        }
+      ],
+      "styles": {
+        "Idle": "idle",
+        "Walk": "walk",
+        "Injured": "injured_walk",
+        "StrafeLeft": "walk_left",
+        "StrafeRight": "walk_right",
+        "Combat": "walk_boxing",
+        "Crouch": "crouch",
+        "CrouchIdle": "crouch_idle"
+      },
+      "character_definitions": [
+        "/Game/AetherCore/Data/DA_Character_Player_Quinn"
+      ],
+      "animation_class": "/Game/Animation/ABP_AetherCharacter.ABP_AetherCharacter_C",
+      "preview_idle": "/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle",
+      "walk_animation": "/Game/Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd",
+      "attack_animation": "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_01",
+      "state": "configured",
+      "source_geometry": null,
+      "animations": {
+        "actions": "/Game/Animation/Controlled/DA_Actions",
+        "locomotion": "/Game/Characters/Mannequins/Anims/Unarmed/BS_Idle_Walk_Run",
+        "jump": "/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Jump",
+        "fall": "/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Fall_Loop",
+        "land": "/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Land",
+        "heavy": "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_ChargedAttack",
+        "light": [
+          "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_01",
+          "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_02",
+          "/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_03"
+        ]
+      }
+    },
+    {
+      "id": "Quaternius65",
+      "target_mesh": null,
+      "source_rig": "/Game/Animation/Motion/IK_G1",
+      "target_rig": "/Game/Animation/Motion/IK_Quaternius65",
+      "forward_retargeter": "/Game/Animation/Motion/RTG_G1_Quaternius65",
+      "reverse_retargeter": "/Game/Animation/Motion/RTG_Quaternius65_G1",
+      "profile": "/Game/Animation/Motion/DA_MotionQuaternius65",
+      "source_animation_class": "/Game/Animation/Motion/ABP_G1MotionSource.ABP_G1MotionSource_C",
+      "source_root": "pelvis_skel",
+      "target_pelvis": "pelvis",
+      "target_root": "root",
+      "target_head": "Head",
+      "source_heading_degrees": null,
+      "chains": [
+        {
+          "name": "Spine",
+          "source_start": "waist_yaw_skel",
+          "source_end": "waist_pitch_skel",
+          "target_start": "spine_01",
+          "target_end": "spine_03"
+        },
+        {
+          "name": "LeftArm",
+          "source_start": "left_shoulder_pitch_skel",
+          "source_end": "left_shoulder_yaw_skel",
+          "target_start": "upperarm_l",
+          "target_end": "upperarm_l"
+        },
+        {
+          "name": "LeftElbow",
+          "source_start": "left_elbow_skel",
+          "source_end": "left_elbow_skel",
+          "target_start": "lowerarm_l",
+          "target_end": "lowerarm_l"
+        },
+        {
+          "name": "LeftWrist",
+          "source_start": "left_wrist_roll_skel",
+          "source_end": "left_wrist_yaw_skel",
+          "target_start": "hand_l",
+          "target_end": "hand_l"
+        },
+        {
+          "name": "LeftLeg",
+          "source_start": "left_hip_pitch_skel",
+          "source_end": "left_hip_yaw_skel",
+          "target_start": "thigh_l",
+          "target_end": "thigh_l"
+        },
+        {
+          "name": "LeftKnee",
+          "source_start": "left_knee_skel",
+          "source_end": "left_knee_skel",
+          "target_start": "calf_l",
+          "target_end": "calf_l"
+        },
+        {
+          "name": "LeftAnkle",
+          "source_start": "left_ankle_pitch_skel",
+          "source_end": "left_ankle_roll_skel",
+          "target_start": "foot_l",
+          "target_end": "foot_l"
+        },
+        {
+          "name": "LeftToe",
+          "source_start": "left_toe_base",
+          "source_end": "left_toe_base",
+          "target_start": "ball_l",
+          "target_end": "ball_l"
+        },
+        {
+          "name": "RightArm",
+          "source_start": "right_shoulder_pitch_skel",
+          "source_end": "right_shoulder_yaw_skel",
+          "target_start": "upperarm_r",
+          "target_end": "upperarm_r"
+        },
+        {
+          "name": "RightElbow",
+          "source_start": "right_elbow_skel",
+          "source_end": "right_elbow_skel",
+          "target_start": "lowerarm_r",
+          "target_end": "lowerarm_r"
+        },
+        {
+          "name": "RightWrist",
+          "source_start": "right_wrist_roll_skel",
+          "source_end": "right_wrist_yaw_skel",
+          "target_start": "hand_r",
+          "target_end": "hand_r"
+        },
+        {
+          "name": "RightLeg",
+          "source_start": "right_hip_pitch_skel",
+          "source_end": "right_hip_yaw_skel",
+          "target_start": "thigh_r",
+          "target_end": "thigh_r"
+        },
+        {
+          "name": "RightKnee",
+          "source_start": "right_knee_skel",
+          "source_end": "right_knee_skel",
+          "target_start": "calf_r",
+          "target_end": "calf_r"
+        },
+        {
+          "name": "RightAnkle",
+          "source_start": "right_ankle_pitch_skel",
+          "source_end": "right_ankle_roll_skel",
+          "target_start": "foot_r",
+          "target_end": "foot_r"
+        },
+        {
+          "name": "RightToe",
+          "source_start": "right_toe_base",
+          "source_end": "right_toe_base",
+          "target_start": "ball_r",
+          "target_end": "ball_r"
+        }
+      ],
+      "alignments": [
+        {
+          "source_bone": "left_shoulder_yaw_skel",
+          "source_child": "left_elbow_skel",
+          "target_bone": "upperarm_l",
+          "target_child": "lowerarm_l"
+        },
+        {
+          "source_bone": "left_elbow_skel",
+          "source_child": "left_wrist_roll_skel",
+          "target_bone": "lowerarm_l",
+          "target_child": "hand_l"
+        },
+        {
+          "source_bone": "right_shoulder_yaw_skel",
+          "source_child": "right_elbow_skel",
+          "target_bone": "upperarm_r",
+          "target_child": "lowerarm_r"
+        },
+        {
+          "source_bone": "right_elbow_skel",
+          "source_child": "right_wrist_roll_skel",
+          "target_bone": "lowerarm_r",
+          "target_child": "hand_r"
+        }
+      ],
+      "styles": {
+        "Idle": "idle",
+        "Walk": "walk",
+        "Injured": "injured_walk",
+        "StrafeLeft": "walk_left",
+        "StrafeRight": "walk_right",
+        "Combat": "walk_boxing"
+      },
+      "character_definitions": [
+        "/Game/AetherCore/Data/DA_Character_Player_Quaternius65"
+      ],
+      "animation_class": "/Game/Animation/Quaternius/ABP_QuaterniusCharacter.ABP_QuaterniusCharacter_C",
+      "preview_idle": "/Game/Animation/Quaternius/AN_Idle",
+      "walk_animation": "/Game/Animation/Quaternius/AN_Walk",
+      "attack_animation": "/Game/Animation/Quaternius/AN_Attack",
+      "state": "draft",
+      "source_geometry": {
+        "bone_count": 65,
+        "units": "meters",
+        "up_axis": "+Z",
+        "forward_axis": "-Y",
+        "armature_scale": [
+          1,
+          1,
+          1
+        ],
+        "imported_axes_verified": false
+      },
+      "animations": {
+        "actions": null,
+        "locomotion": null,
+        "jump": null,
+        "fall": null,
+        "land": null,
+        "heavy": null,
+        "light": null
+      }
+    }
+  ]
+}

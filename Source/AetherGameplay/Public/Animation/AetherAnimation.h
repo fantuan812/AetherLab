@@ -16,6 +16,8 @@ class AETHERGAMEPLAY_API UAetherAnimInstance : public UAnimInstance
  GENERATED_BODY()
 public:
  UAetherAnimInstance();
+ // 在代理初始化节点前读取显式资源目录，不能依赖 NativeInitializeAnimation 的调用先后。
+ void LoadBoundAnimations();
  virtual void NativeInitializeAnimation() override;
  virtual void NativeUpdateAnimation(float Dt) override;
  UPROPERTY(BlueprintReadOnly,Transient) EAetherMotionState MotionState=EAetherMotionState::Grounded;

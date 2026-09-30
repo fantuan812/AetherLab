@@ -8,6 +8,7 @@ THIRD_PARTY_INCLUDES_START
 #include <openssl/sha.h>
 THIRD_PARTY_INCLUDES_END
 #include "AetherMotionProfile.h"
+#include "AetherMotionBinding.h"
 #include "AetherMotionTypes.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/Skeleton.h"
@@ -51,6 +52,29 @@ TSharedPtr<FJsonObject> Load(const FString& Path,FString& Why)
        !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text),O)||!O)
     {if(Why.IsEmpty())Why=TEXT("无法读取有界动作 JSON");return {};}
     return O;
+}
+bool ReadBinding(const FString& Path,const FString& Id,FAetherMotionBinding& B,FString& Why)
+{
+ if(!AuthoringAllowed(Why))return false;
+ TArray<FAetherMotionBinding> Rows;if(!AetherMotionBindings::Load(Path,Rows,Why))return false;
+ for(const auto& Row:Rows)if(Row.Id.Equals(Id,ESearchCase::CaseSensitive))
+ {if(!Row.Configured){Why=TEXT("Rig is a draft; imported mesh/heading and animation assets are not configured: ")+Id;return false;}B=Row;return true;}
+ Why=TEXT("Unknown explicit rig ID: ")+Id;return false;
+}
+bool ValidateBindingMesh(const FAetherMotionBinding& B,USkeletalMesh* Source,USkeletalMesh* Target,FString& Why)
+{
+ if(!Source||!Target||Source->GetRefSkeleton().GetNum()!=34||Target->GetOutermost()->GetName()!=B.TargetMesh)
+ {Why=TEXT("Explicit target mesh / G1 skeleton mismatch");return false;}
+ const auto& S=Source->GetRefSkeleton();const auto& T=Target->GetRefSkeleton();
+ auto Chain=[](const FReferenceSkeleton& R,FName A,FName Z){const int32 Start=R.FindBoneIndex(A),End=R.FindBoneIndex(Z);
+  if(Start==INDEX_NONE||End==INDEX_NONE)return false;for(int32 I=End;I!=INDEX_NONE;I=R.GetParentIndex(I))if(I==Start)return true;return false;};
+ if(T.FindBoneIndex(B.TargetRoot)==INDEX_NONE||T.FindBoneIndex(B.TargetPelvis)==INDEX_NONE||T.FindBoneIndex(B.TargetHead)==INDEX_NONE||S.FindBoneIndex(B.SourceRoot)==INDEX_NONE)
+ {Why=TEXT("Binding root/head not present in reference skeleton");return false;}
+ for(const auto& C:B.Chains)if(!Chain(S,C.SourceStart,C.SourceEnd)||!Chain(T,C.TargetStart,C.TargetEnd))
+ {Why=TEXT("Binding chain is missing or is not an ancestor path: ")+C.Name.ToString();return false;}
+ for(const auto& A:B.Alignments)if(!Chain(S,A.SourceBone,A.SourceChild)||!Chain(T,A.TargetBone,A.TargetChild)||A.SourceBone==A.SourceChild||A.TargetBone==A.TargetChild)
+ {Why=TEXT("Binding alignment has no reference direction");return false;}
+ return true;
 }
 bool Skeleton(const TSharedPtr<FJsonObject>& O,FAetherMotionSkeleton& S,FString& Why)
 {
@@ -175,52 +199,49 @@ USkeletalMesh* UAetherMotionAuthoring::CreateSource(const FString& Json,FString&
     Mesh->CalculateInvRefMatrices();Mesh->Build();Mesh->PostEditChange();
     if(!Save(Rig,Why)||!Save(Mesh,Why))return nullptr;return Mesh;
 }
-bool UAetherMotionAuthoring::CreateRetargetAssets(USkeletalMesh* Source,USkeletalMesh* Target,const FString& Body,FString& Why)
+bool UAetherMotionAuthoring::CreateRetargetAssets(USkeletalMesh* Source,USkeletalMesh* Target,const FString& BindingJson,const FString& Body,FString& Why)
 {
-    Why.Reset();if(!AuthoringAllowed(Why)||!Source||!Target||(Body!=TEXT("Manny")&&Body!=TEXT("Quinn"))){Why=TEXT("人物或源骨架无效");return false;}
-    struct FChain{const TCHAR* Name;const TCHAR* Start;const TCHAR* End;const TCHAR* TargetStart;const TCHAR* TargetEnd;};
-    const FChain Chains[]={
-        {TEXT("Spine"),TEXT("waist_yaw_skel"),TEXT("waist_pitch_skel"),TEXT("spine_01"),TEXT("spine_05")},
-        {TEXT("LeftArm"),TEXT("left_shoulder_pitch_skel"),TEXT("left_wrist_yaw_skel"),TEXT("upperarm_l"),TEXT("hand_l")},
-        {TEXT("RightArm"),TEXT("right_shoulder_pitch_skel"),TEXT("right_wrist_yaw_skel"),TEXT("upperarm_r"),TEXT("hand_r")},
-        {TEXT("LeftLeg"),TEXT("left_hip_pitch_skel"),TEXT("left_ankle_roll_skel"),TEXT("thigh_l"),TEXT("foot_l")},
-        {TEXT("RightLeg"),TEXT("right_hip_pitch_skel"),TEXT("right_ankle_roll_skel"),TEXT("thigh_r"),TEXT("foot_r")},
-        {TEXT("LeftToe"),TEXT("left_toe_base"),TEXT("left_toe_base"),TEXT("ball_l"),TEXT("ball_l")},
-        {TEXT("RightToe"),TEXT("right_toe_base"),TEXT("right_toe_base"),TEXT("ball_r"),TEXT("ball_r")}};
-    for(const auto& C:Chains)
-        if(Source->GetRefSkeleton().FindBoneIndex(C.Start)==INDEX_NONE||Source->GetRefSkeleton().FindBoneIndex(C.End)==INDEX_NONE||
-           Target->GetRefSkeleton().FindBoneIndex(C.TargetStart)==INDEX_NONE||Target->GetRefSkeleton().FindBoneIndex(C.TargetEnd)==INDEX_NONE)
-        {Why=TEXT("重定向链包含不存在的骨骼：")+FString(C.Name);return false;}
-    auto* SourceRig=LoadObject<UIKRigDefinition>(nullptr,TEXT("/Game/Animation/Motion/IK_G1.IK_G1"));
-    const bool NewSource=!SourceRig;
-    if(!SourceRig)SourceRig=Asset<UIKRigDefinition>(TEXT("/Game/Animation/Motion/IK_G1"),Why);
-    auto* TargetRig=Asset<UIKRigDefinition>(TEXT("/Game/Animation/Motion/IK_")+Body,Why);
-    if(!SourceRig||!TargetRig)return false;
-    auto* SC=UIKRigController::GetController(SourceRig);auto* TC=UIKRigController::GetController(TargetRig);
-    if(!SC->SetSkeletalMesh(Source)||!TC->SetSkeletalMesh(Target)||!SC->SetRetargetRoot(TEXT("pelvis_skel"))||!TC->SetRetargetRoot(TEXT("pelvis")))
-    {Why=TEXT("IK Rig 骨架初始化失败");return false;}
-    if(NewSource)for(const auto& C:Chains)SC->AddRetargetChain(C.Name,C.Start,C.End,NAME_None);
-    for(const auto& C:Chains)TC->AddRetargetChain(C.Name,C.TargetStart,C.TargetEnd,NAME_None);
-    auto* Retarget=Asset<UIKRetargeter>(TEXT("/Game/Animation/Motion/RTG_G1_")+Body,Why);
-    auto* Reverse=Asset<UIKRetargeter>(TEXT("/Game/Animation/Motion/RTG_")+Body+TEXT("_G1"),Why);
-    if(!Retarget||!Reverse)return false;
-    for(auto* R:{Retarget,Reverse})
-    {
-        const bool Back=R==Reverse;auto* Controller=UIKRetargeterController::GetController(R);
-        Controller->SetIKRig(ERetargetSourceOrTarget::Source,Back?TargetRig:SourceRig);
-        Controller->SetIKRig(ERetargetSourceOrTarget::Target,Back?SourceRig:TargetRig);
-        Controller->SetPreviewMesh(ERetargetSourceOrTarget::Source,Back?Target:Source);
-        Controller->SetPreviewMesh(ERetargetSourceOrTarget::Target,Back?Source:Target);
-        Controller->AddDefaultOps();
-        for(const auto& C:Chains)if(!Controller->SetSourceChain(C.Name,C.Name)){Why=TEXT("重定向链映射失败");return false;}
-        Controller->AutoAlignAllBones(ERetargetSourceOrTarget::Target);
-    }
-    auto* Profile=Asset<UAetherMotionProfile>(TEXT("/Game/Animation/Motion/DA_Motion")+Body,Why);if(!Profile)return false;
-    Profile->SourceMesh=Source;Profile->Retargeter=Retarget;
-    Profile->Styles={{TEXT("Idle"),TEXT("idle")},{TEXT("Walk"),TEXT("walk")},{TEXT("Injured"),TEXT("injured_walk")},
-                     {TEXT("StrafeLeft"),TEXT("walk_left")},{TEXT("StrafeRight"),TEXT("walk_right")},{TEXT("Combat"),TEXT("walk_boxing")}};
-    // 蹲姿只有自制 crouch 经质量验收后才加入 profile；不能把上游潜行标签当成碰撞高度证明。
-    return (!NewSource||Save(SourceRig,Why))&&Save(TargetRig,Why)&&Save(Retarget,Why)&&Save(Reverse,Why)&&Save(Profile,Why);
+ Why.Reset();FAetherMotionBinding B;
+ if(!ReadBinding(BindingJson,Body,B,Why)||!ValidateBindingMesh(B,Source,Target,Why))return false;
+ auto GetRig=[&](const FString& P){auto* R=LoadObject<UIKRigDefinition>(nullptr,*(P+TEXT(".")+FPackageName::GetLongPackageAssetName(P)));return R?R:Asset<UIKRigDefinition>(P,Why);};
+ auto* SourceRig=GetRig(B.SourceRig);auto* TargetRig=GetRig(B.TargetRig);if(!SourceRig||!TargetRig)return false;
+ if(SourceRig==TargetRig){Why=TEXT("Source and target rig must be distinct assets");return false;}
+ auto Configure=[&](UIKRigDefinition* Rig,USkeletalMesh* Mesh,bool Robot){
+  auto* C=UIKRigController::GetController(Rig);
+  if(!C->SetSkeletalMesh(Mesh)||!C->SetRetargetRoot(Robot?B.SourceRoot:B.TargetPelvis))return false;
+  // 不保留作者目录之外的旧链，否则目标资产会混入两套骨架契约。
+  const auto Previous=C->GetRetargetChains();
+  for(const auto& Old:Previous)if(!B.Chains.ContainsByPredicate([&](const FAetherMotionBindingChain& Row){return Row.Name==Old.ChainName;}))
+   if(!C->RemoveRetargetChain(Old.ChainName))return false;
+  for(const auto& Row:B.Chains)
+  {
+   const FName Start=Robot?Row.SourceStart:Row.TargetStart,End=Robot?Row.SourceEnd:Row.TargetEnd;
+   if(Previous.ContainsByPredicate([&](const FBoneChain& Old){return Old.ChainName==Row.Name;}))
+   {if(!C->SetRetargetChainStartBone(Row.Name,Start)||!C->SetRetargetChainEndBone(Row.Name,End))return false;}
+   else if(C->AddRetargetChain(Row.Name,Start,End,NAME_None)!=Row.Name)return false;
+  }
+  return true;
+ };
+ if(!Configure(SourceRig,Source,true)||!Configure(TargetRig,Target,false)){Why=TEXT("IK Rig initialization failed");return false;}
+ UIKRetargeter* Forward=nullptr;
+ for(const bool Back:{false,true})
+ {
+  const FString& Path=Back?B.Reverse:B.Forward;
+  auto* R=LoadObject<UIKRetargeter>(nullptr,*(Path+TEXT(".")+FPackageName::GetLongPackageAssetName(Path)));
+  const bool New=!R;if(!R)R=Asset<UIKRetargeter>(Path,Why);if(!R)return false;if(!Back)Forward=R;
+  auto* C=UIKRetargeterController::GetController(R);
+  C->SetIKRig(ERetargetSourceOrTarget::Source,Back?TargetRig:SourceRig);C->SetIKRig(ERetargetSourceOrTarget::Target,Back?SourceRig:TargetRig);
+  C->SetPreviewMesh(ERetargetSourceOrTarget::Source,Back?Target:Source);C->SetPreviewMesh(ERetargetSourceOrTarget::Target,Back?Source:Target);
+  if(New)C->AddDefaultOps();
+  for(const auto& Row:B.Chains)if(!C->SetSourceChain(Row.Name,Row.Name)){Why=TEXT("Cannot bind anatomical chain");return false;}
+  if(!Save(R,Why))return false;
+ }
+ auto* Profile=LoadObject<UAetherMotionProfile>(nullptr,*(B.Profile+TEXT(".")+FPackageName::GetLongPackageAssetName(B.Profile)));
+ if(!Profile)Profile=Asset<UAetherMotionProfile>(B.Profile,Why);if(!Profile)return false;
+ Profile->SourceMesh=Source;Profile->Retargeter=Forward;
+ Profile->SourceAnimationClass=TSoftClassPtr<UAnimInstance>(FSoftObjectPath(B.SourceAnimationClass));Profile->Styles=B.Styles;
+ ++Profile->Revision;
+ return Save(SourceRig,Why)&&Save(TargetRig,Why)&&Save(Profile,Why);
 }
 UAnimSequence* UAetherMotionAuthoring::ImportClip(const FString& Json,USkeletalMesh* Source,const FString& Path,FString& Why)
 {
@@ -354,7 +375,7 @@ UAnimSequence* UAetherMotionAuthoring::RetargetClip(UAnimSequence* Animation,USk
     return Save(Result,Why)?Result:nullptr;
 }
 
-bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkeletalMesh* G1,bool Reverse,FString& Why)
+bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkeletalMesh* G1,bool Reverse,const FString& BindingJson,const FString& Body,FString& Why)
 {
  Why.Reset();ON_SCOPE_EXIT{if(!Why.IsEmpty())UE_LOG(LogTemp,Error,TEXT("AETHER_RETARGET_CALIBRATION_FAIL %s"),*Why);};if(!AuthoringAllowed(Why)||!Retargeter||!G1||G1->GetRefSkeleton().GetNum()!=34)return false;
  const auto& Ref=G1->GetRefSkeleton();TArray<FTransform> Global;Global.SetNum(Ref.GetNum());double MinZ=0;
@@ -366,50 +387,17 @@ bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkelet
  const double Height=-MinZ;
  if(Height<40||Height>150){Why=TEXT("G1 reference leg height invalid");return false;}
  auto* Controller=UIKRetargeterController::GetController(Retargeter);
- // 六关节 G1 腿不能整条插值到三关节人物腿：那会把膝弯曲分摊到髋 yaw/roll。
- // 按髋、膝、踝分别映射，使两个方向都保留真正的解剖关节位置。
- for(const auto RigSide:{ERetargetSourceOrTarget::Source,ERetargetSourceOrTarget::Target})
- {
-  auto* Rig=Controller->GetIKRigWriteable(RigSide);if(!Rig){Why=TEXT("Missing retarget rig");return false;}
-  auto* RC=UIKRigController::GetController(Rig);
-  const bool Robot=RigSide==(Reverse?ERetargetSourceOrTarget::Target:ERetargetSourceOrTarget::Source);
-  for(const TCHAR* SideName:{TEXT("Left"),TEXT("Right")})
-  {
-   const bool Left=FString(SideName)==TEXT("Left");const FString Prefix=Left?TEXT("left"):TEXT("right"),Suffix=Left?TEXT("l"):TEXT("r");
-   // 肩 pitch/roll/yaw、肘、腕分别对应人体上臂/前臂/手。
-   // 整条七关节臂插值到三关节会把肘屈曲分摊到上臂，产生持续抬肩的鸡翅姿态。
-   for(int32 Segment=0;Segment<3;++Segment){
-    const FName Chain(*(FString(SideName)+(Segment==0?TEXT("Arm"):Segment==1?TEXT("Elbow"):TEXT("Wrist"))));
-    const FName Start(*(Robot?Prefix+(Segment==0?TEXT("_shoulder_pitch_skel"):Segment==1?TEXT("_elbow_skel"):TEXT("_wrist_roll_skel")):
-        (Segment==0?TEXT("upperarm_"):Segment==1?TEXT("lowerarm_"):TEXT("hand_"))+Suffix));
-    const FName End(*(Robot&&Segment!=1?Prefix+(Segment==0?TEXT("_shoulder_yaw_skel"):TEXT("_wrist_yaw_skel")):Start.ToString()));
-    if(!RC->GetRetargetChains().ContainsByPredicate([&](const FBoneChain& C){return C.ChainName==Chain;}))RC->AddRetargetChain(Chain,Start,End,NAME_None);
-    else {RC->SetRetargetChainStartBone(Chain,Start);RC->SetRetargetChainEndBone(Chain,End);}
-   }
-   const FName HipChain(*(FString(SideName)+TEXT("Leg")));
-   RC->SetRetargetChainStartBone(HipChain,FName(*(Robot?Prefix+TEXT("_hip_pitch_skel"):TEXT("thigh_")+Suffix)));
-   RC->SetRetargetChainEndBone(HipChain,FName(*(Robot?Prefix+TEXT("_hip_yaw_skel"):TEXT("thigh_")+Suffix)));
-   for(const bool Knee:{true,false})
-   {
-    const FName Chain(*(FString(SideName)+(Knee?TEXT("Knee"):TEXT("Ankle"))));
-    const FName Start(*(Robot?Prefix+(Knee?TEXT("_knee_skel"):TEXT("_ankle_pitch_skel")):(Knee?TEXT("calf_"):TEXT("foot_"))+Suffix));
-    const FName End(*(Robot&&!Knee?Prefix+TEXT("_ankle_roll_skel"):Start.ToString()));
-    if(!RC->GetRetargetChains().ContainsByPredicate([&](const FBoneChain& C){return C.ChainName==Chain;}))RC->AddRetargetChain(Chain,Start,End,NAME_None);
-    else {RC->SetRetargetChainStartBone(Chain,Start);RC->SetRetargetChainEndBone(Chain,End);}
-   }
-  }
-  Controller->SetIKRig(RigSide,Rig);
-  if(!Save(Rig,Why))return false;
- }
- Controller->SetIKRig(ERetargetSourceOrTarget::Source,Controller->GetIKRigWriteable(ERetargetSourceOrTarget::Source));
- for(const TCHAR* Name:{TEXT("LeftLeg"),TEXT("RightLeg"),TEXT("LeftKnee"),TEXT("RightKnee"),TEXT("LeftAnkle"),TEXT("RightAnkle"),TEXT("LeftArm"),TEXT("RightArm"),TEXT("LeftElbow"),TEXT("RightElbow"),TEXT("LeftWrist"),TEXT("RightWrist")})
-  if(!Controller->SetSourceChain(Name,Name)){Why=TEXT("Cannot map anatomical leg chain");return false;}
+ FAetherMotionBinding B;if(!ReadBinding(BindingJson,Body,B,Why))return false;
+ const auto HumanSide=Reverse?ERetargetSourceOrTarget::Source:ERetargetSourceOrTarget::Target;
+ const auto* HumanRig=Controller->GetIKRigWriteable(HumanSide);
+ if(!HumanRig||!ValidateBindingMesh(B,G1,HumanRig->GetPreviewMesh(),Why))return false;
+ for(const auto& Row:B.Chains)if(!Controller->SetSourceChain(Row.Name,Row.Name)){Why=TEXT("Cannot bind anatomical chain");return false;}
  // 锁定模型的 +X 位于左髋，必须镜像到 UE 角色的 -Y；
- // 参考人物网格朝 +Y，而 G1 源朝 +X。校准参考朝向后再对齐关节，不能把90度偏差烘进膝轴。
+ // 目标导入后的朝向由当前骨架绑定明确指定，不能从源文件坐标或网格名猜测。
  const auto RobotSide=Reverse?ERetargetSourceOrTarget::Target:ERetargetSourceOrTarget::Source;
  for(const auto SideToReset:{ERetargetSourceOrTarget::Source,ERetargetSourceOrTarget::Target})
   Controller->ResetRetargetPose(Controller->GetCurrentRetargetPoseName(SideToReset),{},SideToReset);
- Controller->SetRotationOffsetForRetargetPoseBone(TEXT("pelvis_skel"),FQuat(FVector::UpVector,PI/2),RobotSide);
+ Controller->SetRotationOffsetForRetargetPoseBone(B.SourceRoot,FQuat(FVector::UpVector,FMath::DegreesToRadians(B.SourceHeading)),RobotSide);
  Controller->SetRootOffsetInRetargetPose(FVector(0,0,Height),RobotSide);
  // AutoAlignAllBones 会先清空整份 pose，并再次修改 pelvis，不能在这里使用。
  // 仅对已映射的非骨盆链逐骨对齐，保持明确校准的前向与身高。
@@ -419,7 +407,7 @@ bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkelet
  {
   const int32 Start=TargetRef.FindBoneIndex(Chain.StartBone.BoneName);
   for(int32 Bone=TargetRef.FindBoneIndex(Chain.EndBone.BoneName);Bone!=INDEX_NONE;Bone=TargetRef.GetParentIndex(Bone))
-  {const FName Name=TargetRef.GetBoneName(Bone);if(Name!=TEXT("pelvis")&&Name!=TEXT("pelvis_skel")&&Name!=TEXT("root"))AlignBones.AddUnique(Name);if(Bone==Start)break;}
+  {const FName Name=TargetRef.GetBoneName(Bone);if(Name!=B.TargetPelvis&&Name!=B.SourceRoot&&Name!=B.TargetRoot)AlignBones.AddUnique(Name);if(Bone==Start)break;}
  }
  Controller->AutoAlignBones(AlignBones,ERetargetAutoAlignMethod::ChainToChain,ERetargetSourceOrTarget::Target);
  // 单骨人体链没有链内方向供 AutoAlign 推断；显式对齐肩到肘、肘到腕。
@@ -433,12 +421,9 @@ bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkelet
   return Result;
  };
  const auto& SourceRef=Controller->GetIKRigWriteable(ERetargetSourceOrTarget::Source)->GetPreviewMesh()->GetRefSkeleton();
- for(const bool Left:{true,false})for(const bool Elbow:{false,true}){
-  const FString Prefix=Left?TEXT("left"):TEXT("right"),Suffix=Left?TEXT("l"):TEXT("r");
-  const FName RobotBone(*(Prefix+(Elbow?TEXT("_elbow_skel"):TEXT("_shoulder_yaw_skel"))));
-  const FName RobotChild(*(Prefix+(Elbow?TEXT("_wrist_roll_skel"):TEXT("_elbow_skel"))));
-  const FName HumanBone(*((Elbow?FString(TEXT("lowerarm_")):FString(TEXT("upperarm_")))+Suffix));
-  const FName HumanChild(*((Elbow?FString(TEXT("hand_")):FString(TEXT("lowerarm_")))+Suffix));
+ for(const auto& Alignment:B.Alignments){
+  const FName RobotBone=Alignment.SourceBone,RobotChild=Alignment.SourceChild;
+  const FName HumanBone=Alignment.TargetBone,HumanChild=Alignment.TargetChild;
   const int32 SourceBone=SourceRef.FindBoneIndex(Reverse?HumanBone:RobotBone),SourceChild=SourceRef.FindBoneIndex(Reverse?HumanChild:RobotChild);
   const FName BoneName=Reverse?RobotBone:HumanBone;
   const int32 Bone=TargetRef.FindBoneIndex(BoneName),Child=TargetRef.FindBoneIndex(Reverse?RobotChild:HumanChild);
@@ -465,8 +450,8 @@ bool UAetherMotionAuthoring::CalibrateRetarget(UIKRetargeter* Retargeter,USkelet
    Controller->SetRetargetOpEnabled(I,!Reverse);
    if(!Reverse)
    {
-    Root->SetSourceRootBone(TEXT("pelvis_skel"));Root->SetTargetRootBone(TEXT("root"));
-    auto& Settings=*static_cast<FIKRetargetRootMotionOpSettings*>(Controller->GetRetargetOpByIndex(I)->GetSettings());Settings.TargetPelvis.BoneName=TEXT("pelvis");
+    Root->SetSourceRootBone(B.SourceRoot);Root->SetTargetRootBone(B.TargetRoot);
+    auto& Settings=*static_cast<FIKRetargetRootMotionOpSettings*>(Controller->GetRetargetOpByIndex(I)->GetSettings());Settings.TargetPelvis.BoneName=B.TargetPelvis;
     Settings.RootMotionSource=ERootMotionSource::GenerateFromTargetPelvis;Settings.RootHeightSource=ERootMotionHeightSource::SnapToGround;
     Settings.bMaintainOffsetFromPelvis=true;
    }

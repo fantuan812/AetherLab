@@ -12,7 +12,8 @@ class AETHERMOTIONRUNTIME_API UAetherMotionComponent : public UActorComponent
     GENERATED_BODY()
 public:
     UAetherMotionComponent();
-    UPROPERTY(EditAnywhere) TSoftObjectPtr<UAetherMotionProfile> ProfileAsset;
+    UPROPERTY(VisibleAnywhere) TSoftObjectPtr<UAetherMotionProfile> ProfileAsset;
+    void SetTargetMesh(const FSoftObjectPath& Mesh);
     // 游戏适配器只写通用意图；组件不推断伤害、技能、任务或存档规则。
     void SetIntent(bool bAllowed,FName Style,FGuid Action);
     void InvalidateMotion();
@@ -44,7 +45,7 @@ private:
     FName DesiredStyle=TEXT("Idle");
     bool bAllowed=false,bWasAllowed=false,bTransitionRequested=false;
     uint64 AssetGeneration=0;
-    FName BodyProfile;
+    FSoftObjectPath BoundTarget;
     uint64 Agent=0,AcceptedSequence=0;
     double Frame=3,NextPlan=0,LastAcceptedPlanMs=0;
     struct FBridgeSample{uint64 Frame=MAX_uint64;double Seconds=0;};

@@ -1,5 +1,11 @@
 """Run with UE 5.8 PythonScriptPlugin after building the native classes."""
 import unreal as ue
+import pathlib
+import sys
+ROOT=pathlib.Path(ue.Paths.project_dir()).resolve()
+sys.path.insert(0,str(ROOT / "Scripts/Authoring"))
+from MotionBindings import load_bindings, apply_character_binding
+bindings=load_bindings(ROOT / "Content/AetherCore/Definitions/MotionBindings.json")
 L=ue.EditorAssetLibrary
 T=ue.AssetToolsHelpers.get_asset_tools()
 def create(name,cls):
@@ -26,16 +32,15 @@ for name,scale,two,off in [('TrainingSword',(.07,.1,.9),False,False),('TrainingH
         item.set_editor_property('attacks',attacks)
     L.save_loaded_asset(item);items.append(item)
 cat=create('DA_EquipmentCatalog',ue.AetherEquipmentCatalog);cat.set_editor_property('items',items);L.save_loaded_asset(cat)
-body=L.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple')
-walk=L.load_asset('/Game/Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd')
-hit=L.load_asset('/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_01')
-idle=L.load_asset('/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle')
-assert body and walk and hit and idle,'Official template assets unavailable'
 chars={}
 for name in ['Player','Guard','Caster','Boss']:
     c=create('DA_Character_'+name,ue.AetherCharacterDefinition)
     eq=[slot('MainHand','BellHammer')] if name=='Boss' else [slot('MainHand','EmberFocus')] if name=='Caster' else [slot('MainHand','TrainingSword'),slot('OffHand','TrainingShield')]
-    props(c,character_id='UE_'+name,body_mesh=body,preview_idle_animation=idle,walk_animation=walk,attack_animation=hit,capsule_half_height=88,capsule_radius=34,initial_equipment=eq,quick_equip_items=['TrainingSword','TrainingHammer','TideStaff'])
+    path='/Game/AetherCore/Data/DA_Character_'+name
+    matches=[row for row in bindings.values() if path in row['character_definitions']]
+    if len(matches)!=1:raise RuntimeError('角色没有唯一显式骨架绑定：'+path)
+    apply_character_binding(ue,c,matches[0])
+    props(c,character_id='UE_'+name,capsule_half_height=88,capsule_radius=34,initial_equipment=eq,quick_equip_items=['TrainingSword','TrainingHammer','TideStaff'])
     L.save_loaded_asset(c);chars[name]=c
 content=create('DA_GameContent',ue.AetherGameContent);props(content,equipment_catalog=cat,player=chars['Player'],guard=chars['Guard'],caster=chars['Caster'],boss=chars['Boss']);L.save_loaded_asset(content)
 print('AETHER_BASIC_ASSETS_PASS')

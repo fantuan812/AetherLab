@@ -21,20 +21,29 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "UObject/ConstructorHelpers.h"
-UAetherAnimInstance::UAetherAnimInstance()
-{
- static ConstructorHelpers::FObjectFinder<UAetherActionSet> Actions(TEXT("/Game/Animation/Controlled/DA_Actions.DA_Actions"));ActionSet=Actions.Object;
- static ConstructorHelpers::FObjectFinder<UBlendSpace> Move(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/BS_Idle_Walk_Run.BS_Idle_Walk_Run"));Locomotion=Move.Object;
- static ConstructorHelpers::FObjectFinder<UAnimSequence> Jump(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Jump.MM_Jump"));JumpClip=Jump.Object;
- static ConstructorHelpers::FObjectFinder<UAnimSequence> Fall(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Fall_Loop.MM_Fall_Loop"));FallClip=Fall.Object;
- static ConstructorHelpers::FObjectFinder<UAnimSequence> Land(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/Jump/MM_Land.MM_Land"));LandClip=Land.Object;
- static ConstructorHelpers::FObjectFinder<UAnimSequence> Heavy(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_ChargedAttack.MM_ChargedAttack"));HeavyClip=Heavy.Object;
- static ConstructorHelpers::FObjectFinder<UAnimSequence> One(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_01.MM_Attack_01"));
- static ConstructorHelpers::FObjectFinder<UAnimSequence> Two(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_02.MM_Attack_02"));
- static ConstructorHelpers::FObjectFinder<UAnimSequence> Three(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/Attack/MM_Attack_03.MM_Attack_03"));LightClips={One.Object,Two.Object,Three.Object};
-}
+#include "AetherMotionBinding.h"
+#include "Engine/SkeletalMesh.h"
+UAetherAnimInstance::UAetherAnimInstance() = default;
 void UAetherAnimInstance::NativeInitializeAnimation(){Super::NativeInitializeAnimation();SetRootMotionMode(ERootMotionMode::IgnoreRootMotion);}
+void UAetherAnimInstance::LoadBoundAnimations()
+{
+ check(IsInGameThread());
+ ActionSet=nullptr;Locomotion=nullptr;JumpClip=nullptr;FallClip=nullptr;LandClip=nullptr;HeavyClip=nullptr;LightClips.Reset();
+ const auto* Mesh=GetSkelMeshComponent()?GetSkelMeshComponent()->GetSkeletalMeshAsset():nullptr;
+ FString Why;const auto* B=AetherMotionBindings::ForMesh(FSoftObjectPath(Mesh),Why);
+ if(!B){UE_LOG(LogTemp,Error,TEXT("AETHER_ANIMATION_BINDING_UNAVAILABLE %s"),*Why);return;}
+ auto Get=[&](const TCHAR* Key){const auto* Path=B->AnimationAssets.Find(FName(Key));return Path?Path->TryLoad():nullptr;};
+ auto* Actions=Cast<UAetherActionSet>(Get(TEXT("actions")));auto* Move=Cast<UBlendSpace>(Get(TEXT("locomotion")));
+ auto* Jump=Cast<UAnimSequence>(Get(TEXT("jump")));auto* Fall=Cast<UAnimSequence>(Get(TEXT("fall")));
+ auto* Land=Cast<UAnimSequence>(Get(TEXT("land")));auto* Heavy=Cast<UAnimSequence>(Get(TEXT("heavy")));
+ TArray<TObjectPtr<UAnimSequence>> Light;for(const auto& Path:B->LightAnimations)Light.Add(Cast<UAnimSequence>(Path.TryLoad()));
+ auto Matches=[&](const UAnimSequence* Clip){return Clip&&Clip->GetSkeleton()==Mesh->GetSkeleton();};
+ bool Valid=Actions&&Actions->bDefinitionValid&&Move&&Move->GetSkeleton()==Mesh->GetSkeleton()&&Matches(Jump)&&Matches(Fall)&&Matches(Land)&&Matches(Heavy)&&!Light.IsEmpty();
+ for(const auto& Clip:Light)Valid&=Matches(Clip);
+ if(Actions)for(const auto& Pair:Actions->Clips)Valid&=Matches(Pair.Value);
+ if(!Valid){UE_LOG(LogTemp,Error,TEXT("AETHER_ANIMATION_RESOURCES_INVALID %s: missing resource or skeleton mismatch"),*B->Id);return;}
+ ActionSet=Actions;Locomotion=Move;JumpClip=Jump;FallClip=Fall;LandClip=Land;HeavyClip=Heavy;LightClips=MoveTemp(Light);
+}
 EAetherMotionState UAetherAnimInstance::SelectState(bool Alive,bool Stunned,bool Falling,float VerticalSpeed,bool Landing,bool Guarding)
 {
  if(!Alive)return EAetherMotionState::Downed;if(Stunned)return EAetherMotionState::Stunned;if(Falling)return VerticalSpeed>60?EAetherMotionState::Rising:EAetherMotionState::Falling;
@@ -52,7 +61,7 @@ void UAetherAnimInstance::NativeUpdateAnimation(float Dt)
 {
     const double Started=FPlatformTime::Seconds();
     Super::NativeUpdateAnimation(Dt);
-    auto* C=Cast<AAetherCharacter>(TryGetPawnOwner());if(!C||C->GetNetMode()==NM_DedicatedServer)return;
+    auto* C=Cast<AAetherCharacter>(TryGetPawnOwner());if(!C||C->GetNetMode()==NM_DedicatedServer||!Locomotion||LightClips.IsEmpty())return;
     ON_SCOPE_EXIT{if(C->Motion)C->Motion->RecordBridgeSeconds(FPlatformTime::Seconds()-Started);};
     // 在游戏线程只采样一次；图代理只消费本帧数值，独立负责传统/生成姿态混合。
     const auto Frame=AetherAnimationSnapshot::Capture(*C);
