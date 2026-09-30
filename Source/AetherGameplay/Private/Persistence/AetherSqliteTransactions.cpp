@@ -15,8 +15,10 @@ FAetherStoreReadResult ReadAggregate(sqlite3* DB, const FAetherAggregateKey& Key
     if (Step==SQLITE_DONE) { R.Code=EAetherStoreCode::Missing; return R; }
     if (Step!=SQLITE_ROW) { R.Detail=Error(DB); return R; }
     FAetherStoredAggregate V;
-    V.Key=Key; V.Revision=Q.ColumnInt(0); V.SchemaVersion=int32(Q.ColumnInt(1));
-    if (V.SchemaVersion!=Schema) { R.Code=EAetherStoreCode::UnsupportedSchema; return R; }
+    V.Key=Key;V.Revision=Q.ColumnInt(0);const int64 StoredSchema=Q.ColumnInt(1);
+    if(StoredSchema!=Schema)
+    {R.Code=EAetherStoreCode::UnsupportedSchema;R.Detail=FString::Printf(TEXT("AETHER_SAVE_SCHEMA_UNSUPPORTED: aggregate schema %lld; expected %d. Original data preserved; no automatic conversion."),StoredSchema,Schema);return R;}
+    V.SchemaVersion=int32(StoredSchema);
     if (V.Revision<0 || !Q.ColumnBlob(2,V.Payload) || V.Payload.IsEmpty())
     { R.Code=EAetherStoreCode::Corrupt; R.Detail=TEXT("Invalid stored aggregate"); return R; }
     R.Code=EAetherStoreCode::Found; R.Value=MoveTemp(V);

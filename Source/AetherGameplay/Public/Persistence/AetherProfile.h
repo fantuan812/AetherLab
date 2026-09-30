@@ -1,6 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 #include "Inventory/AetherInventoryCommand.h"
 #include "AetherProfile.generated.h"
 USTRUCT(BlueprintType)

@@ -1,5 +1,5 @@
 #include "Framework/AetherFrontier.h"
-#include "World/AetherWorldDefinition.h"
+#include "Definitions/AetherWorldDefinition.h"
 #include "Persistence/AetherNativePersistence.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"

@@ -250,4 +250,31 @@ bool FAetherProfileStoreTest::RunTest(const FString&)
     TestTrue(TEXT("Single durable rank/payment and reward claim"),Loaded.Gold==90&&Loaded.Inventory.At(6)->Quantity==4&&Loaded.Skills.PermanentRank(TEXT("Fire.Ignite"))==2&&Loaded.Skills.AvailableSkillPoints==2&&Loaded.PendingRewards.IsEmpty()&&Loaded.ClaimedRewardIds.Contains(Reward.RewardId));
     Opened.Store->Close();return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherUnsupportedAggregateSchemaTest,"Aether.Systems.Persistence.UnsupportedAggregateSchema",TestFlags)
+bool FAetherUnsupportedAggregateSchemaTest::RunTest(const FString&)
+{
+    sqlite3* DB=nullptr;
+    if(!TestEqual(TEXT("Open isolated in-memory fixture"),sqlite3_open(":memory:",&DB),SQLITE_OK)){if(DB)sqlite3_close(DB);return false;}
+    using namespace AetherSQLite::Private;
+    if(!TestTrue(TEXT("Create current index with unsupported row fixture"),Exec(DB,
+        "CREATE TABLE aggregates(kind INTEGER,id TEXT,revision INTEGER,schema INTEGER,payload BLOB);"
+        "INSERT INTO aggregates VALUES(0,'ProfileFixture',0,999,X'01'),(1,'Main',0,999,X'02'),(2,'ContainerFixture',0,999,X'03');")))
+    {sqlite3_close(DB);return false;}
+    const auto Row=ReadAggregate(DB,{EAetherAggregateKind::World,TEXT("Main")});
+    TestTrue(TEXT("Unknown world version has explicit diagnosis and no usable value"),Row.Code==EAetherStoreCode::UnsupportedSchema&&!Row.Value.IsSet()&&Row.Detail.StartsWith(TEXT("AETHER_SAVE_SCHEMA_UNSUPPORTED:")));
+    for(const auto Kind:{EAetherAggregateKind::Profile,EAetherAggregateKind::Container,EAetherAggregateKind::World})
+    {
+        const auto Index=ReadRevisions(DB,Kind);
+        TestTrue(TEXT("Unknown indexed versions are unsupported rather than generic corruption"),Index.Code==EAetherStoreCode::UnsupportedSchema&&Index.Revisions.IsEmpty()&&Index.Detail.StartsWith(TEXT("AETHER_SAVE_SCHEMA_UNSUPPORTED:")));
+    }
+    TestTrue(TEXT("Install oversized schema that would narrow to current version"),Exec(DB,"UPDATE aggregates SET schema=4294967306 WHERE kind=1"));
+    TestTrue(TEXT("64-bit unsupported version cannot truncate into a supported schema"),ReadAggregate(DB,{EAetherAggregateKind::World,TEXT("Main")}).Code==EAetherStoreCode::UnsupportedSchema);
+    TestTrue(TEXT("Revision index rejects the same oversized version"),ReadRevisions(DB,EAetherAggregateKind::World).Code==EAetherStoreCode::UnsupportedSchema);
+    {
+        FStatement Count(DB,"SELECT count(*) FROM aggregates WHERE schema!=10");
+        TestTrue(TEXT("Rejected reads preserve all unsupported rows"),Count.Step()==SQLITE_ROW&&Count.ColumnInt(0)==3);
+    }
+    sqlite3_close(DB);return true;
+}
+
 #endif

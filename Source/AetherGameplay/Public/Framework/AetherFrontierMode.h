@@ -91,7 +91,8 @@ public:
 private:
     friend class FAetherContainerCapacitySceneTest;
     // 只有服务器启动装配持有这些值；旧 Database 是导航/流送的只读投影，不能提交它。
-    bool bNativeMode=true,bNativeSceneReady=false,bNativeBaselineReady=false,bNativeFailureReported=false;
+    static constexpr bool bNativeMode=true; // No legacy runtime selector; remaining projection consumers are being retired separately.
+    bool bNativeSceneReady=false,bNativeBaselineReady=false,bNativeFailureReported=false;
     TFuture<FAetherWorldCheckpointResult> NativeBaseline;
     double NativeBaselineStarted=0;
     TOptional<FAetherWorldStateV10> NativeWorld;

@@ -10,7 +10,7 @@
 #include "Inventory/AetherResourceGate.h"
 #include "Assets/AetherContent.h"
 #include "Definitions/AetherV10Definitions.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 #include "Inventory/AetherInventoryRules.h"
 #include "Interaction/AetherActions.h"
 #include "Input/AetherPlayerInputComponent.h"

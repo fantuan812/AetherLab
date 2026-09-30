@@ -1,6 +1,6 @@
 #include "World/AetherEncounters.h"
 #include "Framework/AetherFrontier.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"

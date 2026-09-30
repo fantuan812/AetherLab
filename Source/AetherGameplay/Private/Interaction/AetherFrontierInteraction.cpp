@@ -1,7 +1,7 @@
 #include "Framework/AetherFrontier.h"
 #include "Inventory/AetherResourceGate.h"
 #include "Quests/AetherGuide.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 #include "Interaction/AetherActions.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"

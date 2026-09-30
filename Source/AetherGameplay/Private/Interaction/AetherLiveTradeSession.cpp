@@ -2,7 +2,7 @@
 #include "Definitions/AetherV10Definitions.h"
 #include "Characters/AetherFrontierCharacter.h"
 #include "World/AetherFrontierProp.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 #include "Quests/AetherGuide.h"
 #include "Presentation/AetherMenuSubsystem.h"
 

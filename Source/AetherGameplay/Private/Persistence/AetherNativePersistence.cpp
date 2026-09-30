@@ -1,5 +1,6 @@
 #include "Persistence/AetherNativePersistence.h"
-#include "Persistence/AetherNativeMigrationSource.h"
+#include "Persistence/AetherSaveStartupPolicy.h"
+#include "HAL/FileManager.h"
 #include "Persistence/AetherNativeWorldPhysics.h"
 #include "Persistence/AetherSqliteStore.h"
 #include "Profile/AetherProfileCodec.h"
@@ -12,7 +13,7 @@ bool UAetherNativePersistence::Prepare(const FString& InPrefix,bool NewWorld,FSt
 {
     check(IsInGameThread());
     if(BoundScene.IsValid()&&BoundScene.Get()!=GetWorld()){StopScene();State=EAetherNativePersistencePhase::Dormant;}
-    if(State!=EAetherNativePersistencePhase::Dormant||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!AetherNativeMigration::ValidPrefix(InPrefix))
+    if(State!=EAetherNativePersistencePhase::Dormant||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!AetherSaveStartup::ValidPrefix(InPrefix))
     {Reason=TEXT("Invalid native startup state, server world or save prefix");return false;}
     if(auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();Runtime&&Runtime->HasBackend())
     {Reason=TEXT("Previous native backend is still draining accepted transactions");return false;}
@@ -38,19 +39,19 @@ void UAetherNativePersistence::Tick(float DeltaSeconds)
     {
         if(!Probe.IsValid()||!Probe.IsReady())return;
         const auto R=Probe.Get();Probe={};if(R.Code!=EAetherStoreCode::Found){Fail(R.Detail);return;}
-        TOptional<FAetherLegacyImport> Import;
         const bool Existing=R.Values.Contains({EAetherAggregateKind::World,TEXT("Main")});
-        if(!Existing)
+        bool Historical=false;
+        if(!Existing)for(int32 Slot=0;Slot<2;++Slot)
         {
-            if(!R.ProfileRevisions.IsEmpty()||R.ContainerCount!=0){Fail(TEXT("Existing data has no world; refusing automatic migration/new world"));return;}
-            auto Source=AetherNativeMigration::Prepare(Prefix);
-            if(Source.Code==EAetherNativeSourceCode::Invalid){Fail(Source.Detail);return;}
-            Import=MoveTemp(Source.Import);
-            if(!Import.IsSet()&&!AllowFresh){Fail(TEXT("No verified legacy source; fresh world not authorized"));return;}
+            const FString Base=FPaths::ProjectSavedDir()/TEXT("SaveGames")/(Prefix+FString::FromInt(Slot));
+            Historical|=IFileManager::Get().FileExists(*(Base+TEXT(".sav")))||IFileManager::Get().FileExists(*(Base+TEXT(".crc")));
         }
+        FString PolicyReason;
+        if(!AetherSaveStartup::CanOpen(Existing,!R.ProfileRevisions.IsEmpty()||R.ContainerCount!=0,Historical,AllowFresh,PolicyReason))
+        {Fail(PolicyReason);return;}
         // 已有原生世界优先，不因遗留旧档现在损坏而覆盖或拒绝合法的新数据库。
         Bootstrap=MakeUnique<FAetherWorldBootstrap>(Store.ToSharedRef());FString Reason;
-        if(!Bootstrap->Start(MoveTemp(Import),!Existing&&AllowFresh,Reason)){Fail(Reason);return;}
+        if(!Bootstrap->Start(!Existing&&AllowFresh,Reason)){Fail(Reason);return;}
         State=EAetherNativePersistencePhase::Auditing;
     }
     if(State==EAetherNativePersistencePhase::Auditing)
