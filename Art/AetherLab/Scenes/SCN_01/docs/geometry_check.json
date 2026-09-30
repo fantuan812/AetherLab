@@ -1,0 +1,17 @@
+{
+  "objects": 1814,
+  "mesh_objects": 1803,
+  "base_mesh_vertices": 19958,
+  "base_mesh_polygons": 23306,
+  "note": "Counts exclude modifier-evaluated tessellation. Scene opens in Blender; UE not tested.",
+  "units": "Meters; importer must convert to centimeters in UE.",
+  "separate_mesh_checks": {
+    "Contained water": 1,
+    "Wheel": 33,
+    "Broken rim": 9,
+    "Brazier": 5,
+    "Stylized flame": 7,
+    "Curved oak stave": 18,
+    "Portal": 2
+  }
+}
