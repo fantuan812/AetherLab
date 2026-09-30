@@ -22,6 +22,20 @@ private:
     UFUNCTION() void Select();
 };
 
+DECLARE_DELEGATE_TwoParams(FOnAetherDialoguePlayback,bool,uint64);
+UCLASS()
+class AETHERUI_API UAetherDialoguePlaybackButton : public UButton
+{
+    GENERATED_BODY()
+public:
+    void BindPlayback(bool Skip,uint64 Version);
+    FOnAetherDialoguePlayback OnPlayback;
+private:
+    bool bSkip=false;
+    uint64 ShownVersion=0;
+    UFUNCTION() void ActivatePlayback();
+};
+
 // 独立对话页只消费会话视图，不写任务、不生成目标、不决定服务资格。
 UCLASS()
 class AETHERUI_API UAetherDialoguePage : public UCommonActivatableWidget
@@ -30,6 +44,7 @@ class AETHERUI_API UAetherDialoguePage : public UCommonActivatableWidget
 public:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual TOptional<FUIInputConfig> GetDesiredInputConfig() const override;
+    virtual UWidget* NativeGetDesiredFocusTarget() const override;
     virtual void NativeConstruct() override;
     virtual void NativeDestruct() override;
     virtual FReply NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
@@ -38,7 +53,9 @@ private:
     void RefreshFeedback();
     TWeakObjectPtr<AAetherFrontierCharacter> Player;
     void Choose(int32 Index,uint64 Version);
+    void Playback(bool Skip,uint64 Version);
     TWeakObjectPtr<UAetherDialogueSession> Session;
+    TWeakObjectPtr<UWidget> PreferredFocus;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Speaker;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Speech;
     UPROPERTY(Transient, meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> Feedback;

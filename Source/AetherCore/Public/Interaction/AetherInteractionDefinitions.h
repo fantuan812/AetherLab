@@ -1,5 +1,6 @@
 #pragma once
 #include "Contracts/AetherInteraction.h"
+#include "Interaction/AetherDialoguePresentation.h"
 #include "Definitions/AetherRules.h"
 #include "Inventory/AetherEconomyDefinitions.h"
 
@@ -22,7 +23,8 @@ struct FAetherDialogueOption
 };
 struct FAetherDialogueNode
 {
-    FString Id,Speaker,Text;
+    FString Id,Speaker,PresentationId;
+    TArray<FAetherDialogueLine> Lines;
     TArray<FAetherDialogueOption> Options;
 };
 struct FAetherDialogueChoiceView
@@ -33,7 +35,8 @@ struct FAetherDialogueChoiceView
 };
 struct FAetherDialogueView
 {
-    FString NodeId,Speaker,Text;
+    FString NodeId,Speaker,PresentationId;
+    TArray<FAetherDialogueLine> Lines;
     TArray<FAetherDialogueChoiceView> Choices;
 };
 struct FAetherInteractionDefinition
@@ -44,7 +47,8 @@ struct FAetherInteractionDefinition
 };
 struct AETHERCORE_API FAetherInteractionDefinitions
 {
-    int32 SchemaVersion=1;
+    int32 SchemaVersion=2;
+    TMap<FString,FAetherDialoguePresentation> Presentations;
     TMap<FString,FAetherInteractionDefinition> Targets;
     bool Validate(const FAetherRules& Rules,const FAetherEconomyDefinitionsV10& Economy,FString& Reason) const;
     static FAetherInteractionDefinitions Parse(const FString& Json,const FAetherRules& Rules,const FAetherEconomyDefinitionsV10& Economy,FString& Reason);

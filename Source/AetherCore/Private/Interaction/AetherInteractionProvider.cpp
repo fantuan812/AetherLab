@@ -144,7 +144,7 @@ TOptional<FAetherDialogueView> FAetherInteractionProvider::QueryDialogue(const F
         if(Reachable.Num()==Before||Reachable.Num()==CurrentCount)break;
     }
     if(!Reachable.Contains(NodeId))return {};
-    const auto& Node=Definition.Dialogue[NodeId];FAetherDialogueView View;View.NodeId=NodeId;View.Speaker=Node.Speaker;View.Text=Node.Text;
+    const auto& Node=Definition.Dialogue[NodeId];FAetherDialogueView View;View.NodeId=NodeId;View.Speaker=Node.Speaker;View.Lines=Node.Lines;View.PresentationId=Node.PresentationId;
     for(const auto& O:Node.Options)
     {
         FAetherDialogueChoiceView Choice;Choice.Label=O.Label;Choice.ActionId=O.ActionId;Choice.NextNodeId=O.NextNodeId;

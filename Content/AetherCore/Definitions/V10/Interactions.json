@@ -1,5 +1,5 @@
 {
-  "SchemaVersion": 1,
+  "SchemaVersion": 2,
   "Targets": [
     {
       "Id": "Background",
@@ -31,14 +31,24 @@
         {
           "Id": "Greeting",
           "Speaker": "镇民",
-          "Text": "雨后的路不好走。需要帮助时，可以去登记台或旅舍问问。",
           "Options": [
             {
               "Label": "稍后再聊",
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "雨后的路不好走。",
+              "DurationSeconds": 1.8
+            },
+            {
+              "Text": "需要帮助时，可以去登记台或旅舍问问。",
+              "DurationSeconds": 3.2
+            }
+          ],
+          "PresentationId": "Conversation"
         }
       ]
     },
@@ -124,7 +134,6 @@
         {
           "Id": "Greeting",
           "Speaker": "登记员",
-          "Text": "这里登记来访者。办妥后去旅舍安顿，有事也可以再来找我。",
           "Options": [
             {
               "Label": "登记身份",
@@ -146,7 +155,18 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "这里登记来访者。",
+              "DurationSeconds": 1.8
+            },
+            {
+              "Text": "办妥后去旅舍安顿，有事也可以再来找我。",
+              "DurationSeconds": 3.2
+            }
+          ],
+          "PresentationId": "Conversation"
         }
       ]
     },
@@ -194,28 +214,156 @@
           "HideLocked": false
         },
         {
-          "Id": "PracticeHaste", "Kind": "Rest", "Verb": "轻步练习", "IconId": "Rest", "Priority": 90, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Haste", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+          "Id": "PracticeHaste",
+          "Kind": "Rest",
+          "Verb": "轻步练习",
+          "IconId": "Rest",
+          "Priority": 90,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Sample.Haste",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         },
         {
-          "Id": "PracticeWeakness", "Kind": "Rest", "Verb": "虚弱适应练习", "IconId": "Rest", "Priority": 89, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Weakness", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+          "Id": "PracticeWeakness",
+          "Kind": "Rest",
+          "Verb": "虚弱适应练习",
+          "IconId": "Rest",
+          "Priority": 89,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Sample.Weakness",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         },
         {
-          "Id": "PracticeRecovery", "Kind": "Rest", "Verb": "持续恢复", "IconId": "Rest", "Priority": 88, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Regeneration", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+          "Id": "PracticeRecovery",
+          "Kind": "Rest",
+          "Verb": "持续恢复",
+          "IconId": "Rest",
+          "Priority": 88,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Sample.Regeneration",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         },
         {
-          "Id": "PracticePoison", "Kind": "Rest", "Verb": "毒性适应练习", "IconId": "Rest", "Priority": 87, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Poison", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+          "Id": "PracticePoison",
+          "Kind": "Rest",
+          "Verb": "毒性适应练习",
+          "IconId": "Rest",
+          "Priority": 87,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Sample.Poison",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         },
         {
-          "Id": "PracticeSilence", "Kind": "Rest", "Verb": "沉默适应练习", "IconId": "Rest", "Priority": 86, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Silence", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+          "Id": "PracticeSilence",
+          "Kind": "Rest",
+          "Verb": "沉默适应练习",
+          "IconId": "Rest",
+          "Priority": 86,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Sample.Silence",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         },
         {
-          "Id": "PracticeVitality", "Kind": "Rest", "Verb": "强身祝福", "IconId": "Rest", "Priority": 85, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Vitality", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+          "Id": "PracticeVitality",
+          "Kind": "Rest",
+          "Verb": "强身祝福",
+          "IconId": "Rest",
+          "Priority": 85,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Sample.Vitality",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         },
         {
-          "Id": "PracticeAntitoxin", "Kind": "Rest", "Verb": "抗毒祝福", "IconId": "Rest", "Priority": 84, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Antitoxin", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+          "Id": "PracticeAntitoxin",
+          "Kind": "Rest",
+          "Verb": "抗毒祝福",
+          "IconId": "Rest",
+          "Priority": 84,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Sample.Antitoxin",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         },
         {
-          "Id": "PracticeCleanse", "Kind": "Rest", "Verb": "净化减益", "IconId": "Rest", "Priority": 83, "DialogueId": "", "QuestId": "", "ObjectiveId": "", "ServiceId": "Sample.Cleanse", "RequiredClaims": ["Q_Main_02"], "RequiredEvidence": [], "HideAfterClaims": [], "HideAfterEvidence": [], "SafeOnly": false, "HideLocked": false
+          "Id": "PracticeCleanse",
+          "Kind": "Rest",
+          "Verb": "净化减益",
+          "IconId": "Rest",
+          "Priority": 83,
+          "DialogueId": "",
+          "QuestId": "",
+          "ObjectiveId": "",
+          "ServiceId": "Sample.Cleanse",
+          "RequiredClaims": [
+            "Q_Main_02"
+          ],
+          "RequiredEvidence": [],
+          "HideAfterClaims": [],
+          "HideAfterEvidence": [],
+          "SafeOnly": false,
+          "HideLocked": false
         },
         {
           "Id": "Rest",
@@ -258,7 +406,6 @@
         {
           "Id": "Greeting",
           "Speaker": "旅舍老板",
-          "Text": "赶路辛苦了。办妥登记后可以在这里落脚；安全时也欢迎回来休息。",
           "Options": [
             {
               "Label": "绑定据点",
@@ -280,7 +427,18 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "赶路辛苦了。",
+              "DurationSeconds": 1.4
+            },
+            {
+              "Text": "办妥登记后可以在这里落脚；安全时也欢迎回来休息。",
+              "DurationSeconds": 3.4
+            }
+          ],
+          "PresentationId": "Conversation"
         }
       ]
     },
@@ -423,7 +581,6 @@
         {
           "Id": "Greeting",
           "Speaker": "导师",
-          "Text": "先把眼前该做的事理清。准备好后，我可以传授能力、安排训练，也能帮你重新规划已学技能。",
           "Options": [
             {
               "Label": "学习故事能力",
@@ -460,7 +617,18 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "先把眼前该做的事理清。",
+              "DurationSeconds": 2.0
+            },
+            {
+              "Text": "准备好后，我可以传授能力、安排训练，也能帮你重新规划已学技能。",
+              "DurationSeconds": 4.0
+            }
+          ],
+          "PresentationId": "Conversation"
         }
       ]
     },
@@ -506,7 +674,6 @@
         {
           "Id": "Greeting",
           "Speaker": "补给商人",
-          "Text": "药水和口粮都备着。旅途中有用得上的东西，随时来看看。",
           "Options": [
             {
               "Label": "交易补给",
@@ -518,7 +685,18 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "药水和口粮都备着。",
+              "DurationSeconds": 1.8
+            },
+            {
+              "Text": "旅途中有用得上的东西，随时来看看。",
+              "DurationSeconds": 2.8
+            }
+          ],
+          "PresentationId": "Conversation"
         }
       ]
     },
@@ -581,7 +759,6 @@
         {
           "Id": "Greeting",
           "Speaker": "军械匠",
-          "Text": "护具和饰品在这里挑。装备有了磨损，也可以带来看看修理费用。",
           "Options": [
             {
               "Label": "挑选装备",
@@ -598,7 +775,18 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "护具和饰品在这里挑。",
+              "DurationSeconds": 2.0
+            },
+            {
+              "Text": "装备有了磨损，也可以带来看看修理费用。",
+              "DurationSeconds": 3.0
+            }
+          ],
+          "PresentationId": "Conversation"
         }
       ]
     },
@@ -738,7 +926,6 @@
         {
           "Id": "Greeting",
           "Speaker": "补给委托",
-          "Text": "带齐补给后回来交付，每日只结算一次。",
           "Options": [
             {
               "Label": "结算今日委托",
@@ -755,7 +942,14 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "带齐补给后回来交付，每日只结算一次。",
+              "DurationSeconds": 3.5
+            }
+          ],
+          "PresentationId": "Board"
         }
       ]
     },
@@ -822,7 +1016,6 @@
         {
           "Id": "Greeting",
           "Speaker": "巡逻委托",
-          "Text": "巡视三处标记，记录完成后回来领取报酬。",
           "Options": [
             {
               "Label": "结算今日委托",
@@ -839,7 +1032,14 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "巡视三处标记，记录完成后回来领取报酬。",
+              "DurationSeconds": 3.5
+            }
+          ],
+          "PresentationId": "Board"
         }
       ]
     },
@@ -906,7 +1106,6 @@
         {
           "Id": "Greeting",
           "Speaker": "灭火委托",
-          "Text": "先开始今日委托，再前往灰木区处理属于你的火点。",
           "Options": [
             {
               "Label": "结算今日委托",
@@ -923,7 +1122,14 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "先开始今日委托，再前往灰木区处理属于你的火点。",
+              "DurationSeconds": 3.5
+            }
+          ],
+          "PresentationId": "Board"
         }
       ]
     },
@@ -1395,7 +1601,6 @@
         {
           "Id": "Greeting",
           "Speaker": "修道院哨兵",
-          "Text": "挑战需要至少两名附近的队员或同伴；准备妥当后再出发。",
           "Options": [
             {
               "Label": "进入修道院遭遇",
@@ -1407,7 +1612,14 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "挑战需要至少两名附近的队员或同伴；准备妥当后再出发。",
+              "DurationSeconds": 3.5
+            }
+          ],
+          "PresentationId": "Conversation"
         }
       ]
     },
@@ -1499,7 +1711,6 @@
         {
           "Id": "Greeting",
           "Speaker": "中继守卫",
-          "Text": "清理三波敌人，随后在中继旁保持引导。",
           "Options": [
             {
               "Label": "开始中继防守",
@@ -1516,7 +1727,14 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "清理三波敌人，随后在中继旁保持引导。",
+              "DurationSeconds": 3.5
+            }
+          ],
+          "PresentationId": "Conversation"
         }
       ]
     },
@@ -1608,7 +1826,6 @@
         {
           "Id": "Greeting",
           "Speaker": "旅舍领队",
-          "Text": "砾石擅长近战，沐禾能够治疗。队伍最多容纳四名真人和同伴。",
           "Options": [
             {
               "Label": "招募砾石",
@@ -1625,9 +1842,53 @@
               "ActionId": "",
               "NextNodeId": ""
             }
-          ]
+          ],
+          "Lines": [
+            {
+              "Text": "砾石擅长近战，沐禾能够治疗。",
+              "DurationSeconds": 3.5
+            },
+            {
+              "Text": "队伍最多容纳四名真人和同伴。",
+              "DurationSeconds": 3.5
+            }
+          ],
+          "PresentationId": "Conversation"
         }
       ]
+    }
+  ],
+  "Presentations": [
+    {
+      "Id": "Conversation",
+      "AdvanceLabel": "下一句",
+      "SkipLabel": "直接查看服务",
+      "AllowAdvance": true,
+      "AllowSkip": true,
+      "Camera": {
+        "Offset": [
+          180,
+          75,
+          150
+        ],
+        "LookAtOffset": [
+          0,
+          0,
+          125
+        ],
+        "Fov": 55,
+        "BlendInSeconds": 0.25,
+        "BlendOutSeconds": 0.2,
+        "ProbeRadiusCm": 12
+      }
+    },
+    {
+      "Id": "Board",
+      "AdvanceLabel": "下一句",
+      "SkipLabel": "查看委托",
+      "AllowAdvance": true,
+      "AllowSkip": true,
+      "Camera": null
     }
   ]
 }
