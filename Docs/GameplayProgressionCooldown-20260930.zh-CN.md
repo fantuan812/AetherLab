@@ -18,4 +18,12 @@
 
 独占文件：新建 Source/AetherGameplay/Public/Skills/AetherSkillProgressionContext.h、Private/Skills/AetherSkillProgressionContext.cpp、Private/Tests/AetherSkillProgressionCooldownTests.cpp；修改 AetherNativeContext.cpp、AetherSkillTreePage.cpp。不修改 Combat、PlayerState、BuffRuntime 或并行岗位文件。无旧协议转换或兼容层。
 
-状态：方案 checkpoint；尚未实现。未编译、未测试。不得据此声称 UE、多人或完整玩法验收通过。
+状态：实现已提交，待独立源码复审；未编译、未测试。不得据此声称 UE、多人或完整玩法验收通过。
+
+## 本次改动
+
+- 以共享 ResolveExecutionState 读取独立技能及共享组的任意未到期截止时间；三个成长命令继续复用 Core 既有 Busy 规则。
+- 服务器只读 PlayerState 的权威截止时间；客户端只读既有 BuffRuntime 对齐快照。客户端缺服务器 GameState 时间、生命身份、档案/授权版本对齐时保持禁用。
+- 技能树缓存键纳入 bCoolingDown，沿用现有页面刷新机制；不会等待档案版本变化，也不创建另一个冷却计时器。
+- 添加三个 Automation 回归源码：权威源与独立恢复期、拥有者原子快照对齐、Learn/Upgrade/Reset 的拒绝与到期恢复。仅完成源码编写，未执行。
+- 源码空白检查干净。未编译、未执行规则/自动化/UE/多人测试。未改存档、协议、GAS施法、Niagara、MotionBricks或兼容入口。

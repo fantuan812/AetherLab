@@ -1,4 +1,5 @@
 #include "Skills/AetherSkillTreePage.h"
+#include "Skills/AetherSkillProgressionContext.h"
 #include "Effects/AetherBuffRuntime.h"
 #include "UI/AetherWidgetAssets.h"
 #include "UI/AetherMenuRoot.h"
@@ -113,7 +114,8 @@ void UAetherSkillTreePage::HandleNativeProfile()
     auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());auto* PS=C?C->ProfileState():nullptr;
     if(C)
     {
-        S.SkillContext.bInCombat=C->HasRecentCombat(8);S.SkillContext.bCasting=C->CastLockUntil>C->CombatTime();S.SkillContext.bCoolingDown=S.SkillContext.bCasting;
+        S.SkillContext.bInCombat=C->HasRecentCombat(8);
+        AetherSkillProgression::ResolveExecutionState(*C,P->Revision,S.SkillContext);
         S.bPresentationReady=C->BuffRuntime->PresentationReady(P->Revision);
         S.bCanAct=S.bPresentationReady&&C->Ready()&&!CommandClient->HasPending();
         if(auto* Registry=C->GetWorld()->GetSubsystem<UAetherNearbyRegistry>())
@@ -122,7 +124,7 @@ void UAetherSkillTreePage::HandleNativeProfile()
                     if(AetherGuide::QueryTarget(C,Teacher).Prop==Teacher){S.SkillContext.bAtResetService=true;break;}
         if(PS&&S.bPresentationReady)S.ExternalGrants=PS->GetNativeSkillGrants();
     }
-    FString Key=S.Context.SessionId.ToString()+FString::Printf(TEXT("|%lld|%d%d%d%d|%lld"),P->Revision,S.SkillContext.bAtResetService,S.SkillContext.bInCombat,S.SkillContext.bCasting,CommandClient->HasPending(),PS?PS->SkillGrants.ProfileRevision:-1);
+    FString Key=S.Context.SessionId.ToString()+FString::Printf(TEXT("|%lld|%d%d%d%d%d|%lld"),P->Revision,S.SkillContext.bAtResetService,S.SkillContext.bInCombat,S.SkillContext.bCasting,S.SkillContext.bCoolingDown,CommandClient->HasPending(),PS?PS->SkillGrants.ProfileRevision:-1);
     if(PS)Key+=TEXT("|grants:")+FString::FromInt(PS->SkillGrants.Sequence);
     Key+=S.bPresentationReady?TEXT("|ready"):TEXT("|sync");
     for(const auto& G:S.ExternalGrants)Key+=TEXT("|")+G.SourceId+TEXT(":")+G.SkillId+FString::FromInt(G.Rank);
