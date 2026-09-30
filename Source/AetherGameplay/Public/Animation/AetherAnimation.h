@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "AetherEquipmentComponent.h"
+#include "AetherEquipmentGrip.h"
 #include "Animation/AetherActionPresentation.h"
 #include "Animation/AetherAnimationSnapshot.h"
 #include "AetherAnimation.generated.h"
@@ -40,7 +41,9 @@ public:
  float GripWeights[2]={0,0};
  float SupportHandWeight=0,WeaponHoldWeight=0;
  FVector WeaponHoldTarget=FVector::ZeroVector,WeaponElbowTarget=FVector::ZeroVector;
- FVector SupportHandOffset=FVector::ZeroVector;
+ FName MainHandBone,SupportHandBone;
+ FAetherResolvedWeaponGrip SupportGrip;
+ FString GripDiagnostic;
  FVector FootTargets[2]={FVector::ZeroVector,FVector::ZeroVector};
  FVector KneeTargets[2]={FVector::ZeroVector,FVector::ZeroVector};
  static float AttackPosition(const FAetherAttackDefinition& Attack,float Elapsed,float Length);

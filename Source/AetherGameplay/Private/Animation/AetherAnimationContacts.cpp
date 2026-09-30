@@ -1,5 +1,6 @@
 #include "Animation/AetherAnimation.h"
 #include "AetherMotionComponent.h"
+#include "AetherEquipmentVisuals.h"
 #include "AnimNodes/AnimNode_RetargetPoseFromMesh.h"
 #include "Combat/AetherCombat.h"
 #include "Characters/AetherFrontierCharacter.h"
@@ -69,13 +70,22 @@ void UAetherAnimInstance::UpdateContacts(AAetherCharacter& Character,const FAeth
  const auto* Off=C->Equipment?C->Equipment->InSlot(TEXT("OffHand")):nullptr;
  // 世界接触优先于武器握持；失去装备、死亡或受击时平滑释放，姿态不修改玩法资源。
  const bool CanGrip=Frame.bAlive&&!Frame.bStunned&&!ContactValid&&!Frame.bCarrying&&!Frame.bRescuing;
- const bool Support=CanGrip&&Main&&Main->bOccupiesBothHands;
- if(Support){SupportHandOffset=Main->SupportHandOffset;ElbowTargets[0]=Mesh->GetComponentTransform().InverseTransformPosition(C->GetActorLocation()+C->GetActorForwardVector()*30-C->GetActorRightVector()*80+FVector(0,0,25));}
+ FString Why;
+ SupportGrip=FAetherResolvedWeaponGrip();
+ const bool HasVisual=C->Equipment&&C->Equipment->VisualForSlot(TEXT("MainHand"));
+ const bool HasSupportGrip=HasVisual&&AetherEquipmentVisuals::ResolveSupportGrip(Mesh,Main,MainHandBone,SupportHandBone,SupportGrip,Why);
+ if(!HasVisual)Why=TEXT("Main-hand weapon visual is not ready");
+ if(Main&&Main->bOccupiesBothHands&&!HasSupportGrip&&GripDiagnostic!=Why)
+  UE_LOG(LogTemp,Warning,TEXT("AETHER_WEAPON_GRIP_UNAVAILABLE %s: %s"),*Main->ItemId.ToString(),*Why);
+ GripDiagnostic=Main&&Main->bOccupiesBothHands?Why:FString();
+ const bool Support=CanGrip&&HasSupportGrip;
+ if(!HasSupportGrip){SupportHandWeight=0;WeaponHoldWeight=0;}
+ if(Support){ElbowTargets[0]=Mesh->GetComponentTransform().InverseTransformPosition(C->GetActorLocation()+C->GetActorForwardVector()*30-C->GetActorRightVector()*80+FVector(0,0,25));}
  SupportHandWeight=FMath::FInterpTo(SupportHandWeight,Support?1.f:0.f,Dt,12);
  // 双手闲置持握将主手放在胸前；攻击仍让正式 Montage 决定主手轨迹，副手跟随其当帧握点。
  WeaponHoldWeight=FMath::FInterpTo(WeaponHoldWeight,Support&&!Frame.bAttacking?1.f:0.f,Dt,16);
  WeaponHoldTarget=Mesh->GetComponentTransform().InverseTransformPosition(C->GetActorLocation()+C->GetActorForwardVector()*28+C->GetActorRightVector()*4+FVector(0,0,8));
  WeaponElbowTarget=Mesh->GetComponentTransform().InverseTransformPosition(C->GetActorLocation()+C->GetActorRightVector()*80+FVector(0,0,12));
  GripWeights[0]=FMath::FInterpTo(GripWeights[0],CanGrip&&(Off||Support)?1.f:0.f,Dt,12);
- GripWeights[1]=FMath::FInterpTo(GripWeights[1],CanGrip&&Main?1.f:0.f,Dt,12);
+ GripWeights[1]=FMath::FInterpTo(GripWeights[1],CanGrip&&Main&&(!Main->bOccupiesBothHands||HasSupportGrip)?1.f:0.f,Dt,12);
 }

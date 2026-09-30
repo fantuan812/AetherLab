@@ -1,7 +1,11 @@
 """UE 5.8 editor import + native data assets; no generated Blueprint combat logic."""
-import unreal as ue,json,traceback
+import unreal as ue,json,traceback,sys
 from pathlib import Path
-ROOT=Path('C:/ueproject/test');ART=ROOT/'Art/SwordMagic/Modular';PACK='/Game/SwordMagic'
+ROOT=Path(ue.Paths.project_dir()).resolve();ART=ROOT/'Art/SwordMagic/Modular';PACK='/Game/SwordMagic'
+sys.path.insert(0,str(ROOT/'Scripts/Authoring'))
+from WeaponGripBindings import prepare_grips, apply_grip
+# A missing real contract stops before material/import/data mutations. Import source meshes separately first.
+GRIPS=prepare_grips(ue,ROOT,['TrainingHammer','BellHammer'],PACK+'/Data')
 MAN=json.loads((ART/'manifest.json').read_text(encoding='utf-8'))
 LIB=ue.EditorAssetLibrary;TOOLS=ue.AssetToolsHelpers.get_asset_tools();ME=ue.MaterialEditingLibrary
 REPORT={'stage':'starting','assets':[],'errors':[]}
@@ -92,6 +96,7 @@ def game_data(meshes,chars,animations):
     defs=[]
     for id,label,mesh,slot,socket,two,scale in [('OathSword','Oath Sword','SM_OathSword','MainHand','hand_r',False,1),('OathShield','Oath Shield','SM_OathShield','OffHand','hand_l',False,1),('TrainingHammer','War Hammer','SM_BellHammer','MainHand','hand_r',True,.58),('BellHammer','Bell Hammer','SM_BellHammer','MainHand','hand_r',True,1)]:
         d=create('DA_'+id,ue.AetherEquipmentDefinition);props(d,item_id=id,display_name=label,mesh=meshes[mesh],slot=slot,socket=socket,occupies_both_hands=two,allows_guard=slot=='OffHand',grip_transform=tr(scale=(scale,)*3))
+        if two:apply_grip(ue,d,GRIPS)
         d.set_editor_property('attacks',[] if slot=='OffHand' else [attack('Light',16,14,6,8,165,.08,.12,.18),attack('Heavy',32,45,32,24,165,.18,.15,.42)] if id=='OathSword' else [attack('Light',28,30,20,16,220,.20,.16,.44),attack('Heavy',45,65,50,32,245,.30,.18,.57)])
         LIB.save_loaded_asset(d);defs.append(d)
     catalog=create('DA_EquipmentCatalog',ue.AetherEquipmentCatalog);catalog.set_editor_property('items',defs);LIB.save_loaded_asset(catalog)

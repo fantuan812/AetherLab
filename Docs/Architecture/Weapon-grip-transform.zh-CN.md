@@ -21,9 +21,18 @@
 
 ## 作者与迁移边界
 
-作者输入计划位于 `ContentSource/Equipment/WeaponGrips.json`，只接受新完整契约，绑定原始握持 manifest 的 SHA-256。当前没有该输入，不提供虚构旋转或旧位置兼容转换。所有作者入口必须在修改资产前预校验需要的全部行。
+作者输入位于 `ContentSource/Equipment/WeaponGrips.json`，由 `Scripts/Authoring/WeaponGripBindings.py` 严格读取，只接受新完整契约，绑定原始握持 manifest 的 SHA-256。当前没有该输入，不提供虚构旋转或旧位置兼容转换。三个作者入口在首次修改资产前预校验所需全部行、真实来源文件哈希、已导入的身体/武器类型与完整路径、骨名/socket及参考姿态scale、既有输出资产类型。原始网格须先独立导入，不能借这个步骤推断导入轴。
 
-确认需重作者化的双手资产：`/Game/AetherCore/Data/DA_TrainingHammer`、`DA_TideStaff`、`DA_BellHammer`。这是从源作者脚本确认的清单，不宣称读取了全部 uasset 序列化内容。它们缺完整副手朝向与身体身份绑定；基础几何版本还含非uniform scale，需烘入网格后提供新合同。其他二进制若包含双手配置，同样必须重作者化。
+schema 1 顶层字段只能是 `schema`、`coordinates`、`source`、`bindings`；`coordinates` 必须为 `unreal-local-centimeters-xyzw`。`source` 仅含合同目录内原始manifest的相对 `path` 与真实文件 `sha256`。每条 binding 必须包含：
+
+- `item_id` 与完整包路径 `equipment_asset`（输出身份）；不同输出包可有同名物品，输出不能重复或大小写别名重复
+- `target_mesh`、`weapon_mesh`（已经导入且身份准确的资产包）
+- `main_bone`、`support_bone`、`socket`（socket 必须挂在声明的主手骨；直接使用该骨名表示明确的单位附着点）
+- `weapon_to_socket` 与 `support_hand_to_weapon`；各自必须有三元 `translation_cm`、四元 `rotation_xyzw`、三元 `scale`
+
+缺字段、未知字段、重复JSON key、位置旧格式、错单位/坐标标记、源哈希变化、异常旋转/scale均拒绝。作者写入新 `SupportHandTransform`、身体/手骨身份、`GripSourceSha256` 和显式已配置标志。运行时与作者使用一致数值约束；`SecondarySocket` 仍专供成对装备，双手武器不允许混用。数据预校验不声称能回滚磁盘故障或其他旧作者逻辑的失败；本轮三个入口均未在UE执行或改写二进制。
+
+确认需重作者化的双手资产：`/Game/AetherCore/Data/DA_TrainingHammer`、`DA_TideStaff`、`DA_BellHammer`，以及旧模块导入入口的 `/Game/SwordMagic/Data/DA_TrainingHammer`、`DA_BellHammer`。这是从源作者脚本确认的清单，不宣称读取了全部 uasset 序列化内容。它们缺完整副手朝向与身体身份绑定；基础几何版本还含非uniform scale，需烘入网格后提供新合同。其他二进制若包含双手配置，同样必须重作者化。旧二进制会明确失败，不能把本分支直接合入运行主线。
 
 Quaternius 原65骨最新版 `.blend`、rest 合同、主副握点矩阵/手指姿态的原始 manifest 尚未恢复。展示视频不含这些可编辑数据。现有计划输出路径不是资源存在证明。
 
@@ -34,4 +43,6 @@ Quaternius 原65骨最新版 `.blend`、rest 合同、主副握点矩阵/手指�
 3. 缺输入、源哈希改变、重复绑定、目标身体/主副骨不一致、socket父骨不一致、装备变更/卸装后无陈旧握点
 4. 世界接触优先，攻击跟随当帧主手，受击/死亡释放，传统/生成混合不改变 GAS 事件或模型输出权限
 
-当前仅恢复与审阅源码，未把设计验证标记为已执行。UE 验收本轮取消，后续也不自动安排。
+当前已实现源码、作者schema及测试源码，并执行Python AST解析与源码静态审阅；没有执行上述行为验证。`Aether.Equipment.FullGripTransform`、`Aether.Equipment.FullGripDefinition` 与 `Scripts/Tests/TestWeaponGripBindings.py` 已编写未运行。UE 验收本轮取消，后续也不自动安排。手指握姿仍沿用既有层，原骨手指资源接入是后续资源任务，不在本次通用副手变换实现中冒充完成。
+
+参考API：[USkeletalMeshSocket](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/USkeletalMeshSocket) 返回socket局部transform；[USkinnedAsset::FindSocketInfo](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/USkinnedAsset/FindSocketInfo) 描述socket关联骨信息。空间链与缩放规则以项目现有 `AetherEquipmentVisuals::Attach` 的实际行为为依据。

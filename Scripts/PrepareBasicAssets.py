@@ -5,6 +5,7 @@ import sys
 ROOT=pathlib.Path(ue.Paths.project_dir()).resolve()
 sys.path.insert(0,str(ROOT / "Scripts/Authoring"))
 from MotionBindings import load_bindings, apply_character_binding
+from WeaponGripBindings import prepare_grips, apply_grip
 bindings=load_bindings(ROOT / "Content/AetherCore/Definitions/MotionBindings.json")
 L=ue.EditorAssetLibrary
 T=ue.AssetToolsHelpers.get_asset_tools()
@@ -22,9 +23,12 @@ def attack(name,damage,cost,reach,impulse,wind):
     a=ue.AetherAttackDefinition();props(a,id=name,damage=damage,stamina_cost=cost,reach_cm=reach,impulse_ns=impulse,windup_seconds=wind,active_seconds=.18,recovery_seconds=.3,posture_damage=damage);return a
 cube=L.load_asset('/Engine/BasicShapes/Cube');cylinder=L.load_asset('/Engine/BasicShapes/Cylinder')
 items=[]
-for name,scale,two,off in [('TrainingSword',(.07,.1,.9),False,False),('TrainingHammer',(.25,.25,.95),True,False),('TideStaff',(.07,.07,1.6),True,False),('TrainingShield',(.45,.45,.06),False,True),('BellHammer',(.3,.3,1.25),True,False),('EmberFocus',(.18,.18,.7),False,False)]:
+weapon_rows=[('TrainingSword',(.07,.1,.9),False,False),('TrainingHammer',(.25,.25,.95),True,False),('TideStaff',(.07,.07,1.6),True,False),('TrainingShield',(.45,.45,.06),False,True),('BellHammer',(.3,.3,1.25),True,False),('EmberFocus',(.18,.18,.7),False,False)]
+grips=prepare_grips(ue,ROOT,[name for name,scale,two,off in weapon_rows if two])
+for name,scale,two,off in weapon_rows:
     item=create('DA_'+name,ue.AetherEquipmentDefinition)
     props(item,item_id=name,display_name=name,slot='OffHand' if off else 'MainHand',socket='hand_l' if off else 'hand_r',mesh=cylinder if off else cube,occupies_both_hands=two,allows_guard=off,grip_transform=ue.Transform(location=ue.Vector(0,0,30),rotation=ue.Rotator(0,0,0),scale=ue.Vector(*scale)))
+    if two:apply_grip(ue,item,grips)
     item.set_editor_property('attacks',[] if off else [attack('Light',26 if two else 16,16 if two else 8,210 if two else 165,18 if two else 6,.2 if two else .08),attack('Heavy',45 if two else 32,30 if two else 24,230 if two else 180,50 if two else 32,.3)])
     if name=='TrainingSword':
         attacks=list(item.get_editor_property('attacks'))

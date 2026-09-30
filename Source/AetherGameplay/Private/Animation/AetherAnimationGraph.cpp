@@ -69,15 +69,21 @@ struct FAetherGroundFootIK : FAnimNode_TwoBoneIK
 };
 struct FAetherSupportHandIK : FAnimNode_TwoBoneIK
 {
- FBoneReference MainHand;FVector GripOffset=FVector::ZeroVector;bool UseGrip=false;
+ FBoneReference MainHand;FAetherResolvedWeaponGrip Grip;bool UseGrip=false;
  virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override
- {FAnimNode_TwoBoneIK::CacheBones_AnyThread(Context);MainHand.BoneName=TEXT("hand_r");MainHand.Initialize(Context.AnimInstanceProxy->GetRequiredBones());}
+ {FAnimNode_TwoBoneIK::CacheBones_AnyThread(Context);MainHand.Initialize(Context.AnimInstanceProxy->GetRequiredBones());}
  virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output,TArray<FBoneTransform>& Out) override
  {
-  const FVector Contact=EffectorLocation;
-  if(UseGrip&&MainHand.IsValidToEvaluate(Output.Pose.GetPose().GetBoneContainer()))
-   EffectorLocation=Output.Pose.GetComponentSpaceTransform(MainHand.GetCompactPoseIndex(Output.Pose.GetPose().GetBoneContainer())).TransformPosition(GripOffset);
+  if(!UseGrip){FAnimNode_TwoBoneIK::EvaluateSkeletalControl_AnyThread(Output,Out);return;}
+  const auto& Bones=Output.Pose.GetPose().GetBoneContainer();FTransform Target;
+  if(!Grip.bValid||Grip.MainBone!=MainHand.BoneName||Grip.SupportBone!=IKBone.BoneName||!MainHand.IsValidToEvaluate(Bones)||
+     !IKBone.IsValidToEvaluate(Bones)||!AetherEquipmentGrip::SupportTarget(Grip,
+      Output.Pose.GetComponentSpaceTransform(MainHand.GetCompactPoseIndex(Bones)),Output.AnimInstanceProxy->GetComponentTransform(),Target))return;
+  const FVector Contact=EffectorLocation;EffectorLocation=Target.GetTranslation();
   FAnimNode_TwoBoneIK::EvaluateSkeletalControl_AnyThread(Output,Out);EffectorLocation=Contact;
+  // Set rotation on the same control output as position; the base control blends both with its Alpha once.
+  const auto HandIndex=IKBone.GetCompactPoseIndex(Bones);
+  for(auto& Bone:Out)if(Bone.BoneIndex==HandIndex){Bone.Transform.SetRotation(Target.GetRotation());break;}
  }
 };
 struct FAetherAnimProxy : FAnimInstanceProxy
@@ -124,7 +130,7 @@ struct FAetherAnimProxy : FAnimInstanceProxy
   ToLocal.ComponentPose.SetLinkNode(&LeftHand);
   for(FAnimNode_TwoBoneIK* Foot:{static_cast<FAnimNode_TwoBoneIK*>(&LeftFoot),static_cast<FAnimNode_TwoBoneIK*>(&RightFoot),static_cast<FAnimNode_TwoBoneIK*>(&LeftHand),&RightHand}){Foot->EffectorLocationSpace=BCS_ComponentSpace;Foot->JointTargetLocationSpace=BCS_ComponentSpace;Foot->bAllowStretching=false;Foot->bMaintainEffectorRelRot=true;Foot->Alpha=0;}
   LeftFoot.IKBone.BoneName="foot_l";RightFoot.IKBone.BoneName="foot_r";
-  LeftHand.IKBone.BoneName="hand_l";RightHand.IKBone.BoneName="hand_r";
+  LeftHand.IKBone.BoneName=A->SupportHandBone;RightHand.IKBone.BoneName=A->MainHandBone;LeftHand.MainHand.BoneName=A->MainHandBone;
   FAnimInstanceProxy::Initialize(Instance);
  }
  virtual void PreUpdate(UAnimInstance* Instance,float Dt) override
@@ -156,7 +162,7 @@ struct FAetherAnimProxy : FAnimInstanceProxy
   }
   LeftFoot.Alpha=RightFoot.Alpha=A->FootWeight;LeftFoot.EffectorLocation=A->FootTargets[0];RightFoot.EffectorLocation=A->FootTargets[1];LeftFoot.JointTargetLocation=A->KneeTargets[0];RightFoot.JointTargetLocation=A->KneeTargets[1];
   for(int32 I=0;I<2;++I)GripBlend[I].BlendWeights[0]=A->GripWeights[I];
-  LeftHand.UseGrip=A->HandWeight<.01f&&A->SupportHandWeight>.01f;LeftHand.GripOffset=A->SupportHandOffset;
+  LeftHand.UseGrip=A->SupportGrip.bValid&&A->HandWeight<.01f&&A->SupportHandWeight>.01f;LeftHand.Grip=A->SupportGrip;
   LeftHand.Alpha=LeftHand.UseGrip?A->SupportHandWeight:A->HandWeight;RightHand.Alpha=A->HandWeight;
   LeftHand.EffectorLocation=A->HandTargets[0];RightHand.EffectorLocation=A->HandTargets[1];
   LeftHand.JointTargetLocation=A->ElbowTargets[0];RightHand.JointTargetLocation=A->ElbowTargets[1];

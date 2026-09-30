@@ -1,5 +1,7 @@
 """十槽官方基础几何体装备。全部代码完成并具备新 UClass 后才运行；脚本不等于已制作资产。"""
 import unreal as ue
+from pathlib import Path
+from WeaponGripBindings import prepare_grips, apply_grip
 
 def load_optional(path):
     # 首次创建不存在的目标是正常情况；不要向命令行作者过程记录误导性 Error。
@@ -34,6 +36,10 @@ rows += [
     ("SilverRing", ["Ring1", "Ring2"], "hand_r", (0, 0, 0), (1, 1, 1), True),
 ]
 existing = list(catalog.get_editor_property("items"))
+# Preflight every two-hand output before the first create/update/save in this batch.
+grips = prepare_grips(ue, Path(ue.Paths.project_dir()),
+                      [str(item.get_editor_property("item_id")) for item in existing
+                       if item.get_editor_property("occupies_both_hands")])
 for name, slots, socket, position, scale, invisible in rows:
     path = folder + "/DA_" + name
     item = load_optional(path) if L.does_asset_exist(path) else None
@@ -70,6 +76,8 @@ for name, source, display in [
         raise RuntimeError("武器资产类型冲突：" + path)
     for key in ("slot", "allowed_slots", "socket", "mesh", "grip_transform", "secondary_socket",
                 "secondary_grip_transform", "invisible_accessory", "occupies_both_hands",
+                "support_hand_transform_configured", "grip_target_mesh", "grip_main_hand_bone",
+                "grip_support_hand_bone", "grip_source_sha256", "support_hand_transform",
                 "allows_guard", "guard_stamina_multiplier", "parry_window_seconds", "attacks"):
         item.set_editor_property(key, source_asset.get_editor_property(key))
     item.set_editor_property("item_id", name)
@@ -77,10 +85,10 @@ for name, source, display in [
     if not L.save_loaded_asset(item):
         raise RuntimeError("无法保存武器：" + path)
     existing = [a for a in existing if str(a.get_editor_property("item_id")) != name] + [item]
-# 双手武器的辅助握点独立于防具双侧附着，运行时由当前主手骨求解，避免上一帧反馈。
+# Apply only explicit full contracts validated before any asset mutation.
 for item in existing:
     if item.get_editor_property("occupies_both_hands"):
-        item.set_editor_property("support_hand_offset",ue.Vector(0,0,32 if str(item.get_editor_property("item_id"))=="TideStaff" else 24))
+        apply_grip(ue, item, grips)
         if not L.save_loaded_asset(item):
             raise RuntimeError("无法保存辅助握点")
 catalog.set_editor_property("items", existing)
