@@ -21,7 +21,7 @@ class AETHERGAMEPLAY_API FAetherWorldBootstrap
 public:
     explicit FAetherWorldBootstrap(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store);
     ~FAetherWorldBootstrap();
-    bool Start(TOptional<FAetherLegacyImport> Legacy,bool AllowFreshWorld,FString& Reason);
+    bool Start(bool AllowFreshWorld,FString& Reason);
     void Poll();
     void Stop();
     EAetherBootstrapPhase Phase() const;

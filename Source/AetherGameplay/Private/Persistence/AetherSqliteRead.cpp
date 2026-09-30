@@ -17,7 +17,10 @@ FAetherStoreRevisionIndex ReadRevisions(sqlite3* DB,EAetherAggregateKind Kind)
         bool Valid=!Id.IsEmpty()&&Id.Len()<=128&&Back.Length()==Bytes&&FMemory::Memcmp(Back.Get(),Raw,Bytes)==0;
         for(TCHAR C:Id)Valid&=C>=32;
         const int64 Revision=Q.ColumnInt(1);
-        if(!Valid||Revision<0||Revision==MAX_int64||Q.ColumnInt(2)!=Schema||R.Revisions.Contains(Id))
+        const int64 StoredSchema=Q.ColumnInt(2);
+        if(StoredSchema!=Schema)
+        {R.Code=EAetherStoreCode::UnsupportedSchema;R.Detail=FString::Printf(TEXT("AETHER_SAVE_SCHEMA_UNSUPPORTED: indexed aggregate schema %lld; expected %d. Original data preserved; no automatic conversion."),StoredSchema,Schema);R.Revisions.Reset();return R;}
+        if(!Valid||Revision<0||Revision==MAX_int64||R.Revisions.Contains(Id))
         {R.Code=EAetherStoreCode::Corrupt;R.Detail=TEXT("Invalid aggregate revision index");R.Revisions.Reset();return R;}
         R.Revisions.Add(Id,Revision);
     }

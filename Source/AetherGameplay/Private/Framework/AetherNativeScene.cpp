@@ -9,7 +9,7 @@
 #include "Engine/GameInstance.h"
 #include "EngineUtils.h"
 #include "Assets/AetherAssetPreload.h"
-#include "World/AetherWorldDefinition.h"
+#include "Definitions/AetherWorldDefinition.h"
 #include "Interaction/AetherNativeInteraction.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
@@ -55,8 +55,11 @@ void AAetherFrontierMode::FailNativeScene(const FString& Reason)
     if(bNativeFailureReported)return;bNativeFailureReported=true;
     UE_LOG(LogTemp,Error,TEXT("AETHER_NATIVE_SCENE_FAILED %s"),*Reason);
     // 失败不会清库或回退旧档；每个已入场连接均退出，避免操作半恢复场景。
+    const FString Message=(Reason.StartsWith(TEXT("AETHER_SAVE_FORMAT_UNSUPPORTED:"))||Reason.StartsWith(TEXT("AETHER_SAVE_SCHEMA_UNSUPPORTED:")))?
+        TEXT("此世界的存档格式不受支持，已停止加载且保留原件。请恢复当前格式备份，或明确选择新的存档名称开始新游戏。"):
+        TEXT("世界存档恢复失败，请检查服务器日志并保留存档。");
     for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)
-        if(auto* PC=It->Get())PC->ClientReturnToMainMenuWithTextReason(FText::FromString(TEXT("世界存档恢复失败，请检查服务器日志并保留存档。")));
+        if(auto* PC=It->Get())PC->ClientReturnToMainMenuWithTextReason(FText::FromString(Message));
 }
 void AAetherFrontierMode::PublishNativeWorld(const FAetherWorldStateV10& W)
 {

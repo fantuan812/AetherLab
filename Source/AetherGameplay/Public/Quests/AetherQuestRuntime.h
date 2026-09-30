@@ -1,6 +1,6 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 #include "AetherQuestRuntime.generated.h"
 struct FAetherProfile;
 // Only the authority composition root supplies proven source IDs. This ledger never pays rewards.

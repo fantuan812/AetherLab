@@ -1,7 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "Persistence/AetherProfile.h"
 #include "Persistence/AetherWorldState.h"
-#include "World/AetherWorldDefinition.h"
+#include "Definitions/AetherWorldDefinition.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #if WITH_DEV_AUTOMATION_TESTS

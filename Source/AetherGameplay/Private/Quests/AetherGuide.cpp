@@ -4,7 +4,7 @@
 #include "Interaction/AetherNativeInteraction.h"
 #include "Interaction/AetherWorldActionComponent.h"
 #include "Framework/AetherFrontier.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 #include "Interaction/AetherNearbyRegistry.h"
 #include "ReactiveWorldSubsystem.h"
 #include "EngineUtils.h"

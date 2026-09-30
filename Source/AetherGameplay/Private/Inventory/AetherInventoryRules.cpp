@@ -1,6 +1,6 @@
 #include "Inventory/AetherInventoryRules.h"
 #include "Persistence/AetherProfile.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 namespace AetherInventory
 {
 bool ValidateLoadout(const FAetherInventoryData& P,const FAetherRules& R)

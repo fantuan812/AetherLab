@@ -4,6 +4,8 @@ UE 5.8 C++ 开放世界灰盒。人物使用官方 Manny，场景和六种装备
 
 当前收尾状态见 [121242c 完整性方案实施记录](Docs/Planning/Closure-121242c-implementation.zh-CN.md) 和 [候选状态](Docs/Acceptance/Closure-status.json)。9月29日候选已有增量编译、34项局部规则/回归及短菜单验证，见 [系统验证记录](Docs/Acceptance/Systems-2026-09-29.zh-CN.md)；其48项广泛验收仍为1通过、28部分覆盖、19未运行，不能视作完整发布验收。本分支9月30日审查修复见 [修复范围与验证边界](Docs/Planning/Demo-audit-fixes-2026-09-30.zh-CN.md)：修复新增代码尚未在 UE 编译/运行，历史通过不覆盖新改动。
 
+当前源码还在按完整 Demo 补齐契约推进：动作定义已统一，自动旧格式存档导入已移除。旧 `.sav/.crc` 只有在没有合法原生世界时阻断启动并保留原件，不自动转换或清零；见 [单一路径与恢复边界](Docs/Planning/Native-only-startup-2026-09-30.zh-CN.md)。新批次仍未在 UE 编译、测试或 Cook，Vault 新作者配方待重新烘焙。
+
 ## 运行
 
 ```powershell
@@ -20,7 +22,7 @@ UE 5.8 C++ 开放世界灰盒。人物使用官方 Manny，场景和六种装备
 - GAS 近战/四元素/救援；背包实例和装备事务；八条主线、三类日常、商店买卖、离线及满包待领奖励。
 - 两名唯一 AI 同行者、队伍邀请/接受/离队、修道院多阶段遭遇、三波公共活动、五类敌人行为、视线记忆与回巢；野外刷新冷却和公共掉落原子认领。
 - 原生 Manny 动画图、跳落混合、攻击蒙太奇与基础足部 IK；中文主线追踪、地图目标和统一交互提示。
-- Enhanced Input、菜单键位设置与冲突交换；UMG 功能面板；双世代校验存档、天气和区域降频；World Partition 地图与按需动态 NavMesh。
+- Enhanced Input、菜单键位设置与冲突交换；UMG 功能面板；原生 SQLite 单写者存档、天气和区域降频；World Partition 地图与按需动态 NavMesh。
 
 这些是灰盒实现，完整设计的全部验收尚未执行。[实现范围与限制](Docs/Implementation-v5.zh-CN.md)明确区分代码完成和未验收事项。[完整设计稿](Docs/Design-v4.zh-CN.md)是需求参考。
 

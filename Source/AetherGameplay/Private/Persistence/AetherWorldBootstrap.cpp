@@ -8,7 +8,6 @@ struct FAetherWorldBootstrap::FImpl
     TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
     EAetherBootstrapPhase Phase=EAetherBootstrapPhase::Idle;
     FString Failure;
-    TOptional<FAetherLegacyImport> Legacy;
     bool AllowFresh=false;
     bool WroteInitial=false;
     TFuture<FAetherStoreSnapshotResult> Snapshot;
@@ -24,7 +23,7 @@ struct FAetherWorldBootstrap::FImpl
     void Fail(const FString& Why)
     {
         Failure=Why.IsEmpty()?TEXT("Native startup read/validation failed"):Why;
-        Phase=EAetherBootstrapPhase::Failed;World.Reset();Containers.Reset();Instances.Reset();Legacy.Reset();
+        Phase=EAetherBootstrapPhase::Failed;World.Reset();Containers.Reset();Instances.Reset();
         Snapshot={};Read={};Write={};
     }
     void ReadIndex(EAetherBootstrapPhase Next)
@@ -49,14 +48,13 @@ struct FAetherWorldBootstrap::FImpl
 };
 FAetherWorldBootstrap::FAetherWorldBootstrap(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> S):Impl(MakeUnique<FImpl>(S)){}
 FAetherWorldBootstrap::~FAetherWorldBootstrap()=default;
-bool FAetherWorldBootstrap::Start(TOptional<FAetherLegacyImport> Legacy,bool AllowFresh,FString& Reason)
+bool FAetherWorldBootstrap::Start(bool AllowFresh,FString& Reason)
 {
     check(IsInGameThread());
     const auto& D=FAetherV10Definitions::Get();
     if(Impl->Phase!=EAetherBootstrapPhase::Idle){Reason=TEXT("Bootstrap already started");return false;}
     if(!D.bValid){Reason=D.Error;Impl->Fail(Reason);return false;}
-    if(Legacy.IsSet()&&!AetherImports::Validate(Legacy.GetValue(),Reason)){Impl->Fail(Reason);return false;}
-    Impl->Legacy=MoveTemp(Legacy);Impl->AllowFresh=AllowFresh;Impl->ReadIndex(EAetherBootstrapPhase::Reading);Reason.Reset();return true;
+    Impl->AllowFresh=AllowFresh;Impl->ReadIndex(EAetherBootstrapPhase::Reading);Reason.Reset();return true;
 }
 void FAetherWorldBootstrap::Poll()
 {
@@ -78,20 +76,19 @@ void FAetherWorldBootstrap::Poll()
                 !S.ProfileRevisions.OrderIndependentCompareEqual(B.Initial.ProfileRevisions)||
                 !S.ContainerRevisions.OrderIndependentCompareEqual(B.Initial.ContainerRevisions))
             {B.Fail(TEXT("Database changed during startup audit; stop other writers and retry"));return;}
-            B.Phase=EAetherBootstrapPhase::Ready;B.Legacy.Reset();return;
+            B.Phase=EAetherBootstrapPhase::Ready;return;
         }
         if(!Row)
         {
             if(B.WroteInitial||!S.ProfileRevisions.IsEmpty()||!S.ContainerRevisions.IsEmpty())
             {B.Fail(TEXT("Missing world with existing aggregates; no blank fallback"));return;}
-            if(B.Legacy.IsSet())B.Write=B.Store->ImportLegacy(B.Legacy.GetValue());
-            else if(B.AllowFresh)
+            if(B.AllowFresh)
             {
                 FAetherWorldStateV10 Empty;FAetherStoredAggregate Initial;Initial.Key={EAetherAggregateKind::World,TEXT("Main")};
                 if(!AetherWorldCodec::Encode(Empty,D.Items,D.Rules,{},Initial.Payload,Reason)){B.Fail(Reason);return;}
                 B.Write=B.Store->InitializeWorld(MoveTemp(Initial));
             }
-            else {B.Fail(TEXT("World absent and no verified import or explicit fresh-world authorization"));return;}
+            else {B.Fail(TEXT("World absent; explicit fresh-world authorization required"));return;}
             B.Phase=EAetherBootstrapPhase::Initializing;return;
         }
         FAetherWorldStateV10 World;
@@ -139,7 +136,7 @@ void FAetherWorldBootstrap::Poll()
 }
 void FAetherWorldBootstrap::Stop()
 {
-    Impl->Snapshot={};Impl->Read={};Impl->Write={};Impl->World.Reset();Impl->Containers.Reset();Impl->Instances.Reset();Impl->Legacy.Reset();
+    Impl->Snapshot={};Impl->Read={};Impl->Write={};Impl->World.Reset();Impl->Containers.Reset();Impl->Instances.Reset();
     Impl->Phase=EAetherBootstrapPhase::Stopped;
 }
 EAetherBootstrapPhase FAetherWorldBootstrap::Phase() const{return Impl->Phase;}

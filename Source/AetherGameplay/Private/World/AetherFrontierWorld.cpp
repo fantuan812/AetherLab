@@ -1,3 +1,4 @@
+#include "Persistence/AetherSaveStartupPolicy.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "Framework/AetherFrontier.h"
 #include "Quests/AetherGuide.h"
@@ -10,10 +11,10 @@
 #include "Combat/AetherPhysicsDamage.h"
 #include "Movement/AetherTraversal.h"
 #include "Assets/AetherContent.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 #include "Inventory/AetherInventoryRules.h"
 #include "World/AetherShellDefinition.h"
-#include "World/AetherWorldDefinition.h"
+#include "Definitions/AetherWorldDefinition.h"
 #include "Assets/AetherAssetPreload.h"
 #include "TimerManager.h"
 #include "NavigationSystem.h"
@@ -134,40 +135,16 @@ void AAetherFrontierMode::InitGame(const FString& Map,const FString& Options,FSt
 {
     Super::InitGame(Map,Options,Error);bSmoke=FParse::Param(FCommandLine::Get(),TEXT("AetherV4Smoke"));
     if(bSmoke)SavePrefix=TEXT("AetherFrontier_Automation");
-    FString Override; if(FParse::Value(FCommandLine::Get(),TEXT("AetherSavePrefix="),Override) && Override.Len()<64 && !Override.Contains("/")&&!Override.Contains("\\"))SavePrefix=Override;
+    FString Override;const bool ParsedPrefix=FParse::Value(FCommandLine::Get(),TEXT("AetherSavePrefix="),Override);
+    const bool SpecifiedPrefix=ParsedPrefix||FString(FCommandLine::Get()).Contains(TEXT("-AetherSavePrefix"),ESearchCase::IgnoreCase);
+    if(!AetherSaveStartup::SelectPrefix(SpecifiedPrefix,Override,SavePrefix,Error))return;
     if(!FAetherWorldDefinitions::Get().bValid){Error=FAetherWorldDefinitions::Get().Error;return;}
     if(!FAetherRules::Get().bValid){Error=FAetherRules::Get().Error;return;}
-    // 正常存档由 v10 单一 writer 管理；冻结 v9 路径只供显式历史回归模式使用。
-#if !UE_BUILD_SHIPPING
-    bNativeMode=!bSmoke&&!FParse::Param(FCommandLine::Get(),TEXT("AetherLegacyRuntime"));
-#endif
-    if(bNativeMode)
-    {
-        Database=NewObject<UAetherFrontierSave>(this);
-        if(!GetGameInstance()->GetSubsystem<UAetherNativePersistence>()->Prepare(SavePrefix,true,Error))return;
-        return;
-    }
-    // Definition assets load asynchronously; validate catalog before admitting a pawn.
-    if(!Storage)Storage=AetherLocalSnapshotStore();
-    Database=NewObject<UAetherFrontierSave>(this);
-    bool FoundStorage=false,LoadedStorage=false;
-    if(!bSmoke)for(int32 I=0;I<2;++I)
-    {
-        const FString Slot=SavePrefix+FString::FromInt(I);
-        const bool Exists=Storage->Exists(Slot);FoundStorage|=Exists;if(!Exists)continue;
-        if(auto* Saved=Cast<UAetherFrontierSave>(Storage->Load(Slot)))
-        {
-            bool ChecksumValid=Saved->Version==4;
-            if(Saved->Version==5)
-            {
-                ChecksumValid=Storage->IsCommitted(Slot,Saved->Generation);
-            }
-            bool Valid=Saved->ValidateWorldLedger()&&ChecksumValid&&(Saved->Version==4||Saved->Version==5) && Saved->Generation>=0 && Saved->Profiles.Num()<=128;
-            TSet<FString> IDs;for(const auto& P:Saved->Profiles){Valid &= P.Validate()&&!P.CharacterId.IsEmpty()&&!IDs.Contains(P.CharacterId);IDs.Add(P.CharacterId);}
-            if(Valid&&Saved->Generation>Database->Generation){LoadedStorage=true;if(Saved->Version==4){Saved->World.Reset();Saved->Version=5;}Database=Saved;}
-        }
-    }
-    if(FoundStorage&&!LoadedStorage)Error=TEXT("Both profile generations are invalid. Preserve Saved/SaveGames and restore a backup; refusing to start with empty profiles.");
+    if(bSmoke||FParse::Param(FCommandLine::Get(),TEXT("AetherLegacyRuntime")))
+    {Error=TEXT("Historical runtime/save modes are unsupported. Use the native journey and isolated current-schema fixtures; original saves are preserved.");return;}
+    Database=NewObject<UAetherFrontierSave>(this); // Scene projection is removed in the next domain-by-domain batch.
+    GetGameInstance()->GetSubsystem<UAetherNativePersistence>()->Prepare(SavePrefix,true,Error);
+
 }
 FString AAetherFrontierMode::InitNewPlayer(APlayerController* PC,const FUniqueNetIdRepl& Id,const FString& Options,const FString& Portal)
 {

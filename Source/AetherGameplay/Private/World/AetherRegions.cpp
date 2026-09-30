@@ -1,6 +1,6 @@
 #include "Framework/AetherFrontier.h"
 #include "EngineUtils.h"
-#include "World/AetherWorldDefinition.h"
+#include "Definitions/AetherWorldDefinition.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "HAL/PlatformMemory.h"

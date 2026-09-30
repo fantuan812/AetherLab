@@ -1,5 +1,5 @@
 #include "Framework/AetherFrontier.h"
-#include "World/AetherWorldDefinition.h"
+#include "Definitions/AetherWorldDefinition.h"
 #include "Movement/AetherTraversal.h"
 #include "ReactiveWorldSubsystem.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"

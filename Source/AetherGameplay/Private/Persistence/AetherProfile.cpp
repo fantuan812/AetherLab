@@ -1,5 +1,5 @@
 #include "Persistence/AetherProfile.h"
-#include "Framework/AetherRules.h"
+#include "Definitions/AetherRules.h"
 #include "Inventory/AetherInventoryRules.h"
 #include "Quests/AetherQuestRuntime.h"
 
