@@ -37,7 +37,7 @@
 
 AAetherFrontierCharacter::AAetherFrontierCharacter(const FObjectInitializer& ObjectInitializer)
     :Super(ObjectInitializer.SetDefaultSubobjectClass<UAetherCharacterMovement>(ACharacter::CharacterMovementComponentName))
-{ bUseBasicAssets=true;JumpMaxCount=1;JumpMaxHoldTime=.18f;CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle"));WorldActions=CreateDefaultSubobject<UAetherWorldActionComponent>(TEXT("WorldActions"));PlayerInput=CreateDefaultSubobject<UAetherPlayerInputComponent>(TEXT("PlayerInput"));CompanionDecision=CreateDefaultSubobject<UAetherCompanionComponent>(TEXT("CompanionDecision")); }
+{ SkillAuthority=EAetherSkillAuthority::Profile;bUseBasicAssets=true;JumpMaxCount=1;JumpMaxHoldTime=.18f;CarryHandle=CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("CarryHandle"));WorldActions=CreateDefaultSubobject<UAetherWorldActionComponent>(TEXT("WorldActions"));PlayerInput=CreateDefaultSubobject<UAetherPlayerInputComponent>(TEXT("PlayerInput"));CompanionDecision=CreateDefaultSubobject<UAetherCompanionComponent>(TEXT("CompanionDecision")); }
 AAetherPlayerState* AAetherFrontierCharacter::ProfileState() const {return GetPlayerState<AAetherPlayerState>();}
 void AAetherFrontierCharacter::BindPersistentAbilities()
 {
@@ -111,16 +111,16 @@ void AAetherFrontierCharacter::OnRep_PlayerState()
 { Super::OnRep_PlayerState(); BindPersistentAbilities(); OnPresentationChanged.Broadcast(); }
 bool AAetherFrontierCharacter::SpellUnlocked(int32 Spell) const
 {
-    if(UsesNativeSkills())
+    if((SkillAuthority==EAetherSkillAuthority::Profile))
     {
         const auto* State=NativeSkillView();const auto* Id=State?State->Hotbar.Find(Spell):nullptr;
         return Id&&SkillUnlocked(*Id);
     }
-    const auto* PS=ProfileState();return Spell>=0&&Spell<4&&(!PS||(PS->Profile.LearnedSpells&(1<<Spell))!=0);
+    return SkillAuthority==EAetherSkillAuthority::Definition&&Super::SpellUnlocked(Spell);
 }
 void AAetherFrontierCharacter::ApplyProfileEquipment()
 {
-    auto* PS=ProfileState(); if (!HasAuthority()||!PS||UsesNativeSkills()) return;
+    auto* PS=ProfileState(); if (!HasAuthority()||!PS||(SkillAuthority==EAetherSkillAuthority::Profile)) return;
     TArray<FAetherEquippedSlot> Slots;
     if(!AetherInventory::BuildLoadout(PS->Profile,FAetherRules::Get(),Slots))return;
     Equipment->RestoreLoadout(Slots);
@@ -359,7 +359,7 @@ void AAetherFrontierCharacter::Tick(float Dt)
     }
     if(!HasAuthority())return;
     // Native profiles publish derived limits from committed progression/equipment only.
-    if(!UsesNativeSkills())if(auto* PS=ProfileState())MaxHealth=100+5*FMath::Clamp(PS->Profile.Experience/200,0,4);
+    if(!(SkillAuthority==EAetherSkillAuthority::Profile))if(auto* PS=ProfileState())MaxHealth=100+5*FMath::Clamp(PS->Profile.Experience/200,0,4);
     if(ReviveTarget)
     {
         if(!IsValid(ReviveTarget)||!Alive()||ReviveTarget->Alive()||CombatRuntime->DamageReceivedCount!=ReviveDamageSerial||CombatTime()<StunUntil||FVector::DistSquared(GetActorLocation(),ReviveTarget->GetActorLocation())>FMath::Square(220.0))ReviveTarget=nullptr;
@@ -415,13 +415,13 @@ float AAetherFrontierCharacter::TakeDamage(float Amount,const FDamageEvent& Even
 void AAetherFrontierCharacter::ClaimRewards()
 {
  if(!bPanel||Panel!=2)return;
- if(UsesNativeSkills()){FString Why;AetherNativeInventory::Shortcut(*this,"Claim",NAME_None,Why);Feedback=Why;OnPresentationChanged.Broadcast();}
+ if((SkillAuthority==EAetherSkillAuthority::Profile)){FString Why;AetherNativeInventory::Shortcut(*this,"Claim",NAME_None,Why);Feedback=Why;OnPresentationChanged.Broadcast();}
  else ServerAction("Claim");
 }
 void AAetherFrontierCharacter::CycleItem()
 {
  if(!bPanel||!ProfileState())return;
- if(Panel==1&&UsesNativeSkills()){FString Why;AetherNativeInventory::Shortcut(*this,"Next",NAME_None,Why);OnPresentationChanged.Broadcast();return;}
+ if(Panel==1&&(SkillAuthority==EAetherSkillAuthority::Profile)){FString Why;AetherNativeInventory::Shortcut(*this,"Next",NAME_None,Why);OnPresentationChanged.Broadcast();return;}
  if(Panel==1&&!ProfileState()->Profile.Inventory.IsEmpty()){SelectedItem=(SelectedItem+1)%ProfileState()->Profile.Inventory.Num();SelectedInstance=ProfileState()->Profile.Inventory[SelectedItem].InstanceId;}
  if(Panel==2)TrackedQuest=AetherGuide::SelectQuest(ProfileState()->Profile,TrackedQuest,true);
  OnPresentationChanged.Broadcast();

@@ -62,7 +62,6 @@ public:
     virtual bool SkillUnlocked(const FString& SkillId) const override;
     virtual bool TrySpell(int32 Slot) override;
     virtual void GrantSpells() override;
-    bool UsesNativeSkills() const;
     const FAetherSkillStateV10* NativeSkillView() const;
     virtual void ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

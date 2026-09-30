@@ -90,6 +90,7 @@ public:
     AAetherFrontierProp* Make(FName Id,FName Service,FVector Location,FVector Scale,EAetherObjectKind Kind,const FString& Label);
 private:
     friend class FAetherContainerCapacitySceneTest;
+    friend class FAetherNpcSkillAuthorityTest;
     // 只有服务器启动装配持有这些值；旧 Database 是导航/流送的只读投影，不能提交它。
     static constexpr bool bNativeMode=true; // No legacy runtime selector; remaining projection consumers are being retired separately.
     bool bNativeSceneReady=false,bNativeBaselineReady=false,bNativeFailureReported=false;
@@ -143,7 +144,8 @@ private:
     void BuildWorld();
     void BuildWorkshop();
     void CaptureWorkshop();
-    AAetherFrontierCharacter* SpawnFighter(FVector P,EAetherFighter Type,FName Id);
+    AAetherFrontierCharacter* SpawnFighter(FVector P,EAetherFighter Type,FName Id,const FString& SkillLoadout=FString());
+    bool SpawnFighterBatch(const TArray<uint8>& Types,const TArray<FVector>& Locations,TArray<TObjectPtr<AAetherFrontierCharacter>>& Out,FString& Reason);
     bool WriteDatabase(UAetherFrontierSave* Next);
     void CollectPublicFacts(FAetherWorldFacts& Facts) const;
     void RefreshWorldProgress();

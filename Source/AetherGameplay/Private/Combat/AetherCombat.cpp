@@ -9,6 +9,7 @@
 #include "Effects/AetherBuffRuntime.h"
 #include "Equipment/AetherElementDamage.h"
 #include "Skills/AetherSkillDefinitions.h"
+#include "Skills/AetherNpcSkillDefinitions.h"
 #include "Framework/AetherAdventure.h"
 #include "Framework/AetherFrontier.h"
 #include "Interaction/AetherActions.h"
@@ -220,7 +221,7 @@ void AAetherCharacter::UpdateAnimation()
 void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(AAetherCharacter, MaxHealth); DOREPLIFETIME(AAetherCharacter, Fighter); DOREPLIFETIME(AAetherCharacter, bBlocking);
+    DOREPLIFETIME(AAetherCharacter, MaxHealth); DOREPLIFETIME(AAetherCharacter, Fighter);DOREPLIFETIME(AAetherCharacter,SkillAuthority);DOREPLIFETIME(AAetherCharacter,SkillLoadoutId); DOREPLIFETIME(AAetherCharacter, bBlocking);
     DOREPLIFETIME(AAetherCharacter, bWindingUp); DOREPLIFETIME(AAetherCharacter, bPacified);
     DOREPLIFETIME(AAetherCharacter, PresentedAction);
     DOREPLIFETIME(AAetherCharacter, WaterReserveKg); DOREPLIFETIME(AAetherCharacter, CastStartedAt); DOREPLIFETIME(AAetherCharacter, CastLockUntil); DOREPLIFETIME(AAetherCharacter, StunUntil);
@@ -250,7 +251,7 @@ void AAetherCharacter::EndPlay(const EEndPlayReason::Type Reason)
 }
 void AAetherCharacter::OnRep_Controller()
 { Super::OnRep_Controller(); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
-void AAetherCharacter::GrantSpells()
+void AAetherCharacter::GrantCoreAbilities()
 {
     if(HasAuthority())
     {
@@ -261,26 +262,23 @@ void AAetherCharacter::GrantSpells()
         {bool Found=false;for(const auto& Spec:AbilitySystem->GetActivatableAbilities())if(Spec.Ability&&Spec.Ability->IsA<UAetherMeleeAbility>()&&Spec.Level==Level)Found=true;
         if(!Found)AbilitySystem->GiveAbility(FGameplayAbilitySpec(UAetherMeleeAbility::StaticClass(),Level,4+Level,this));}
     }
-    if (!HasAuthority()) return;
-    SpellHandles.Reset();
-    const auto& D=FAetherSkillDefinitionsV10::Get();
-    for(int32 I=0;I<4;++I)
-    {
-        const auto* Skill=D.Legacy(I);if(!Skill)continue;
-        // PlayerState ASC 跨 Pawn 保留：再次授权复用原 Handle 和等级，不能降级或叠加。
-        if(const auto* Existing=AetherSkillBinding::Find(*AbilitySystem,Skill->SkillId))
-        {SpellHandles.Add(Existing->Handle);continue;}
-        FGameplayAbilitySpec Spec(UAetherSpellAbility::StaticClass(),1,INDEX_NONE);
-        Spec.GetDynamicSpecSourceTags().AddTag(AetherSkillBinding::TagFor(Skill->SkillId));
-        SpellHandles.Add(AbilitySystem->GiveAbility(Spec));
-    }
+}
+void AAetherCharacter::GrantSpells()
+{
+    GrantCoreAbilities();FString Reason;
+    if(SkillAuthority==EAetherSkillAuthority::Definition&&!GrantDefinitionSkills(Reason))
+        UE_LOG(LogTemp,Error,TEXT("AETHER_NPC_SKILLS_UNAVAILABLE actor=%s reason=%s"),*GetName(),*Reason);
 }
 bool AAetherCharacter::SkillUnlocked(const FString& SkillId) const
 {
-    const auto* D=FAetherSkillDefinitionsV10::Get().Skills.Find(SkillId);
-    // 档案迁移前保持旧故事解锁条件；后续由技能来源账本替换这个兼容入口。
-    return D&&D->bActive&&D->LegacyBit>=0&&SpellUnlocked(D->LegacyBit);
+    if(SkillAuthority!=EAetherSkillAuthority::Definition||GetPlayerState<AAetherPlayerState>()||!AbilitySystem)return false;
+    const auto* Loadout=FAetherNpcSkillDefinitions::Get().Find(SkillLoadoutId);
+    const auto* Grant=Loadout?Loadout->InitialGrants.FindByPredicate([&](const auto& R){return R.SkillId.Equals(SkillId,ESearchCase::CaseSensitive);}):nullptr;
+    const auto* Spec=Grant?AetherSkillBinding::Find(*AbilitySystem,SkillId):nullptr;
+    return Spec&&FAetherSkillDefinitionsV10::Get().Effect(SkillId,Spec->Level);
 }
+bool AAetherCharacter::SpellUnlocked(int32 Slot) const
+{const FString Id=SkillAtInputSlot(Slot);return !Id.IsEmpty()&&SkillUnlocked(Id);}
 bool AAetherCharacter::TrySkill(const FString& SkillId)
 {
     if(!HasAuthority())
@@ -329,8 +327,7 @@ float AAetherCharacter::SkillCooldownRemaining(const FString& Id) const
 }
 bool AAetherCharacter::TrySpell(int32 Spell)
 {
-    const auto* D=FAetherSkillDefinitionsV10::Get().Legacy(Spell);
-    return D&&TrySkill(D->SkillId);
+    const FString Id=SkillAtInputSlot(Spell);return !Id.IsEmpty()&&TrySkill(Id);
 }
 
 bool AAetherCharacter::Ready() const
@@ -375,15 +372,15 @@ void AAetherCharacter::ResetCombat()
 }
 bool AAetherCharacter::FindSpellTarget(int32 Spell,FHitResult& Hit,FVector& Origin,FVector& Direction) const
 {
-    const auto* D=FAetherSkillDefinitionsV10::Get().Legacy(Spell);
-    const auto* Spec=D&&AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,D->SkillId):nullptr;
-    return D&&FindSkillTarget(D->SkillId,Spec?Spec->Level:1,Hit,Origin,Direction);
+    const FString Id=SkillAtInputSlot(Spell);
+    const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,Id):nullptr;
+    return Spec&&FindSkillTarget(Id,Spec->Level,Hit,Origin,Direction);
 }
 bool AAetherCharacter::ExecuteSpell(int32 Spell)
 {
-    const auto* D=FAetherSkillDefinitionsV10::Get().Legacy(Spell);
-    const auto* Spec=D&&AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,D->SkillId):nullptr;
-    return D&&ExecuteSkill(D->SkillId,Spec?Spec->Level:1);
+    const FString Id=SkillAtInputSlot(Spell);
+    const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,Id):nullptr;
+    return Spec&&ExecuteSkill(Id,Spec->Level);
 }
 bool AAetherCharacter::FindSkillTarget(const FString& SkillId,int32 Rank,FHitResult& Hit,FVector& Origin,FVector& Direction) const
 {

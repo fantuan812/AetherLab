@@ -45,7 +45,7 @@ FString FAetherSceneServiceHandlers::Recruit(const FAetherSceneServiceContext& X
         const bool Healer=Action->Kind==K::RecruitHealer;const FName Id=Healer?FName("Muhe"):FName("Lishi");
         for(const auto& B:M.Companions)if(B->CompanionId==Id)return TEXT("这位同伴已在队伍中。");
         if(M.PartySize(PS->PartyLeader)>=4)return TEXT("真人和同伴合计最多四人。");
-        auto* B=M.SpawnFighter(C->GetActorLocation()+FVector(0,150,20),EAetherFighter::Player,NAME_None);
+        auto* B=M.SpawnFighter(C->GetActorLocation()+FVector(0,150,20),EAetherFighter::Player,NAME_None,Action->ServiceId);
         if(!B)return TEXT("无法创建同伴。");
         B->CompanionOwner=C;B->bHealer=Healer;B->CompanionId=Id;
         B->SpawnDefaultController();

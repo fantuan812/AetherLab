@@ -1,22 +1,11 @@
 #include "Characters/AetherFrontierCharacter.h"
 #include "Networking/AetherCommandClient.h"
-#include "Persistence/AetherNativePersistence.h"
 #include "Engine/LocalPlayer.h"
-#include "Engine/GameInstance.h"
 #include "GameFramework/PlayerController.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Skills/AetherSkillAbilityBinding.h"
 #include "Effects/AetherBuffRuntime.h"
 
-bool AAetherFrontierCharacter::UsesNativeSkills() const
-{
-    const auto* PS=ProfileState();if(!PS)return false;
-    if(PS->bNativeSkillsEnabled)return true;
-    if(HasAuthority())if(auto* GI=GetGameInstance())return GI->GetSubsystem<UAetherNativePersistence>()->OwnsWriteAuthority();
-    if(const auto* PC=Cast<APlayerController>(GetController()))
-        if(auto* LP=PC->GetLocalPlayer())return LP->GetSubsystem<UAetherCommandClient>()->GetChannel().IsValid();
-    return false;
-}
 const FAetherSkillStateV10* AAetherFrontierCharacter::NativeSkillView() const
 {
     if(HasAuthority()){const auto* PS=ProfileState();return PS?PS->GetNativeSkills():nullptr;}
@@ -26,7 +15,8 @@ const FAetherSkillStateV10* AAetherFrontierCharacter::NativeSkillView() const
 }
 bool AAetherFrontierCharacter::SkillUnlocked(const FString& Id) const
 {
-    if(!UsesNativeSkills())return Super::SkillUnlocked(Id);
+    if(SkillAuthority==EAetherSkillAuthority::Definition)return Super::SkillUnlocked(Id);
+    if(SkillAuthority!=EAetherSkillAuthority::Profile)return false;
     const auto* State=NativeSkillView();const auto* Definition=FAetherSkillDefinitionsV10::Get().Skills.Find(Id);
     if(!State||!Definition||!Definition->SkillId.Equals(Id,ESearchCase::CaseSensitive)||!Definition->bActive)return false;
     if(HasAuthority())
@@ -42,14 +32,16 @@ bool AAetherFrontierCharacter::SkillUnlocked(const FString& Id) const
 }
 bool AAetherFrontierCharacter::TrySpell(int32 Slot)
 {
-    if(!UsesNativeSkills())return Super::TrySpell(Slot);
+    if(SkillAuthority==EAetherSkillAuthority::Definition)return Super::TrySpell(Slot);
+    if(SkillAuthority!=EAetherSkillAuthority::Profile)return false;
     const auto* State=NativeSkillView();const auto* Id=State?State->Hotbar.Find(Slot):nullptr;
     return Slot>=0&&Slot<FAetherSkillStateV10::HotbarCapacity&&Id&&TrySkill(*Id);
 }
 void AAetherFrontierCharacter::GrantSpells()
 {
-    // 保留公共闪避/近战等基础能力，再按原生账本清理/重建元素技能。
-    // 载入期间即使底层存在基础 Spec，SkillUnlocked 仍拒绝原生尚未就绪的角色。
-    Super::GrantSpells();
-    if(HasAuthority())if(auto* PS=ProfileState();PS&&PS->bNativeSkillsEnabled){FString Reason;PS->RebindNativeSkills(Reason);}
+    // 玩家未载入账本时只授予公共动作，不先获得NPC元素技能再撤销。
+    if(SkillAuthority==EAetherSkillAuthority::Definition){Super::GrantSpells();return;}
+    GrantCoreAbilities();
+    if(HasAuthority()&&SkillAuthority==EAetherSkillAuthority::Profile)
+        if(auto* PS=ProfileState();PS&&PS->GetNativeProfile()){FString Reason;PS->RebindNativeSkills(Reason);}
 }

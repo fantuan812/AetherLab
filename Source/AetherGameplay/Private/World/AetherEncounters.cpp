@@ -17,7 +17,7 @@ bool AAetherEncounterDirector::Participates(const AAetherFrontierCharacter* C,FN
     const auto& R=Encounter=="Abbey"?Abbey:Relay;return R.Participants.Contains(PS->Profile.CharacterId);
 }
 void AAetherEncounterDirector::SetPhase(FAetherEncounterRun& R,EAetherEncounterPhase P)
-{R.Phase=P;++R.Version;R.PhaseStarted=GetWorld()->GetTimeSeconds();ForceNetUpdate();}
+{R.Phase=P;++R.Version;R.PhaseStarted=GetWorld()->GetTimeSeconds();if(P==EAetherEncounterPhase::Failed){if(R.Definition==TEXT("Relay"))RelayChanneler=nullptr;else AbbeyChanneler=nullptr;}ForceNetUpdate();}
 FString AAetherEncounterDirector::Start(AAetherFrontierCharacter* C,bool Public)
 {
     if(!HasAuthority()||!C||!C->ProfileState())return TEXT("No authority/profile.");
@@ -44,23 +44,26 @@ FString AAetherEncounterDirector::Start(AAetherFrontierCharacter* C,bool Public)
     if(!Public&&Seats<2)return TEXT("At least two nearby humans/companions are required.");
     Next.LockedSeats=FMath::Clamp(Seats,2,4);R=Next;SetPhase(R,EAetherEncounterPhase::Front);
     SpawnWave(R,Public?RelayEnemies:AbbeyEnemies);
+    if(R.Phase==EAetherEncounterPhase::Failed)return TEXT("遭遇暂时无法创建：敌人定义或生成不可用，未结算奖励。");
     return Public?TEXT("Relay defence: clear three finite waves, then stabilize the relay."):TEXT("Abbey challenge: courtyard, three valve waves, elite, then bell guardian.");
 }
 void AAetherEncounterDirector::SpawnWave(FAetherEncounterRun& R,TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies)
 {
     for(const auto& E:Enemies)if(IsValid(E))E->Destroy();Enemies.Reset();
-    auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(!M)return;
+    auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(!M){SetPhase(R,EAetherEncounterPhase::Failed);return;}
     const bool Public=R.Definition=="Relay",Boss=R.Phase==EAetherEncounterPhase::Boss;
     const FName Definition=Public?FName(*FString::Printf(TEXT("Relay%d"),R.Wave)):R.Phase==EAetherEncounterPhase::Front?FName("AbbeyFront"):R.Phase==EAetherEncounterPhase::Channel?FName("AbbeyChannel"):Boss?FName("AbbeyBoss"):FName("AbbeyElite");
     const auto* Rule=FAetherRules::Get().Encounters.Find(Definition);if(!Rule){SetPhase(R,EAetherEncounterPhase::Failed);return;}
     const FVector Center=Rule->Center;const int32 Count=Rule->Types.Num();
-    for(int32 I=0;I<Count;++I)
+    TArray<FVector> Locations;for(int32 I=0;I<Count;++I)Locations.Add(Center+FVector((I-Count/2)*240,120*(I%2),0));
+    FString Reason;
+    if(!M->SpawnFighterBatch(Rule->Types,Locations,Enemies,Reason))
+    {SetPhase(R,EAetherEncounterPhase::Failed);UE_LOG(LogTemp,Error,TEXT("AETHER_ENCOUNTER_SPAWN_FAILED %s"),*Reason);return;}
+    for(const auto& Entry:Enemies)
     {
-        const auto Type=static_cast<EAetherFighter>(Rule->Types[I]);
-        auto* E=M->SpawnFighter(Center+FVector((I-Count/2)*240,120*(I%2),0),Type,NAME_None);
-        E->EncounterId=R.Definition;E->MaxHealth*=R.LockedSeats==2?1:R.LockedSeats==3?1.3:1.65;
+        auto* E=Entry.Get();E->EncounterId=R.Definition;E->MaxHealth*=R.LockedSeats==2?1:R.LockedSeats==3?1.3:1.65;
         if(R.Phase==EAetherEncounterPhase::Elite)E->MaxHealth*=2;
-        E->SetVitals(E->MaxHealth,100,100);Enemies.Add(E);
+        E->SetVitals(E->MaxHealth,100,100);
         for(const auto& Id:R.Participants)M->KillCredit.FindOrAdd(E).Add(*Id);
         if(Boss){M->Guardian=E;E->BossPhase=0;E->BossPhaseStarted=GetWorld()->GetTimeSeconds();}
     }
@@ -169,6 +172,24 @@ void AAetherEncounterDirector::UpdateRun(FAetherEncounterRun& R,TArray<TObjectPt
 void AAetherEncounterDirector::Tick(float Dt)
 {Super::Tick(Dt);if(!HasAuthority())return;CampTimer+=Dt;if(CampTimer>=1){CampTimer=0;UpdateCamps();}UpdateRun(Abbey,AbbeyEnemies,Dt,EmptySinceAbbey);UpdateRun(Relay,RelayEnemies,Dt,EmptySinceRelay);}
 
+bool FAetherCamp::CanCreateClearReward() const
+{
+    if(!bSpawned||bSpawnFailed||bRewardCreated||!Instance.IsValid()||Enemies.IsEmpty())return false;
+    for(const auto& Enemy:Enemies)if(IsValid(Enemy)&&Enemy->Alive())return false;
+    return true;
+}
+bool AAetherEncounterDirector::SpawnCamp(AAetherFrontierMode& Mode,FAetherCamp& Camp,const FAetherEncounterRule& Rule)
+{
+    if(Camp.bSpawned||!Camp.Enemies.IsEmpty())return false;
+    TArray<FVector> Locations;for(int32 I=0;I<Rule.Types.Num();++I)Locations.Add(Rule.Center+FVector(I*180,0,0));
+    FString Reason;
+    if(!Mode.SpawnFighterBatch(Rule.Types,Locations,Camp.Enemies,Reason))
+    {
+        Camp.bSpawned=false;Camp.bSpawnFailed=true;Camp.bRewardCreated=false;Camp.Instance.Invalidate();
+        UE_LOG(LogTemp,Error,TEXT("AETHER_CAMP_SPAWN_FAILED %s"),*Reason);return false;
+    }
+    Camp.bSpawned=true;Camp.bSpawnFailed=false;Camp.Instance=FGuid::NewGuid();Camp.ClearedAt=0;Camp.bRewardCreated=false;return true;
+}
 void AAetherEncounterDirector::UpdateCamps()
 {
     auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(!M||M->bSmoke)return;
@@ -181,14 +202,12 @@ void AAetherEncounterDirector::UpdateCamps()
     {
         const auto* Rule=FAetherRules::Get().Encounters.Find(Camp.Definition);if(!Rule)continue;
         double Distance=1.e30;for(TActorIterator<AAetherFrontierCharacter> It(GetWorld());It;++It)if(It->ProfileState())Distance=FMath::Min(Distance,FVector::Distance(Rule->Center,It->GetActorLocation()));
-        if(!Camp.bSpawned&&Distance<2200)
-        {
-            Camp.bSpawned=true;Camp.Instance=FGuid::NewGuid();Camp.ClearedAt=0;Camp.bRewardCreated=false;
-            for(int I=0;I<Rule->Types.Num();++I)Camp.Enemies.Add(M->SpawnFighter(Rule->Center+FVector(I*180,0,0),static_cast<EAetherFighter>(Rule->Types[I]),NAME_None));
-        }
+        // Failed assembly is never an empty defeated camp. Re-entering the region permits a fresh attempt.
+        if(Camp.bSpawnFailed){if(Distance>3000)Camp.bSpawnFailed=false;continue;}
+        if(!Camp.bSpawned&&Distance<2200&&!SpawnCamp(*M,Camp,*Rule))continue;
         if(!Camp.bSpawned)continue;
         bool Alive=false;for(const auto& Enemy:Camp.Enemies)Alive|=IsValid(Enemy)&&Enemy->Alive();
-        if(!Alive&&!Camp.bRewardCreated)
+        if(Camp.CanCreateClearReward())
         {if(!M->RecordCampClear(Camp.Definition,Camp.Instance))continue;Camp.bRewardCreated=true;Camp.ClearedAt=Now;}
 
         if(!Alive&&Camp.bRewardCreated&&Now-Camp.ClearedAt>=Rule->RespawnSeconds&&Distance>3000)

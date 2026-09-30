@@ -1572,7 +1572,7 @@
           "DialogueId": "",
           "QuestId": "",
           "ObjectiveId": "",
-          "ServiceId": "",
+          "ServiceId": "Companion.Guard",
           "RequiredClaims": [
             "Q_Main_04",
             "Q_Main_05"
@@ -1592,7 +1592,7 @@
           "DialogueId": "",
           "QuestId": "",
           "ObjectiveId": "",
-          "ServiceId": "",
+          "ServiceId": "Companion.Healer",
           "RequiredClaims": [
             "Q_Main_04",
             "Q_Main_05"

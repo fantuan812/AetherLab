@@ -4,6 +4,8 @@
 #include "World/AetherWorldState.h"
 #include "AetherEncounters.generated.h"
 class AAetherFrontierCharacter;
+class AAetherFrontierMode;
+struct FAetherEncounterRule;
 UENUM()
 enum class EAetherEncounterPhase:uint8 { Idle, Front, Channel, Elite, Boss, Succeeded, Failed };
 USTRUCT()
@@ -31,6 +33,8 @@ struct FAetherCamp
  float ClearedAt=0;
  bool bSpawned=false;
  bool bRewardCreated=false;
+ bool bSpawnFailed=false;
+ bool CanCreateClearReward() const;
 };
 UCLASS()
 class AETHERGAMEPLAY_API AAetherEncounterDirector : public AActor
@@ -53,6 +57,7 @@ public:
     UPROPERTY() TArray<FAetherCamp> Camps;
     float CampTimer=0;
     void UpdateCamps();
+    bool SpawnCamp(AAetherFrontierMode& Mode,FAetherCamp& Camp,const FAetherEncounterRule& Rule);
     // 恢复当前波次为全血敌人；不恢复已断开的引导者，成功回执保持原实例。
     bool RestoreNative(const FAetherEncounterStateV10& AbbeyState,const FAetherEncounterStateV10& RelayState,FString& Reason);
     virtual void Tick(float Dt) override;

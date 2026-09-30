@@ -1,0 +1,18 @@
+{
+  "SchemaVersion": 1,
+  "Loadouts": [
+    {"Id":"MeleeOnly","InitialGrants":[]},
+    {"Id":"FireCaster","InitialGrants":[{"SkillId":"Fire.Ignite","Rank":1,"Slot":0},{"SkillId":"Storm.Strike","Rank":1,"Slot":3}]},
+    {"Id":"Companion.Guard","InitialGrants":[]},
+    {"Id":"Companion.Healer","InitialGrants":[{"SkillId":"Water.Draw","Rank":1,"Slot":1}]},
+    {"Id":"TrainingElementalist","InitialGrants":[{"SkillId":"Fire.Ignite","Rank":1,"Slot":0},{"SkillId":"Water.Draw","Rank":1,"Slot":1},{"SkillId":"Frost.Freeze","Rank":1,"Slot":2},{"SkillId":"Storm.Strike","Rank":1,"Slot":3}]}
+  ],
+  "FighterLoadouts": {
+    "Player":"TrainingElementalist",
+    "ShieldGuard":"MeleeOnly",
+    "FireCaster":"FireCaster",
+    "BellKnight":"MeleeOnly",
+    "Wolf":"MeleeOnly",
+    "Golem":"MeleeOnly"
+  }
+}

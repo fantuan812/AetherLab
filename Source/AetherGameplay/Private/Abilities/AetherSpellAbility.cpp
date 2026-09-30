@@ -21,12 +21,6 @@ bool ResolveSkill(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* 
     return FAetherSkillDefinitionsV10::Get().Effect(Id,Rank)!=nullptr;
 }
 }
-float UAetherSpellAbility::Cost(int32 Spell)
-{
-    const auto& D=FAetherSkillDefinitionsV10::Get();const auto* S=D.Legacy(Spell);
-    const auto* E=S?D.Effect(S->SkillId,1):nullptr;
-    return E?float(E->ManaCost):0.f;
-}
 bool UAetherSpellAbility::CheckCost(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayTagContainer* Tags) const
 {
     FString Id;int32 Rank=0;if(!ResolveSkill(H,Info,Id,Rank))return false;

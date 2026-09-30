@@ -1,3 +1,4 @@
+#include "Skills/AetherNpcSkillDefinitions.h"
 #include "Persistence/AetherSaveStartupPolicy.h"
 #include "Definitions/AetherV10Definitions.h"
 #include "Framework/AetherFrontier.h"
@@ -140,6 +141,9 @@ void AAetherFrontierMode::InitGame(const FString& Map,const FString& Options,FSt
     if(!AetherSaveStartup::SelectPrefix(SpecifiedPrefix,Override,SavePrefix,Error))return;
     if(!FAetherWorldDefinitions::Get().bValid){Error=FAetherWorldDefinitions::Get().Error;return;}
     if(!FAetherRules::Get().bValid){Error=FAetherRules::Get().Error;return;}
+    for(const auto FighterKind:{EAetherFighter::Player,EAetherFighter::ShieldGuard,EAetherFighter::FireCaster,EAetherFighter::BellKnight,EAetherFighter::Wolf,EAetherFighter::Golem})
+        if(!FAetherNpcSkillDefinitions::Get().ForFighter(StaticEnum<EAetherFighter>()->GetNameStringByValue(int64(FighterKind))))
+        {Error=TEXT("Missing NPC skill binding for a supported fighter category; no fallback spawn");return;}
     if(bSmoke||FParse::Param(FCommandLine::Get(),TEXT("AetherLegacyRuntime")))
     {Error=TEXT("Historical runtime/save modes are unsupported. Use the native journey and isolated current-schema fixtures; original saves are preserved.");return;}
     Database=NewObject<UAetherFrontierSave>(this); // Scene projection is removed in the next domain-by-domain batch.
@@ -331,10 +335,29 @@ AAetherFrontierProp* AAetherFrontierMode::Make(FName Id,FName Service,FVector P,
 }
 AAetherFrontierProp* AAetherFrontierMode::Prop(FName Id) const
 {if(auto* A=Registry.Find(Id))return A;for(AAetherFrontierProp* P:Props)if(IsValid(P)&&P->Spec.Id==Id)return P;return nullptr;}
-AAetherFrontierCharacter* AAetherFrontierMode::SpawnFighter(FVector P,EAetherFighter Type,FName Id)
+AAetherFrontierCharacter* AAetherFrontierMode::SpawnFighter(FVector P,EAetherFighter Type,FName Id,const FString& SkillLoadout)
 {
+    const auto& Catalog=FAetherNpcSkillDefinitions::Get();
+    const auto* Loadout=SkillLoadout.IsEmpty()?Catalog.ForFighter(StaticEnum<EAetherFighter>()->GetNameStringByValue(int64(Type))):Catalog.Find(SkillLoadout);
+    if(!Loadout){UE_LOG(LogTemp,Error,TEXT("AETHER_NPC_SPAWN_REJECTED missing skill capability definition"));return nullptr;}
     auto* C=GetWorld()->SpawnActorDeferred<AAetherFrontierCharacter>(AAetherFrontierCharacter::StaticClass(),FTransform(P),nullptr,nullptr,ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn);
+    if(!C)return nullptr;C->SkillAuthority=EAetherSkillAuthority::Definition;C->SkillLoadoutId=Loadout->Id;
     C->Fighter=Type;C->Reactive->StableId=NAME_None;UGameplayStatics::FinishSpawningActor(C,FTransform(P));return C;
+}
+bool AAetherFrontierMode::SpawnFighterBatch(const TArray<uint8>& Types,const TArray<FVector>& Locations,TArray<TObjectPtr<AAetherFrontierCharacter>>& Out,FString& Reason)
+{
+    if(!Out.IsEmpty()||Types.IsEmpty()||Types.Num()!=Locations.Num()){Reason=TEXT("Invalid or nonempty fighter batch");return false;}
+    for(int32 I=0;I<Types.Num();++I)
+    {
+        auto* Actor=SpawnFighter(Locations[I],EAetherFighter(Types[I]),NAME_None);
+        if(!Actor)
+        {
+            for(const auto& Created:Out)if(IsValid(Created))Created->Destroy();
+            Out.Reset();Reason=TEXT("NPC spawn/capability unavailable; partial batch removed, no clear/reward credit");return false;
+        }
+        Out.Add(Actor);
+    }
+    Reason.Reset();return true;
 }
 void AAetherFrontierMode::BeginPlay()
 {

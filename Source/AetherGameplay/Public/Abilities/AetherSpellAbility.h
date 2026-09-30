@@ -14,7 +14,6 @@ public:
     virtual void ApplyCost(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* Info, FGameplayAbilityActivationInfo Activation) const override;
     virtual void ActivateAbility(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* Info,
         FGameplayAbilityActivationInfo Activation, const FGameplayEventData* Event) override;
-    static float Cost(int32 Spell);
     virtual void EndAbility(FGameplayAbilitySpecHandle Handle,const FGameplayAbilityActorInfo* Info,
         FGameplayAbilityActivationInfo Activation,bool Replicate,bool Cancelled) override;
 private:

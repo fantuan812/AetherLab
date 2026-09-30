@@ -9,6 +9,8 @@
 #include "AetherAdventure.generated.h"
 
 class AAetherCharacter;
+class UAetherCharacterDefinition;
+enum class EAetherFighter : uint8;
 class UStaticMeshComponent;
 class UTextRenderComponent;
 class UAetherLevelDefinition;
@@ -111,6 +113,7 @@ public:
     virtual void BeginPlay() override;
     virtual void Tick(float Dt) override;
     virtual void RestartPlayer(AController* NewPlayer) override;
+    virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer,const FTransform& SpawnTransform) override;
     FString Interact(AAetherCharacter* Player, bool Alternate);
     FString SaveAdventure(AAetherCharacter* Player);
     FString LoadAdventure(AAetherCharacter* Player);
@@ -123,6 +126,9 @@ public:
     bool bSmoke = false;
 private:
     AAetherWorldObject* Object(FName Id, EAetherObjectKind Kind, FVector Position, FVector Scale, const FString& Label = FString(), double Water = 0);
+    AAetherCharacter* SpawnConfiguredCharacter(UClass* ActorClass,const FTransform& Transform,EAetherFighter Fighter,UAetherCharacterDefinition* Visual=nullptr,AController* Owner=nullptr);
+    void FailCharacterAssembly();
+    bool bCharacterAssemblyFailed=false;
     void BuildAbbey();
     void BuildArtAbbey();
     void UpdateWorld(float Dt);
