@@ -9,6 +9,7 @@
 #include "Quests/AetherGuide.h"
 #include "Persistence/AetherNativeWorldPhysics.h"
 #include "ReactiveWorldSubsystem.h"
+#include "Skills/AetherSkillProgressionContext.h"
 
 namespace
 {
@@ -34,13 +35,13 @@ bool AAetherFrontierMode::ResolveNativeContext(AAetherPlayerController& PC,const
     if(!X.bCanManageInventory)return false;
     for(const auto& Buff:FAetherBuffDefinitions::Get().Buffs)
         if(C->BuffRuntime->CanApply(Buff.Key))X.AdmissibleBuffs.Add(Buff.Key);
-    const float Now=C->CombatTime();const bool Combat=C->HasRecentCombat(8);
+    const bool Combat=C->HasRecentCombat(8);
     bool Threatened=false;
     for(TActorIterator<AAetherCharacter> It(GetWorld());It;++It)
         if(It->Fighter!=EAetherFighter::Player&&It->Alive()&&FVector::DistSquared(C->GetActorLocation(),It->GetActorLocation())<FMath::Square(1800.)){Threatened=true;break;}
     X.SafeForSeconds=Combat||Threatened?0:FMath::Max(8.f,C->TimeSinceDamage());
     X.Skill.CharacterLevel=1+Profile.Experience/200;X.Skill.bInCombat=Combat||Threatened;
-    X.Skill.bCasting=C->CastLockUntil>Now;X.Skill.bCoolingDown=X.Skill.bCasting;
+    AetherSkillProgression::ResolveExecutionState(*C,Profile.Revision,X.Skill);
     for(const auto& Claim:Profile.Claims)X.Skill.CompletedQuests.Add(Claim);
     X.ExternalSkillGrants=PS->GetNativeSkillGrants();
     const auto* NearbyRegistry=GetWorld()->GetSubsystem<UAetherNearbyRegistry>();
