@@ -18,6 +18,14 @@ BASE = "/Game/Characters/Mannequins/Anims/"
 IDLE = BASE + "Unarmed/MM_Idle"
 WALK = BASE + "Unarmed/Walk/MF_Unarmed_Walk_Fwd"
 RECIPES = {}
+# 同一份当前运行时契约决定烘焙时长；作者脚本不保留另一套动作数值。
+ACTION_PATH = Path(ue.Paths.project_content_dir()) / "AetherCore/Definitions/V10/Actions.json"
+ACTION_CATALOG = json.loads(ACTION_PATH.read_text(encoding="utf-8"))
+if ACTION_CATALOG.get("SchemaVersion") != 1:
+    raise RuntimeError("不支持的动作定义版本")
+ACTION_ROWS = {row["ActionId"]: row for row in ACTION_CATALOG["Actions"]}
+if len(ACTION_ROWS) != len(ACTION_CATALOG["Actions"]):
+    raise RuntimeError("动作身份重复")
 
 
 def key(t, rotation=(0, 0, 0), translation=(0, 0, 0)):
@@ -33,8 +41,8 @@ def curve(values):
     return [key(*v) for v in values]
 
 
-def recipe(name, source=IDLE, duration=1.0, animate=False, reverse=False, tracks=None, plant_feet=False):
-    RECIPES[name] = dict(source=source, schema=1, duration=duration,
+def recipe(name, source=IDLE, animate=False, reverse=False, tracks=None, plant_feet=False):
+    RECIPES[name] = dict(source=source, schema=1, duration=ACTION_ROWS[name]["Duration"],
                          animateSource=animate, reverseSource=reverse, tracks=tracks or {}, plantFeet=plant_feet)
 
 
@@ -54,9 +62,9 @@ def arms():
 recipe("CrouchIdle", tracks=squat(), plant_feet=True)
 for name, suffix in [("CrouchWalk", "Fwd"), ("CrouchBack", "Bwd"),
                      ("CrouchLeft", "Left"), ("CrouchRight", "Right")]:
-    recipe(name, BASE + "Unarmed/Walk/MF_Unarmed_Walk_" + suffix, 1.0, True, tracks=squat(30), plant_feet=True)
+    recipe(name, BASE + "Unarmed/Walk/MF_Unarmed_Walk_" + suffix, True, tracks=squat(30), plant_feet=True)
 recipe("CarryIdle", tracks=arms())
-recipe("CarryWalk", WALK, 1.0, True, tracks=arms())
+recipe("CarryWalk", WALK, True, tracks=arms())
 recipe("Guard", tracks={**arms(), "upperarm_l": constant((0, -68, -55)),
                         "lowerarm_l": constant((0, -85, 0)), "spine_03": constant((0, -8, 0))})
 
@@ -74,48 +82,57 @@ for name, side, backward in [("DodgeForward", 0, False), ("DodgeBack", 0, True),
         tracks[bone] = curve([(0, (0, 0, 0)), (.25, (sign*amplitude, side*12, 0)),
                               (.65, (-sign*amplitude*.35, 0, 0)), (1, (0, 0, 0))])
     tracks.update(arms())
-    recipe(name, duration=.55, tracks=tracks)
+    recipe(name, tracks=tracks)
 
 reach = {
     "spine_01": curve([(0, (0, 0, 0)), (.4, (28, 0, 0)), (.65, (28, 0, 0)), (1, (0, 0, 0))]),
     "upperarm_l": curve([(0, (0, 0, 0)), (.4, (0, -65, -20)), (.65, (0, -65, -20)), (1, (0, 0, 0))]),
     "upperarm_r": curve([(0, (0, 0, 0)), (.4, (0, 65, 20)), (.65, (0, 65, 20)), (1, (0, 0, 0))]),
 }
-recipe("Pickup", duration=.7, tracks=reach)
-recipe("Push", duration=.7, tracks={**reach,
+recipe("Pickup", tracks=reach)
+recipe("Push", tracks={**reach,
     "spine_02": curve([(0,(0,0,0)),(.5,(18,0,0)),(.65,(25,0,0)),(1,(0,0,0))])})
-recipe("PutDown", duration=.7, tracks=reach)
-recipe("Rescue", duration=1.2, plant_feet=True, tracks={**squat(40), **arms(),
+recipe("PutDown", tracks=reach)
+recipe("Rescue", plant_feet=True, tracks={**squat(40), **arms(),
     "spine_02": curve([(0, (18, 0, 0)), (.5, (23, 0, 0)), (1, (18, 0, 0))]),
     "lowerarm_r": curve([(0, (0, 45, 0)), (.5, (0, 65, 0)), (1, (0, 45, 0))])})
-recipe("Throw", duration=.7, tracks={
+recipe("Throw", tracks={
     "spine_02": curve([(0, (0, 0, 0)), (.35, (-15, 0, 0)), (.65, (20, 0, 0)), (1, (0, 0, 0))]),
     "upperarm_l": curve([(0, (0, -45, -35)), (.35, (0, -20, -110)), (.65, (0, -80, -25)), (1, (0, 0, 0))]),
     "upperarm_r": curve([(0, (0, 45, 35)), (.35, (0, 20, 110)), (.65, (0, 80, 25)), (1, (0, 0, 0))])})
-recipe("Cast", duration=.8, tracks={
+recipe("Cast", tracks={
     "upperarm_r": curve([(0, (0, 0, 0)), (.25, (0, 35, 90)), (.6, (0, 65, 20)), (1, (0, 0, 0))]),
     "lowerarm_r": curve([(0, (0, 0, 0)), (.25, (0, 80, 0)), (.6, (0, 15, 0)), (1, (0, 0, 0))]),
     "spine_03": curve([(0, (0, 0, 0)), (.25, (0, -12, 0)), (.6, (0, 15, 0)), (1, (0, 0, 0))])})
-recipe("Vault", duration=.82, tracks={
-    **reach,
-    "pelvis": curve([(0, (0, 0, 0), (0, 0, 0)), (.27, (15, 0, 0), (0, 0, -25)),
-                     (.73, (10, 0, 0), (0, 0, -18)), (1, (0, 0, 0), (0, 0, 0))]),
-    "thigh_l": curve([(0, (0, 0, 0)), (.27, (-65, 0, 0)), (.73, (-45, 0, 0)), (1, (0, 0, 0))]),
-    "thigh_r": curve([(0, (0, 0, 0)), (.27, (65, 0, 0)), (.73, (45, 0, 0)), (1, (0, 0, 0))]),
-    "calf_l": curve([(0, (0, 0, 0)), (.27, (95, 0, 0)), (.73, (70, 0, 0)), (1, (0, 0, 0))]),
-    "calf_r": curve([(0, (0, 0, 0)), (.27, (-95, 0, 0)), (.73, (-70, 0, 0)), (1, (0, 0, 0))])})
-recipe("Stun", duration=1.0, tracks={
+vault = ACTION_ROWS["Vault"]
+vault_rise = vault["PhaseDurations"][0] / vault["Duration"]
+vault_across = sum(vault["PhaseDurations"][:2]) / vault["Duration"]
+vault_reach = {bone: [[time, frame[1], frame[2]] for time, frame in
+                      zip((0, vault_rise, vault_across, 1), frames)]
+               for bone, frames in reach.items()}
+recipe("Vault", tracks={
+    **vault_reach,
+    "pelvis": curve([(0, (0, 0, 0), (0, 0, 0)), (vault_rise, (15, 0, 0), (0, 0, -25)),
+                     (vault_across, (10, 0, 0), (0, 0, -18)), (1, (0, 0, 0), (0, 0, 0))]),
+    "thigh_l": curve([(0, (0, 0, 0)), (vault_rise, (-65, 0, 0)), (vault_across, (-45, 0, 0)), (1, (0, 0, 0))]),
+    "thigh_r": curve([(0, (0, 0, 0)), (vault_rise, (65, 0, 0)), (vault_across, (45, 0, 0)), (1, (0, 0, 0))]),
+    "calf_l": curve([(0, (0, 0, 0)), (vault_rise, (95, 0, 0)), (vault_across, (70, 0, 0)), (1, (0, 0, 0))]),
+    "calf_r": curve([(0, (0, 0, 0)), (vault_rise, (-95, 0, 0)), (vault_across, (-70, 0, 0)), (1, (0, 0, 0))])})
+recipe("Stun", tracks={
     "spine_02": curve([(0, (15, 0, 0)), (.25, (18, 0, 5)), (.75, (18, 0, -5)), (1, (15, 0, 0))]),
     "neck_01": curve([(0, (12, 0, 0)), (.5, (18, 8, 0)), (1, (12, 0, 0))]), **arms()})
 
 # 真实受击/倒地/起身和落地直接使用官方完整序列；起身反向重采样完整倒地运动并保持足 IK 收尾。
-recipe("Death", BASE + "Death/MM_Death_Front_01", 1.5, True)
-recipe("GetUp", BASE + "Death/MM_Death_Front_01", 1.2, True, True)
-recipe("Hit", BASE + "Rifle/HitReact/MM_HitReact_Front_Med_01", .35, True)
-recipe("Land", BASE + "Unarmed/Jump/MM_Land", .18, True)
-recipe("LandHeavy", BASE + "Unarmed/Jump/MM_Land", .45, True, tracks={
+recipe("Death", BASE + "Death/MM_Death_Front_01", True)
+recipe("GetUp", BASE + "Death/MM_Death_Front_01", True, True)
+recipe("Hit", BASE + "Rifle/HitReact/MM_HitReact_Front_Med_01", True)
+recipe("Land", BASE + "Unarmed/Jump/MM_Land", True)
+recipe("LandHeavy", BASE + "Unarmed/Jump/MM_Land", True, tracks={
     "pelvis": curve([(0, (0, 0, 0), (0, 0, -15)), (.4, (0, 0, 0), (0, 0, -25)), (1, (0, 0, 0), (0, 0, 0))]),
     "spine_02": curve([(0, (12, 0, 0)), (.4, (24, 0, 0)), (1, (0, 0, 0))])})
+
+if set(RECIPES) != set(ACTION_ROWS):
+    raise RuntimeError("动作资源与当前定义清单不一致")
 
 L.make_directory(ROOT)
 clips = {}

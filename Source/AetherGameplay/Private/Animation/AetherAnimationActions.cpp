@@ -24,23 +24,25 @@ void UAetherAnimInstance::UpdateActions(AAetherCharacter& Character,const FAethe
 {
  auto* C=&Character;const float Now=Frame.Time;
  // 控制动作按服务器时钟取样，晚加入/短暂不可见不会从动画第一帧重新播放。
+ const auto* GetUp=AetherControlledActions::Find(TEXT("GetUp"));
  FName Id;float Elapsed=0,Duration=0;bool Loop=false;
  if(!Frame.bAlive){Id=TEXT("Death");Elapsed=Now-DownedAt;}
- else if(Frame.bStunned){Id=TEXT("Stun");Elapsed=Now;Loop=true;}
- else if(Now<RevivedAt+1.2f){Id=TEXT("GetUp");Elapsed=Now-RevivedAt;Duration=1.2f;}
+ else if(Frame.bStunned){Id=TEXT("Stun");Elapsed=Now;}
+ else if(GetUp&&Now<RevivedAt+GetUp->Duration){Id=TEXT("GetUp");Elapsed=Now-RevivedAt;Duration=GetUp->Duration;}
  else if(Frame.Action.Duration>0&&Now<Frame.Action.StartedAt+Frame.Action.Duration)
  {Id=Frame.Action.Id;Elapsed=Now-Frame.Action.StartedAt;Duration=Frame.Action.Duration;}
- else if(Frame.bRescuing){Id=TEXT("Rescue");Elapsed=Now;Loop=true;}
- else if(Frame.bCarrying){Id=GroundSpeed>10?TEXT("CarryWalk"):TEXT("CarryIdle");Elapsed=Now;Loop=true;}
+ else if(Frame.bRescuing){Id=TEXT("Rescue");Elapsed=Now;}
+ else if(Frame.bCarrying){Id=GroundSpeed>10?TEXT("CarryWalk"):TEXT("CarryIdle");Elapsed=Now;}
  else if(Now<Frame.CastUntil){Id=TEXT("Cast");Elapsed=Now-Frame.CastStarted;Duration=FMath::Max(.1f,Frame.CastUntil-Frame.CastStarted);}
- else if(Frame.bBlocking){Id=TEXT("Guard");Elapsed=Now;Loop=true;}
- else if(Now<LandUntil){Id=LandingId;Elapsed=Now-(LandUntil-(LandingId==TEXT("LandHeavy")?.45f:.18f));}
+ else if(Frame.bBlocking){Id=TEXT("Guard");Elapsed=Now;}
+ else if(Now<LandUntil){Id=LandingId;Elapsed=Now-LandStarted;}
  else if(Frame.bCrouched)
  {
    Id=GroundSpeed<10?TEXT("CrouchIdle"):FMath::Abs(Direction)>135?TEXT("CrouchBack"):
        Direction>45?TEXT("CrouchRight"):Direction<-45?TEXT("CrouchLeft"):TEXT("CrouchWalk");
-   Elapsed=Now;Loop=true;
+   Elapsed=Now;
  }
+ if(const auto* Rule=AetherControlledActions::Find(Id))Loop=Rule->bLoop;
  UAnimSequence* Selected=nullptr;if(ActionSet&&ActionSet->bDefinitionValid)if(const auto* Found=ActionSet->Clips.Find(Id))Selected=Found->Get();
  if(Selected)
  {

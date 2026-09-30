@@ -66,7 +66,7 @@ public:
     UPROPERTY(Replicated) float CastStartedAt = 0;
     UPROPERTY(Replicated) float StunUntil = 0;
     UPROPERTY(Replicated) FAetherActionPresentation PresentedAction;
-    void PresentAction(FName Id,float Duration);
+    void PresentAction(FName Id,float PlayRate=1.f);
     int32 SelectedSpell = 0;
     FString Feedback;
     FVector Home = FVector::ZeroVector;

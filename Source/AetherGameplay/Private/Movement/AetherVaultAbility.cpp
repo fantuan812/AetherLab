@@ -7,7 +7,7 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "NativeGameplayTags.h"
-#include "Combat/AetherActionTiming.h"
+#include "Combat/AetherControlledActionDefinition.h"
 
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_VaultActive,"Aether.Action.Vault");
 namespace AetherVault {FGameplayTag ActiveTag(){return TAG_VaultActive;}}
@@ -19,7 +19,9 @@ UAetherVaultAbility::UAetherVaultAbility()
 }
 bool UAetherVaultAbility::FindPath(AAetherFrontierCharacter& C,TArray<FVector>& Points,FVector* Contact)
 {
-    Points.Reset();auto* M=C.GetCharacterMovement();auto* Capsule=C.GetCapsuleComponent();
+    Points.Reset();const auto* Rule=AetherControlledActions::Find(TEXT("Vault"));
+    if(!Rule||!Rule->IsValid()||Rule->PhaseDurations.Num()!=3)return false;
+    auto* M=C.GetCharacterMovement();auto* Capsule=C.GetCapsuleComponent();
     if(!M->IsMovingOnGround()||C.IsCrouched())return false;
     const FVector Start=C.GetActorLocation(),Forward=C.GetActorForwardVector().GetSafeNormal2D();
     const float Half=Capsule->GetScaledCapsuleHalfHeight(),Radius=Capsule->GetScaledCapsuleRadius();
@@ -63,11 +65,12 @@ bool UAetherVaultAbility::CanActivateAbility(FGameplayAbilitySpecHandle H,const 
 void UAetherVaultAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,const FGameplayEventData*)
 {
     auto* C=Info?Cast<AAetherFrontierCharacter>(Info->AvatarActor.Get()):nullptr;
+    const auto* Rule=AetherControlledActions::Find(TEXT("Vault"));
     FVector Contact;
-    if(!C||!FindPath(*C,Path,&Contact)||!CommitAbility(H,Info,A)||!IsActive()||!IsValid(C)||
+    if(!Rule||!C||!FindPath(*C,Path,&Contact)||!CommitAbility(H,Info,A)||!IsActive()||!IsValid(C)||
         Info->AvatarActor.Get()!=C||Info->AbilitySystemComponent.Get()!=C->AbilitySystem||C->AbilitySystem->GetAvatarActor()!=C)
     {if(IsActive())EndAbility(H,Info,A,true,true);return;}
-    C->PresentAction(TEXT("Vault"),AetherActionTiming::VaultDuration);C->PresentedAction.bHasContact=true;C->PresentedAction.Contact=Contact;
+    C->PresentAction(TEXT("Vault"));C->PresentedAction.bHasContact=true;C->PresentedAction.Contact=Contact;
     OwnedActionSerial=C->PresentedAction.Serial;
     Character=C;DamageAtStart=C->CombatRuntime->LastDamageAt;Phase=0;C->SetSprintInput(false);C->StopJumping();
     C->GetCharacterMovement()->StopMovementImmediately();C->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
@@ -80,7 +83,9 @@ void UAetherVaultAbility::NextPhase()
     auto* C=Character.Get();if(!C||!IsActive()){Abort();return;}
     if(Phase>0&&FVector::DistSquared(C->GetActorLocation(),Path[Phase-1])>FMath::Square(12.f)){Abort();return;}
     if(Phase==Path.Num()){EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,false);return;}
-    const float Duration=Phase==1?AetherActionTiming::VaultAcross:Phase==0?AetherActionTiming::VaultRise:AetherActionTiming::VaultLand;
+    const auto* Rule=AetherControlledActions::Find(TEXT("Vault"));
+    if(!Rule||!Rule->PhaseDurations.IsValidIndex(Phase)){Abort();return;}
+    const float Duration=Rule->PhaseDurations[Phase];
     auto* Task=UAbilityTask_ApplyRootMotionMoveToForce::ApplyRootMotionMoveToForce(this,FName(*FString::Printf(TEXT("Aether.Vault.%d"),Phase)),
         Path[Phase++],Duration,false,MOVE_Flying,true,nullptr,ERootMotionFinishVelocityMode::SetVelocity,FVector::ZeroVector,0);
     Task->OnTimedOutAndDestinationReached.AddDynamic(this,&UAetherVaultAbility::NextPhase);

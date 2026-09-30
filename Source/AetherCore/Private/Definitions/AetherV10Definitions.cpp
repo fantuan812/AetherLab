@@ -9,6 +9,7 @@ const FAetherV10Definitions& FAetherV10Definitions::Get()
     static const FAetherV10Definitions Value=[]
     {
         FAetherV10Definitions D;D.Rules=FAetherRules::Get();D.Skills=FAetherSkillDefinitionsV10::Get();
+        if(!FAetherControlledActionCatalog::Get().bValid){D.Error=FAetherControlledActionCatalog::Get().Error;return D;}
         for(const auto& Action:AetherControlledActions::All())if(!Action.IsValid())
         {D.Error=TEXT("Invalid controlled action rule");return D;}
         if(!D.Rules.bValid||!D.Skills.Validate(D.Error)){if(D.Error.IsEmpty())D.Error=D.Rules.Error;return D;}
