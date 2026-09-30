@@ -41,6 +41,11 @@
       "Name": "AetherAnimationEditor",
       "Type": "UncookedOnly",
       "LoadingPhase": "Default"
+    },
+    {
+      "Name": "AetherAudio",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
     }
   ],
   "Plugins": [

@@ -8,6 +8,6 @@ public class AetherEditor : ModuleRules
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         bUseUnity = false;
         PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine" });
-        PrivateDependencyModuleNames.AddRange(new[] { "AetherCore", "AetherGameplay", "UnrealEd", "NavigationSystem", "AnimationCore", "Json", "AssetRegistry", "UMG", "UMGEditor", "SlateCore", "Kismet", "KismetCompiler", "AetherUI", "AetherMotionRuntime", "AetherMotionEditor", "AetherAnimationEditor", "AnimGraph", "BlueprintGraph", "IKRig" });
+        PrivateDependencyModuleNames.AddRange(new[] { "AetherAudio", "AetherCore", "AetherGameplay", "UnrealEd", "NavigationSystem", "AnimationCore", "Json", "AssetRegistry", "UMG", "UMGEditor", "SlateCore", "Kismet", "KismetCompiler", "AetherUI", "AetherMotionRuntime", "AetherMotionEditor", "AetherAnimationEditor", "AnimGraph", "BlueprintGraph", "IKRig" });
     }
 }

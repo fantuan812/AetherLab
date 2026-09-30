@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "status": "source_ready_unreal_import_and_audition_pending",
+  "sources": {
+    "break_wood_01": {
+      "author": "Independent.nu (submitted by qubodup)",
+      "source_page": "https://opengameart.org/content/35-wooden-crackshitsdestructions",
+      "download_url": "https://opengameart.org/sites/default/files/independent_nu_ljudbank-wood_crack_hit_destruction.7z",
+      "file": "Waves/break_wood_01.wav",
+      "sha256": "405bba108af6692120e20cc2781ae41cb1e7ea291246c2855a901f1b77330bef",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_file": "Originals/break_wood_01.flac",
+      "original_filename": "wood/wood_impact/crack01.mp3.flac",
+      "original_sha256": "a25993adc8c2bbfdd80490980d83c27a587f2d3452ee4e5bd784f02c082ec448",
+      "archive_sha256": "2f9723be0147c32ea07db8ef7406229fb8f1a6ce8feabdf0dbf2dc5ee2aacd1a",
+      "duration_seconds": 2.143125,
+      "processing": "Mono 48 kHz PCM16 decode/resample, peak normalization to -9 dBFS; no trim, denoise, time stretch or composition",
+      "audition_verified": false,
+      "source_semantics": "Creator-labelled wooden crack/destruction; material-specific cue used for prototype reactive break feedback, not validated for all prop materials"
+    },
+    "break_wood_02": {
+      "author": "Independent.nu (submitted by qubodup)",
+      "source_page": "https://opengameart.org/content/35-wooden-crackshitsdestructions",
+      "download_url": "https://opengameart.org/sites/default/files/independent_nu_ljudbank-wood_crack_hit_destruction.7z",
+      "file": "Waves/break_wood_02.wav",
+      "sha256": "241203efe26645d4896714e4324ae2ec083bb57f3e4dd1abc0cac43d91526475",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_file": "Originals/break_wood_02.flac",
+      "original_filename": "wood/wood_impact/crack02.mp3.flac",
+      "original_sha256": "357e4ade8eaeff386d01a68d795d49e6a2e971fb33b9dea203b9e66e9e52b0a1",
+      "archive_sha256": "2f9723be0147c32ea07db8ef7406229fb8f1a6ce8feabdf0dbf2dc5ee2aacd1a",
+      "duration_seconds": 2.352104166666667,
+      "processing": "Mono 48 kHz PCM16 decode/resample, peak normalization to -9 dBFS; no trim, denoise, time stretch or composition",
+      "audition_verified": false,
+      "source_semantics": "Creator-labelled wooden crack/destruction; material-specific cue used for prototype reactive break feedback, not validated for all prop materials"
+    },
+    "freeze_ice_01": {
+      "author": "bart; derived from Stephan / pdsounds",
+      "source_page": "https://opengameart.org/content/ice-spells",
+      "download_url": "https://opengameart.org/sites/default/files/icespells.zip",
+      "file": "Waves/freeze_ice_01.wav",
+      "sha256": "7a06e7ce41cdf7e023facf28d1a6030f8b4396ecca14840a556c6d82da6e44d9",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_file": "Originals/freeze_ice_01.wav",
+      "original_filename": "ice/ice.wav",
+      "original_sha256": "c3039c864d056d0e4951b84b96a7bb0044ca8cb58aeae514fc256145872b6a94",
+      "archive_sha256": "45f02a204fc7cc896a17487080376c521ac2e564fe3da4d24cffa0086f8d6a54",
+      "duration_seconds": 1.1639166666666667,
+      "processing": "Mono 48 kHz PCM16 decode/resample, peak normalization to -9 dBFS; no trim, denoise, time stretch or composition",
+      "audition_verified": false,
+      "source_semantics": "Creator-designed ice spell/crackle/freeze cue; not a literal field recording of freezing"
+    },
+    "freeze_ice_02": {
+      "author": "bart; derived from Stephan / pdsounds",
+      "source_page": "https://opengameart.org/content/ice-spells",
+      "download_url": "https://opengameart.org/sites/default/files/icespells.zip",
+      "file": "Waves/freeze_ice_02.wav",
+      "sha256": "415144700042490842748e1b2386f205a509cfaf883f82d96c924d03c36d3566",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_file": "Originals/freeze_ice_02.wav",
+      "original_filename": "ice/coldsnap.wav",
+      "original_sha256": "090977264d65d90a50b04e9f0c1c4e02fb194e5b50d9fe244f0079a4da54158c",
+      "archive_sha256": "45f02a204fc7cc896a17487080376c521ac2e564fe3da4d24cffa0086f8d6a54",
+      "duration_seconds": 2.6485416666666666,
+      "processing": "Mono 48 kHz PCM16 decode/resample, peak normalization to -9 dBFS; no trim, denoise, time stretch or composition",
+      "audition_verified": false,
+      "source_semantics": "Creator-designed ice spell/crackle/freeze cue; not a literal field recording of freezing"
+    },
+    "extinguish_steam_01": {
+      "author": "bart",
+      "source_page": "https://opengameart.org/content/steam-release-sounds",
+      "download_url": "https://opengameart.org/sites/default/files/steam_hisses.zip",
+      "file": "Waves/extinguish_steam_01.wav",
+      "sha256": "61cd9f2063e8458df8adb92ec2888e9b2d0b0e88f057470a907ef02217c921b9",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_file": "Originals/extinguish_steam_01.wav",
+      "original_filename": "steam/steam hisses - Marker #1.wav",
+      "original_sha256": "1dd3462e1320c9a620c35328fee71d4ca30a5284dd9948b24da0faecb476817c",
+      "archive_sha256": "7dc5ae6f43ef0e9a47b8333e1e1508463cb64877ab06baa0259c643a9ab4677f",
+      "duration_seconds": 1.8461458333333334,
+      "processing": "Mono 48 kHz PCM16 decode/resample, peak normalization to -9 dBFS; no trim, denoise, time stretch or composition",
+      "audition_verified": false,
+      "source_semantics": "Creator-labelled steam hiss used as designed steam-release feedback for extinguishing; not a recording of an actual extinguishing event"
+    },
+    "extinguish_steam_02": {
+      "author": "bart",
+      "source_page": "https://opengameart.org/content/steam-release-sounds",
+      "download_url": "https://opengameart.org/sites/default/files/steam_hisses.zip",
+      "file": "Waves/extinguish_steam_02.wav",
+      "sha256": "9a0a46f9e90cd6a00ec6554e9ac02f2ad8186adde565e5e262055c5373be2e2a",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "original_file": "Originals/extinguish_steam_02.wav",
+      "original_filename": "steam/steam hisses - Marker #2.wav",
+      "original_sha256": "e0f94117729588440da6f56fec934fc637b299266556fd6a27df68a03277ef6a",
+      "archive_sha256": "7dc5ae6f43ef0e9a47b8333e1e1508463cb64877ab06baa0259c643a9ab4677f",
+      "duration_seconds": 1.8461875,
+      "processing": "Mono 48 kHz PCM16 decode/resample, peak normalization to -9 dBFS; no trim, denoise, time stretch or composition",
+      "audition_verified": false,
+      "source_semantics": "Creator-labelled steam hiss used as designed steam-release feedback for extinguishing; not a recording of an actual extinguishing event"
+    }
+  },
+  "events": [
+    {
+      "event_id": "Aether.Audio.Reaction.Break",
+      "variants": [
+        "break_wood_01",
+        "break_wood_02"
+      ],
+      "gain": 0.8,
+      "cooldown_seconds": 0.15,
+      "max_concurrent": 4,
+      "inner_radius_cm": 150.0,
+      "falloff_distance_cm": 750.0
+    },
+    {
+      "event_id": "Aether.Audio.Reaction.Freeze",
+      "variants": [
+        "freeze_ice_01",
+        "freeze_ice_02"
+      ],
+      "gain": 0.8,
+      "cooldown_seconds": 0.15,
+      "max_concurrent": 4,
+      "inner_radius_cm": 150.0,
+      "falloff_distance_cm": 750.0
+    },
+    {
+      "event_id": "Aether.Audio.Reaction.Extinguish",
+      "variants": [
+        "extinguish_steam_01",
+        "extinguish_steam_02"
+      ],
+      "gain": 0.8,
+      "cooldown_seconds": 0.15,
+      "max_concurrent": 4,
+      "inner_radius_cm": 150.0,
+      "falloff_distance_cm": 750.0
+    }
+  ]
+}
