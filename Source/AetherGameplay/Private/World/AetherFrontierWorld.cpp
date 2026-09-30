@@ -117,7 +117,7 @@ void AAetherFrontierProp::OnMaterialReaction(EReactiveReaction K,double Magnitud
     {
         if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>())
             if(auto* C=Cast<AAetherCharacter>(Reactive->GetLastSourceActor()))
-                if((Service!="TrainingExtinguished"&&!Service.ToString().StartsWith("DailyFire")) || GetOwner()==C)M->Observe(C,Service,Spec.Id);
+                if(!AetherGuide::IsPersonalFire(Service) || GetOwner()==C)M->Observe(C,Service,Spec.Id);
         bWasBurning=false;bExtinguished=true;
     }
 }

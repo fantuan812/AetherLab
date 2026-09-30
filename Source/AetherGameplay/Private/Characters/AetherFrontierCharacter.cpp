@@ -1,4 +1,6 @@
 #include "Characters/AetherFrontierCharacter.h"
+#include "Networking/AetherCommandClient.h"
+#include "Engine/LocalPlayer.h"
 #include "Persistence/AetherNativePersistence.h"
 #include "Engine/GameInstance.h"
 #include "Quests/AetherGuide.h"
@@ -423,7 +425,11 @@ void AAetherFrontierCharacter::CycleItem()
  if(!bPanel||!ProfileState())return;
  if(Panel==1&&(SkillAuthority==EAetherSkillAuthority::Profile)){FString Why;AetherNativeInventory::Shortcut(*this,"Next",NAME_None,Why);OnPresentationChanged.Broadcast();return;}
  if(Panel==1&&!ProfileState()->Profile.Inventory.IsEmpty()){SelectedItem=(SelectedItem+1)%ProfileState()->Profile.Inventory.Num();SelectedInstance=ProfileState()->Profile.Inventory[SelectedItem].InstanceId;}
- if(Panel==2)TrackedQuest=AetherGuide::SelectQuest(ProfileState()->Profile,TrackedQuest,true);
+ if(Panel==2)if(const auto* PC=Cast<APlayerController>(GetController()))if(auto* LP=PC->GetLocalPlayer())
+ {
+  const auto& Snapshot=LP->GetSubsystem<UAetherCommandClient>()->GetProfile();
+  if(Snapshot.IsSet())TrackedQuest=AetherGuide::SelectQuest(Snapshot.GetValue(),TrackedQuest,true);
+ }
  OnPresentationChanged.Broadcast();
 }
 

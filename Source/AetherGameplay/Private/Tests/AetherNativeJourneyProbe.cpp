@@ -77,6 +77,9 @@ void AetherNativeJourneyProbe::Tick(AAetherPlayerController* PC)
  }
  S.DeathAt=0;
  const auto& P=Client->GetProfile().GetValue();
+ const auto Guidance=AetherGuide::Resolve(C,&P);
+ if(!Guidance.bReady||Guidance.ProfileRevision!=P.Revision)
+ {Fail(TEXT("Guidance is not using the published current profile snapshot"));return;}
  const auto Advance=[&](const TCHAR* Name)
  {
   auto Row=MakeShared<FJsonObject>();Row->SetStringField(TEXT("step"),Name);Row->SetNumberField(TEXT("revision"),double(P.Revision));

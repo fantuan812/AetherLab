@@ -63,8 +63,9 @@ TOptional<FAetherInteractionProvider> AetherNativeInteraction::Provider(AAetherF
             Action.Kind==EAetherInteractionActionKind::TrackObjective||Action.Kind==EAetherInteractionActionKind::ResetSkills)S.RegisteredHandlers.Add(Action.Kind);
     return FAetherInteractionProvider(*Definition,MoveTemp(S),D.Rules);
 }
-bool AetherNativeInteraction::Submit(AAetherFrontierCharacter& C,const FAetherInteractionSelection& S,FString& Reason)
+bool AetherNativeInteraction::Submit(AAetherFrontierCharacter& C,const FAetherInteractionSelection& S,FString& Reason,FGuid* SubmittedCommandId)
 {
+    if(SubmittedCommandId)SubmittedCommandId->Invalidate();
     auto* PC=Cast<APlayerController>(C.GetController());auto* LP=PC?PC->GetLocalPlayer():nullptr;
     auto* Client=LP?LP->GetSubsystem<UAetherCommandClient>():nullptr;
     if(!Client||!Client->GetProfile().IsSet()||!Client->GetChannel().IsValid()||Client->HasPending()||
@@ -92,6 +93,8 @@ bool AetherNativeInteraction::Submit(AAetherFrontierCharacter& C,const FAetherIn
     {auto* Controller=Cast<AAetherPlayerController>(PC);return Controller&&Controller->SendV10SceneInput(Command,Reason);}
     TArray<uint8> Bytes;
     if(!AetherCommands::Encode(Command,Bytes,Reason))return false;
+    if(SubmittedCommandId)*SubmittedCommandId=Command.CommandId;
     const bool Sent=Client->Submit(Client->GetChannel(),Client->GetOwnerIdentity(),Bytes,Reason);
+    if(!Sent&&SubmittedCommandId)SubmittedCommandId->Invalidate();
     if(Sent)Reason=TEXT("请求已提交，正在等待持久确认。");return Sent;
 }

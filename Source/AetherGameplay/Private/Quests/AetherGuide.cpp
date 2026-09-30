@@ -5,18 +5,20 @@
 #include "Interaction/AetherWorldActionComponent.h"
 #include "Framework/AetherFrontier.h"
 #include "Definitions/AetherRules.h"
+#include "Definitions/AetherWorldDefinition.h"
+#include "Quests/AetherQuestProgression.h"
 #include "Interaction/AetherNearbyRegistry.h"
 #include "ReactiveWorldSubsystem.h"
 #include "EngineUtils.h"
 namespace AetherGuide
 {
-FName SelectQuest(const FAetherProfile& P,FName Preferred,bool Cycle)
+FName SelectQuest(const FAetherProfileStateV10& P,FName Preferred,bool Cycle)
 {
  const auto& Quests=FAetherRules::Get().Quests;const int32 Count=Quests.Num();if(!Count)return NAME_None;
- if(!Cycle&&P.Available(Preferred))return Preferred;
+ if(!Cycle&&AetherQuestProgression::Available(P,Preferred.ToString(),FAetherRules::Get()))return Preferred;
  const int32 Index=Quests.IndexOfByPredicate([&](const auto& Q){return Q.Id==Preferred;});
  const int32 Start=Cycle&&Index!=INDEX_NONE?(Index+1)%Count:0;
- for(int32 I=0;I<Count;++I){const FName Id=Quests[(Start+I)%Count].Id;if(P.Available(Id))return Id;}return NAME_None;
+ for(int32 I=0;I<Count;++I){const FName Id=Quests[(Start+I)%Count].Id;if(AetherQuestProgression::Available(P,Id.ToString(),FAetherRules::Get()))return Id;}return NAME_None;
 }
 AAetherFrontierProp* SelectWaterReceiver(AAetherFrontierCharacter* C,AAetherFrontierProp* Container)
 {
@@ -33,7 +35,7 @@ AAetherFrontierProp* SelectWaterReceiver(AAetherFrontierCharacter* C,AAetherFron
  return Best;
 }
 FString ObjectiveLabel(FName Id){const auto* O=FAetherRules::Get().Objectives.Find(Id);return O?O->Label:Id.ToString();}
-bool IsPersonalFire(FName Service){if(Service=="TrainingExtinguished")return true;for(const auto& D:FAetherRules::Get().Dailies)if(D.bPersonalFires&&D.Facts.Contains(Service))return true;return false;}
+bool IsPersonalFire(FName Service){if(Service==FAetherRules::Get().PersonalTraining.FireObjectiveId&&!Service.IsNone())return true;for(const auto& D:FAetherRules::Get().Dailies)if(D.bPersonalFires&&D.Facts.Contains(Service))return true;return false;}
 bool CanInspectFire(const AAetherFrontierProp* Fire)
 {
  if(!IsValid(Fire)||!Fire->HasAuthority()||!Fire->Reactive)return false;
@@ -42,39 +44,78 @@ bool CanInspectFire(const AAetherFrontierProp* Fire)
  // Consumed fuel proves this is an existing cleared site, not the cold frame before initial ignition.
  return State&&!State->bBurning&&State->TemperatureC<Fire->Reactive->GetMaterial().IgnitionC&&State->FuelKg<Fire->Reactive->GetMaterial().InitialFuelKg-1.e-8;
 }
-FAetherGuidance Resolve(AAetherFrontierCharacter* C)
+FAetherGuidance Resolve(AAetherFrontierCharacter* C,const FAetherProfileStateV10* Snapshot)
 {
- FAetherGuidance G;if(!C||!C->ProfileState())return G;
- const auto& P=C->ProfileState()->Profile;G.Quest=SelectQuest(P,C->TrackedQuest);C->TrackedQuest=G.Quest;
- if(G.Quest.IsNone()){G.Title=TEXT("主线已完成");G.Label=TEXT("镇上委托与中继防守已开放");G.Hint=TEXT("到公告板领取每日委托。");G.Position=FVector(-900,300,100);G.bHasTarget=P.Claims.Contains(FName("Q_Main_08"));return G;}
- G.Title=FAetherProfile::QuestTitle(G.Quest);G.bRewardReady=P.Complete(G.Quest);
- if(G.bRewardReady){G.Label=TEXT("目标完成，奖励待领");G.Hint=TEXT("整理背包后，在任务面板领取奖励。");return G;}
- for(auto Id:FAetherProfile::Objectives(G.Quest))if(!P.Evidence.Contains(Id)){G.Objective=Id;break;}
- const auto* O=FAetherRules::Get().Objectives.Find(G.Objective);if(!O)return G;
- G.Label=O->Label;G.Hint=O->Hint;G.Position=O->Position;G.bHasTarget=true;FName Anchor=O->Anchor;
- auto Locate=[&](FName Id)->AAetherFrontierProp*{for(TActorIterator<AAetherFrontierProp> It(C->GetWorld());It;++It)if(It->Spec.Id==Id)return *It;return nullptr;};
- if(G.Quest=="Q_Main_03")
+ FAetherGuidance G;const auto& D=FAetherV10Definitions::Get();const auto& Definition=D.Guidance;
+ if(!D.bValid){G.Title=TEXT("任务定义不可用");G.Hint=D.Error;return G;}
+ G.Title=Definition.LoadingTitle;G.Hint=Definition.LoadingHint;
+ if(!IsValid(C)||C->IsActorBeingDestroyed()||!Snapshot)return G;
+ // A caller supplies its own current snapshot. Never substitute the listen server's newer profile.
+ const auto& P=*Snapshot;G.bReady=true;G.ProfileRevision=P.Revision;
+ G.Quest=SelectQuest(P,C->TrackedQuest);C->TrackedQuest=G.Quest;
+ const auto Finish=[&]()
+ {if(!P.PendingRewards.IsEmpty())G.Hint+=(G.Hint.IsEmpty()?FString():FString(LINE_TERMINATOR))+Definition.PendingRewardHint;return G;};
+ const auto Anchor=[&](const FString& Id)
  {
-  const FName PersonalId=*FString(TEXT("Training_")+P.CharacterId);auto* Fire=Locate(PersonalId);AAetherFrontierCharacter* Trainer=nullptr;
-  for(TActorIterator<AAetherFrontierCharacter> It(C->GetWorld());It;++It)if(It->Fighter==EAetherFighter::ShieldGuard&&It->Alive()&&It->GetOwner()==C){Trainer=*It;break;}
-  const bool NeedTeacher=(P.LearnedSpells&3)!=3||(!P.Evidence.Contains("TrainingExtinguished")&&!Fire)||(!P.Evidence.Contains("Block")&&!Trainer);
-  if(NeedTeacher){Anchor="Teacher";G.Position=FVector(400,-300,90);G.Label=TEXT("拜访导师，准备个人训练");G.Hint=TEXT("与导师交谈，学习引焰 / 引泉并生成训练目标。");}
-  else if(G.Objective=="TrainingExtinguished"&&Fire){Anchor=PersonalId;G.Position=Fire->GetActorLocation();}
-  else if(G.Objective=="Block"&&Trainer){Anchor=NAME_None;G.Position=Trainer->GetActorLocation();}
+  const auto* Placement=FAetherWorldDefinitions::Get().Find(FName(*Id));if(!Placement)return false;
+  G.Position=Placement->Location;G.bHasTarget=true;
+  for(TActorIterator<AAetherFrontierProp> It(C->GetWorld());It;++It)
+   if(It->Spec.Id.ToString().Equals(Id,ESearchCase::CaseSensitive)&&It->bEnabled&&!It->IsActorBeingDestroyed())
+   {G.Position=It->GetActorLocation();break;}
+  return true;
+ };
+ if(G.Quest.IsNone())
+ {
+  bool Complete=!D.Rules.Quests.IsEmpty();for(const auto& Q:D.Rules.Quests)Complete&=P.Claims.Contains(Q.Id.ToString());
+  const auto* A=FAetherWorldDefinitions::Get().Find(FName(*Definition.Completion.AnchorId));bool DailyUnlocked=false;
+  if(A)for(const auto& Daily:D.Rules.Dailies)DailyUnlocked|=Daily.Service==A->Service&&(Daily.QuestGate.IsNone()||P.Claims.Contains(Daily.QuestGate.ToString()));
+  if(Complete&&DailyUnlocked){G.Title=Definition.Completion.Title;G.Label=Definition.Completion.Label;G.Hint=Definition.Completion.Hint;Anchor(Definition.Completion.AnchorId);}
+  return Finish();
  }
- if(G.Quest=="Q_Main_07")for(TActorIterator<AAetherEncounterDirector> It(C->GetWorld());It;++It)if(It->Abbey.Participants.Contains(P.CharacterId))
+ const auto* Quest=D.Rules.Quest(G.Quest);if(!Quest)return G;
+ G.Title=Quest->Title;G.Hint.Reset();G.bRewardReady=AetherQuestProgression::Complete(P,Quest->Id.ToString(),D.Rules);
+ if(G.bRewardReady){G.Label=Definition.RewardReadyLabel;G.Hint=Definition.RewardReadyHint;return Finish();}
+ for(FName Id:Quest->Objectives)if(!P.Evidence.Contains(Id.ToString())){G.Objective=Id;break;}
+ const auto* Objective=D.Rules.Objectives.Find(G.Objective);if(!Objective)return Finish();
+ G.Label=Objective->Label;G.Hint=Objective->Hint;G.Position=Objective->Position;G.bHasTarget=true;
+ if(!Objective->Anchor.IsNone())Anchor(Objective->Anchor.ToString());
+ const auto DynamicActor=[&](const FString& ObjectiveId)->AActor*
  {
-  switch(It->Abbey.Phase)
+  const auto* Rule=Definition.DynamicObjectives.Find(ObjectiveId);if(!Rule)return nullptr;
+  if(Rule->Kind==EAetherGuidanceTargetKind::OwnedService)
   {
-   case EAetherEncounterPhase::Front:Anchor=NAME_None;G.Position=FVector(0,25000,120);G.Label=TEXT("击败前庭守卫");G.Hint=TEXT("与同行者清理前庭，保护自己的生命与体力。");break;
-   case EAetherEncounterPhase::Channel:Anchor="AbbeyValve";G.Position=FVector(0,25500,90);G.Label=TEXT("保护并引导水道阀门");G.Hint=TEXT("在阀门旁交互，或指挥同行者引导。");break;
-   case EAetherEncounterPhase::Elite:Anchor=NAME_None;G.Position=FVector(0,26600,120);G.Label=TEXT("清除侧廊精英");break;
-   case EAetherEncounterPhase::Boss:Anchor=NAME_None;G.Position=FVector(0,27400,120);G.Label=TEXT("击败铸钟守卫");G.Hint=TEXT("破坏架势，过热时用水，抓住暴露窗口。");break;
-   default:break;
+   for(TActorIterator<AAetherFrontierProp> It(C->GetWorld());It;++It)
+    if(It->GetOwner()==C&&It->bEnabled&&!It->IsActorBeingDestroyed()&&It->Service.ToString().Equals(Rule->SelectorId,ESearchCase::CaseSensitive))return *It;
   }
+  else for(TActorIterator<AAetherFrontierCharacter> It(C->GetWorld());It;++It)
+   if(It->GetOwner()==C&&It->Alive()&&!It->IsActorBeingDestroyed()&&
+      StaticEnum<EAetherFighter>()->GetNameStringByValue(int64(It->Fighter)).Equals(Rule->SelectorId,ESearchCase::CaseSensitive))return *It;
+  return nullptr;
+ };
+ for(const auto& Preparation:Definition.Preparations)if(Preparation.QuestId.Equals(Quest->Id.ToString(),ESearchCase::CaseSensitive))
+ {
+  bool Needed=false;
+  for(const auto& Skill:Preparation.RequiredPermanentSkills)Needed|=P.Skills.PermanentRank(Skill)<=0;
+  for(const auto& Id:Preparation.RequiredLiveObjectives)Needed|=!P.Evidence.Contains(Id)&&!DynamicActor(Id);
+  if(Needed){G.Label=Preparation.Label;G.Hint=Preparation.Hint;Anchor(Preparation.AnchorId);return Finish();}
  }
- if(!Anchor.IsNone())if(auto* Target=Locate(Anchor))G.Position=Target->GetActorLocation();return G;
+ if(auto* Target=DynamicActor(G.Objective.ToString()))G.Position=Target->GetActorLocation();
+ for(const auto& Phase:Definition.EncounterPhases)
+ {
+  const auto* Reward=D.Rules.ActivityRewards.Find(FName(*Phase.EncounterId));if(!Reward||Reward->Objective!=G.Objective)continue;
+  for(TActorIterator<AAetherEncounterDirector> It(C->GetWorld());It;++It)for(const auto* Run:{&It->Abbey,&It->Relay})
+   if(Run->Definition.ToString().Equals(Phase.EncounterId,ESearchCase::CaseSensitive)&&Run->Participants.Contains(P.CharacterId)&&
+      StaticEnum<EAetherEncounterPhase>()->GetNameStringByValue(int64(Run->Phase)).Equals(Phase.Phase,ESearchCase::CaseSensitive))
+   {
+    G.Label=Phase.Label;G.Hint=Phase.Hint;
+    if(!Phase.AnchorId.IsEmpty())Anchor(Phase.AnchorId);
+    else if(const auto* Encounter=D.Rules.Encounters.Find(FName(*Phase.EncounterDefinitionId)))G.Position=Encounter->Center;
+    return Finish();
+   }
+ }
+ return Finish();
 }
+
 FAetherInteractionTarget QueryTarget(AAetherFrontierCharacter* C,AActor* Actor)
 {
  FAetherInteractionTarget R;

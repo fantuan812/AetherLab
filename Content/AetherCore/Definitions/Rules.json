@@ -1,5 +1,10 @@
 {
   "Version": 2,
+  "PersonalTraining": {
+    "QuestId": "Q_Main_03",
+    "RequiredQuestId": "Q_Main_02",
+    "FireObjectiveId": "TrainingExtinguished"
+  },
   "Items": {
     "Potion": {
       "MaxStack": 20,

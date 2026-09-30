@@ -21,6 +21,12 @@
 #include "Components/EditableTextBox.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/WidgetSwitcher.h"
+#include "Components/TextBlock.h"
+#include "Journal/AetherJournalPage.h"
+#include "Map/AetherMapPage.h"
+#include "Definitions/AetherV10Definitions.h"
+#include "Quests/AetherQuestProgression.h"
+#include "Quests/AetherGuide.h"
 #include "Widgets/CommonActivatableWidgetContainer.h"
 #include "Widgets/Input/SEditableTextBox.h"
 
@@ -196,6 +202,21 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   break;
  case 3:
   if(!Check(C&&C->Panel==2&&Panel->IsActivated(),TEXT("Focused J switches page")))return;
+  {
+   UAetherJournalPage* Journal=nullptr;Panel->WidgetTree->ForEachWidget([&](UWidget* W){if(auto* Page=Cast<UAetherJournalPage>(W))Journal=Page;});
+   const auto& Snapshot=Client->GetProfile();
+   if(!Check(Journal&&Snapshot.IsSet()&&Journal->Profile()==&Snapshot.GetValue(),TEXT("Journal uses the exact current owner snapshot")))return;
+   const auto& Rules=FAetherV10Definitions::Get().Rules;const auto* Locked=Rules.Quests.FindByPredicate([&](const auto& Q){return !Snapshot->Claims.Contains(Q.Id.ToString())&&!AetherQuestProgression::Available(Snapshot.GetValue(),Q.Id.ToString(),Rules);});
+   if(Locked)
+   {
+    UAetherPageButton* Row=nullptr;Journal->WidgetTree->ForEachWidget([&](UWidget* W){if(auto* B=Cast<UAetherPageButton>(W))if(auto* T=Cast<UTextBlock>(B->GetContent()))if(T->GetText().ToString().StartsWith(Locked->Title))Row=B;});
+    if(!Check(Row!=nullptr,TEXT("Locked quest remains inspectable")))return;Row->Action.ExecuteIfBound();
+    UAetherPageButton* Track=nullptr;Journal->WidgetTree->ForEachWidget([&](UWidget* W){if(auto* B=Cast<UAetherPageButton>(W))if(auto* T=Cast<UTextBlock>(B->GetContent()))if(T->GetText().ToString()==TEXT("追踪此任务"))Track=B;});
+    if(!Check(Track&&!Track->GetIsEnabled(),TEXT("Locked quest cannot enable tracking")))return;
+    const FName Before=C->TrackedQuest;Track->Action.ExecuteIfBound();
+    if(!Check(C->TrackedQuest==Before,TEXT("Direct stale callback still revalidates current availability")))return;
+   }
+  }
   if(!Check(FocusedKey(EKeys::Escape),TEXT("Focused Escape is handled")))return;break;
  case 4:
   UE_LOG(LogTemp,Display,TEXT("V10_MENU_CLOSED open=%d page=%d active=%d cursor=%d menu=%d"),C?C->bPanel:0,C?C->Panel:0,Panel->IsActivated(),PC->bShowMouseCursor,Menu->IsOpen());
@@ -214,6 +235,15 @@ void AetherMenuInteraction::Tick(AAetherFrontierHUD* HUD,UAetherFrontierPanel* P
   if(!Check(C&&C->bPanel&&C->Panel==4&&PC->bShowMouseCursor&&Panel->IsActivated(),TEXT("Formal map shares menu input ownership")))return;
   C->StartJumpInput();C->SetSprintInput(true);
   if(!Check(!C->bPressedJump&&!C->bSprinting,TEXT("Map blocks local jump and sprint")))return;
+  {
+   UAetherMapPage* Page=nullptr;Panel->WidgetTree->ForEachWidget([&](UWidget* W){if(auto* Map=Cast<UAetherMapPage>(W))Page=Map;});
+   const auto& Snapshot=Client->GetProfile();
+   if(!Check(Page&&Snapshot.IsSet()&&Page->Profile()==&Snapshot.GetValue(),TEXT("Map shares the same owner snapshot as Journal")))return;
+   Page->LiveRefresh();UAetherMapCanvas* Canvas=nullptr;Page->WidgetTree->ForEachWidget([&](UWidget* W){if(auto* Map=Cast<UAetherMapCanvas>(W))Canvas=Map;});
+   const auto Expected=AetherGuide::Resolve(C,&Snapshot.GetValue());
+   const auto* Marker=Canvas?Canvas->Markers.FindByPredicate([](const auto& M){return M.Id==TEXT("TrackedQuest");}):nullptr;
+   if(!Check(Canvas&&(Expected.bHasTarget?(Marker&&Marker->Position.Equals(Expected.Position)&&Marker->Label==Expected.Label):!Marker),TEXT("Rendered map marker follows current guidance result")))return;
+  }
   Capture(TEXT("Map.png"));GameKey(EKeys::Escape);break;
  case 9:
   if(!Check(C&&!C->bPanel&&!PC->bShowMouseCursor,TEXT("Map Escape restores game input")))return;

@@ -4,6 +4,7 @@
 #include "Combat/AetherControlledActionDefinition.h"
 #include "Effects/AetherBuffState.h"
 #include "Skills/AetherNpcSkillDefinitions.h"
+#include "Definitions/AetherWorldDefinition.h"
 
 const FAetherV10Definitions& FAetherV10Definitions::Get()
 {
@@ -46,6 +47,9 @@ const FAetherV10Definitions& FAetherV10Definitions::Get()
             {D.Error=TEXT("Recruitment references an unknown NPC capability loadout");return D;}
         if(!Read(TEXT("Progression.json"),Text))return D;
         D.Progression=FAetherQuestProgressionDefinitions::Parse(Text,D.Rules,D.Error);
-        D.bValid=D.Progression.Validate(D.Rules,D.Error);return D;
+        if(!D.Progression.Validate(D.Rules,D.Error))return D;
+        if(!Read(TEXT("Guidance.json"),Text))return D;
+        D.Guidance=FAetherGuidanceDefinitions::Parse(Text,D.Rules,FAetherWorldDefinitions::Get(),D.Skills,FAetherNpcSkillDefinitions::Get());
+        D.bValid=D.Guidance.bValid;if(!D.bValid)D.Error=D.Guidance.Error;return D;
     }();return Value;
 }
