@@ -16,6 +16,53 @@ REVISION = "ee0cf5d9035f639ed0787f390fb1ce05d6a4c463"
 UPSTREAM = "a0732b642c0333077e127a2f56ab0014c196bca4"
 H, U, Q, F = c.c_void_p, c.c_uint32, c.c_uint64, c.c_float
 
+# 锁定 G1 ABI 的输出合同；这些不是目标人物骨架或导入轴向配置。
+G1_JOINTS, G1_FPS, CONTEXT_FRAMES = 34, 30, 4
+PLAN_MIN_FRAMES, PLAN_MAX_FRAMES = 24, 64
+ROOT_LIMIT_METERS, QUATERNION_SQUARED_TOLERANCE = 10000, .02
+MAX_SPEED_METERS, MAX_SEED = 20, (1 << 64) - 1
+
+
+def bake_request(*, style, seconds, movement, facing, speed, seed):
+    """先验证显式命令，不借用面向作为移动方向，也不修整推理结果。"""
+    if (not isinstance(style, str) or not 1 <= len(style) <= 64
+            or not style.isascii() or not style.replace("_", "").isalnum()):
+        raise ValueError("风格 ID 无效")
+    if not math.isfinite(seconds) or not .2 <= seconds <= 60:
+        raise ValueError("烘焙时长必须为 0.2 至 60 秒")
+    if not math.isfinite(speed) or not 0 <= speed <= MAX_SPEED_METERS:
+        raise ValueError("烘焙速度必须符合运行时的 0 至 20 米/秒合同")
+    directions = []
+    for name, values in (("movement", movement), ("facing", facing)):
+        if len(values) != 3 or any(not math.isfinite(v) or not math.isfinite(F(v).value) for v in values):
+            raise ValueError(name + " 必须是三个有限 F32 分量")
+        directions.append(tuple(F(v).value for v in values))
+    if sum(v * v for v in directions[1]) <= 1e-12:
+        raise ValueError("facing 方向不能为零")
+    frames = int(round(seconds * G1_FPS))
+    if type(seed) is not int or not 0 <= seed <= MAX_SEED - (frames - 1):
+        raise ValueError("seed 或分段 seed 超出 uint64 范围")
+    return frames, directions[0], directions[1]
+
+
+def validate_pose_frames(roots, rotations, *, minimum=CONTEXT_FRAMES, maximum=60 * G1_FPS, multiple=1):
+    """纯数据检查；与 UE 消费侧使用相同 squared-norm 容差，不归一化或限幅。"""
+    frames = len(roots)
+    if not minimum <= frames <= maximum or frames % multiple or len(rotations) != frames:
+        raise ValueError("姿态帧数不符合 G1 合同")
+    for index, (root, rotation) in enumerate(zip(roots, rotations)):
+        if len(root) != 3 or len(rotation) != G1_JOINTS * 4:
+            raise ValueError(f"姿态维度不符合 G1 合同：frame={index}")
+        if any(not math.isfinite(v) or abs(v) > ROOT_LIMIT_METERS for v in root):
+            raise ValueError(f"生成根轨迹非法：frame={index}")
+        if any(not math.isfinite(v) for v in rotation):
+            raise ValueError(f"生成旋转包含非有限数：frame={index}")
+        for joint in range(G1_JOINTS):
+            squared = sum(v * v for v in rotation[joint * 4:joint * 4 + 4])
+            if abs(squared - 1) > QUATERNION_SQUARED_TOLERANCE:
+                raise ValueError(f"生成旋转未正规化：frame={index}, joint={joint}")
+    return frames
+
 def digest(path):
     with Path(path).open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
@@ -105,9 +152,9 @@ class Native:
         return dict(schema=1, nativeRevision=REVISION, skeleton="g1skel34", coordinates="X-right,Y-up,Z-forward",
                     units="meters", fps=30, skeletonSha256=hashlib.sha256(encoded).hexdigest(), joints=joints)
 
-    def bake(self, style, seconds, direction, speed, seed):
-        if not style.replace("_", "").isalnum() or not 0.2 <= seconds <= 60:
-            raise ValueError("风格 ID 或烘焙时长无效")
+    def bake(self, *, style, seconds, movement, facing, speed, seed):
+        target, movement, facing = bake_request(style=style, seconds=seconds, movement=movement,
+                                                facing=facing, speed=speed, seed=seed)
         handles = {"style": H(), "agent": H(), "command": H()}
         try:
             self.call("mb_style_load", [H, c.c_char_p, c.POINTER(H)], self.model,
@@ -117,11 +164,10 @@ class Native:
             self.call("mb_command_create", [c.POINTER(H)], c.byref(handles["command"]))
             command = handles["command"]
             self.call("mb_command_set_style", [H, H], command, handles["style"])
-            for field in ["movement_direction", "facing_direction"]:
+            for field, direction in (("movement_direction", movement), ("facing_direction", facing)):
                 self.call("mb_command_set_" + field, [H, F, F, F], command, *direction)
             self.call("mb_command_set_target_speed", [H, F], command, speed)
             roots, rotations = [], []
-            target = int(round(seconds * 30))
             while len(roots) < target:
                 self.call("mb_command_set_seed", [H, Q], command, seed + len(roots))
                 motion = H()
@@ -130,15 +176,19 @@ class Native:
                     frames, joints = Q(), Q()
                     self.call("mb_motion_get_frame_count", [H, c.POINTER(Q)], motion, c.byref(frames))
                     self.call("mb_motion_get_joint_count", [H, c.POINTER(Q)], motion, c.byref(joints))
-                    if not 8 <= frames.value <= 64 or joints.value != 34:
+                    if (not PLAN_MIN_FRAMES <= frames.value <= PLAN_MAX_FRAMES
+                            or frames.value % CONTEXT_FRAMES or joints.value != G1_JOINTS):
                         raise ValueError("模型输出维度无效")
                     arrays = []
                     for field, stride in [("root_translations", 3), ("local_rotations_xyzw", 136)]:
                         pointer, size = c.POINTER(F)(), Q()
                         self.call("mb_motion_get_" + field, [H, c.POINTER(c.POINTER(F)), c.POINTER(Q)], motion, c.byref(pointer), c.byref(size))
-                        if size.value != frames.value * stride:
+                        if not pointer or size.value != frames.value * stride:
                             raise ValueError("姿态长度不匹配")
                         arrays.append([list(pointer[i:i+stride]) for i in range(0, size.value, stride)])
+                    # 在任何新帧进入结果或下一段上下文之前拒绝坏值。
+                    validate_pose_frames(*arrays, minimum=PLAN_MIN_FRAMES,
+                                         maximum=PLAN_MAX_FRAMES, multiple=CONTEXT_FRAMES)
                     # plan 的前四帧是上一段实际上下文；每次只加入新帧。
                     take = min(frames.value - 4, target - len(roots))
                     roots.extend(arrays[0][4:4+take])
@@ -149,9 +199,12 @@ class Native:
                               handles["agent"], boundary_root, boundary_rot, 4, 34)
                 finally:
                     self.free("motion", motion)
+            validate_pose_frames(roots, rotations)
             result = self.skeleton()
             result.update(sourceAsset="motionbricks:" + style, sourceSha256=digest(self.root / "styles" / (style + ".mbstyle")),
-                          roots=roots, rotations=rotations)
+                          roots=roots, rotations=rotations,
+                          bakeRequest=dict(seconds=seconds, frames=target, movement=list(movement), facing=list(facing),
+                                           speedMeters=speed, seed=seed, seedPolicy="initial_plus_emitted_frames"))
             return result
         finally:
             for kind in ["command", "agent", "style"]:
@@ -247,7 +300,7 @@ def make_style(source, output, name, speed, duration_count, native):
     atomic_json(path.with_suffix(".source.json"),dict(schema=1,sourceAsset=data.get("sourceAsset"),sourceSha256=source_hash,sourceFileSha256=data.get("sourceFileSha256"),
                 skeleton=skeleton,styleSha256=digest(path),frames=frames,fps=30,qualityApproved=False))
 
-def main():
+def arguments(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("mode",choices=["extract","bake","style"])
     p.add_argument("--stage",type=Path,required=True)
@@ -256,16 +309,33 @@ def main():
     p.add_argument("--style",default="walk")
     p.add_argument("--seconds",type=float,default=4)
     p.add_argument("--speed",type=float,default=1)
-    p.add_argument("--direction",type=float,nargs=3,default=[0,0,1])
+    p.add_argument("--movement-direction",type=float,nargs=3,help="G1 坐标中的显式移动方向")
+    p.add_argument("--facing-direction",type=float,nargs=3,help="G1 坐标中的显式面向方向")
     p.add_argument("--seed",type=int,default=10)
     p.add_argument("--duration-count",type=int,default=6)
-    a=p.parse_args()
+    a=p.parse_args(argv)
+    if a.mode=="bake":
+        if a.movement_direction is None or a.facing_direction is None:
+            p.error("bake 需要显式 --movement-direction 和 --facing-direction")
+        try:
+            bake_request(style=a.style, seconds=a.seconds, movement=a.movement_direction,
+                         facing=a.facing_direction, speed=a.speed, seed=a.seed)
+        except ValueError as error:
+            p.error(str(error))
+    elif a.mode=="style" and not a.source:
+        p.error("style 需要 --source")
+    return a
+
+
+def main():
+    a=arguments()
     native=Native(a.stage)
     try:
         if a.mode=="extract": atomic_json(a.output,native.skeleton())
-        elif a.mode=="bake": atomic_json(a.output,native.bake(a.style,a.seconds,a.direction,a.speed,a.seed))
+        elif a.mode=="bake":
+            atomic_json(a.output,native.bake(style=a.style,seconds=a.seconds,movement=a.movement_direction,
+                                           facing=a.facing_direction,speed=a.speed,seed=a.seed))
         else:
-            if not a.source: p.error("style 需要 --source")
             make_style(a.source,a.output,a.style,a.speed,a.duration_count,native)
     finally: native.close()
 if __name__=="__main__": main()

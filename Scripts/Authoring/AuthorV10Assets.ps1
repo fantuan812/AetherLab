@@ -32,7 +32,7 @@ if($StartAt -eq 'All'){
 if($LASTEXITCODE -ne 0){throw 'G1 skeleton extraction failed.'}
 foreach($taskStyle in @('idle','walk','injured_walk','walk_boxing','walk_left','walk_right')){
  $taskSpeed=if($taskStyle -eq 'idle'){0}else{1}
- & $Python $taskAuthor bake --stage $taskStage --style $taskStyle --seconds 1 --speed $taskSpeed --output (Join-Path $taskSources ("Clips/$taskStyle.json"))
+ & $Python $taskAuthor bake --stage $taskStage --style $taskStyle --seconds 1 --speed $taskSpeed --movement-direction 0 0 1 --facing-direction 0 0 1 --output (Join-Path $taskSources ("Clips/$taskStyle.json"))
  if($LASTEXITCODE -ne 0){throw "Native clip author failed: $taskStyle"}
 }
 }
