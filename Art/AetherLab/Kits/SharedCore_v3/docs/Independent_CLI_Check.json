@@ -1,0 +1,15 @@
+{
+  "source_sha256": "46fc07828d7b3a19d7362f41e0cf03da79df321ea92172fa421f8b6b841767b3",
+  "output_report_argument_verified": true,
+  "baseline_exit_code": 0,
+  "baseline_gate_pass": true,
+  "in_memory_perturbation": {
+    "object": "BRIDGE_Deck08",
+    "delta_world_z_m": 0.2
+  },
+  "perturbed_exit_code": 1,
+  "perturbed_gate_pass": false,
+  "same_source_sha256": true,
+  "blend_saved": false,
+  "pass": true
+}

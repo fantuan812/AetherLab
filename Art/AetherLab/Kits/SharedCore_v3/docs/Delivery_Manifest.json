@@ -1,0 +1,58 @@
+{
+  "date_utc": "2026-10-01",
+  "scope": "v3最小台阶/桥岸/岩地连接批次，未做全图",
+  "artifacts": [
+    {
+      "filename": "AetherLab_CoreKit_Transitions_v3.blend",
+      "library_file_id": "libfile_3dc1fbb1e36881919c4dce2f9c37a35e",
+      "file_id": "file_00000000430481f786238ff3d0f5f32b",
+      "version": 2,
+      "library_path": "/AetherLab_CoreKit_Transitions_v3.blend",
+      "bytes": 7595081,
+      "sha256": "46fc07828d7b3a19d7362f41e0cf03da79df321ea92172fa421f8b6b841767b3",
+      "local_identity_persisted": true,
+      "remote_bytes_sha256": "46fc07828d7b3a19d7362f41e0cf03da79df321ea92172fa421f8b6b841767b3",
+      "remote_reverified": true
+    },
+    {
+      "filename": "CoreKit_Overview.png",
+      "library_file_id": "libfile_0e88c99c97508191a86003faf70875bd",
+      "file_id": "file_00000000f9f0820d9d99c4297db1e307",
+      "version": 2,
+      "library_path": "/CoreKit_Overview.png",
+      "bytes": 2042037,
+      "sha256": "10eaf5851ecefc5b2805ffc5762f080383104b0d1a1747fba787c5490c7ea971",
+      "local_identity_persisted": true,
+      "remote_bytes_sha256": "10eaf5851ecefc5b2805ffc5762f080383104b0d1a1747fba787c5490c7ea971",
+      "remote_reverified": true
+    },
+    {
+      "filename": "AetherLab_SceneAssets_CoreKit_v3.zip",
+      "library_file_id": "libfile_6130d570bcd881918b29e7748d72f8ee",
+      "file_id": "file_0000000089cc81f5a1575e68ee977354",
+      "version": 3,
+      "library_path": "/AetherLab_SceneAssets_CoreKit_v3.zip",
+      "bytes": 10125627,
+      "sha256": "659f565366b2901384c6c656c1d835aa8770e1691d395ff744d0c43d65d5d0a4",
+      "local_identity_persisted": true,
+      "remote_bytes_sha256": "659f565366b2901384c6c656c1d835aa8770e1691d395ff744d0c43d65d5d0a4",
+      "remote_reverified": true
+    }
+  ],
+  "package_verified": {
+    "filename": "AetherLab_SceneAssets_CoreKit_v3.zip",
+    "bytes": 10125627,
+    "mib": 9.656550407409668,
+    "sha256": "659f565366b2901384c6c656c1d835aa8770e1691d395ff744d0c43d65d5d0a4",
+    "verified_content_members": 32,
+    "zip_entries": 33,
+    "limit_mib": 14,
+    "passed": true
+  },
+  "independent_geometry_and_metadata": "passed with scope limits",
+  "independent_visual_review": "5/5 final images inspected",
+  "character_preserved": true,
+  "inherited_v2_geometry_preserved": true,
+  "unreal_compilation_or_tests": "not run; not required for this Blender phase",
+  "remote_reverification": "3/3 pinned versions materialized and byte hashes matched; ZIP32 content members verified"
+}

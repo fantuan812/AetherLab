@@ -549,14 +549,14 @@
         "通用",
         "连接"
       ],
-      "dimension_interface": "近景地形/河岸与远景分件；按道路标高接合，岩地过渡待试拼",
+      "dimension_interface": "近景地形/河岸与远景分件；v3补2m土裙与原尺度河岩接地小样，其他岩壁/岸型仍须随全图核对",
       "material_families": [
         "earth",
         "stone",
         "foliage"
       ],
       "status": "已有源待模块化",
-      "production_status": "需求已登记；未完成族级验收",
+      "production_status": "需求已登记；SharedCore_v3补最小过渡候选，限定范围验证见transition_release；未完成族级验收",
       "source_collections": [
         "REFINED_Valley"
       ],
@@ -564,7 +564,8 @@
       "required_acceptance": "近远分层、坡侧/河岸/岩地接合图与人物尺度图",
       "evidence": [
         "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
-        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json",
+        "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json"
       ]
     },
     {
@@ -600,14 +601,14 @@
         "通用",
         "连接"
       ],
-      "dimension_interface": "本批Path/Wall/Fence候选节距4m；净宽和视觉BBox另记；v2最小转角/交叉/端头/路地及4m升1m跟坡在限定范围通过；台阶等缺口保留",
+      "dimension_interface": "本批Path/Wall/Fence候选节距4m；净宽和视觉BBox另记；v2最小转角/交叉/端头/路地及4m升1m跟坡在限定范围通过；台阶等缺口保留；v3补4m宽、8×0.125m高差、8×0.5m进深石阶候选，不是通用楼梯系列",
       "material_families": [
         "stone",
         "earth",
         "timber"
       ],
       "status": "已有源待模块化",
-      "production_status": "v2最小核心连接作者27/27组、独立22/22组及实看通过；未完成族级验收",
+      "production_status": "需求已登记；SharedCore_v3补最小过渡候选，限定范围验证见transition_release；未完成族级验收",
       "source_collections": [
         "SM_Path_4m",
         "ENV_PathExtensions",
@@ -620,7 +621,8 @@
       "evidence": [
         "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
         "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json",
-        "Art/AetherLab/Kits/SharedCore_v2/README.zh-CN.md"
+        "Art/AetherLab/Kits/SharedCore_v2/README.zh-CN.md",
+        "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json"
       ]
     },
     {
@@ -1347,14 +1349,14 @@
         "连接",
         "通用"
       ],
-      "dimension_interface": "桥板/梁/绳/支撑/两个真实锚点；桥岸标高和永久维护旁路",
+      "dimension_interface": "桥板/梁/绳/支撑/两个真实锚点；桥岸标高和永久维护旁路；v3固定维护桥候选有效跨4m、桥板/双梁/岸台分离；可落桥/绳锚点状态未验",
       "material_families": [
         "timber",
         "metal",
         "stone"
       ],
       "status": "部分源待补齐",
-      "production_status": "需求已登记；未完成族级验收",
+      "production_status": "需求已登记；SharedCore_v3补最小过渡候选，限定范围验证见transition_release；未完成族级验收",
       "source_collections": [
         "SM_BrokenCart",
         "SCN01_Shelter_Refinement"
@@ -1363,7 +1365,8 @@
       "required_acceptance": "张紧/松落、破坏/落桥状态、桥岸接合；不能仅复用绳外观",
       "evidence": [
         "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
-        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json",
+        "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json"
       ]
     },
     {
@@ -2354,20 +2357,148 @@
       "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
       "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
       "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Stair_Solid_4m_Rise1m",
+      "kit": "SharedCore_v3",
+      "family": "road_path",
+      "route": "新增连接拓扑、复用材质",
+      "role": "连接",
+      "source": "H01_Door_stone_step construction; new closed profile",
+      "interface": {
+        "IN": [
+          0,
+          0,
+          -0.035
+        ],
+        "OUT": [
+          0,
+          4,
+          0.965
+        ]
+      },
+      "status": "最小过渡候选；最终范围见transition_release",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json"
+    },
+    {
+      "asset_id": "KIT_Bridge_DeckPlank_4x0p25",
+      "kit": "SharedCore_v3",
+      "family": "bridge_support",
+      "route": "复用、改造",
+      "role": "连接",
+      "source": "SHR_Workbench_top_plank topology; authored dimensions; existing shared material",
+      "interface": {
+        "IN": [
+          0,
+          0,
+          -0.035
+        ],
+        "OUT": [
+          0,
+          0.25,
+          -0.035
+        ]
+      },
+      "status": "最小过渡候选；最终范围见transition_release",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json"
+    },
+    {
+      "asset_id": "KIT_Bridge_Bearer_4p5m",
+      "kit": "SharedCore_v3",
+      "family": "bridge_support",
+      "route": "复用、改造",
+      "role": "连接",
+      "source": "SHR_Tie_beam topology; authored dimensions; existing shared material",
+      "interface": {
+        "IN": [
+          0,
+          0,
+          -0.55
+        ],
+        "OUT": [
+          0,
+          4,
+          -0.55
+        ]
+      },
+      "status": "最小过渡候选；最终范围见transition_release",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json"
+    },
+    {
+      "asset_id": "KIT_Bridge_Abutment_6x1m",
+      "kit": "SharedCore_v3",
+      "family": "bridge_support",
+      "route": "复用、改造",
+      "role": "连接",
+      "source": "H01_Door_stone_step topology; authored dimensions; existing shared material",
+      "interface": {
+        "IN": [
+          0,
+          0,
+          -0.035
+        ],
+        "OUT": [
+          0,
+          1,
+          -0.035
+        ]
+      },
+      "status": "最小过渡候选；最终范围见transition_release",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json"
+    },
+    {
+      "asset_id": "KIT_RockToe_Earth_2m",
+      "kit": "SharedCore_v3",
+      "family": "landscape",
+      "route": "复用、改造",
+      "role": "连接",
+      "source": "KIT_Shoulder_Straight_1m topology and shared earth",
+      "interface": {
+        "ROAD_EDGE": [
+          0,
+          1,
+          -0.035
+        ],
+        "TERRAIN_EDGE": [
+          2,
+          1,
+          -0.35
+        ]
+      },
+      "status": "最小过渡候选；最终范围见transition_release",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json"
+    },
+    {
+      "asset_id": "KIT_Rock_River_A",
+      "kit": "SharedCore_v3",
+      "family": "landscape",
+      "route": "复用、改造",
+      "role": "连接",
+      "source": "REFINED_Valley/River rock exact source topology, baked original world rotation/scale; translated to embedded datum; shared basalt",
+      "interface": {
+        "BASE": [
+          0,
+          0,
+          -0.5
+        ]
+      },
+      "status": "最小过渡候选；最终范围见transition_release",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json"
     }
   ],
-  "prototype_note": "SharedCore_v2独立小型核心连接试拼，9原母件+13新增=22，678实例共用21份网格。最终源作者27/27组与独立22/22组分别通过，9角色对象保持检查另通过；五张作者渲染及独立X顶视完成实看。仅本批核心连接候选限定范围通过，全套件门和全图仍未放行。未用灯母件保留112个退化四边形（224个三角形）和40零面积UV多边形遗留风险。",
+  "prototype_note": "SharedCore_v2独立小型核心连接试拼，9原母件+13新增=22，678实例共用21份网格。最终源作者27/27组与独立22/22组分别通过，9角色对象保持检查另通过；五张作者渲染及独立X顶视完成实看。仅本批核心连接候选限定范围通过，全套件门和全图仍未放行。未用灯母件保留112个退化四边形（224个三角形）和40零面积UV多边形遗留风险。 v3另保留全部v2几何，新增6母件、77实例连成34m样段；其独立证据不与v2检查组合并计数。",
   "prototype_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
   "gates": {
     "requirements": "形成可审查清单；未代替缺口补查与验收",
-    "kit": "未整体放行；v2最小核心连接限定范围作者27/27组、独立22/22组及实看通过",
+    "kit": "未整体放行；v2最小核心连接限定范围作者27/27组、独立22/22组及实看通过；v3最小过渡几何/元数据/负控/5图限定范围通过，仍未整体放行",
     "world": "未开始全图生产铺设",
-    "detail": "未开始全图局部细化"
+    "detail": "未开始全图局部细化",
+    "base_layout": "v3最小连接已通过；可按Global-blockout-coverage-v3清单有条件开展六区基础铺设和功能粗模，未覆盖连接仅阻塞相关段"
   },
   "unverified": [
     "未用灯母件继承112个退化四边形（224个三角形）及40个零面积UV多边形；不能声明全部22母网格质量通过",
     "完整道路边缘/交叉/端头系列及不同净宽变体",
-    "台阶、桥岸/岩地过渡与完整路地系列",
+    "其他台阶规格、桥跨度/转向、岩壁/岸型与完整路地系列；v3仅最小组合样段",
     "其余建筑、地标与玩法套件",
     "角色设计身高与现有baseline差异决策",
     "目标镜头材质/LOD/lightmap",
@@ -2578,5 +2709,54 @@
       "matches_final_delivery_geometry": true,
       "fingerprint_dependency_graph_refreshed": true
     }
+  },
+  "transition_release": {
+    "kit": "SharedCore_v3",
+    "source_filename": "AetherLab_CoreKit_Transitions_v3.blend",
+    "source_sha256": "46fc07828d7b3a19d7362f41e0cf03da79df321ea92172fa421f8b6b841767b3",
+    "retained_master_count": 22,
+    "new_master_count": 6,
+    "total_master_count": 28,
+    "new_fixture_instance_count": 77,
+    "inherited_v2_fixture_instance_count": 678,
+    "fixture_length_m": 34,
+    "new_material_datablocks": 0,
+    "manifest": "Art/AetherLab/Kits/SharedCore_v3/docs/Transition_Manifest.json",
+    "independent_review": "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Geometry_Review.json",
+    "status": "passed_limited_geometry_metadata_negative_control_and_five_views",
+    "world_coverage_plan": "Docs/Art/Global-blockout-coverage-v3.zh-CN.md",
+    "scope": "最小台阶上下口、固定桥岸/维护桥段、岩地裙边；一条真实组合样段，不是全图",
+    "full_kit_gate_passed": false,
+    "world_gate_passed": false,
+    "character_reference": {
+      "new_hero_target_m": 1.65,
+      "legacy_65bone_reference_m": 1.80279655,
+      "geometry_edited": false
+    },
+    "limitations": [
+      "固定桥不含绳锚点/落桥状态或结构承载结论",
+      "25族生产验收状态不升级",
+      "其他规格随全图实际需要有限补齐",
+      "未运行UE/导航/碰撞/LOD/性能验收"
+    ],
+    "geometry_results": {
+      "new_masters_valid": 6,
+      "linked_fixture_instances": 77,
+      "stair_risers": 8,
+      "measured_riser_m_approx": 0.125,
+      "bridge_seams": 17,
+      "beam_end_embeds_m": 0.25,
+      "static_route_m": 34,
+      "static_width_m": 1.6638824939727783,
+      "rail_inner_width_m": 3.429999828338623,
+      "height_probes_m": [
+        1.65,
+        1.8028
+      ],
+      "negative_control": "Deck08抬高0.2m检测两道坏缝，恢复通过且不保存源"
+    },
+    "visual_review": "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Visual_Review.json",
+    "inherited_v2_preservation": "Art/AetherLab/Kits/SharedCore_v3/docs/Inherited_v2_Preservation.json",
+    "remaining": "族级门/全图门未通过；按覆盖表可有条件开始基础铺设与功能粗模"
   }
 }

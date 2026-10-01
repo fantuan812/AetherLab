@@ -1,0 +1,20 @@
+{
+  "reference_source": "AetherLab_CoreKit_Interface_v2.blend",
+  "review_source": "AetherLab_CoreKit_Transitions_v3.blend",
+  "source_sha256": "46fc07828d7b3a19d7362f41e0cf03da79df321ea92172fa421f8b6b841767b3",
+  "equal_objects": true,
+  "equal_root_rotation": true,
+  "equal_root_scale": true,
+  "root_translation_before": [
+    26.0,
+    -14.0,
+    -0.028256414458155632
+  ],
+  "root_translation_after": [
+    0.550000011920929,
+    -3.0,
+    -0.028256414458155632
+  ],
+  "object_count": 9,
+  "geometry_changes": []
+}

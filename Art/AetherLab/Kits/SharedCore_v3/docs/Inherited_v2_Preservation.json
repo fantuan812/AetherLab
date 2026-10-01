@@ -1,0 +1,11 @@
+{
+  "source": "AetherLab_CoreKit_Transitions_v3.blend",
+  "source_sha256": "46fc07828d7b3a19d7362f41e0cf03da79df321ea92172fa421f8b6b841767b3",
+  "inherited_mesh_objects": 700,
+  "geometry_uv_material_matrix_fingerprint": "85d4a20e464230722d7fbe9be04ff7afb42fd45eae8c464895187f953cc785e3",
+  "scope": "v2 22 master + 678 fixture mesh objects; excludes visibility changes and translated character reference",
+  "reference_source_sha256": "9da7bdfc2731c144cb31d0866b9574a24d9f9057e6ed38895226d6371e3ac62b",
+  "reference_fingerprint": "85d4a20e464230722d7fbe9be04ff7afb42fd45eae8c464895187f953cc785e3",
+  "passed": true,
+  "differences": {}
+}
