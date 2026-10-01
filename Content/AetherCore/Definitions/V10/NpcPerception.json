@@ -1,0 +1,13 @@
+{
+  "SchemaVersion": 1,
+  "Profiles": [
+    {"Id":"Enemy.Standard","SampleIntervalSeconds":0.25,"SightRadiusCm":1300,"TargetHomeRadiusCm":2600,"SelfLeashRadiusCm":2800,"MemorySeconds":4,"ObservationFreshnessSeconds":0.3,"HomeArrivalRadiusCm":120}
+  ],
+  "FighterProfiles": {
+    "ShieldGuard":"Enemy.Standard",
+    "FireCaster":"Enemy.Standard",
+    "BellKnight":"Enemy.Standard",
+    "Wolf":"Enemy.Standard",
+    "Golem":"Enemy.Standard"
+  }
+}

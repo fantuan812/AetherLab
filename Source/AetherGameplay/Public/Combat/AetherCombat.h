@@ -13,6 +13,7 @@
 #include "Skills/AetherCastExecution.h"
 #include "Actions/AetherActionPolicy.h"
 #include "AI/AetherNpcSkillDecision.h"
+#include "AI/AetherNpcPerception.h"
 #include "AetherCombat.generated.h"
 class UAetherMotionComponent;
 
@@ -142,10 +143,6 @@ public:
     FVector NavigationGoal=FVector::ZeroVector;
     int32 NavigationIndex=0;
     float NextPathAt=0;
-    TWeakObjectPtr<AAetherCharacter> PerceivedTarget;
-    FVector LastSeenPosition=FVector::ZeroVector;
-    float LastSeenAt=-100;
-    float NextPerceptionAt=0;
     virtual void ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit) override;
     UFUNCTION() void ApplyCharacterDefinition();
     void Pacify();
@@ -157,7 +154,9 @@ public:
 private:
     friend class FAetherElectricalSnapshotTest;
     friend class FAetherNpcSkillDecisionTest;
+    friend class FAetherNpcPerceptionTest;
     FAetherNpcSkillDecision EnemySkillDecision;
+    FAetherNpcPerception EnemyPerception;
     void MoveForward(float V);
     void MoveRight(float V);
     void Turn(float V) { AddControllerYawInput(V); }
