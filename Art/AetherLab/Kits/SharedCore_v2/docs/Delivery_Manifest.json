@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "delivery_date_utc": "2026-10-01",
+  "scope": "共享核心道路/矮墙/围栏连接候选，22母件/678实例/7组试拼；全套件门和全图未完成",
+  "repository_content": "Text scripts, specifications and measured review evidence only; binary files in the existing user Library identities",
+  "access": "Private Library access for authorized user; IDs are not public download links",
+  "artifacts": [
+    {
+      "filename": "AetherLab_CoreKit_Interface_v2.blend",
+      "library_file_id": "libfile_3dc1fbb1e36881919c4dce2f9c37a35e",
+      "file_id": "file_00000000b8bc81f8b12a30c5a4e13f33",
+      "current_version_number": 1,
+      "bytes": 7552267,
+      "sha256": "9da7bdfc2731c144cb31d0866b9574a24d9f9057e6ed38895226d6371e3ac62b",
+      "library_path": "/AetherLab_CoreKit_Interface_v2.blend",
+      "remote_materialized_sha256": "9da7bdfc2731c144cb31d0866b9574a24d9f9057e6ed38895226d6371e3ac62b",
+      "remote_reverified": true
+    },
+    {
+      "filename": "CoreKit_Overview.png",
+      "library_file_id": "libfile_0e88c99c97508191a86003faf70875bd",
+      "file_id": "file_000000001c7c820c96caeade03d4f0fa",
+      "current_version_number": 1,
+      "bytes": 2437292,
+      "sha256": "18cb21c0c4085dc873f7cd0ea9d4c8f3ec026468162a22e895789b355d7a7a0d",
+      "library_path": "/CoreKit_Overview.png",
+      "remote_materialized_sha256": "18cb21c0c4085dc873f7cd0ea9d4c8f3ec026468162a22e895789b355d7a7a0d",
+      "remote_reverified": true
+    },
+    {
+      "filename": "CoreKit_Assembly_Close.png",
+      "library_file_id": "libfile_d90b767a3a9c819184f4f97d67dd30e4",
+      "file_id": "file_00000000f7bc81f59dc1208f895d7529",
+      "current_version_number": 1,
+      "bytes": 2299825,
+      "sha256": "c9d85876d7295c96dee8073f1a460974f019481aa5af723295d6783d031fab01",
+      "library_path": "/CoreKit_Assembly_Close.png",
+      "remote_materialized_sha256": "c9d85876d7295c96dee8073f1a460974f019481aa5af723295d6783d031fab01",
+      "remote_reverified": true
+    },
+    {
+      "filename": "AetherLab_SceneAssets_CoreKit_v2.zip",
+      "library_file_id": "libfile_6130d570bcd881918b29e7748d72f8ee",
+      "file_id": "file_00000000ea6481f7b9538813e2f76f46",
+      "current_version_number": 2,
+      "bytes": 13137551,
+      "sha256": "81ff8a0932f7a97ec772f4e240ec7549e5cdb9a675f0c87eb03f1ae450a62ad3",
+      "library_path": "/AetherLab_SceneAssets_CoreKit_v2.zip",
+      "remote_materialized_sha256": "81ff8a0932f7a97ec772f4e240ec7549e5cdb9a675f0c87eb03f1ae450a62ad3",
+      "remote_reverified": true
+    }
+  ],
+  "blender_author_checks": 27,
+  "independent_checks": 22,
+  "character_preservation_objects": 9,
+  "package_members_sha256_checked": 28,
+  "remote_bytes_sha256_reverification": "4/4 current pinned Library files materialized and SHA-256 matched (blend/images version1, corrected bundle version2); ZIP28 content member hashes verified plus manifest itself",
+  "zip_entries_including_manifest": 29
+}

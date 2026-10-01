@@ -1151,7 +1151,7 @@
   "source_character_height_m": 1.8027965174987912,
   "limitations": [
     "Only core road/wall/fence connections; not all scene kits",
-    "No stairs/bridge-bank/rock-wall production kits; inherited unused lantern contains112 degenerate triangles",
+    "No stairs/bridge-bank/rock-wall production kits; inherited unused lantern contains 112 degenerate quads (224 triangles)",
     "No engine, navigation, collision, LOD or performance acceptance",
     "Paving stone spacing is intentional; solid soil substrate closes visual holes",
     "Upright posts usually buried0.14m; height-fixture first wall pier0.21m and other wall piers0.18m; banks visibly slope",

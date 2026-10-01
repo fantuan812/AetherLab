@@ -2,7 +2,7 @@
   "version": 2,
   "blender_version": "4.3.2",
   "file": "AetherLab_CoreKit_Interface_v2.blend",
-  "file_sha256": "3f514bf9e1e6353c2da35acee7887883750ff02fa5cacf8cb3c68e03fa7b671b",
+  "file_sha256": "9da7bdfc2731c144cb31d0866b9574a24d9f9057e6ed38895226d6371e3ac62b",
   "date_utc": "2026-10-01",
   "method": "Fresh Blender process, evaluated world-space vertices/polygons and BVH rays; presentation platform excluded. Samples prove only their recorded resolution; not a mathematical all-resolution guarantee.",
   "checks": [

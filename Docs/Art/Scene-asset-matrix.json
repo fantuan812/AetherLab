@@ -600,14 +600,14 @@
         "通用",
         "连接"
       ],
-      "dimension_interface": "本批Path/Wall/Fence候选节距4m；净宽和视觉BBox另记；坡阶/交叉/端头待闭环",
+      "dimension_interface": "本批Path/Wall/Fence候选节距4m；净宽和视觉BBox另记；v2最小转角/交叉/端头/路地及4m升1m跟坡在限定范围通过；台阶等缺口保留",
       "material_families": [
         "stone",
         "earth",
         "timber"
       ],
       "status": "已有源待模块化",
-      "production_status": "需求已登记；未完成族级验收",
+      "production_status": "v2最小核心连接作者27/27组、独立22/22组及实看通过；未完成族级验收",
       "source_collections": [
         "SM_Path_4m",
         "ENV_PathExtensions",
@@ -616,10 +616,11 @@
         "SHR_Approved_EntryStep_Option"
       ],
       "source_note": "道路、墙、栏杆、台阶均有源；规范枢轴、连接、净空和边缘而非重造",
-      "required_acceptance": "实际锚点、接缝、标高、共享柱、净空；CoreKit只覆盖其中一部分",
+      "required_acceptance": "实际网格覆盖/接缝/标高、唯一共享柱、几何净空和双角色尺度；v2只覆盖最小连接试拼，台阶/桥岸/岩地等仍待补",
       "evidence": [
         "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
-        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json",
+        "Art/AetherLab/Kits/SharedCore_v2/README.zh-CN.md"
       ]
     },
     {
@@ -1916,12 +1917,17 @@
     "global_grid_confirmed": false,
     "universal_road_width_confirmed": false,
     "dcc_unit": "m, METRIC, scale_length=1",
-    "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/audit/character_scale_audit.json"
+    "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/audit/character_scale_audit.json",
+    "candidate_ramp_run_rise_m": [
+      4,
+      1
+    ],
+    "ramp_is_project_standard": false
   },
   "prototype_modules": [
     {
       "asset_id": "KIT_Path_Flagstone_4x4_A",
-      "kit": "SharedCore_v1",
+      "kit": "SharedCore_v2",
       "family": "road_path",
       "route": "改造",
       "role": "连接",
@@ -1944,23 +1950,32 @@
         "Flagstone_03_2",
         "Flagstone_03_3"
       ],
-      "status": "接口候选，未完成套件门",
-      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "introduced_in": "SharedCore_v1",
+      "source_preservation": "保留v1母件及其来源身份；v2新增试拼不覆盖v1源模型",
+      "historical_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
     },
     {
       "asset_id": "KIT_Path_Substrate_4x4",
-      "kit": "SharedCore_v1",
+      "kit": "SharedCore_v2",
       "family": "road_path",
       "route": "新增连接件，复用材质",
       "role": "连接",
       "interface": "4m连接节距候选；BBox与净空另记",
       "source_objects": [],
-      "status": "接口候选，未完成套件门",
-      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "introduced_in": "SharedCore_v1",
+      "source_preservation": "保留v1母件及其来源身份；v2新增试拼不覆盖v1源模型",
+      "historical_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+      "v2_cleanup": "只修v2生产副本的反向法线和塌线竖面UV；原v1文件不改",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
     },
     {
       "asset_id": "KIT_WallLow_Run_4m",
-      "kit": "SharedCore_v1",
+      "kit": "SharedCore_v2",
       "family": "road_path",
       "route": "改造",
       "role": "连接",
@@ -1975,12 +1990,16 @@
         "Rubble parapet block.030",
         "Rubble parapet block.031"
       ],
-      "status": "接口候选，未完成套件门",
-      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "introduced_in": "SharedCore_v1",
+      "source_preservation": "保留v1母件及其来源身份；v2新增试拼不覆盖v1源模型",
+      "historical_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
     },
     {
       "asset_id": "KIT_WallLow_EndCornerPier",
-      "kit": "SharedCore_v1",
+      "kit": "SharedCore_v2",
       "family": "road_path",
       "route": "改造",
       "role": "连接",
@@ -1989,12 +2008,16 @@
         "Pillar base.003",
         "Pillar cap.003"
       ],
-      "status": "接口候选，未完成套件门",
-      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "introduced_in": "SharedCore_v1",
+      "source_preservation": "保留v1母件及其来源身份；v2新增试拼不覆盖v1源模型",
+      "historical_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
     },
     {
       "asset_id": "KIT_Fence_Rails_4m",
-      "kit": "SharedCore_v1",
+      "kit": "SharedCore_v2",
       "family": "road_path",
       "route": "改造",
       "role": "连接",
@@ -2003,12 +2026,16 @@
         "Fence rail",
         "Fence rail.001"
       ],
-      "status": "接口候选，未完成套件门",
-      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "introduced_in": "SharedCore_v1",
+      "source_preservation": "保留v1母件及其来源身份；v2新增试拼不覆盖v1源模型",
+      "historical_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
     },
     {
       "asset_id": "KIT_Fence_SharedPost",
-      "kit": "SharedCore_v1",
+      "kit": "SharedCore_v2",
       "family": "road_path",
       "route": "改造",
       "role": "连接",
@@ -2016,12 +2043,16 @@
       "source_objects": [
         "Fence stake"
       ],
-      "status": "接口候选，未完成套件门",
-      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "introduced_in": "SharedCore_v1",
+      "source_preservation": "保留v1母件及其来源身份；v2新增试拼不覆盖v1源模型",
+      "historical_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
     },
     {
       "asset_id": "KIT_LanternPost",
-      "kit": "SharedCore_v1",
+      "kit": "SharedCore_v2",
       "family": "lighting",
       "route": "改造",
       "role": "通用",
@@ -2038,12 +2069,16 @@
         "Lantern cap.002",
         "Lantern cap.003"
       ],
-      "status": "接口候选，未完成套件门",
-      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+      "status": "保留未用母件；112个退化四边形（224个三角形）与40个零面积UV多边形遗留风险；未通过网格质量验收",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "introduced_in": "SharedCore_v1",
+      "source_preservation": "保留v1母件及其来源身份；v2新增试拼不覆盖v1源模型",
+      "historical_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
     },
     {
       "asset_id": "KIT_Path_Ramp_4m_Rise1m",
-      "kit": "SharedCore_v1",
+      "kit": "SharedCore_v2",
       "family": "road_path",
       "route": "改造",
       "role": "连接",
@@ -2051,12 +2086,16 @@
       "source_objects": [
         "KIT_Path_Flagstone_4x4_A"
       ],
-      "status": "接口候选，未完成套件门",
-      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "introduced_in": "SharedCore_v1",
+      "source_preservation": "保留v1母件及其来源身份；v2新增试拼不覆盖v1源模型",
+      "historical_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
     },
     {
       "asset_id": "KIT_Substrate_Ramp_4m_Rise1m",
-      "kit": "SharedCore_v1",
+      "kit": "SharedCore_v2",
       "family": "road_path",
       "route": "改造",
       "role": "连接",
@@ -2064,30 +2103,480 @@
       "source_objects": [
         "KIT_Path_Substrate_4x4"
       ],
-      "status": "接口候选，未完成套件门",
-      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "introduced_in": "SharedCore_v1",
+      "source_preservation": "保留v1母件及其来源身份；v2新增试拼不覆盖v1源模型",
+      "historical_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+      "v2_cleanup": "只修v2生产副本的反向法线和塌线竖面UV；原v1文件不改",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Path_Foundation_4x4",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "4×4m道路底座；由原路床加深至局部Z=-0.55m，闭合道路支撑",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [
+        "KIT_Path_Substrate_4x4"
+      ],
+      "source_note": "KIT_Path_Substrate_4x4",
+      "material_families": [
+        "earth"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Wall_Footing_4m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "新增连接件，复用材质",
+      "role": "连接",
+      "interface": "4m矮墙基脚；名义横宽0.68m，局部Z=-0.155～0.10m",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [],
+      "source_note": "new minimum connection geometry",
+      "material_families": [
+        "stone"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_WallLow_Rise_4m_1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "原矮墙沿局部Y每4m升1m；固定派生网格，不逐实例拉伸",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [
+        "KIT_WallLow_Run_4m"
+      ],
+      "source_note": "KIT_WallLow_Run_4m",
+      "material_families": [
+        "stone"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Wall_Footing_Rise_4m_1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "4m墙基脚随坡升1m，与坡墙配对",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [
+        "KIT_Wall_Footing_4m"
+      ],
+      "source_note": "KIT_Wall_Footing_4m",
+      "material_families": [
+        "stone"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Fence_Rails_Rise_4m_1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "原围栏横梁沿局部Y每4m升1m；柱保持直立",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [
+        "KIT_Fence_Rails_4m"
+      ],
+      "source_note": "KIT_Fence_Rails_4m",
+      "material_families": [
+        "timber"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Shoulder_Straight_1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "新增连接件，复用材质",
+      "role": "连接",
+      "interface": "1×1m路肩；道路侧局部Z=-0.035m接地侧-0.35m，底-0.55m",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [],
+      "source_note": "new minimum connection geometry",
+      "material_families": [
+        "earth"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Shoulder_Convex90_1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "新增连接件，复用材质",
+      "role": "连接",
+      "interface": "1×1m外凸90度路肩闭口；配直路肩覆盖道路外角",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [],
+      "source_note": "new slope closure, shared earth material",
+      "material_families": [
+        "earth"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Shoulder_Concave90_1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "新增连接件，复用材质",
+      "role": "连接",
+      "interface": "1×1m内凹90度路肩闭口；配直路肩覆盖道路内角及T/X边界",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [],
+      "source_note": "new slope closure, shared earth material",
+      "material_families": [
+        "earth"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Terrain_Patch_1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "landscape",
+      "route": "新增连接件，复用材质",
+      "role": "连接",
+      "interface": "1×1m土块；局部Z=-0.55～-0.35m，用于端头和试拼支撑",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [],
+      "source_note": "new minimum connection geometry",
+      "material_families": [
+        "earth"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Terrain_RaisedPatch_1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "landscape",
+      "route": "新增连接件，复用材质",
+      "role": "连接",
+      "interface": "1×1m实心高台土基；局部顶Z=0.965m、底Z=-0.55m，消除高端转接底部悬边",
+      "interface_values": "构建参数；最终独立实测见验收报告，不从作者声明推定通过",
+      "source_objects": [],
+      "source_note": "new minimum connection geometry",
+      "material_families": [
+        "earth"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Ramp_Bank_4m_Rise1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "新增连接件，复用材质",
+      "role": "连接",
+      "interface": "4m长升1m坡路实体土基；两侧坡脚回接平地，中央承托坡路床",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [],
+      "source_note": "existing earth material; solid cross-section follows flat ground",
+      "material_families": [
+        "earth"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Raised_Landing_Bank_4m_Height1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "新增连接件，复用材质",
+      "role": "连接",
+      "interface": "4m长高位平台实体土基；承托+1m路面，两侧坡脚回接平地",
+      "interface_values": "构建参数，待保存文件独立回读；不作为实测通过证据",
+      "source_objects": [],
+      "source_note": "existing earth material; solid cross-section follows flat ground",
+      "material_families": [
+        "earth"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
+    },
+    {
+      "asset_id": "KIT_Raised_EndBank_1m",
+      "kit": "SharedCore_v2",
+      "introduced_in": "SharedCore_v2",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "由高位平台土基派生1m长端岸；保留横断面并填平中央槽至局部Z=0.965m",
+      "interface_values": "构建参数；最终独立实测见验收报告，不从作者声明推定通过",
+      "source_objects": [
+        "KIT_Raised_Landing_Bank_4m_Height1m"
+      ],
+      "source_note": "KIT_Raised_Landing_Bank_4m_Height1m",
+      "material_families": [
+        "earth"
+      ],
+      "status": "本轮核心连接候选限定范围通过：作者27/27组、独立22/22组及实看完成；全套件门未整体放行",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "interface_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json"
     }
   ],
-  "prototype_note": "小型试拼，不是全图；仅以最终独立回读验证JSON为准，生成器预设test声明不作为通过证据。",
-  "prototype_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+  "prototype_note": "SharedCore_v2独立小型核心连接试拼，9原母件+13新增=22，678实例共用21份网格。最终源作者27/27组与独立22/22组分别通过，9角色对象保持检查另通过；五张作者渲染及独立X顶视完成实看。仅本批核心连接候选限定范围通过，全套件门和全图仍未放行。未用灯母件保留112个退化四边形（224个三角形）和40零面积UV多边形遗留风险。",
+  "prototype_evidence": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
   "gates": {
     "requirements": "形成可审查清单；未代替缺口补查与验收",
-    "kit": "未放行，部分接口候选",
+    "kit": "未整体放行；v2最小核心连接限定范围作者27/27组、独立22/22组及实看通过",
     "world": "未开始全图生产铺设",
     "detail": "未开始全图局部细化"
   },
   "unverified": [
-    "完整转角/交叉修边/端头系列",
-    "台阶与桥岸/路地/岩地过渡",
+    "未用灯母件继承112个退化四边形（224个三角形）及40个零面积UV多边形；不能声明全部22母网格质量通过",
+    "完整道路边缘/交叉/端头系列及不同净宽变体",
+    "台阶、桥岸/岩地过渡与完整路地系列",
+    "其余建筑、地标与玩法套件",
     "角色设计身高与现有baseline差异决策",
-    "目标镜头材质/LOD",
+    "目标镜头材质/LOD/lightmap",
     "全图风格",
     "UE导航/碰撞/性能（非本批要求）"
   ],
   "binary_delivery": {
     "repository_has_binary": false,
-    "manifest": "../../Art/AetherLab/Kits/SharedCore_v1/docs/Delivery_Manifest.json",
+    "manifest": "../../Art/AetherLab/Kits/SharedCore_v2/docs/Delivery_Manifest.json",
     "package_library_file_id": "libfile_6130d570bcd881918b29e7748d72f8ee",
-    "note": "prototype_evidence里的blend/png路径为Library恢复包内路径，不声称该二进制在本Git提交中存在"
+    "note": "通过既有Library文件身份交付新版本；当前版本、字节数与哈希以v2 Delivery_Manifest.json为准。原v1记录保留为历史，不使用其哈希冒充v2。blend/png/zip仅在Library，Git只保留文本、脚本和报告。",
+    "v2_update": {
+      "status": "see_delivery_manifest",
+      "preserve_existing_library_identity": true,
+      "source_library_file_id": "libfile_3dc1fbb1e36881919c4dce2f9c37a35e",
+      "package_library_file_id": "libfile_6130d570bcd881918b29e7748d72f8ee",
+      "delivery_manifest": "Art/AetherLab/Kits/SharedCore_v2/docs/Delivery_Manifest.json"
+    },
+    "historical_v1_manifest": "../../Art/AetherLab/Kits/SharedCore_v1/docs/Delivery_Manifest.json"
+  },
+  "prototype_release": {
+    "kit": "SharedCore_v2",
+    "source_filename": "AetherLab_CoreKit_Interface_v2.blend",
+    "source_v1_library_file_id": "libfile_3dc1fbb1e36881919c4dce2f9c37a35e",
+    "source_v1_sha256": "451da979d79475cbed1ae9974dfe7193458d6d6899f9269434a125480fc18b25",
+    "original_master_count": 9,
+    "new_master_count": 13,
+    "total_master_count": 22,
+    "count_basis": "最终保存文件的作者重开与独立审查回读一致",
+    "author_manifest": "Art/AetherLab/Kits/SharedCore_v2/docs/Connections_Manifest.json",
+    "validation_report": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+    "validation_status": "core_connection_geometry_and_visual_review_complete",
+    "fixtures": [
+      {
+        "id": "ROAD_LOOP_T",
+        "name": "真实闭合道路环及T支路",
+        "required_check": "路面/路基覆盖、内外90度路肩、闭环与T口连续性",
+        "status": "本轮限定范围几何检查与实看通过；不扩大为完整系列验收"
+      },
+      {
+        "id": "ROAD_X",
+        "name": "独立道路X交叉",
+        "required_check": "四向道路与交叉内凹角路肩的连续覆盖",
+        "status": "本轮限定范围几何检查与实看通过；不扩大为完整系列验收"
+      },
+      {
+        "id": "ROAD_EARTH_END",
+        "name": "道路端头接土",
+        "required_check": "X交叉南臂末端经路肩接土块；不扩大为完整路地系列",
+        "status": "本轮限定范围几何检查与实看通过；不扩大为完整系列验收"
+      },
+      {
+        "id": "WALL_LOOP",
+        "name": "矮墙闭环",
+        "required_check": "直段、90度角、连续基脚与每接点唯一共享墩",
+        "status": "本轮限定范围几何检查与实看通过；不扩大为完整系列验收"
+      },
+      {
+        "id": "FENCE_LOOP",
+        "name": "围栏闭环",
+        "required_check": "直段、90度角、每接点唯一共享柱和独立跨中柱",
+        "status": "本轮限定范围几何检查与实看通过；不扩大为完整系列验收"
+      },
+      {
+        "id": "MIXED_X_ENDS",
+        "name": "矮墙与围栏混合X及端盖",
+        "required_check": "两墙两栏共用一个中心墩；外端墩/柱收口",
+        "status": "本轮限定范围几何检查与实看通过；不扩大为完整系列验收"
+      },
+      {
+        "id": "HEIGHT_MIX",
+        "name": "4m升1m坡路与墙栏跟坡",
+        "required_check": "低路→坡路→高平台、实体土基、坡墙/坡基脚/坡栏、直立柱与高端墙栏转接",
+        "status": "本轮限定范围几何检查与实看通过；不扩大为完整系列验收"
+      }
+    ],
+    "scope": "仅核心道路/矮墙/围栏最小连接；不做全图、单栋精雕或UE验收",
+    "source_preservation": "独立v2源模型；原v1及v7源、角色几何/骨架/权重/比例不覆盖、不缩放",
+    "library_update_status": "通过既有Library身份交付；最终版本、字节数与SHA-256以Delivery_Manifest.json为准",
+    "full_kit_gate_passed": false,
+    "world_gate_passed": false,
+    "instance_count": 678,
+    "used_mesh_count": 21,
+    "author_reopen_validation": {
+      "report": "Art/AetherLab/Kits/SharedCore_v2/docs/Connections_Validation.json",
+      "file_sha256": "9da7bdfc2731c144cb31d0866b9574a24d9f9057e6ed38895226d6371e3ac62b",
+      "checks_passed": 27,
+      "checks_total": 27,
+      "blender_version": "4.3.2",
+      "scope": "作者另起Blender进程回读最终保存文件；27组有限采样检查，与独立22组分别记录，不合并为49个统一测试"
+    },
+    "v2_production_copy_cleanup": [
+      "补实心高台土基和1m端岸处理实际底部悬边",
+      "修正原路床/坡路床v2副本及新件的反向法线",
+      "改为逐面主轴SurfaceUV投影，修正竖面UV塌线；原v1文件未改"
+    ],
+    "known_legacy_risks": [
+      {
+        "asset_id": "KIT_LanternPost",
+        "issue": "继承但未在本轮试拼使用的灯母件有112个退化四边形（224个三角形）和40个零面积UV多边形",
+        "degenerate_polygon_count": 112,
+        "degenerate_triangle_count": 224,
+        "status": "遗留风险；未宣称全部22母网格质量通过",
+        "zero_area_material_uv_polygons": 40
+      }
+    ],
+    "independent_geometry_review": {
+      "report": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Geometry_Review.json",
+      "file_sha256": "9da7bdfc2731c144cb31d0866b9574a24d9f9057e6ed38895226d6371e3ac62b",
+      "checks_passed": 22,
+      "checks_total": 22,
+      "status": "passed_with_scope_limits",
+      "method": "独立审查脚本重开冻结文件；未调用作者验证器；排除展示底台、标注和角色后对实际网格进行采样",
+      "coverage": [
+        "道路环/T/X覆盖与接缝",
+        "道路端头接土与坡岸",
+        "44柱墩底截面承托与无重复柱",
+        "27墙栏段的54处端部真实嵌接",
+        "21个实际使用母网格闭合、正体积、无退化及UV非零面积投影",
+        "双身高静态几何包络和抬柱负控",
+        "22母件局部接口、对应Empty及678实例锚点属性一致"
+      ],
+      "static_envelope": {
+        "heights_m": [
+          1.65,
+          1.8028
+        ],
+        "diameter_m": 0.8,
+        "route_station_interval_m": 0.1,
+        "axis_interval_max_m": 0.02,
+        "measured_central_span_min_m": 2.6748504638671875,
+        "conservative_clearance_m": 0.48039486646652224,
+        "not_runtime_collision": true
+      },
+      "negative_control": {
+        "object": "HEIGHT_fence_Node0",
+        "temporary_raise_m": 0.6,
+        "expected_failures_detected": 4,
+        "original_blend_changed": false
+      },
+      "limitation": "几何采样不是全分辨率布尔无缝证明；非UE导航、碰撞、动画、多人或性能验收",
+      "check_groups": "21组几何/数据/负控，另1组22母件及678实例接口元数据一致性",
+      "fixture_geometry_sha256": "ee2ae912ca6796d2cc9dd26711b0a8d149ce9706fd249c777ee62d11d198c457"
+    },
+    "character_preservation": {
+      "report": "Art/AetherLab/Kits/SharedCore_v2/docs/Character_Preservation_Check.json",
+      "source_library_file_id": "libfile_d49623233fe88191b50a13860ee7cb46",
+      "object_count": 9,
+      "bone_count": 65,
+      "all_passed": true,
+      "scope": "角色几何/拓扑/权重/组名/骨架rest与baseline一致；只平移，审查材质替换有意排除"
+    },
+    "visual_review": {
+      "status": "completed_for_core_connections",
+      "report": "Art/AetherLab/Kits/SharedCore_v2/docs/Independent_Review.zh-CN.md",
+      "authored_preview_count": 5,
+      "additional_independent_preview_count": 1,
+      "preview_render_input_blend_sha256": "f3644928a7e85e93fee67f8157a17b2a044c31f102bc1fc4173ba103c8a0870d",
+      "final_fixture_geometry_matches_preview": true,
+      "scope": "五张作者渲染及独立X顶视全部打开实看；接口元数据刷新后未另渲染，独立几何指纹及作者网格/UV/材质引用/矩阵/相机指纹证明几何一致；仅核心连接可见完整性，非最终原画材质验收"
+    },
+    "intentional_post_z_offset_below_route_m": {
+      "ordinary": 0.14,
+      "height_wall_first": 0.21,
+      "height_wall_other": 0.18,
+      "note": "相对名义路面Z的下移量，不等于实际埋深"
+    },
+    "measured_post_center_embed_m": {
+      "ordinary_approx": 0.105,
+      "height_wall_first_approx": 0.175,
+      "height_wall_other_approx": 0.145,
+      "note": "独立报告柱中心截面实际承托回读；底截面角点承托另检"
+    },
+    "current_file_sha256": "9da7bdfc2731c144cb31d0866b9574a24d9f9057e6ed38895226d6371e3ac62b",
+    "module_interfaces": {
+      "report": "Art/AetherLab/Kits/SharedCore_v2/docs/Module_Interfaces.json",
+      "module_count": 22,
+      "coordinate_space": "母件局部米坐标；乘实例matrix_world得到世界接口",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_instance_scale": [
+        1,
+        1,
+        1
+      ],
+      "metadata_fix": "修正母件和实例继承的坡件OUT.z=0，统一22母件局部接口、Empty及678实例锚点属性；跟坡OUT=(0,4,1)",
+      "geometry_and_camera_fingerprint_sha256": "1e620efc234bc3a3c0a2744d7ec31ed7edc89c3829b4d1690fd13079d0f494a0",
+      "render_geometry_unchanged_after_metadata_refresh": true,
+      "scope": "刷新前后网格/UV/材质槽名/对象矩阵/相机指纹一致；仅接口属性与Empty变化",
+      "builder_dependency": "build_connections.py必须与connection_metadata.py同目录交付",
+      "instance_socket_metadata_synced": 678,
+      "metadata_refresh_comparison": {
+        "geometry_before_refresh_file_sha256": "f3644928a7e85e93fee67f8157a17b2a044c31f102bc1fc4173ba103c8a0870d",
+        "fixture_geometry_sha256_before": "ee2ae912ca6796d2cc9dd26711b0a8d149ce9706fd249c777ee62d11d198c457",
+        "fixture_geometry_sha256_after": "ee2ae912ca6796d2cc9dd26711b0a8d149ce9706fd249c777ee62d11d198c457",
+        "fixture_geometry_unchanged": true,
+        "author_full_mesh_uv_material_reference_transform_camera_fingerprint": "1e620efc234bc3a3c0a2744d7ec31ed7edc89c3829b4d1690fd13079d0f494a0",
+        "author_record": "Module_Interfaces.json"
+      }
+    },
+    "portable_rebuild": {
+      "status": "passed",
+      "input_v1_sha256": "451da979d79475cbed1ae9974dfe7193458d6d6899f9269434a125480fc18b25",
+      "new_output_directory": true,
+      "reopened_checks_passed": 27,
+      "reopened_checks_total": 27,
+      "geometry_and_camera_fingerprint_sha256": "1e620efc234bc3a3c0a2744d7ec31ed7edc89c3829b4d1690fd13079d0f494a0",
+      "matches_final_delivery_geometry": true,
+      "fingerprint_dependency_graph_refreshed": true
+    }
   }
 }

@@ -3,6 +3,7 @@ import bpy,json,os,hashlib,sys,argparse
 from mathutils import Vector
 
 def geometry_fingerprint():
+ bpy.context.view_layer.update()
  # Mesh coordinates, polygons, UV, material names, all object transforms and cameras: render-affecting snapshot.
  record=[]
  for o in sorted(bpy.context.scene.objects,key=lambda x:x.name):
@@ -37,8 +38,18 @@ def refresh(root):
    o[k]=list(v);e=bpy.data.objects.new(n+'__'+k,None);tech.objects.link(e);e.parent=o;e.location=v;e.empty_display_type='ARROWS';e.empty_display_size=.18;e.hide_render=True
   o['connectors_json']=json.dumps(sockets);o['allowed_instance_scale']='1,1,1 only';o['forward_up']='+Y/+Z';o['socket_semantics']='nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder';o['connection_pitch_scope']='4m for this core candidate only; 1m edge/soil/endpoint submodules'
   vs=[v.co for v in o.data.vertices];interfaces.append({'asset_id':n,'local_sockets_m':sockets,'local_mesh_bounds_m':[[min(v[i] for v in vs) for i in range(3)],[max(v[i] for v in vs) for i in range(3)]],'origin':o['socket_semantics'],'forward':'+Y','up':'+Z','allowed_rotation':'multiples of90deg for tested fixtures; slope variants directional','allowed_scale':[1,1,1],'materials':[m.name for m in o.data.materials],'source':o.get('derived_from') or o.get('source_collection'),'geometry_change':'none in this metadata refresh'})
+ # Instances own copied custom properties, so refresh them explicitly from their master.
+ synced=0
+ for inst in bpy.data.collections['02_CONNECTION_FIXTURES__NOT_WORLD'].objects:
+  if inst.type!='MESH':continue
+  master=bpy.data.objects[inst['master']];sockets=json.loads(master['connectors_json'])
+  for key in ['IN','OUT','LEFT','RIGHT','MID','CENTER','BASE','ROAD','EARTH','SIDE_A','SIDE_B','ROAD_CORNER','EDGE_X','EDGE_Y','EARTH_CORNER','ROAD_X','ROAD_Y']:
+   if key in inst:del inst[key]
+  for key,co in sockets.items():inst[key]=co
+  for key in ['connectors_json','allowed_instance_scale','forward_up','socket_semantics','connection_pitch_scope']:inst[key]=master[key]
+  synced+=1
  after=geometry_fingerprint();assert before==after,'Metadata refresh changed render geometry'
- report={'version':2,'geometry_and_camera_fingerprint_sha256':before,'render_geometry_unchanged_after_metadata_refresh':before==after,'socket_coordinate_space':'master local meters; apply instance matrix_world to get world sockets','nominal_grade_vs_visual_bounds':'Socket grade0 may have top soil at-.035m; no assumption that socket is outer mesh boundary','interfaces':interfaces}
+ report={'version':2,'instance_socket_metadata_synced':synced,'geometry_and_camera_fingerprint_sha256':before,'render_geometry_unchanged_after_metadata_refresh':before==after,'socket_coordinate_space':'master local meters; apply instance matrix_world to get world sockets','nominal_grade_vs_visual_bounds':'Socket grade0 may have top soil at-.035m; no assumption that socket is outer mesh boundary','interfaces':interfaces}
  os.makedirs(root+'/docs',exist_ok=True);json.dump(report,open(root+'/docs/Module_Interfaces.json','w'),ensure_ascii=False,indent=2)
  return report
 if __name__=='__main__':

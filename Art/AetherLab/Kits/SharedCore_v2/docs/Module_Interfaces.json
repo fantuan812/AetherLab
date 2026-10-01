@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "instance_socket_metadata_synced": 678,
   "geometry_and_camera_fingerprint_sha256": "1e620efc234bc3a3c0a2744d7ec31ed7edc89c3829b4d1690fd13079d0f494a0",
   "render_geometry_unchanged_after_metadata_refresh": true,
   "socket_coordinate_space": "master local meters; apply instance matrix_world to get world sockets",
