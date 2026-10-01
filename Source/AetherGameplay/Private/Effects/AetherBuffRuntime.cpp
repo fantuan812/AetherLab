@@ -259,7 +259,10 @@ bool UAetherBuffRuntime::Apply(const FString& Id,const FString& Source,FString& 
     if(!C||!C->HasAuthority()||!C->Alive()||C->ResourceGate->IsBlocked()||bPublishing)
     {Why=TEXT("效果正在结算，请稍后重试。");return false;}
     if(!SynchronizeLife()){Why=TEXT("当前技能生命或权威尚未就绪。");return false;}
-    FlushDue();
+    const FGuid Life=State.LifeId;const TWeakObjectPtr<UAbilitySystemComponent> System=C->AbilitySystem.Get();
+    FlushDue();FGuid Current;
+    if(!C->Alive()||C->AbilitySystem!=System.Get()||!AetherSkillLives::Resolve(*C,Current)||Current!=Life||State.LifeId!=Life||C->ResourceGate->IsBlocked())
+    {Why=TEXT("效果请求的生命或权威已在结算中变化。");return false;}
     const auto& Definitions=FAetherBuffDefinitions::Get();const auto* D=Definitions.bValid?Definitions.Buffs.Find(Id):nullptr;
     if(HasDue()){Why=TEXT("效果正在按顺序结算。");return false;}
     if(!D){Why=TEXT("效果定义不可用。");return false;}
@@ -276,7 +279,11 @@ bool UAetherBuffRuntime::Dispel(const FString& Tag,FString& Why)
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority()||!C->Alive()||C->ResourceGate->IsBlocked()||bPublishing)return false;
     if(!SynchronizeLife()){Why=TEXT("当前技能生命或权威尚未就绪。");return false;}
-    FlushDue();if(HasDue()){Why=TEXT("效果正在按顺序结算。");return false;}
+    const FGuid Life=State.LifeId;const TWeakObjectPtr<UAbilitySystemComponent> System=C->AbilitySystem.Get();
+    FlushDue();FGuid Current;
+    if(!C->Alive()||C->AbilitySystem!=System.Get()||!AetherSkillLives::Resolve(*C,Current)||Current!=Life||State.LifeId!=Life||C->ResourceGate->IsBlocked())
+    {Why=TEXT("净化请求的生命或权威已在结算中变化。");return false;}
+    if(HasDue()){Why=TEXT("效果正在按顺序结算。");return false;}
     const auto Previous=State;
     if(!State.Dispel(Tag)){Why=TEXT("没有可净化的效果；身体温度与水量不受普通净化影响。");return false;}
     const bool Applied=Publish();if(!Applied){State=Previous;Publish();}

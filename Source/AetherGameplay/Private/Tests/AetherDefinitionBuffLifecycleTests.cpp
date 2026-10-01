@@ -235,6 +235,40 @@ bool FAetherDefinitionBuffLifecycleTest::RunTest(const FString&)
         N->AbilitySystem->InitAbilityActorInfo(F->State,N);FGuid Life;AetherSkillLives::Resolve(*N,Life);N->BuffRuntime->FlushDue();
         TestTrue(TEXT("Same Profile life retries retired unavailable work without permanent action lock"),Life==F->OldLife&&N->Health()==54&&!N->BuffRuntime->HasDue());
     });
+    Step([F,this]{
+        auto* C=F->Other;FString Why;C->BuffRuntime->Dispel(TEXT("Positive"),Why);C->SetVitals(C->MaxHealth-1,77,33);
+        TestTrue(TEXT("Prepare Health-only upper-bound event"),C->BuffRuntime->Apply(TEXT("Sample.Regeneration"),TEXT("Fixture.Clamp"),Why));
+    });
+    Advance(2.1);
+    Step([F,this]{
+        auto* C=F->Other;C->BuffRuntime->FlushDue();
+        TestTrue(TEXT("Health-only tick still uses AttributeSet MaxHealth clamp"),C->Health()==C->MaxHealth&&C->Mana()==77&&C->Stamina()==33);
+    });
+    for(int32 Mode=0;Mode<2;++Mode)
+    {
+        Step([F,this]{
+            auto* C=F->Other;FString Why;C->BuffRuntime->Dispel(TEXT("Positive"),Why);C->SetVitals(50,100,100);
+            TestTrue(TEXT("Prepare due work inside a public mutation entry"),C->BuffRuntime->Apply(TEXT("Sample.Regeneration"),TEXT("Fixture.EntryDue"),Why));
+        });
+        Advance(2.1);
+        Step([F,this,Mode]{
+            auto* C=F->Other;F->Reentered=F->AppliedReplacement=false;AetherSkillLives::Resolve(*C,F->OldLife);
+            FGuid ReplacementId;uint64 ReplacementRevision=0;
+            const auto Hook=C->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetHealthAttribute()).AddLambda([F,&ReplacementId,&ReplacementRevision](const FOnAttributeChangeData& Change){
+                if(Change.NewValue<=Change.OldValue||F->Reentered)return;F->Reentered=true;auto* C=F->Other;
+                C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(),0);C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(),60);
+                FString Why;F->AppliedReplacement=C->BuffRuntime->Apply(TEXT("Sample.Regeneration"),TEXT("Fixture.Replacement"),Why);
+                const auto& State=C->BuffRuntime->GetState();ReplacementRevision=State.Revision;
+                if(State.Instances.Num()==1)ReplacementId=State.Instances[0].InstanceId;
+            });
+            FString Why;const bool Applied=Mode==0?C->BuffRuntime->Apply(TEXT("Sample.Regeneration"),TEXT("Fixture.OldRequest"),Why):C->BuffRuntime->Dispel(TEXT("Positive"),Why);
+            C->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetHealthAttribute()).Remove(Hook);
+            FGuid Current;AetherSkillLives::Resolve(*C,Current);const auto& State=C->BuffRuntime->GetState();
+            TestTrue(TEXT("Mutation entry really reentered a different life with its own effect"),F->Reentered&&F->AppliedReplacement&&Current!=F->OldLife&&ReplacementId.IsValid());
+            TestTrue(TEXT("Original Apply/Dispel rejects after its due work changed life"),!Applied&&!Why.IsEmpty());
+            TestTrue(TEXT("Old mutation cannot refresh or dispel the replacement effect"),State.LifeId==Current&&State.Revision==ReplacementRevision&&State.Instances.Num()==1&&State.Instances[0].InstanceId==ReplacementId&&State.Instances[0].Sources.Contains(TEXT("Fixture.Replacement"))&&!State.Instances[0].Sources.Contains(TEXT("Fixture.OldRequest")));
+        });
+    }
     Step([F]{auto* W=F->World;F->World=nullptr;W->EndPlay(EEndPlayReason::Quit);W->DestroyWorld(false);W->RemoveFromRoot();});
     return true;
 }
