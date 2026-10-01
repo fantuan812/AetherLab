@@ -12,6 +12,7 @@ struct FAetherSceneServiceContext
     AAetherFrontierProp& Target;
     const FAetherInteractionActionDefinition& Action;
     double SafeForSeconds;
+    FGuid OriginCommandId; // 正式场景输入通过授权后传入；不是新建持久事务 ID。
 };
 struct FAetherSceneServiceHandlers
 {
@@ -29,3 +30,4 @@ struct FAetherSceneServiceHandlers
     static FString CollectLegacyLoot(const FAetherSceneServiceContext& Context);
     static FString Recruit(const FAetherSceneServiceContext& Context);
 };
+

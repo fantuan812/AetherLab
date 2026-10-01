@@ -136,7 +136,7 @@ private:
     TMap<FName,FNativeCampWrite> NativeCampWrites;
     bool RecordNativeCampClear(FName Definition,FGuid Instance);
     void SettleNativeEncounter(FAetherEncounterRun& Run);
-    FString ClaimNativeLegacyLoot(AAetherFrontierCharacter* Character,FName StableId);
+    FString ClaimNativeLegacyLoot(AAetherFrontierCharacter* Character,FName StableId,FGuid OriginCommandId);
     bool CaptureNativeWorld(const FAetherWorldStateV10& Previous,FAetherWorldStateV10& Candidate,FString& Reason);
     void ApplyObjectDefinition(AAetherFrontierProp* A,FName Definition);
     AAetherFrontierProp* SpawnPlacement(const FAetherWorldPlacement& Placement);
@@ -169,3 +169,4 @@ private:
     bool bLightCheckStarted = false;
     int32 SmokeStage = 0; int32 Failures = 0;
 };
+

@@ -48,6 +48,8 @@ public:
     void SetWorldPublisher(TFunction<void(const FAetherWorldStateV10&)> Publisher);
     // 可信场景/战斗事件入口；没有对应客户端 RPC。
     bool ObserveServerFact(FAetherServerFact Event,FString& Reason);
+    // 仅经已授权现场服务调用；CharacterId 来自当前 binding，不接受调用者自报身份。
+    bool SubmitLootClaim(AAetherPlayerController* Controller,FGuid LootInstanceId,FGuid OriginCommandId,FString& Reason);
     bool HasPendingServerFact(const FString& CharacterId,FName Fact) const;
     bool BindVerifiedPlayer(AAetherPlayerController* Controller,const FString& CanonicalCharacterId);
     void UnbindPlayer(AAetherPlayerController* Controller);
@@ -65,3 +67,4 @@ public:
 private:
     TUniquePtr<FAetherCommandRuntimeImpl,FAetherCommandRuntimeImplDeleter> Impl;
 };
+

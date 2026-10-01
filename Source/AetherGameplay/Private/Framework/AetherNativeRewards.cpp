@@ -1,6 +1,7 @@
 #include "Framework/AetherFrontier.h"
 #include "Persistence/AetherNativePersistence.h"
 #include "Networking/AetherCommandRuntime.h"
+#include "Framework/AetherPlayerController.h"
 #include "Inventory/AetherResourceGate.h"
 #include "Engine/GameInstance.h"
 
@@ -54,7 +55,7 @@ bool AAetherFrontierMode::RecordNativeCampClear(FName Definition,FGuid Instance)
     });
     NativeCampWrites.Add(Definition,MoveTemp(Pending));return false;
 }
-FString AAetherFrontierMode::ClaimNativeLegacyLoot(AAetherFrontierCharacter* C,FName Id)
+FString AAetherFrontierMode::ClaimNativeLegacyLoot(AAetherFrontierCharacter* C,FName Id,FGuid OriginCommandId)
 {
     auto* PS=C?C->ProfileState():nullptr;auto* Actor=Prop(Id);
     if(!bNativeSceneReady||!NativeWorld.IsSet()||!PS||!C->Ready()||C->ResourceGate->IsBlocked()||C->bTravelPending||
@@ -64,8 +65,9 @@ FString AAetherFrontierMode::ClaimNativeLegacyLoot(AAetherFrontierCharacter* C,F
     if(GetWorld()->LineTraceTestByChannel(C->GetActorLocation(),Actor->GetActorLocation(),ECC_Visibility,Q))return TEXT("领取通路被遮挡。");
     const auto* Loot=NativeWorld->Loot.FindByPredicate([&](const auto& L){return Id.ToString()==TEXT("Loot_")+L.ClaimId.ToString(EGuidFormats::Digits);});
     if(!Loot||!Loot->ClaimedBy.IsEmpty())return TEXT("掉落已领取。");
-    FAetherServerFact E;E.Kind=EAetherServerFactKind::LegacyLoot;E.CharacterId=PS->Profile.CharacterId;E.FactId=TEXT("Loot");E.InstanceId=Loot->ClaimId;
     FString Why;
-    return GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->ObserveServerFact(MoveTemp(E),Why)?
-        TEXT("正在保存领取结果，物品以收到的库存快照为准。"):TEXT("领取暂不可用，请稍后重试。");
+    return GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SubmitLootClaim(
+        Cast<AAetherPlayerController>(C->GetController()),Loot->ClaimId,OriginCommandId,Why)?
+        TEXT("正在保存领取结果，物品以收到的库存快照为准。"):Why;
 }
+

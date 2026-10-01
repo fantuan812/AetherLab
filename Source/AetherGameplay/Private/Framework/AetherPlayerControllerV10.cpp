@@ -16,6 +16,30 @@ void AAetherPlayerController::ClientV10Channel_Implementation(FGuid Channel,cons
 {if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveChannel(this,Channel,CanonicalOwner,Realm);}
 void AAetherPlayerController::ClientV10Reply_Implementation(const FAetherV10ReplyPacket& P)
 {if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveReply(this,P);}
+void AAetherPlayerController::ClientV10LootClaimResult_Implementation(FGuid Channel,FGuid OriginCommandId,FGuid LootInstanceId,EAetherLootClaimOutcome Outcome)
+{
+    auto* LP=GetLocalPlayer();auto* Client=LP?LP->GetSubsystem<UAetherCommandClient>():nullptr;
+    if(!Client||!Channel.IsValid()||Channel!=Client->GetChannel()||!Client->AcceptsControllerIdentity(this)||
+        !OriginCommandId.IsValid()||!LootInstanceId.IsValid())return;
+    auto* C=Cast<AAetherFrontierCharacter>(GetPawn());if(!C)return;
+    if(LootFeedbackChannel!=Channel){LootFeedbackChannel=Channel;CompletedLootFeedback.Reset();}
+    const TPair<FGuid,FGuid> Key(OriginCommandId,LootInstanceId);if(CompletedLootFeedback.Contains(Key))return;
+    FString Message;
+    switch(Outcome)
+    {
+    case EAetherLootClaimOutcome::Applied:Message=TEXT("领取已保存，物品以同步的库存快照为准。");break;
+    case EAetherLootClaimOutcome::AlreadyOwned:Message=TEXT("这份战利品已由你领取，不会重复发放。");break;
+    case EAetherLootClaimOutcome::InventoryFull:Message=TEXT("背包空间不足，战利品仍留在原处；整理背包后可重试。");break;
+    case EAetherLootClaimOutcome::ClaimedByOther:Message=TEXT("这份战利品已被其他玩家领取。");break;
+    case EAetherLootClaimOutcome::Missing:Message=TEXT("这份战利品已不存在，请刷新目标。");break;
+    case EAetherLootClaimOutcome::Invalid:Message=TEXT("领取未能确认，请稍后重试或重新同步库存。");break;
+    default:return;
+    }
+    if(CompletedLootFeedback.Num()>=128)CompletedLootFeedback.RemoveAt(0);
+    CompletedLootFeedback.Add(Key);
+    // 已在拥有者客户端；直接走既有表现通知，不能再伪造普通持久命令回执。
+    C->Notify_Implementation(Message);
+}
 void AAetherPlayerController::ClientV10Snapshot_Implementation(const FAetherV10SnapshotChunk& P)
 {if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveChunk(this,P);}
 
@@ -40,3 +64,4 @@ void AAetherPlayerController::ServerV10ContainerQuery_Implementation(const FAeth
 {if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->QueryContainer(this,Q);}
 void AAetherPlayerController::ClientV10ContainerClosed_Implementation(FGuid Channel,FGuid Context)
 {if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveContainerClosed(this,Channel,Context);}
+

@@ -20,18 +20,29 @@ bool Grant(FAetherProfileStateV10& P,const TMap<FString,int32>& Items,int32 Gold
     P.PendingRewards.Add(MoveTemp(Reward));return true;
 }
 }
+EAetherLootClaimOutcome AetherServerRewards::ApplyLoot(const FAetherServerFact& E,FAetherProfileStateV10& P,
+    FAetherWorldStateV10& W,const FAetherV10Definitions& D,FString& Reason)
+{
+    using O=EAetherLootClaimOutcome;
+    if(E.Kind!=EAetherServerFactKind::LegacyLoot||!E.InstanceId.IsValid())return O::Invalid;
+    auto* Loot=W.Loot.FindByPredicate([&](const auto& L){return L.ClaimId==E.InstanceId;});
+    if(!Loot){Reason=TEXT("Loot no longer exists");return O::Missing;}
+    if(!Loot->ClaimedBy.IsEmpty())
+        return Loot->ClaimedBy.Equals(P.CharacterId,ESearchCase::CaseSensitive)?O::AlreadyOwned:O::ClaimedByOther;
+    auto Items=Loot->Items;if(Items.IsEmpty())Items.Add(Loot->Definition,Loot->Count);
+    // 整包预检在值副本上完成；容量失败不改库存，也不消耗共享掉落所有权。
+    auto Candidate=P;TArray<FString> Keys;Items.GetKeys(Keys);Keys.Sort();
+    for(const auto& Id:Keys)
+    {
+        const auto R=Candidate.Inventory.AddNew(Id,Items[Id],D.Items);
+        if(R.Code==EAetherInventoryMutationCode::Capacity){Reason=TEXT("Loot inventory capacity unavailable");return O::InventoryFull;}
+        if(R.Code!=EAetherInventoryMutationCode::Applied){Reason=TEXT("Invalid loot item");return O::Invalid;}
+    }
+    P=MoveTemp(Candidate);Loot->ClaimedBy=P.CharacterId;Reason.Reset();return O::Applied;
+}
 bool AetherServerRewards::Apply(const FAetherServerFact& E,FAetherProfileStateV10& P,FAetherWorldStateV10& W,
     const FAetherV10Definitions& D,FString& Reason)
 {
-    if(E.Kind==EAetherServerFactKind::LegacyLoot)
-    {
-        auto* Loot=W.Loot.FindByPredicate([&](const auto& L){return L.ClaimId==E.InstanceId;});
-        if(!Loot){Reason=TEXT("Loot no longer exists");return false;}
-        if(!Loot->ClaimedBy.IsEmpty())return Loot->ClaimedBy.Equals(P.CharacterId,ESearchCase::CaseSensitive);
-        auto Items=Loot->Items;if(Items.IsEmpty())Items.Add(Loot->Definition,Loot->Count);
-        if(!Grant(P,Items,0,TEXT("Loot.")+E.InstanceId.ToString(EGuidFormats::Digits),D.Items,false,Reason))return false;
-        Loot->ClaimedBy=P.CharacterId;return true;
-    }
     if(E.Kind!=EAetherServerFactKind::EncounterReward)return false;
     const auto* Rule=D.Rules.ActivityRewards.Find(FName(*E.FactId));if(!Rule){Reason=TEXT("Encounter reward definition missing");return false;}
     auto& Run=E.FactId==TEXT("Abbey")?W.Abbey:W.Relay;
@@ -56,3 +67,4 @@ bool AetherServerRewards::Apply(const FAetherServerFact& E,FAetherProfileStateV1
     }
     Run.Settled.AddUnique(P.CharacterId);return true;
 }
+
