@@ -82,7 +82,7 @@ bool UAetherNativePersistence::Activate(FAetherResolveConnectedContext Resolve,F
     if(!Restored)
     {Fail(Reason);return false;}
     auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();
-    if(!Runtime||!Runtime->InstallBackend(Backend.ToSharedRef(),MoveTemp(Resolve),MoveTemp(Publish),Reason))
+    if(!Runtime||!Runtime->InstallBackend(Backend.ToSharedRef(),World,MoveTemp(Resolve),MoveTemp(Publish),Reason))
     {Fail(Reason);return false;}
     State=EAetherNativePersistencePhase::Active;Detail.Reset();return true;
 }
