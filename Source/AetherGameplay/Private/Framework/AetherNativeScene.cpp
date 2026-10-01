@@ -52,8 +52,16 @@ bool ValidateV10SceneReferences(FString& Reason)
 void AAetherFrontierMode::FailNativeScene(const FString& Reason)
 {
     bWorldRestoreFailed=true;bNativeSceneReady=false;
+    if(auto* Persistence=GetGameInstance()->GetSubsystem<UAetherNativePersistence>())
+    {
+        Persistence->ReportSceneFailure(GetWorld(),Reason);
+        for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)
+            if(auto* PC=Cast<AAetherPlayerController>(It->Get()))PC->PublishStartupStatus(Persistence->StartupStatus());
+    }
     if(bNativeFailureReported)return;bNativeFailureReported=true;
     UE_LOG(LogTemp,Error,TEXT("AETHER_NATIVE_SCENE_FAILED %s"),*Reason);
+    // 启动失败由明确终态页面承接；不能自动回默认 Frontier 再次开库。
+    if(!bNativeBaselineReady)return;
     // 失败不会清库或回退旧档；每个已入场连接均退出，避免操作半恢复场景。
     const FString Message=(Reason.StartsWith(TEXT("AETHER_SAVE_FORMAT_UNSUPPORTED:"))||Reason.StartsWith(TEXT("AETHER_SAVE_SCHEMA_UNSUPPORTED:")))?
         TEXT("此世界的存档格式不受支持，已停止加载且保留原件。请恢复当前格式备份，或明确选择新的存档名称开始新游戏。"):
@@ -145,9 +153,12 @@ void AAetherFrontierMode::BeginNativeLogin(AAetherPlayerController* PC)
 }
 void AAetherFrontierMode::TickNativeStartup()
 {
-    if(!bNativeMode||bWorldRestoreFailed)return;
+    if(!bNativeMode)return;
     auto* Persistence=GetGameInstance()->GetSubsystem<UAetherNativePersistence>();
     if(!Persistence){FailNativeScene(TEXT("Missing native persistence subsystem"));return;}
+    for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)
+        if(auto* PC=Cast<AAetherPlayerController>(It->Get()))PC->PublishStartupStatus(Persistence->StartupStatus());
+    if(bWorldRestoreFailed)return;
     if(Persistence->Phase()==EAetherNativePersistencePhase::Failed){FailNativeScene(Persistence->Failure());return;}
     if(!bNativeSceneReady)
     {
@@ -192,6 +203,7 @@ void AAetherFrontierMode::TickNativeStartup()
     }
     if(!NativeWorld.IsSet()||!GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SetBackendDomain(NativeWorld->RealmId))
     {FailNativeScene(TEXT("Persisted world identity unavailable"));return;}
+    Persistence->MarkWorldReady(GetWorld());
     TickNativeContainers();
     for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)BeginNativeLogin(Cast<AAetherPlayerController>(It->Get()));
     TArray<TWeakObjectPtr<AAetherPlayerController>> Completed;

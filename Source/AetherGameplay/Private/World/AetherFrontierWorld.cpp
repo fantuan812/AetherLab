@@ -147,7 +147,9 @@ void AAetherFrontierMode::InitGame(const FString& Map,const FString& Options,FSt
     if(bSmoke||FParse::Param(FCommandLine::Get(),TEXT("AetherLegacyRuntime")))
     {Error=TEXT("Historical runtime/save modes are unsupported. Use the native journey and isolated current-schema fixtures; original saves are preserved.");return;}
     Database=NewObject<UAetherFrontierSave>(this); // Scene projection is removed in the next domain-by-domain batch.
-    GetGameInstance()->GetSubsystem<UAetherNativePersistence>()->Prepare(SavePrefix,true,Error);
+    // true 包含“已接受并等待旧后端排空”；只有受限等待可以继续装配。
+    // 非等待的参数/开库错误仍留在 InitGame Error，不吞掉真实失败。
+    if(!GetGameInstance()->GetSubsystem<UAetherNativePersistence>()->Prepare(SavePrefix,true,Error))return;
 
 }
 FString AAetherFrontierMode::InitNewPlayer(APlayerController* PC,const FUniqueNetIdRepl& Id,const FString& Options,const FString& Portal)

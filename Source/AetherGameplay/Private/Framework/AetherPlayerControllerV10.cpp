@@ -5,6 +5,16 @@
 #include "Engine/LocalPlayer.h"
 #include "Framework/AetherFrontierMode.h"
 #include "Characters/AetherFrontierCharacter.h"
+#include "Startup/AetherStartupClient.h"
+
+void AAetherPlayerController::PublishStartupStatus(const FAetherStartupSnapshot& Snapshot)
+{
+    if(!HasAuthority()||!Snapshot.AttemptId.IsValid()||Snapshot.Sequence==0||
+        (StartupAttempt==Snapshot.AttemptId&&StartupSequence>=Snapshot.Sequence))return;
+    StartupAttempt=Snapshot.AttemptId;StartupSequence=Snapshot.Sequence;ClientV10StartupStatus(Snapshot);
+}
+void AAetherPlayerController::ClientV10StartupStatus_Implementation(const FAetherStartupSnapshot& Snapshot)
+{if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherStartupClient>()->ReceiveStartup(this,Snapshot);}
 
 void AAetherPlayerController::ServerV10Command_Implementation(const FAetherV10CommandPacket& P)
 {if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->Receive(this,P);}
