@@ -105,7 +105,7 @@ void UAetherSkillTreePage::PublishNativeSnapshot(AAetherFrontierCharacter* Pawn,
     const bool NewSource=!bNativeSnapshot||NativePawn.Get()!=Pawn||Snapshot.Context.SessionId!=S.Context.SessionId||
         !Snapshot.Context.OwnerIdentity.Equals(S.Context.OwnerIdentity,ESearchCase::CaseSensitive);
     if(NewSource)ResetNativePresentation();
-    // bCanAct 汇总 PresentationReady、Ready 与 Pending；其中死亡、Travel、动作门禁等
+    // bCanAct 汇总 PresentationReady、Ready 与 Pending；其中死亡、眩晕、动作门禁等
     // 不一定改变档案/冷却版本，不能只按旧字符串键吞掉这些可用性变化。
     if(!NewSource&&Key==NativeSnapshotKey&&Snapshot.bCanAct==S.bCanAct&&Snapshot.bPresentationReady==S.bPresentationReady)return;
     NativeSnapshotKey=Key;S.Context.SnapshotRevision=++ViewGeneration;
