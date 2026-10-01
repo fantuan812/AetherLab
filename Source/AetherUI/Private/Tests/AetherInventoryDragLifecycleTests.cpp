@@ -65,6 +65,9 @@ bool FAetherInventoryDragLifecycleTest::RunTest(const FString&)
     TestFalse(TEXT("Mouse release cancels the pending source"),Cell->ConsumeDragSource(Mouse,Source));
     Press();Cell->NativeOnMouseCaptureLost(FCaptureLostEvent(0,0));
     TestFalse(TEXT("Capture loss cancels the pending source"),Cell->ConsumeDragSource(Mouse,Source));
+    Press();Cell->NativeOnRemovedFromFocusPath(FFocusEvent(EFocusCause::Navigation,0));
+    Cell->NativeOnAddedToFocusPath(FFocusEvent(EFocusCause::Navigation,0));
+    TestFalse(TEXT("Focus leaves and returns without reviving a press that never owned capture"),Cell->ConsumeDragSource(Mouse,Source));
     Press();Cell->NativeOnMouseLeave(Mouse);
     TestTrue(TEXT("Leaving a cell alone does not cancel a held cross-cell drag"),Cell->ConsumeDragSource(Mouse,Source));
     Press();Cell->NativeOnDragCancelled(FDragDropEvent(Mouse,TSharedPtr<FDragDropOperation>()),nullptr);

@@ -38,6 +38,7 @@ public:
     virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& Event) override;
     virtual FReply NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
     virtual void NativeOnAddedToFocusPath(const FFocusEvent& InFocusEvent) override;
+    virtual void NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent) override;
     virtual void NativeOnMouseEnter(const FGeometry& Geometry,const FPointerEvent& Event) override;
     virtual void NativeOnMouseLeave(const FPointerEvent& Event) override;
     virtual void NativeOnDragDetected(const FGeometry& Geometry,const FPointerEvent& Event,UDragDropOperation*& Operation) override;

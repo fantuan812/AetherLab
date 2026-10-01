@@ -150,6 +150,11 @@ void UAetherInventoryCell::NativeOnAddedToFocusPath(const FFocusEvent& InFocusEv
     Super::NativeOnAddedToFocusPath(InFocusEvent);
     if(!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Hover);
 }
+void UAetherInventoryCell::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
+{
+    // DetectDrag 不持有鼠标捕获；切区域/弹窗失焦不能依赖 capture-lost 清理。
+    PressedSource.Reset();Super::NativeOnRemovedFromFocusPath(InFocusEvent);
+}
 void UAetherInventoryCell::NativeOnMouseEnter(const FGeometry& G,const FPointerEvent& E)
 {Super::NativeOnMouseEnter(G,E);if(!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Hover);}
 void UAetherInventoryCell::NativeOnMouseLeave(const FPointerEvent& E)
