@@ -1,0 +1,17 @@
+{
+  "SchemaVersion": 1,
+  "Profiles": [
+    {"Id":"Guard.Standard","AttackId":"Light","GuardWhileApproaching":true,"StartRangeMarginCm":10,"HealthBands":[{"MaxHealthFraction":1,"TelegraphSeconds":0.95}],"Motion":{"Policy":"None","SpeedCmPerSecond":0}},
+    {"Id":"Caster.Standard","AttackId":"Light","GuardWhileApproaching":false,"StartRangeMarginCm":10,"HealthBands":[{"MaxHealthFraction":1,"TelegraphSeconds":0.95}],"Motion":{"Policy":"None","SpeedCmPerSecond":0}},
+    {"Id":"Knight.Standard","AttackId":"Heavy","GuardWhileApproaching":false,"StartRangeMarginCm":10,"HealthBands":[{"MaxHealthFraction":0.5,"TelegraphSeconds":0.6},{"MaxHealthFraction":1,"TelegraphSeconds":0.95}],"Motion":{"Policy":"None","SpeedCmPerSecond":0}},
+    {"Id":"Wolf.Standard","AttackId":"Light","GuardWhileApproaching":false,"StartRangeMarginCm":10,"HealthBands":[{"MaxHealthFraction":1,"TelegraphSeconds":0.95}],"Motion":{"Policy":"ForwardDuringActive","SpeedCmPerSecond":450}},
+    {"Id":"Golem.Standard","AttackId":"Heavy","GuardWhileApproaching":false,"StartRangeMarginCm":10,"HealthBands":[{"MaxHealthFraction":1,"TelegraphSeconds":0.95}],"Motion":{"Policy":"None","SpeedCmPerSecond":0}}
+  ],
+  "FighterProfiles": {
+    "ShieldGuard":"Guard.Standard",
+    "FireCaster":"Caster.Standard",
+    "BellKnight":"Knight.Standard",
+    "Wolf":"Wolf.Standard",
+    "Golem":"Golem.Standard"
+  }
+}
