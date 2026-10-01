@@ -269,6 +269,43 @@ bool FAetherDefinitionBuffLifecycleTest::RunTest(const FString&)
             TestTrue(TEXT("Old mutation cannot refresh or dispel the replacement effect"),State.LifeId==Current&&State.Revision==ReplacementRevision&&State.Instances.Num()==1&&State.Instances[0].InstanceId==ReplacementId&&State.Instances[0].Sources.Contains(TEXT("Fixture.Replacement"))&&!State.Instances[0].Sources.Contains(TEXT("Fixture.OldRequest")));
         });
     }
+    for(int32 Mode=0;Mode<2;++Mode)
+    {
+        Step([F,this]{
+            auto* C=F->Subject;FString Why;C->ResetCombat();C->SetVitals(80,100,100);F->Controller->SetControlRotation(FRotator::ZeroRotator);
+            F->Patient->BuffRuntime->Dispel(TEXT("Positive"),Why);F->Patient->SetVitals(50,100,100);
+            TestTrue(TEXT("Prepare healing due during initial target acquisition"),F->Patient->BuffRuntime->Apply(TEXT("Sample.Regeneration"),TEXT("Fixture.ActivateDue"),Why));
+        });
+        Advance(2.1);
+        Step([F,this,Mode]{
+            auto* C=F->Subject;F->Reentered=F->AppliedReplacement=false;F->Execution.Invalidate();F->Debits=F->Refunds=0;
+            F->ManaHook=C->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetManaAttribute()).AddLambda([F](const FOnAttributeChangeData& Change){
+                if(Change.NewValue<Change.OldValue)++F->Debits;else if(Change.NewValue>Change.OldValue)++F->Refunds;
+            });
+            const auto Hook=F->Patient->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetHealthAttribute()).AddLambda([F,Mode](const FOnAttributeChangeData& Change){
+                if(Change.NewValue<=Change.OldValue||F->Reentered)return;F->Reentered=true;auto* C=F->Subject;C->CancelActions();
+                if(Mode==1){F->AppliedReplacement=C->TrySkill(TEXT("Body.Aid"));F->Execution=C->CastExecutionId;}
+            });
+            C->TrySkill(TEXT("Body.Aid"));
+            F->Patient->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetHealthAttribute()).Remove(Hook);
+            TestTrue(TEXT("Initial FindSkillTarget really entered a healing cancellation callback"),F->Reentered&&F->Patient->Health()==54);
+            const auto* Spec=AetherSkillBinding::Find(*C->AbilitySystem,TEXT("Body.Aid"));
+            if(Mode==0)TestTrue(TEXT("Canceled activation leaves no orphaned execution or windup lock"),!C->CastExecutionId.IsValid()&&C->CastLockUntil==0&&Spec&&!Spec->IsActive());
+            else TestTrue(TEXT("Returning old activation preserves actual replacement execution"),F->AppliedReplacement&&F->Execution.IsValid()&&C->CastExecutionId==F->Execution&&Spec&&Spec->IsActive());
+        });
+        Advance(.8);
+        Step([F,this,Mode]{
+            auto* C=F->Subject;C->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetManaAttribute()).Remove(F->ManaHook);
+            TestFalse(TEXT("No orphaned execution after real windup time"),C->CastExecutionId.IsValid());
+            if(Mode==0)TestTrue(TEXT("Canceled initial target acquisition cannot charge or apply later"),F->Debits==0&&C->Mana()==100&&C->SkillCooldownRemaining(TEXT("Body.Aid"))==0&&F->Patient->BuffRuntime->GetState().Instances.Num()==1);
+            else
+            {
+                FGuid Life;AetherSkillLives::Resolve(*C,Life);const FString Source=TEXT("Skill.Body.Aid.")+Life.ToString(EGuidFormats::Digits);
+                const bool Applied=F->Patient->BuffRuntime->GetState().Instances.ContainsByPredicate([&](const auto& I){return I.Sources.Contains(Source);});
+                TestTrue(TEXT("Replacement actual windup alone commits one cost and effect"),F->Debits==1&&F->Refunds==0&&C->Mana()==85&&C->SkillCooldownRemaining(TEXT("Body.Aid"))>0&&Applied);
+            }
+        });
+    }
     Step([F]{auto* W=F->World;F->World=nullptr;W->EndPlay(EEndPlayReason::Quit);W->DestroyWorld(false);W->RemoveFromRoot();});
     return true;
 }

@@ -42,26 +42,44 @@ void UAetherSpellAbility::ApplyCost(FGameplayAbilitySpecHandle H,const FGameplay
 void UAetherSpellAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,const FGameplayEventData* Event)
 {
     bPaid=false;bResultCommitted=false;PreparedCast.Reset();
-    FString Id;int32 Rank=0;
-    auto* C=Info?Cast<AAetherCharacter>(Info->AvatarActor.Get()):nullptr;
-    if(C)C->BuffRuntime->FlushDue();
-    if(C)if(auto* PS=C->GetPlayerState<AAetherPlayerState>())PS->RefreshTemporarySkills();
-    if(!IsActive())return;
-    FHitResult Hit;FVector Origin,Direction;
-    if(!IsValid(C)||!C->HasAuthority()||!ResolveSkill(H,Info,Id,Rank)||!C->FindSkillTarget(Id,Rank,Hit,Origin,Direction))
-    {EndAbility(H,Info,A,true,true);return;}
-    // 复制身份/等级/成本再 Commit，属性通知可能改变 ASC 列表，不能跨回调持有 Spec 指针。
-    FAetherCastExecution Cast;Cast.SkillId=Id;Cast.Rank=Rank;
+    // 先建立本次激活身份。源/目标FlushDue和技能刷新均可同步取消并重开同一GA实例。
+    const auto Request=MakeShared<FAetherCastExecution>();PaymentExecution=Request;
+    const TWeakObjectPtr<AAetherCharacter> Avatar=Info?Cast<AAetherCharacter>(Info->AvatarActor.Get()):nullptr;
+    const TWeakObjectPtr<UAbilitySystemComponent> ASC=Info?Info->AbilitySystemComponent.Get():nullptr;
+    FGuid Life;
+    const auto OwnsRequest=[&]{return PaymentExecution==Request;};
+    const auto Reject=[&]{if(IsActive()&&OwnsRequest())EndAbility(H,Info,A,true,true);};
+    if(!Avatar.IsValid()||!ASC.IsValid()||!AetherSkillLives::Resolve(*Avatar,Life)){Reject();return;}
+    const auto ValidRequest=[&]
+    {
+        FGuid Current;
+        return OwnsRequest()&&IsActive()&&Avatar.IsValid()&&ASC.IsValid()&&Avatar->Alive()&&
+            Avatar->AbilitySystem==ASC.Get()&&ASC->GetAvatarActor()==Avatar.Get()&&AetherSkillLives::Resolve(*Avatar,Current)&&Current==Life;
+    };
+    if(!ValidRequest()){Reject();return;}
+    auto* C=Avatar.Get();C->BuffRuntime->FlushDue();
+    if(!ValidRequest()){Reject();return;}
+    if(auto* PS=C->GetPlayerState<AAetherPlayerState>())PS->RefreshTemporarySkills();
+    if(!ValidRequest()){Reject();return;}
+    FString Id;int32 Rank=0;FHitResult Hit;FVector Origin,Direction;
+    if(!ResolveSkill(H,Info,Id,Rank)){Reject();return;}
+    const bool Found=C->FindSkillTarget(Id,Rank,Hit,Origin,Direction);
+    if(!ValidRequest()){Reject();return;}
+    FString CurrentId;int32 CurrentRank=0;
+    if(!Found||!ResolveSkill(H,Info,CurrentId,CurrentRank)||CurrentId!=Id||CurrentRank!=Rank){Reject();return;}
+    if(C->CastExecutionId.IsValid()||C->QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||C->SkillCooldownRemaining(Id)>0||!C->SkillUnlocked(Id))
+    {Reject();return;}
+    // 复制身份/等级/成本再Commit，属性通知可能改变ASC列表，不能跨回调持有Spec指针。
+    FAetherCastExecution Cast=*Request;Cast.SkillId=Id;Cast.Rank=Rank;Cast.LifeId=Life;
     const auto& Definitions=FAetherSkillDefinitionsV10::Get();
     Cast.DefinitionRevision=Definitions.ContentSchemaVersion;Cast.Effect=*Definitions.Effect(Id,Rank);
     Cast.Mechanic=Definitions.Skills.FindChecked(Id).Mechanic;
-    if(!AetherSkillLives::Resolve(*C,Cast.LifeId)){EndAbility(H,Info,A,true,true);return;}
     if(auto* Target=::Cast<AAetherCharacter>(Hit.GetActor());Target&&Cast.Mechanic==EAetherSkillMechanic::FriendlyTargetBuff)
-        if(!AetherSkillLives::Resolve(*Target,Cast.TargetLifeId)){EndAbility(H,Info,A,true,true);return;}
+        if(!AetherSkillLives::Resolve(*Target,Cast.TargetLifeId)){Reject();return;}
     const double Speed=FMath::Clamp(double(C->BuffRuntime->ActionSpeedMultiplier),.1,3.);
     Cast.Effect.WindupSeconds/=Speed;
     Cast.Effect.RecoverySeconds=(Cast.Effect.RecoverySeconds<0?Cast.Effect.Cooldown:Cast.Effect.RecoverySeconds)/Speed;
-    PreparedCast=Cast;PaymentExecution=MakeShared<FAetherCastExecution>(Cast);PreparedAvatar=C;PreparedSystem=Info->AbilitySystemComponent;
+    PreparedCast=Cast;*Request=Cast;PreparedAvatar=Avatar;PreparedSystem=ASC;
     C->CastExecutionId=Cast.ExecutionId;
     UE_LOG(LogTemp,Verbose,TEXT("AETHER_SPELL_ACCEPT input=%u execution=%s skill=%s life=%s time=%.3f"),C->LastServerCastInputSequence,*Cast.ExecutionId.ToString(),*Id,*Cast.LifeId.ToString(),C->CombatTime());
     if(Cast.Effect.WindupSeconds>0)
