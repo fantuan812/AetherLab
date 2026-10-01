@@ -35,6 +35,9 @@ public:
     virtual void NativeDestruct() override;
     virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
 private:
+    friend class FAetherSkillPageLifecycleTest;
+    void ResetNativePresentation();
+    void PublishNativeSnapshot(AAetherFrontierCharacter* Pawn,FAetherInspectionSnapshot Snapshot,const FString& Key);
     void Refresh();
     void Select(const FAetherSkillNodeIdentity& Node,bool FocusDetail);
     void RequestAction(const FAetherInspectRequest& Request,const FAetherInspectionAction& Action);
@@ -61,7 +64,7 @@ private:
     TWeakObjectPtr<AAetherFrontierCharacter> LegacySource,NativePawn;
     TWeakObjectPtr<UAetherMenuSubsystem> Menu;
     TWeakObjectPtr<UAetherCommandClient> CommandClient;
-    bool bNativeSnapshot=false;
+    bool bNativeSnapshot=false,bHandlingNativeProfile=false;
     FString NativeSnapshotKey;
     int64 ViewGeneration=0;
     FTimerHandle ViewTimer;
