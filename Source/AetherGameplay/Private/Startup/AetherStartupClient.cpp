@@ -127,7 +127,8 @@ struct FAetherStartupClientImpl
     {
         if(bRouting||bTravelQueued||View.Stage==EAetherStartupStage::Cancelled)return;
         if(Current&&(!IsValid(Current)||Current->IsActorBeingDestroyed()))Current=nullptr;
-        if(!Controller.IsExplicitlyNull()&&Controller.Get()!=Current)Begin(EAetherStartupStage::Connecting,false);
+        // 已销毁的弱PC与尚未生成的新PC都Get()==nullptr，仍然是一次身份失效。
+        if(Controller.IsStale(true)||(!Controller.IsExplicitlyNull()&&Controller.Get()!=Current))Begin(EAetherStartupStage::Connecting,false);
         Controller=Current;
     }
     bool QueueTravel(const FString& URL,bool Cancel)

@@ -217,8 +217,34 @@ bool FAetherStartupLifecycleTest::RunTest(const FString&)
     TestTrue(TEXT("Channel arriving second binds without wiping the startup identity"),Client->OwnsCommandChannel(ThirdPC,ThirdChannel)&&Client->GetView().ServerAttemptId==Status.AttemptId);
     const auto ThirdView=Client->GetView();Client->ReceiveStartup(FirstPC,Status);Client->ObserveCommandChannel(SecondPC,SecondChannel);
     TestTrue(TEXT("Still-valid old controllers cannot revive old state"),AetherStartup::SameView(ThirdView,Client->GetView()));
+
+    for(const auto EndStage:{EAetherStartupStage::Ready,EAetherStartupStage::Failed})
+    {
+        auto* EndingPC=W->SpawnActor<AAetherPlayerController>();
+        if(!TestNotNull(TEXT("Controller for destroyed-to-null interval"),EndingPC))return false;
+        EndingPC->SetPlayer(Player);EndingPC->PublishStartupStatus(Status);
+        if(EndStage==EAetherStartupStage::Failed)EndingPC->PublishStartupFailure(Status,EAetherStartupFailure::ProfileUnavailable);
+        else const_cast<FAetherStartupView&>(Client->GetView()).Stage=EAetherStartupStage::Ready;
+        const auto EndingToken=Client->GetView().LocalAttemptToken;
+        TWeakObjectPtr<AAetherPlayerController> Ended=EndingPC;
+        if(!TestTrue(TEXT("Destroy current controller before replacement exists"),EndingPC->Destroy()))return false;
+        // 显式保留本LocalPlayer尚未接到替代PC的空档，不能让旧存活PC成为测试替身。
+        Player->PlayerController=nullptr;
+        if(!TestTrue(TEXT("Destroyed weak controller is genuinely stale in the null interval"),Ended.IsStale(true)&&Player->GetPlayerController(W)==nullptr))return false;
+        Client->Tick(0);
+        TestTrue(TEXT("Destroyed-to-null clears old terminal or Ready ownership"),Client->GetView().Stage==EAetherStartupStage::Connecting&&
+            Client->GetView().LocalAttemptToken!=EndingToken&&!Client->GetView().ServerAttemptId.IsValid()&&Client->GetView().FailureCode==EAetherStartupFailure::None);
+        const auto GapView=Client->GetView();Client->Tick(0);
+        TestTrue(TEXT("Stable null interval does not repeatedly mint attempts"),AetherStartup::SameView(GapView,Client->GetView()));
+    }
+    auto* ReplacementPC=W->SpawnActor<AAetherPlayerController>();
+    if(!TestNotNull(TEXT("Replacement after destroyed-to-null interval"),ReplacementPC))return false;
+    ReplacementPC->SetPlayer(Player);ReplacementPC->PublishStartupStatus(Status);
+    const FGuid ReplacementChannel=FGuid::NewGuid();ReplacementPC->ClientV10Channel(ReplacementChannel,Identity,Realm);
+    TestTrue(TEXT("New controller recovers after null interval with only its own channel"),Client->GetView().Stage==EAetherStartupStage::WorldReady&&
+        Client->GetView().ServerAttemptId==Status.AttemptId&&Client->OwnsCommandChannel(ReplacementPC,ReplacementChannel));
     auto CancelledStatus=Status;CancelledStatus.Sequence=2;CancelledStatus.Stage=EAetherStartupStage::Cancelled;
-    ThirdPC->PublishStartupStatus(CancelledStatus);const auto CancelledToken=Client->GetView().LocalAttemptToken;
+    ReplacementPC->PublishStartupStatus(CancelledStatus);const auto CancelledToken=Client->GetView().LocalAttemptToken;
     FourthPC->SetPlayer(Player);Client->Tick(0);FourthPC->PublishStartupStatus(Status);FourthPC->ClientV10Channel(FGuid::NewGuid(),Identity,Realm);
     TestTrue(TEXT("Explicit cancelled attempt cannot revive through PC replacement"),Client->GetView().Stage==EAetherStartupStage::Cancelled&&Client->GetView().LocalAttemptToken==CancelledToken);
 
