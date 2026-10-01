@@ -79,13 +79,35 @@ bool FAetherNpcSkillDecisionTest::RunTest(const FString&)
     Target->Fighter=EAetherFighter::Player;
     Next=Decision.Choose(*Npc,*Target);
     TestEqual(TEXT("Failed delivery retries the same next identity"),Next.SkillId,FString(TEXT("Storm.Strike")));
+
+    // 同步零前摇在 ValidateCommit 前取消，标记必须来自当时 GAS 的真实执行身份。
+    FGuid CanceledExecution;bool CanceledDuringPayment=false;
+    const auto CancelPayment=Npc->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetManaAttribute()).AddLambda([&](const FOnAttributeChangeData& Change)
+    {
+        if(!CanceledDuringPayment&&Change.NewValue<Change.OldValue)
+        {CanceledDuringPayment=true;CanceledExecution=Npc->CastExecutionId;Npc->CancelActions();}
+    });
+    Decision.TryExecute(*Npc,*Target,Next.SkillId);
+    Npc->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetManaAttribute()).Remove(CancelPayment);
+    TestTrue(TEXT("Cancellation observes a real GAS execution before the helper binds its return"),CanceledDuringPayment&&CanceledExecution.IsValid());
+    TestEqual(TEXT("Canceled request refunds payment"),Npc->Mana(),100.f);
+    TestEqual(TEXT("Canceled request cannot advance rotation"),Decision.LastCommittedSkill(),FString(TEXT("Fire.Ignite")));
+    TestEqual(TEXT("Canceled request cannot start cooldown"),Npc->SkillCooldownRemaining(TEXT("Storm.Strike")),0.f);
+    FAetherCastExecution Late;Late.SkillId=Next.SkillId;Late.ExecutionId=CanceledExecution;Late.Rank=1;
+    TestFalse(TEXT("Late canceled execution cannot use the now-empty intent path"),Decision.ValidateCommit(*Npc,Late));
+    FGuid NewExecution;
+    const auto ObserveExecution=Npc->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetManaAttribute()).AddLambda([&](const FOnAttributeChangeData& Change)
+    {if(Change.NewValue<Change.OldValue)NewExecution=Npc->CastExecutionId;});
     TestTrue(TEXT("Valid second skill requests the real GAS ability"),Decision.TryExecute(*Npc,*Target,Next.SkillId));
+    Npc->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetManaAttribute()).Remove(ObserveExecution);
+    TestTrue(TEXT("New execution does not inherit the previous cancellation"),NewExecution.IsValid()&&NewExecution!=CanceledExecution);
     TestEqual(TEXT("Accepted reactive delivery commits the second identity"),Decision.LastCommittedSkill(),FString(TEXT("Storm.Strike")));
     TestTrue(TEXT("Second effect reaches the existing reactive solver input queue"),World->GetSubsystem<UReactiveWorldSubsystem>()->GetSimulation()->HasPendingInputs());
 
     const float BeforeControlChange=Npc->SkillCooldownRemaining(TEXT("Fire.Ignite"));
     Controller->UnPossess();Controller->Possess(Npc);
     TestTrue(TEXT("Controller changes clear only selection history"),Decision.LastCommittedSkill().IsEmpty());
+    TestFalse(TEXT("Controller reset cannot resurrect the canceled execution"),Decision.ValidateCommit(*Npc,Late));
     TestEqual(TEXT("Controller changes cannot erase ASC cooldown"),Npc->SkillCooldownRemaining(TEXT("Fire.Ignite")),BeforeControlChange);
     TestTrue(TEXT("New decision generation still waits for GAS"),Decision.Choose(*Npc,*Target).Kind==EAetherNpcSkillChoice::Waiting);
 

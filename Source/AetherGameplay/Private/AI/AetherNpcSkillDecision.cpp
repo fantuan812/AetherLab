@@ -47,8 +47,17 @@ bool FAetherNpcSkillDecision::SynchronizeControl(const AAetherCharacter& C)
     if(!bIssuingRequest&&!RequestedSkillId.IsEmpty()&&C.CastExecutionId!=RequestedExecution)CancelRequest();
     return true;
 }
-void FAetherNpcSkillDecision::CancelRequest()
+void FAetherNpcSkillDecision::ClearRequest()
 {RequestedSkillId.Reset();RequestedTarget.Reset();RequestedExecution.Invalidate();bIssuingRequest=false;}
+void FAetherNpcSkillDecision::CancelRequest(FGuid ActiveExecution)
+{
+    if(!RequestedSkillId.IsEmpty())
+    {
+        const FGuid Execution=RequestedExecution.IsValid()?RequestedExecution:ActiveExecution;
+        if(Execution.IsValid())CanceledExecution=Execution;
+    }
+    ClearRequest();
+}
 void FAetherNpcSkillDecision::Reset()
 {CancelRequest();LastCommittedSkillId.Reset();OwnedSystem.Reset();OwnedController.Reset();}
 FAetherNpcSkillChoice FAetherNpcSkillDecision::Choose(AAetherCharacter& C,AAetherCharacter& Target)
@@ -98,6 +107,7 @@ bool FAetherNpcSkillDecision::TryExecute(AAetherCharacter& C,AAetherCharacter& T
 }
 bool FAetherNpcSkillDecision::ValidateCommit(AAetherCharacter& C,const FAetherCastExecution& Cast)
 {
+    if(Cast.ExecutionId.IsValid()&&Cast.ExecutionId==CanceledExecution)return false;
     if(RequestedSkillId.IsEmpty())return true; // 普通玩家/训练探针仍使用其原有 GAS 目标合同。
     if(bIssuingRequest&&!RequestedExecution.IsValid())RequestedExecution=Cast.ExecutionId;
     const auto* Loadout=FAetherNpcSkillDefinitions::Get().Find(C.SkillLoadoutId);
@@ -108,6 +118,6 @@ bool FAetherNpcSkillDecision::ValidateCommit(AAetherCharacter& C,const FAetherCa
 }
 void FAetherNpcSkillDecision::RecordCommitted(const AAetherCharacter& C,const FAetherCastExecution& Cast)
 {
-    if(SameControl(C)&&RequestedSkillId==Cast.SkillId&&RequestedExecution==Cast.ExecutionId)
-    {LastCommittedSkillId=Cast.SkillId;CancelRequest();}
+    if(!RequestedSkillId.IsEmpty()&&SameControl(C)&&RequestedSkillId==Cast.SkillId&&RequestedExecution==Cast.ExecutionId&&Cast.ExecutionId!=CanceledExecution)
+    {LastCommittedSkillId=Cast.SkillId;ClearRequest();}
 }

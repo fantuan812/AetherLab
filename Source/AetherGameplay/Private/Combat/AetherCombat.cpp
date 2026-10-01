@@ -234,7 +234,7 @@ void AAetherCharacter::PossessedBy(AController* C)
 void AAetherCharacter::CancelActions()
 {
     if(!HasAuthority())return;
-    EnemySkillDecision.CancelRequest();
+    EnemySkillDecision.CancelRequest(CastExecutionId);
     Equipment->CancelAttack();
     // A PlayerState ASC may already have moved to a replacement pawn.
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->CancelAllAbilities();
