@@ -1,0 +1,773 @@
+{
+  "version": 2,
+  "blender_version": "4.3.2",
+  "file": "AetherLab_CoreKit_Interface_v2.blend",
+  "file_sha256": "3f514bf9e1e6353c2da35acee7887883750ff02fa5cacf8cb3c68e03fa7b671b",
+  "date_utc": "2026-10-01",
+  "method": "Fresh Blender process, evaluated world-space vertices/polygons and BVH rays; presentation platform excluded. Samples prove only their recorded resolution; not a mathematical all-resolution guarantee.",
+  "checks": [
+    {
+      "test": "scene metric unit scale",
+      "passed": true,
+      "measurement": [
+        "METRIC",
+        1.0
+      ]
+    },
+    {
+      "test": "all instance mesh data shared with master",
+      "passed": true,
+      "measurement": {
+        "instances": 678,
+        "unique_meshes": 21
+      }
+    },
+    {
+      "test": "no per-instance scaling",
+      "passed": true,
+      "measurement": []
+    },
+    {
+      "test": "new connection meshes finite and nondegenerate",
+      "passed": true,
+      "measurement": {
+        "nonfinite": [],
+        "degenerate": []
+      }
+    },
+    {
+      "test": "new meshes closed manifold edge topology",
+      "passed": true,
+      "measurement": []
+    },
+    {
+      "test": "new meshes outward signed volume",
+      "passed": true,
+      "measurement": []
+    },
+    {
+      "test": "master SurfaceUV layer present",
+      "passed": true,
+      "measurement": []
+    },
+    {
+      "test": "explicit material UV references resolve",
+      "passed": true,
+      "measurement": []
+    },
+    {
+      "test": "referenced images packed",
+      "passed": true,
+      "measurement": [
+        {
+          "name": "T_AgedCedar_Albedo.png",
+          "packed": true
+        },
+        {
+          "name": "T_WeatheredSlate_Albedo.png",
+          "packed": true
+        }
+      ]
+    },
+    {
+      "test": "FENCE_LOOP full support footprint sampling",
+      "passed": true,
+      "measurement": {
+        "sample_count": 4356,
+        "pitch_m": 0.2,
+        "misses": [],
+        "excluded": "presentation platform, labels, character"
+      }
+    },
+    {
+      "test": "HEIGHT_MIX full support footprint sampling",
+      "passed": true,
+      "measurement": {
+        "sample_count": 3603,
+        "pitch_m": 0.2,
+        "misses": [],
+        "excluded": "presentation platform, labels, character"
+      }
+    },
+    {
+      "test": "MIXED_X_ENDS full support footprint sampling",
+      "passed": true,
+      "measurement": {
+        "sample_count": 4356,
+        "pitch_m": 0.2,
+        "misses": [],
+        "excluded": "presentation platform, labels, character"
+      }
+    },
+    {
+      "test": "ROAD_EARTH_END full support footprint sampling",
+      "passed": true,
+      "measurement": {
+        "sample_count": 288,
+        "pitch_m": 0.2,
+        "misses": [],
+        "excluded": "presentation platform, labels, character"
+      }
+    },
+    {
+      "test": "ROAD_LOOP_T full support footprint sampling",
+      "passed": true,
+      "measurement": {
+        "sample_count": 9728,
+        "pitch_m": 0.2,
+        "misses": [],
+        "excluded": "presentation platform, labels, character"
+      }
+    },
+    {
+      "test": "ROAD_X full support footprint sampling",
+      "passed": true,
+      "measurement": {
+        "sample_count": 4131,
+        "pitch_m": 0.2,
+        "misses": [],
+        "excluded": "presentation platform, labels, character"
+      }
+    },
+    {
+      "test": "WALL_LOOP full support footprint sampling",
+      "passed": true,
+      "measurement": {
+        "sample_count": 4356,
+        "pitch_m": 0.2,
+        "misses": [],
+        "excluded": "presentation platform, labels, character"
+      }
+    },
+    {
+      "test": "all adjoining flat road seams full-width",
+      "passed": true,
+      "measurement": {
+        "seams": 17,
+        "records": [
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_0_0",
+              "ROAD_LOOP_T_Base_0_1"
+            ],
+            "axis": 1,
+            "edge_world": 4.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_0_0",
+              "ROAD_LOOP_T_Base_1_0"
+            ],
+            "axis": 0,
+            "edge_world": 2.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_0_1",
+              "ROAD_LOOP_T_Base_0_2"
+            ],
+            "axis": 1,
+            "edge_world": 8.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_0_2",
+              "ROAD_LOOP_T_Base_0_3"
+            ],
+            "axis": 1,
+            "edge_world": 12.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_0_3",
+              "ROAD_LOOP_T_Base_1_3"
+            ],
+            "axis": 0,
+            "edge_world": 2.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_1_0",
+              "ROAD_LOOP_T_Base_2_0"
+            ],
+            "axis": 0,
+            "edge_world": 6.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_1_3",
+              "ROAD_LOOP_T_Base_2_3"
+            ],
+            "axis": 0,
+            "edge_world": 6.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_2_0",
+              "ROAD_LOOP_T_Base_3_0"
+            ],
+            "axis": 0,
+            "edge_world": 10.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_2_3",
+              "ROAD_LOOP_T_Base_3_3"
+            ],
+            "axis": 0,
+            "edge_world": 10.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_3_0",
+              "ROAD_LOOP_T_Base_3_1"
+            ],
+            "axis": 1,
+            "edge_world": 4.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_3_1",
+              "ROAD_LOOP_T_Base_3_2"
+            ],
+            "axis": 1,
+            "edge_world": 8.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_3_1",
+              "ROAD_LOOP_T_Base_4_1"
+            ],
+            "axis": 0,
+            "edge_world": 14.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_LOOP_T_Base_3_2",
+              "ROAD_LOOP_T_Base_3_3"
+            ],
+            "axis": 1,
+            "edge_world": 12.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_X_Base_7_1",
+              "ROAD_X_Base_6_1"
+            ],
+            "axis": 0,
+            "edge_world": 26.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_X_Base_7_1",
+              "ROAD_X_Base_8_1"
+            ],
+            "axis": 0,
+            "edge_world": 30.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_X_Base_7_1",
+              "ROAD_X_Base_7_0"
+            ],
+            "axis": 1,
+            "edge_world": 4.0,
+            "samples": 41,
+            "max_height_gap_m": 9.5367431640625e-07,
+            "misses": 0
+          },
+          {
+            "objects": [
+              "ROAD_X_Base_7_1",
+              "ROAD_X_Base_7_2"
+            ],
+            "axis": 1,
+            "edge_world": 8.0,
+            "samples": 41,
+            "max_height_gap_m": 0.0,
+            "misses": 0
+          }
+        ],
+        "tolerance_m": 2e-05
+      }
+    },
+    {
+      "test": "road edge to shoulder/neighbor full-width continuity",
+      "passed": true,
+      "measurement": {
+        "samples": 1512,
+        "missing": 0,
+        "max_height_gap_m": 0.00031757354736328125,
+        "tolerance_m": 0.001
+      }
+    },
+    {
+      "test": "convex concave shoulder patch seam heights",
+      "passed": true,
+      "measurement": {
+        "seams": 165,
+        "missing": 0,
+        "max_gap_m": 9.5367431640625e-07,
+        "tolerance_m": 0.001
+      }
+    },
+    {
+      "test": "all joint supports touch or embed actual ground",
+      "passed": true,
+      "measurement": {
+        "supports": 44,
+        "samples": 396,
+        "max_positive_gap_m": -0.015772774815559387,
+        "failures": [],
+        "tolerance_m": 0.003
+      }
+    },
+    {
+      "test": "all wall/fence measured ends have one shared support",
+      "passed": true,
+      "measurement": {
+        "segments": 27,
+        "links": [
+          {
+            "segment": "WALL_LOOP_Run0",
+            "fixture": "WALL_LOOP",
+            "supports": [
+              "WALL_LOOP_Joint0",
+              "WALL_LOOP_Joint1"
+            ]
+          },
+          {
+            "segment": "WALL_LOOP_Run1",
+            "fixture": "WALL_LOOP",
+            "supports": [
+              "WALL_LOOP_Joint1",
+              "WALL_LOOP_Joint2"
+            ]
+          },
+          {
+            "segment": "WALL_LOOP_Run2",
+            "fixture": "WALL_LOOP",
+            "supports": [
+              "WALL_LOOP_Joint2",
+              "WALL_LOOP_Joint3"
+            ]
+          },
+          {
+            "segment": "WALL_LOOP_Run3",
+            "fixture": "WALL_LOOP",
+            "supports": [
+              "WALL_LOOP_Joint3",
+              "WALL_LOOP_Joint4"
+            ]
+          },
+          {
+            "segment": "WALL_LOOP_Run4",
+            "fixture": "WALL_LOOP",
+            "supports": [
+              "WALL_LOOP_Joint4",
+              "WALL_LOOP_Joint5"
+            ]
+          },
+          {
+            "segment": "WALL_LOOP_Run5",
+            "fixture": "WALL_LOOP",
+            "supports": [
+              "WALL_LOOP_Joint5",
+              "WALL_LOOP_Joint6"
+            ]
+          },
+          {
+            "segment": "WALL_LOOP_Run6",
+            "fixture": "WALL_LOOP",
+            "supports": [
+              "WALL_LOOP_Joint6",
+              "WALL_LOOP_Joint7"
+            ]
+          },
+          {
+            "segment": "WALL_LOOP_Run7",
+            "fixture": "WALL_LOOP",
+            "supports": [
+              "WALL_LOOP_Joint7",
+              "WALL_LOOP_Joint0"
+            ]
+          },
+          {
+            "segment": "FENCE_LOOP_Run0",
+            "fixture": "FENCE_LOOP",
+            "supports": [
+              "FENCE_LOOP_Joint0",
+              "FENCE_LOOP_Joint1"
+            ]
+          },
+          {
+            "segment": "FENCE_LOOP_Run1",
+            "fixture": "FENCE_LOOP",
+            "supports": [
+              "FENCE_LOOP_Joint1",
+              "FENCE_LOOP_Joint2"
+            ]
+          },
+          {
+            "segment": "FENCE_LOOP_Run2",
+            "fixture": "FENCE_LOOP",
+            "supports": [
+              "FENCE_LOOP_Joint2",
+              "FENCE_LOOP_Joint3"
+            ]
+          },
+          {
+            "segment": "FENCE_LOOP_Run3",
+            "fixture": "FENCE_LOOP",
+            "supports": [
+              "FENCE_LOOP_Joint3",
+              "FENCE_LOOP_Joint4"
+            ]
+          },
+          {
+            "segment": "FENCE_LOOP_Run4",
+            "fixture": "FENCE_LOOP",
+            "supports": [
+              "FENCE_LOOP_Joint4",
+              "FENCE_LOOP_Joint5"
+            ]
+          },
+          {
+            "segment": "FENCE_LOOP_Run5",
+            "fixture": "FENCE_LOOP",
+            "supports": [
+              "FENCE_LOOP_Joint5",
+              "FENCE_LOOP_Joint6"
+            ]
+          },
+          {
+            "segment": "FENCE_LOOP_Run6",
+            "fixture": "FENCE_LOOP",
+            "supports": [
+              "FENCE_LOOP_Joint6",
+              "FENCE_LOOP_Joint7"
+            ]
+          },
+          {
+            "segment": "FENCE_LOOP_Run7",
+            "fixture": "FENCE_LOOP",
+            "supports": [
+              "FENCE_LOOP_Joint7",
+              "FENCE_LOOP_Joint0"
+            ]
+          },
+          {
+            "segment": "MIX_X_Run0",
+            "fixture": "MIXED_X_ENDS",
+            "supports": [
+              "MIX_X_End0",
+              "MIX_X_OneSharedPier"
+            ]
+          },
+          {
+            "segment": "MIX_X_Run1",
+            "fixture": "MIXED_X_ENDS",
+            "supports": [
+              "MIX_X_End1",
+              "MIX_X_OneSharedPier"
+            ]
+          },
+          {
+            "segment": "MIX_X_Run2",
+            "fixture": "MIXED_X_ENDS",
+            "supports": [
+              "MIX_X_End2",
+              "MIX_X_OneSharedPier"
+            ]
+          },
+          {
+            "segment": "MIX_X_Run3",
+            "fixture": "MIXED_X_ENDS",
+            "supports": [
+              "MIX_X_End3",
+              "MIX_X_OneSharedPier"
+            ]
+          },
+          {
+            "segment": "HEIGHT_wall_0",
+            "fixture": "HEIGHT_MIX",
+            "supports": [
+              "HEIGHT_wall_Node0",
+              "HEIGHT_wall_Node1"
+            ]
+          },
+          {
+            "segment": "HEIGHT_wall_1",
+            "fixture": "HEIGHT_MIX",
+            "supports": [
+              "HEIGHT_wall_Node1",
+              "HEIGHT_wall_Node2"
+            ]
+          },
+          {
+            "segment": "HEIGHT_wall_2",
+            "fixture": "HEIGHT_MIX",
+            "supports": [
+              "HEIGHT_wall_Node2",
+              "HEIGHT_wall_Node3"
+            ]
+          },
+          {
+            "segment": "HEIGHT_fence_0",
+            "fixture": "HEIGHT_MIX",
+            "supports": [
+              "HEIGHT_fence_Node0",
+              "HEIGHT_fence_Node1"
+            ]
+          },
+          {
+            "segment": "HEIGHT_fence_1",
+            "fixture": "HEIGHT_MIX",
+            "supports": [
+              "HEIGHT_fence_Node1",
+              "HEIGHT_fence_Node2"
+            ]
+          },
+          {
+            "segment": "HEIGHT_fence_2",
+            "fixture": "HEIGHT_MIX",
+            "supports": [
+              "HEIGHT_fence_Node2",
+              "HEIGHT_fence_Node3"
+            ]
+          },
+          {
+            "segment": "HEIGHT_CrossKit_Rail",
+            "fixture": "HEIGHT_MIX",
+            "supports": [
+              "HEIGHT_CrossKit_End",
+              "HEIGHT_wall_Node3"
+            ]
+          }
+        ],
+        "errors": []
+      }
+    },
+    {
+      "test": "WALL_LOOP actual connected closed cycle",
+      "passed": true,
+      "measurement": {
+        "nodes": 8,
+        "connected_nodes": 8,
+        "degrees": {
+          "WALL_LOOP_Joint0": 2,
+          "WALL_LOOP_Joint1": 2,
+          "WALL_LOOP_Joint2": 2,
+          "WALL_LOOP_Joint3": 2,
+          "WALL_LOOP_Joint4": 2,
+          "WALL_LOOP_Joint5": 2,
+          "WALL_LOOP_Joint6": 2,
+          "WALL_LOOP_Joint7": 2
+        }
+      }
+    },
+    {
+      "test": "FENCE_LOOP actual connected closed cycle",
+      "passed": true,
+      "measurement": {
+        "nodes": 8,
+        "connected_nodes": 8,
+        "degrees": {
+          "FENCE_LOOP_Joint0": 2,
+          "FENCE_LOOP_Joint1": 2,
+          "FENCE_LOOP_Joint2": 2,
+          "FENCE_LOOP_Joint3": 2,
+          "FENCE_LOOP_Joint4": 2,
+          "FENCE_LOOP_Joint5": 2,
+          "FENCE_LOOP_Joint6": 2,
+          "FENCE_LOOP_Joint7": 2
+        }
+      }
+    },
+    {
+      "test": "ramp low/high entire bank cross-section continuity",
+      "passed": true,
+      "measurement": {
+        "samples": 242,
+        "misses": [],
+        "max_gap_m": 0.000125885009765625,
+        "tolerance_m": 0.0002
+      }
+    },
+    {
+      "test": "height route sampled 0.8m diameter capsule h=1.6500",
+      "passed": true,
+      "measurement": {
+        "positions": 121,
+        "axis_samples_per_position": 11,
+        "ground_samples_per_position": 5,
+        "min_obstacle_distance_m": 0.8887153267860413,
+        "radius_m": 0.4,
+        "unsupported": [],
+        "geometry_only": true
+      }
+    },
+    {
+      "test": "height route sampled 0.8m diameter capsule h=1.8028",
+      "passed": true,
+      "measurement": {
+        "positions": 121,
+        "axis_samples_per_position": 11,
+        "ground_samples_per_position": 5,
+        "min_obstacle_distance_m": 0.8887153267860413,
+        "radius_m": 0.4,
+        "unsupported": [],
+        "geometry_only": true
+      }
+    },
+    {
+      "test": "unscaled 65-bone character height retained",
+      "passed": true,
+      "measurement": {
+        "height_m": 1.8027965500950813,
+        "design_height_m": 1.65,
+        "bones": 65
+      }
+    }
+  ],
+  "all_checks_passed": true,
+  "master_count": 22,
+  "instance_count": 678,
+  "limitations": [
+    "Static geometry only; no engine navigation, collision, animation, multiplayer, LOD or GPU test",
+    "Surface stone gaps are intentional soil-filled joints; final material/style/UV quality not accepted",
+    "Stairs, bridge-bank, rock transitions and other scene kits remain open",
+    "No full-world assembly performed"
+  ],
+  "fixture_bounds": {
+    "FENCE_LOOP": {
+      "min": [
+        9.0,
+        -15.0,
+        -0.23500001430511475
+      ],
+      "max": [
+        20.0,
+        -4.0,
+        1.159999966621399
+      ]
+    },
+    "HEIGHT_MIX": {
+      "min": [
+        20.0,
+        -17.0,
+        -0.550000011920929
+      ],
+      "max": [
+        29.0,
+        -3.0,
+        2.1599998474121094
+      ]
+    },
+    "MIXED_X_ENDS": {
+      "min": [
+        -1.0,
+        19.0,
+        -0.23500001430511475
+      ],
+      "max": [
+        10.0,
+        30.0,
+        1.1900001764297485
+      ]
+    },
+    "ROAD_EARTH_END": {
+      "min": [
+        26.0,
+        -3.0,
+        -0.550000011920929
+      ],
+      "max": [
+        30.0,
+        -1.0,
+        -0.3499999940395355
+      ]
+    },
+    "ROAD_LOOP_T": {
+      "min": [
+        -3.0,
+        -1.0000001192092896,
+        -0.550000011920929
+      ],
+      "max": [
+        19.0,
+        17.0,
+        0.0
+      ]
+    },
+    "ROAD_X": {
+      "min": [
+        21.0,
+        -1.0000001192092896,
+        -0.550000011920929
+      ],
+      "max": [
+        35.0,
+        13.0,
+        0.0
+      ]
+    },
+    "WALL_LOOP": {
+      "min": [
+        -2.0,
+        -15.0,
+        -0.23500001430511475
+      ],
+      "max": [
+        9.0,
+        -4.0,
+        1.1900001764297485
+      ]
+    }
+  }
+}

@@ -1,0 +1,1000 @@
+{
+  "version": 2,
+  "geometry_and_camera_fingerprint_sha256": "1e620efc234bc3a3c0a2744d7ec31ed7edc89c3829b4d1690fd13079d0f494a0",
+  "render_geometry_unchanged_after_metadata_refresh": true,
+  "socket_coordinate_space": "master local meters; apply instance matrix_world to get world sockets",
+  "nominal_grade_vs_visual_bounds": "Socket grade0 may have top soil at-.035m; no assumption that socket is outer mesh boundary",
+  "interfaces": [
+    {
+      "asset_id": "KIT_Path_Flagstone_4x4_A",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          0
+        ],
+        "LEFT": [
+          -2,
+          2,
+          0
+        ],
+        "RIGHT": [
+          2,
+          2,
+          0
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -1.8575513362884521,
+          0.044900260865688324,
+          -0.09339741617441177
+        ],
+        [
+          1.8558807373046875,
+          3.9560742378234863,
+          0.0
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet basalt 2",
+        "KIT_Wet basalt 3",
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 0"
+      ],
+      "source": "SM_Path_4m",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Path_Substrate_4x4",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          0
+        ],
+        "LEFT": [
+          -2,
+          2,
+          0
+        ],
+        "RIGHT": [
+          2,
+          2,
+          0
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -2.0,
+          0.0,
+          -0.1550000011920929
+        ],
+        [
+          2.0,
+          4.0,
+          -0.03500000014901161
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": null,
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_WallLow_Run_4m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          0
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -0.33969515562057495,
+          0.003145448165014386,
+          0.0
+        ],
+        [
+          0.3396952748298645,
+          3.997357130050659,
+          0.7699999809265137
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet basalt 3",
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 2"
+      ],
+      "source": "SM_Wall_4m",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_WallLow_EndCornerPier",
+      "local_sockets_m": {
+        "CENTER": [
+          0,
+          0,
+          0
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -0.5104832649230957,
+          -0.5104832649230957,
+          0.0
+        ],
+        [
+          0.5104832649230957,
+          0.5104832649230957,
+          1.3300001621246338
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 2"
+      ],
+      "source": "SM_Wall_4m",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Fence_Rails_4m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          0
+        ],
+        "MID": [
+          0,
+          2,
+          0
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -0.06499996036291122,
+          0.0,
+          0.46499982476234436
+        ],
+        [
+          0.06499920040369034,
+          4.0,
+          0.9950001239776611
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Aged cedar"
+      ],
+      "source": "SM_Fence_4m",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Fence_SharedPost",
+      "local_sockets_m": {
+        "CENTER": [
+          0,
+          0,
+          0
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -0.08500003814697266,
+          -0.08500003814697266,
+          0.0
+        ],
+        [
+          0.08500003814697266,
+          0.08500003814697266,
+          1.2999999523162842
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Aged cedar"
+      ],
+      "source": "SM_Fence_4m",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_LanternPost",
+      "local_sockets_m": {
+        "BASE": [
+          0,
+          0,
+          0
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -0.800000011920929,
+          -0.19999980926513672,
+          9.536743306171047e-08
+        ],
+        [
+          0.0799998790025711,
+          0.19999980926513672,
+          2.6500000953674316
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Aged cedar",
+        "KIT_Forged iron",
+        "KIT_Amber lantern glass",
+        "KIT_Lantern aged brass"
+      ],
+      "source": "SM_LanternPost",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Path_Ramp_4m_Rise1m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          1
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -1.8575513362884521,
+          0.044900260865688324,
+          -0.06781197339296341
+        ],
+        [
+          1.8558807373046875,
+          3.9560742378234863,
+          0.9757990837097168
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet basalt 2",
+        "KIT_Wet basalt 3",
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 0"
+      ],
+      "source": "KIT_Path_Flagstone_4x4_A",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Substrate_Ramp_4m_Rise1m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          1
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -2.0,
+          0.0,
+          -0.1550000011920929
+        ],
+        [
+          2.0,
+          4.0,
+          0.9649999737739563
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "KIT_Path_Substrate_4x4",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Path_Foundation_4x4",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          0
+        ],
+        "LEFT": [
+          -2,
+          2,
+          0
+        ],
+        "RIGHT": [
+          2,
+          2,
+          0
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -2.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          2.0,
+          4.0,
+          -0.03500000014901161
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "KIT_Path_Substrate_4x4",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Wall_Footing_4m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          0
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -0.3400000035762787,
+          0.0,
+          -0.1550000011920929
+        ],
+        [
+          0.3400000035762787,
+          4.0,
+          0.10000000149011612
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet basalt 1"
+      ],
+      "source": "new minimum connection geometry",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_WallLow_Rise_4m_1m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          1
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -0.33969515562057495,
+          0.003145448165014386,
+          0.02218513935804367
+        ],
+        [
+          0.3396952748298645,
+          3.997357130050659,
+          1.7482731342315674
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet basalt 3",
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 2"
+      ],
+      "source": "KIT_WallLow_Run_4m",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Wall_Footing_Rise_4m_1m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          1
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -0.3400000035762787,
+          0.0,
+          -0.1550000011920929
+        ],
+        [
+          0.3400000035762787,
+          4.0,
+          1.100000023841858
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet basalt 1"
+      ],
+      "source": "KIT_Wall_Footing_4m",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Fence_Rails_Rise_4m_1m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          1
+        ],
+        "MID": [
+          0,
+          2,
+          0.5
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -0.06499996036291122,
+          0.0,
+          0.47125014662742615
+        ],
+        [
+          0.06499920040369034,
+          4.0,
+          1.9887497425079346
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Aged cedar"
+      ],
+      "source": "KIT_Fence_Rails_4m",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Shoulder_Straight_1m",
+      "local_sockets_m": {
+        "ROAD": [
+          0,
+          0.5,
+          -0.035
+        ],
+        "EARTH": [
+          1,
+          0.5,
+          -0.35
+        ],
+        "SIDE_A": [
+          0.5,
+          0,
+          -0.1925
+        ],
+        "SIDE_B": [
+          0.5,
+          1,
+          -0.1925
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          0.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          1.0,
+          1.0,
+          -0.03500000014901161
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "new minimum connection geometry",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Shoulder_Convex90_1m",
+      "local_sockets_m": {
+        "ROAD_CORNER": [
+          0,
+          0,
+          -0.035
+        ],
+        "EDGE_X": [
+          0.5,
+          0,
+          -0.1925
+        ],
+        "EDGE_Y": [
+          0,
+          0.5,
+          -0.1925
+        ],
+        "EARTH_CORNER": [
+          1,
+          1,
+          -0.35
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          0.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          1.0,
+          1.0,
+          -0.03500000014901161
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "new slope closure, shared earth material",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Shoulder_Concave90_1m",
+      "local_sockets_m": {
+        "ROAD_CORNER": [
+          0,
+          0,
+          -0.035
+        ],
+        "ROAD_X": [
+          0.5,
+          0,
+          -0.035
+        ],
+        "ROAD_Y": [
+          0,
+          0.5,
+          -0.035
+        ],
+        "EARTH_CORNER": [
+          1,
+          1,
+          -0.35
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          0.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          1.0,
+          1.0,
+          -0.03500000014901161
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "new slope closure, shared earth material",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Terrain_Patch_1m",
+      "local_sockets_m": {
+        "IN": [
+          0.5,
+          0,
+          -0.35
+        ],
+        "OUT": [
+          0.5,
+          1,
+          -0.35
+        ],
+        "LEFT": [
+          0,
+          0.5,
+          -0.35
+        ],
+        "RIGHT": [
+          1,
+          0.5,
+          -0.35
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          0.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          1.0,
+          1.0,
+          -0.3499999940395355
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "new minimum connection geometry",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Terrain_RaisedPatch_1m",
+      "local_sockets_m": {
+        "IN": [
+          0.5,
+          0,
+          0.965
+        ],
+        "OUT": [
+          0.5,
+          1,
+          0.965
+        ],
+        "LEFT": [
+          0,
+          0.5,
+          0.965
+        ],
+        "RIGHT": [
+          1,
+          0.5,
+          0.965
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          0.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          1.0,
+          1.0,
+          0.9649999737739563
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "new minimum connection geometry",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Ramp_Bank_4m_Rise1m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          0
+        ],
+        "OUT": [
+          0,
+          4,
+          1
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -3.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          3.0,
+          4.0,
+          0.9649999737739563
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "existing earth material; solid cross-section follows flat ground",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Raised_Landing_Bank_4m_Height1m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          1
+        ],
+        "OUT": [
+          0,
+          4,
+          1
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -3.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          3.0,
+          4.0,
+          0.9649999737739563
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "existing earth material; solid cross-section follows flat ground",
+      "geometry_change": "none in this metadata refresh"
+    },
+    {
+      "asset_id": "KIT_Raised_EndBank_1m",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          1
+        ],
+        "OUT": [
+          0,
+          1,
+          1
+        ]
+      },
+      "local_mesh_bounds_m": [
+        [
+          -3.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          3.0,
+          1.0,
+          0.9649999737739563
+        ]
+      ],
+      "origin": "nominal route grade for road/wall/fence/bank; explicit visible surface grade for 1m terrain/shoulder",
+      "forward": "+Y",
+      "up": "+Z",
+      "allowed_rotation": "multiples of90deg for tested fixtures; slope variants directional",
+      "allowed_scale": [
+        1,
+        1,
+        1
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "source": "KIT_Raised_Landing_Bank_4m_Height1m",
+      "geometry_change": "none in this metadata refresh"
+    }
+  ]
+}
