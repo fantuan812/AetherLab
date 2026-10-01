@@ -43,6 +43,10 @@ bool FAetherSkillIdentityTest::RunTest(const FString&)
     TestTrue(TEXT("Multiple identity tags rejected"),AetherSkillBinding::Identify(Ambiguous).IsEmpty());
     FGameplayAbilitySpec Untagged(UAetherSpellAbility::StaticClass(),4,0);
     TestTrue(TEXT("Level/input cannot stand in for missing identity"),AetherSkillBinding::Identify(Untagged).IsEmpty());
+    C->SetVitals(100,10,100);
+    TestEqual(TEXT("Cost rejection is checked before any successful cooldown"),C->SkillCooldownRemaining(TEXT("Fire.Ignite")),0.f);
+    TestFalse(TEXT("Insufficient mana rejects upgraded cast"),C->TrySkill(TEXT("Fire.Ignite")));
+    TestEqual(TEXT("Mana unchanged on failure"),C->Mana(),10.f);
     C->SetVitals(100,100,100);
     TestTrue(TEXT("Shared GA activates tagged fire at rank three"),C->TrySkill(TEXT("Fire.Ignite")));
     TestEqual(TEXT("Actual cost comes from rank three"),C->Mana(),76.f);
@@ -53,9 +57,7 @@ bool FAetherSkillIdentityTest::RunTest(const FString&)
     TestTrue(TEXT("Actual cast lock comes from same rank"),FMath::IsNearlyEqual(C->CastLockUntil-C->CombatTime(),float(D.Effect(TEXT("Fire.Ignite"),3)->Cooldown)));
     TestFalse(TEXT("Cooldown rejects duplicate cast"),C->TrySkill(TEXT("Fire.Ignite")));
     TestEqual(TEXT("Rejected cast spends no mana"),C->Mana(),76.f);
-    C->ResetCombat();C->SetVitals(100,10,100);
-    TestFalse(TEXT("Insufficient mana rejects upgraded cast"),C->TrySkill(TEXT("Fire.Ignite")));
-    TestEqual(TEXT("Mana unchanged on failure"),C->Mana(),10.f);
+    C->ResetCombat();
     Fire=AetherSkillBinding::Find(*C->AbilitySystem,TEXT("Fire.Ignite"));Fire->Level=4;
     C->SetVitals(100,100,100);
     TestFalse(TEXT("Unsupported rank cannot cast"),C->TrySkill(TEXT("Fire.Ignite")));
@@ -79,7 +81,8 @@ bool FAetherSkillWaterTest::RunTest(const FString&)
     Spec->Level=3;
     // 失败注入使用新 ASC，不能靠 ResetCombat 清理前一次成功施法的正式冷却。
     // 在隔离世界开始模拟前装配，避免把测试 fixture 当作完整场景启动。
-    auto* Rejected=World->SpawnActor<AAetherCharacter>();
+    FActorSpawnParameters RejectedParams;RejectedParams.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    auto* Rejected=World->SpawnActor<AAetherCharacter>(FVector::ZeroVector,FRotator::ZeroRotator,RejectedParams);
     if(!TestNotNull(TEXT("Independent rejected-injection caster"),Rejected))return false;
     Rejected->SetActorEnableCollision(false);
     Rejected->AbilitySystem->AddAttributeSetSubobject(Rejected->Attributes.Get());
