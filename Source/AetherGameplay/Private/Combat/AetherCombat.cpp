@@ -18,6 +18,7 @@
 #include "Movement/AetherVaultAbility.h"
 #include "Interaction/AetherWorldActionComponent.h"
 #include "Movement/AetherTraversal.h"
+#include "Movement/AetherNavigationProbe.h"
 #include "Animation/AetherAnimation.h"
 #include "Assets/AetherContent.h"
 #include "Assets/AetherAssetPreload.h"
@@ -793,7 +794,22 @@ void AAetherCharacter::ServerSave_Implementation(bool Load)
 
 FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
 {
-    if(CombatTime()<NextSteeringAt)return SteeringDirection;NextSteeringAt=CombatTime()+.2f;
+    auto* FloorActor=GetCharacterMovement()->CurrentFloor.HitResult.GetActor();
+    auto* EscapeIce=IsValid(FloorActor)?FloorActor->FindComponentByClass<UReactiveBodyComponent>():nullptr;
+    const auto GroundAllowed=[&](const FHitResult& Floor)
+    {
+        auto* Actor=Floor.GetActor();if(!IsValid(Actor))return false;
+        if(auto* Bridge=Actor->FindComponentByClass<UAetherTraversalComponent>();Bridge&&Bridge->bAuthoredBridge&&!Bridge->bRouteOpen){NextPathAt=0;return false;}
+        if(auto* Ice=Actor->FindComponentByClass<UReactiveBodyComponent>();Ice&&Ice->bIceControlsPawnCollision&&Ice->IceSupport!=EReactiveIceSupport::Bearing&&!(Ice==EscapeIce&&Ice->IceSupport==EReactiveIceSupport::Thawing)){NextPathAt=0;return false;}
+        return true;
+    };
+    if(CombatTime()<NextSteeringAt)
+    {
+        FHitResult Floor;
+        if(SteeringDirection.IsNearlyZero()||(AetherNavigationProbe::IsLocalStepClear(*this,SteeringDirection*150,Floor)&&GroundAllowed(Floor)))return SteeringDirection;
+        SteeringDirection=FVector::ZeroVector;NavigationPoints.Reset();NextPathAt=0;
+    }
+    NextSteeringAt=CombatTime()+.2f;
     // Recast paths are bounded to the locally generated tiles. Missing paths fall back to guarded steering.
     if(CombatTime()>=NextPathAt||FVector::DistSquared2D(Destination,NavigationGoal)>FMath::Square(200.))
     {
@@ -805,9 +821,7 @@ FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
     }
     while(NavigationPoints.IsValidIndex(NavigationIndex)&&FVector::DistSquared2D(GetActorLocation(),NavigationPoints[NavigationIndex])<FMath::Square(90.))++NavigationIndex;
     FVector Waypoint=NavigationPoints.IsValidIndex(NavigationIndex)?NavigationPoints[NavigationIndex]:Destination;
-    auto* FloorActor=GetCharacterMovement()->CurrentFloor.HitResult.GetActor();
-    auto* EscapeIce=FloorActor?FloorActor->FindComponentByClass<UReactiveBodyComponent>():nullptr;
-    if(EscapeIce&&EscapeIce->bIceControlsPawnCollision&&EscapeIce->IceSupport==EReactiveIceSupport::Thawing)
+    if(IsValid(EscapeIce)&&EscapeIce->bIceControlsPawnCollision&&EscapeIce->IceSupport==EReactiveIceSupport::Thawing&&IsValid(EscapeIce->GetPrimitive()))
     {
         const FBox Box=EscapeIce->GetPrimitive()->Bounds.GetBox();const FVector Here=GetActorLocation();
         TArray<FVector> Exits={FVector(Box.Min.X-100,Here.Y,Here.Z),FVector(Box.Max.X+100,Here.Y,Here.Z),FVector(Here.X,Box.Min.Y-100,Here.Z),FVector(Here.X,Box.Max.Y+100,Here.Z)};
@@ -815,15 +829,11 @@ FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
         Waypoint=Exits[0];NextPathAt=0;NavigationPoints.Reset();
     }
     FVector Desired=(Waypoint-GetActorLocation()).GetSafeNormal2D();double Best=-1.e30;SteeringDirection=FVector::ZeroVector;
-    FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherSteering),false,this);
     auto* World=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();const auto* Sim=World?World->GetSimulation():nullptr;
     for(float Angle:{0.f,45.f,-45.f,90.f,-90.f,135.f,-135.f})
     {
         FVector Dir=Desired.RotateAngleAxis(Angle,FVector::UpVector);FVector End=GetActorLocation()+Dir*150;
-        if(GetWorld()->SweepTestByChannel(GetActorLocation(),End,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeCapsule(30,70),Q))continue;
-        FHitResult Floor;if(!GetWorld()->LineTraceSingleByChannel(Floor,End,End-FVector(0,0,200),ECC_Visibility,Q)||Floor.ImpactNormal.Z<.5||!Floor.GetComponent()->IsCollisionEnabled()||Floor.GetComponent()->GetCollisionResponseToChannel(ECC_Pawn)!=ECR_Block)continue;
-        if(auto* Bridge=Floor.GetActor()->FindComponentByClass<UAetherTraversalComponent>();Bridge&&Bridge->bAuthoredBridge&&!Bridge->bRouteOpen){NextPathAt=0;continue;}
-        if(auto* Ice=Floor.GetActor()->FindComponentByClass<UReactiveBodyComponent>();Ice&&Ice->bIceControlsPawnCollision&&Ice->IceSupport!=EReactiveIceSupport::Bearing&&!(Ice==EscapeIce&&Ice->IceSupport==EReactiveIceSupport::Thawing)){NextPathAt=0;continue;}
+        FHitResult Floor;if(!AetherNavigationProbe::IsLocalStepClear(*this,Dir*150,Floor)||!GroundAllowed(Floor))continue;
         double Score=FVector::DotProduct(Dir,Desired);if(Sim)for(auto Id:Sim->Query(End,70))
         {const auto* State=Sim->Find(Id);if(State&&(State->bBurning||State->TemperatureC>100))Score-=5;}
         if(Score>Best){Best=Score;SteeringDirection=Dir;}
