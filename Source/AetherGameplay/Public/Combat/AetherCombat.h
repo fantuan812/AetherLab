@@ -14,6 +14,7 @@
 #include "Actions/AetherActionPolicy.h"
 #include "AI/AetherNpcSkillDecision.h"
 #include "AI/AetherNpcPerception.h"
+#include "AI/AetherNpcMeleeDecision.h"
 #include "AetherCombat.generated.h"
 class UAetherMotionComponent;
 
@@ -155,8 +156,11 @@ private:
     friend class FAetherElectricalSnapshotTest;
     friend class FAetherNpcSkillDecisionTest;
     friend class FAetherNpcPerceptionTest;
+    friend class FAetherNpcMeleeLifecycleTest;
+    friend class UAetherMeleeAbility;
     FAetherNpcSkillDecision EnemySkillDecision;
     FAetherNpcPerception EnemyPerception;
+    FAetherNpcMeleeDecision EnemyMeleeDecision;
     void MoveForward(float V);
     void MoveRight(float V);
     void Turn(float V) { AddControllerYawInput(V); }
@@ -183,11 +187,9 @@ private:
     UFUNCTION() void ElectricalWindow(const FReactiveElectricalWindow& Window);
     UFUNCTION(Client, Reliable) void ClientFeedback(const FString& Message);
     float ActionUntil = 0;
-    float NextAI = 0;
     float NextShockStun = 0;
     uint32 PresentedAttackSerial = 0;
     bool bWalkingAnimation = false;
-    bool bAIHeavy = false;
     bool bAbilitiesGranted = false;
     float NetProbeTime = 0;
     bool bNetCastRequested = false;
