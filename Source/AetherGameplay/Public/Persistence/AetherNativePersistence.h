@@ -40,6 +40,7 @@ public:
     virtual void Deinitialize() override;
 private:
     friend class FAetherNativeCheckpointLifecycleTest;
+    friend class FAetherNativeActivationLifecycleTest;
     void Fail(FString Reason);
     EAetherNativePersistencePhase State=EAetherNativePersistencePhase::Dormant;
     FString Prefix,Detail;
