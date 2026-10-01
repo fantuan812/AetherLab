@@ -1,0 +1,1792 @@
+{
+  "geometry_count_units": {
+    "degenerate_faces": "legacy field: counts original mesh polygons, not triangulated faces",
+    "degenerate_polygon_count": "original mesh polygon count below 1e-10 square meters",
+    "degenerate_triangle_count": "Blender loop-triangle count below 1e-10 square meters",
+    "zero_area_material_uv_polygons": "original mesh polygons with SurfaceUV projected area below 1e-10"
+  },
+  "fixture_geometry_sha256": "ee2ae912ca6796d2cc9dd26711b0a8d149ce9706fd249c777ee62d11d198c457",
+  "reviewed_file": "Reviewed_CoreKit_Interface_v2.blend",
+  "artifact_filename": "AetherLab_CoreKit_Interface_v2.blend",
+  "verification_date_utc": "2026-10-01",
+  "sha256": "9da7bdfc2731c144cb31d0866b9574a24d9f9057e6ed38895226d6371e3ac62b",
+  "blender": [
+    4,
+    3,
+    2
+  ],
+  "scope": "Independent saved-file geometry review. No author validator invoked. No engine/nav/collision/performance claims. Geometry sampling is not exhaustive mesh boolean proof. Presentation floor, labels and character excluded from rays.",
+  "tests": [
+    {
+      "test": "ROAD_LOOP_T footprint and shoulders independent 0.1m raster",
+      "samples": 31200,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.0002,
+      "passed": true
+    },
+    {
+      "test": "ROAD_LOOP_T visible top never falls below continuous support",
+      "samples": 31200,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.0002,
+      "passed": true
+    },
+    {
+      "test": "ROAD_LOOP_T shoulder and tile seam strips",
+      "samples": 3432,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.0007,
+      "passed": true
+    },
+    {
+      "test": "ROAD_X footprint and shoulders independent 0.1m raster",
+      "samples": 13200,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.0002,
+      "passed": true
+    },
+    {
+      "test": "ROAD_X visible top never falls below continuous support",
+      "samples": 13200,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.0002,
+      "passed": true
+    },
+    {
+      "test": "ROAD_X shoulder and tile seam strips",
+      "samples": 1416,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.0007,
+      "passed": true
+    },
+    {
+      "test": "Road X shoulder to terrain end cross-kit seam",
+      "samples": 273,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.0002,
+      "passed": true
+    },
+    {
+      "test": "Height fixture central grade exact, side-bank no holes or overshoot",
+      "samples": 28441,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.0003,
+      "passed": true
+    },
+    {
+      "test": "Height ramp lower/upper seam full-width",
+      "samples": 238,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.0005,
+      "passed": true
+    },
+    {
+      "test": "Wall footing bases intersect production ground/bank",
+      "samples": 1599,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.001,
+      "passed": true
+    },
+    {
+      "test": "44 upright pier/post centers embed into support",
+      "samples": 44,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.001,
+      "passed": true,
+      "contacts": [
+        [
+          "WALL_LOOP_Joint0",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "WALL_LOOP_Joint1",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "WALL_LOOP_Joint2",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "WALL_LOOP_Joint3",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "WALL_LOOP_Joint4",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "WALL_LOOP_Joint5",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "WALL_LOOP_Joint6",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "WALL_LOOP_Joint7",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Joint0",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Mid0",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Joint1",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Mid1",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Joint2",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Mid2",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Joint3",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Mid3",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Joint4",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Mid4",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Joint5",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Mid5",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Joint6",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Mid6",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Joint7",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "FENCE_LOOP_Mid7",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "MIX_X_End0",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "MIX_X_End1",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "MIX_X_Mid1",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "MIX_X_End2",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "MIX_X_Mid2",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "MIX_X_End3",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "MIX_X_OneSharedPier",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "HEIGHT_wall_Node0",
+          -0.20999999344348907,
+          -0.034999847412109375,
+          0.1750001460313797
+        ],
+        [
+          "HEIGHT_wall_Node1",
+          -0.18000000715255737,
+          -0.034999847412109375,
+          0.145000159740448
+        ],
+        [
+          "HEIGHT_wall_Node2",
+          0.8199999928474426,
+          0.9650001525878906,
+          0.145000159740448
+        ],
+        [
+          "HEIGHT_wall_Node3",
+          0.8199999928474426,
+          0.9650001525878906,
+          0.145000159740448
+        ],
+        [
+          "HEIGHT_fence_Node0",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "HEIGHT_Fence_Mid0",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "HEIGHT_fence_Node1",
+          -0.14000000059604645,
+          -0.034999847412109375,
+          0.10500015318393707
+        ],
+        [
+          "HEIGHT_Fence_Mid1",
+          0.36000001430511475,
+          0.4650001525878906,
+          0.10500013828277588
+        ],
+        [
+          "HEIGHT_fence_Node2",
+          0.8600000143051147,
+          0.9650001525878906,
+          0.10500013828277588
+        ],
+        [
+          "HEIGHT_Fence_Mid2",
+          0.8600000143051147,
+          0.9650001525878906,
+          0.10500013828277588
+        ],
+        [
+          "HEIGHT_fence_Node3",
+          0.8600000143051147,
+          0.9650001525878906,
+          0.10500013828277588
+        ],
+        [
+          "HEIGHT_CrossKit_End",
+          0.8600000143051147,
+          0.9650001525878906,
+          0.10500013828277588
+        ],
+        [
+          "HEIGHT_CrossKit_Mid",
+          0.8600000143051147,
+          0.9650001525878906,
+          0.10500013828277588
+        ]
+      ]
+    },
+    {
+      "test": "Actual full bottom footprints of upright supports have backing",
+      "samples": 352,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.001,
+      "passed": true
+    },
+    {
+      "test": "No coincident duplicate upright supports",
+      "samples": 44,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 1e-05,
+      "passed": true
+    },
+    {
+      "test": "Barrier actual endpoint mesh vertices embed in one support",
+      "samples": 2114,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.002,
+      "passed": true,
+      "endpoints": [
+        [
+          "WALL_LOOP_Run0",
+          0,
+          "WALL_LOOP_Joint0",
+          20,
+          0
+        ],
+        [
+          "WALL_LOOP_Run0",
+          4,
+          "WALL_LOOP_Joint1",
+          22,
+          0
+        ],
+        [
+          "WALL_LOOP_Run1",
+          0,
+          "WALL_LOOP_Joint1",
+          20,
+          0
+        ],
+        [
+          "WALL_LOOP_Run1",
+          4,
+          "WALL_LOOP_Joint2",
+          22,
+          0
+        ],
+        [
+          "WALL_LOOP_Run2",
+          0,
+          "WALL_LOOP_Joint2",
+          20,
+          0
+        ],
+        [
+          "WALL_LOOP_Run2",
+          4,
+          "WALL_LOOP_Joint3",
+          22,
+          0
+        ],
+        [
+          "WALL_LOOP_Run3",
+          0,
+          "WALL_LOOP_Joint3",
+          20,
+          0
+        ],
+        [
+          "WALL_LOOP_Run3",
+          4,
+          "WALL_LOOP_Joint4",
+          22,
+          0
+        ],
+        [
+          "WALL_LOOP_Run4",
+          0,
+          "WALL_LOOP_Joint4",
+          20,
+          0
+        ],
+        [
+          "WALL_LOOP_Run4",
+          4,
+          "WALL_LOOP_Joint5",
+          22,
+          0
+        ],
+        [
+          "WALL_LOOP_Run5",
+          0,
+          "WALL_LOOP_Joint5",
+          20,
+          0
+        ],
+        [
+          "WALL_LOOP_Run5",
+          4,
+          "WALL_LOOP_Joint6",
+          22,
+          0
+        ],
+        [
+          "WALL_LOOP_Run6",
+          0,
+          "WALL_LOOP_Joint6",
+          20,
+          0
+        ],
+        [
+          "WALL_LOOP_Run6",
+          4,
+          "WALL_LOOP_Joint7",
+          22,
+          0
+        ],
+        [
+          "WALL_LOOP_Run7",
+          0,
+          "WALL_LOOP_Joint7",
+          20,
+          0
+        ],
+        [
+          "WALL_LOOP_Run7",
+          4,
+          "WALL_LOOP_Joint0",
+          22,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run0",
+          0,
+          "FENCE_LOOP_Joint0",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run0",
+          4,
+          "FENCE_LOOP_Joint1",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run1",
+          0,
+          "FENCE_LOOP_Joint1",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run1",
+          4,
+          "FENCE_LOOP_Joint2",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run2",
+          0,
+          "FENCE_LOOP_Joint2",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run2",
+          4,
+          "FENCE_LOOP_Joint3",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run3",
+          0,
+          "FENCE_LOOP_Joint3",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run3",
+          4,
+          "FENCE_LOOP_Joint4",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run4",
+          0,
+          "FENCE_LOOP_Joint4",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run4",
+          4,
+          "FENCE_LOOP_Joint5",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run5",
+          0,
+          "FENCE_LOOP_Joint5",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run5",
+          4,
+          "FENCE_LOOP_Joint6",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run6",
+          0,
+          "FENCE_LOOP_Joint6",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run6",
+          4,
+          "FENCE_LOOP_Joint7",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run7",
+          0,
+          "FENCE_LOOP_Joint7",
+          56,
+          0
+        ],
+        [
+          "FENCE_LOOP_Run7",
+          4,
+          "FENCE_LOOP_Joint0",
+          56,
+          0
+        ],
+        [
+          "MIX_X_Run0",
+          0,
+          "MIX_X_End0",
+          20,
+          0
+        ],
+        [
+          "MIX_X_Run0",
+          4,
+          "MIX_X_OneSharedPier",
+          22,
+          0
+        ],
+        [
+          "MIX_X_Run1",
+          0,
+          "MIX_X_End1",
+          56,
+          0
+        ],
+        [
+          "MIX_X_Run1",
+          4,
+          "MIX_X_OneSharedPier",
+          56,
+          0
+        ],
+        [
+          "MIX_X_Run2",
+          0,
+          "MIX_X_End2",
+          56,
+          0
+        ],
+        [
+          "MIX_X_Run2",
+          4,
+          "MIX_X_OneSharedPier",
+          56,
+          0
+        ],
+        [
+          "MIX_X_Run3",
+          0,
+          "MIX_X_End3",
+          20,
+          0
+        ],
+        [
+          "MIX_X_Run3",
+          4,
+          "MIX_X_OneSharedPier",
+          22,
+          0
+        ],
+        [
+          "HEIGHT_wall_0",
+          0,
+          "HEIGHT_wall_Node0",
+          20,
+          0
+        ],
+        [
+          "HEIGHT_wall_0",
+          4,
+          "HEIGHT_wall_Node1",
+          22,
+          0
+        ],
+        [
+          "HEIGHT_wall_1",
+          0,
+          "HEIGHT_wall_Node1",
+          20,
+          0
+        ],
+        [
+          "HEIGHT_wall_1",
+          4,
+          "HEIGHT_wall_Node2",
+          22,
+          0
+        ],
+        [
+          "HEIGHT_wall_2",
+          0,
+          "HEIGHT_wall_Node2",
+          20,
+          0
+        ],
+        [
+          "HEIGHT_wall_2",
+          4,
+          "HEIGHT_wall_Node3",
+          22,
+          0
+        ],
+        [
+          "HEIGHT_fence_0",
+          0,
+          "HEIGHT_fence_Node0",
+          56,
+          0
+        ],
+        [
+          "HEIGHT_fence_0",
+          4,
+          "HEIGHT_fence_Node1",
+          56,
+          0
+        ],
+        [
+          "HEIGHT_fence_1",
+          0,
+          "HEIGHT_fence_Node1",
+          56,
+          0
+        ],
+        [
+          "HEIGHT_fence_1",
+          4,
+          "HEIGHT_fence_Node2",
+          56,
+          0
+        ],
+        [
+          "HEIGHT_fence_2",
+          0,
+          "HEIGHT_fence_Node2",
+          56,
+          0
+        ],
+        [
+          "HEIGHT_fence_2",
+          4,
+          "HEIGHT_fence_Node3",
+          56,
+          0
+        ],
+        [
+          "HEIGHT_CrossKit_Rail",
+          0,
+          "HEIGHT_CrossKit_End",
+          56,
+          0
+        ],
+        [
+          "HEIGHT_CrossKit_Rail",
+          4,
+          "HEIGHT_wall_Node3",
+          56,
+          0
+        ]
+      ]
+    },
+    {
+      "test": "Fixture geometry linked, unit-scale and finite",
+      "samples": 678,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 1e-06,
+      "passed": true
+    },
+    {
+      "test": "Active master meshes closed, positive volume, non-degenerate",
+      "samples": 21,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 1e-10,
+      "passed": true
+    },
+    {
+      "test": "Active master SurfaceUV has no zero-area polygon projection",
+      "samples": 21,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 1e-10,
+      "passed": true
+    },
+    {
+      "test": "Master socket Empty coordinates and instance properties agree",
+      "samples": 2563,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 1e-06,
+      "passed": true
+    },
+    {
+      "test": "Height fixture measured central clear span >=2.58m",
+      "samples": 63,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.001,
+      "passed": true,
+      "minimum_measured_m": 2.6748504638671875,
+      "measurements": [
+        [
+          -15.8,
+          0.065,
+          2.9594039916992188,
+          25.04059600830078,
+          28
+        ],
+        [
+          -15.8,
+          0.265,
+          2.9594039916992188,
+          25.04059600830078,
+          28
+        ],
+        [
+          -15.8,
+          0.565,
+          2.6944026947021484,
+          25.04059600830078,
+          27.73499870300293
+        ],
+        [
+          -15.8,
+          0.865,
+          2.9594039916992188,
+          25.04059600830078,
+          28
+        ],
+        [
+          -15.8,
+          1.165,
+          4,
+          24,
+          28
+        ],
+        [
+          -15.8,
+          1.5650000000000002,
+          4,
+          24,
+          28
+        ],
+        [
+          -15.8,
+          1.7678,
+          4,
+          24,
+          28
+        ],
+        [
+          -14,
+          0.065,
+          2.7749996185302734,
+          24.940000534057617,
+          27.71500015258789
+        ],
+        [
+          -14,
+          0.265,
+          3.7150001525878906,
+          24,
+          27.71500015258789
+        ],
+        [
+          -14,
+          0.565,
+          3.7150001525878906,
+          24,
+          27.71500015258789
+        ],
+        [
+          -14,
+          0.865,
+          3.7150001525878906,
+          24,
+          27.71500015258789
+        ],
+        [
+          -14,
+          1.165,
+          4,
+          24,
+          28
+        ],
+        [
+          -14,
+          1.5650000000000002,
+          4,
+          24,
+          28
+        ],
+        [
+          -14,
+          1.7678,
+          4,
+          24,
+          28
+        ],
+        [
+          -12.05,
+          0.065,
+          2.6751461029052734,
+          25.039854049682617,
+          27.71500015258789
+        ],
+        [
+          -12.05,
+          0.265,
+          2.6751461029052734,
+          25.039854049682617,
+          27.71500015258789
+        ],
+        [
+          -12.05,
+          0.565,
+          2.6751461029052734,
+          25.039854049682617,
+          27.71500015258789
+        ],
+        [
+          -12.05,
+          0.865,
+          2.6751461029052734,
+          25.039854049682617,
+          27.71500015258789
+        ],
+        [
+          -12.05,
+          1.165,
+          4,
+          24,
+          28
+        ],
+        [
+          -12.05,
+          1.5650000000000002,
+          4,
+          24,
+          28
+        ],
+        [
+          -12.05,
+          1.7678,
+          4,
+          24,
+          28
+        ],
+        [
+          -11.95,
+          0.07750000000000018,
+          2.6748504638671875,
+          25.040149688720703,
+          27.71500015258789
+        ],
+        [
+          -11.95,
+          0.2775000000000002,
+          2.6748504638671875,
+          25.040149688720703,
+          27.71500015258789
+        ],
+        [
+          -11.95,
+          0.5775000000000001,
+          2.6748504638671875,
+          25.040149688720703,
+          27.71500015258789
+        ],
+        [
+          -11.95,
+          0.8775000000000002,
+          2.6748504638671875,
+          25.040149688720703,
+          27.71500015258789
+        ],
+        [
+          -11.95,
+          1.1775000000000002,
+          4,
+          24,
+          28
+        ],
+        [
+          -11.95,
+          1.5775000000000003,
+          4,
+          24,
+          28
+        ],
+        [
+          -11.95,
+          1.7803000000000002,
+          4,
+          24,
+          28
+        ],
+        [
+          -10,
+          0.565,
+          2.7749996185302734,
+          24.940000534057617,
+          27.71500015258789
+        ],
+        [
+          -10,
+          0.7649999999999999,
+          3.7150001525878906,
+          24,
+          27.71500015258789
+        ],
+        [
+          -10,
+          1.065,
+          3.7150001525878906,
+          24,
+          27.71500015258789
+        ],
+        [
+          -10,
+          1.365,
+          3.7150001525878906,
+          24,
+          27.71500015258789
+        ],
+        [
+          -10,
+          1.665,
+          4,
+          24,
+          28
+        ],
+        [
+          -10,
+          2.065,
+          4,
+          24,
+          28
+        ],
+        [
+          -10,
+          2.2678,
+          4,
+          24,
+          28
+        ],
+        [
+          -8.05,
+          1.0524999999999998,
+          2.6751461029052734,
+          25.039854049682617,
+          27.71500015258789
+        ],
+        [
+          -8.05,
+          1.2524999999999997,
+          2.6751461029052734,
+          25.039854049682617,
+          27.71500015258789
+        ],
+        [
+          -8.05,
+          1.5524999999999998,
+          2.6751461029052734,
+          25.039854049682617,
+          27.71500015258789
+        ],
+        [
+          -8.05,
+          1.8524999999999998,
+          2.6751461029052734,
+          25.039854049682617,
+          27.71500015258789
+        ],
+        [
+          -8.05,
+          2.1525,
+          3.7268924713134766,
+          24,
+          27.726892471313477
+        ],
+        [
+          -8.05,
+          2.5524999999999998,
+          4,
+          24,
+          28
+        ],
+        [
+          -8.05,
+          2.7552999999999996,
+          4,
+          24,
+          28
+        ],
+        [
+          -7.95,
+          1.065,
+          2.6748504638671875,
+          25.040149688720703,
+          27.71500015258789
+        ],
+        [
+          -7.95,
+          1.265,
+          2.6748504638671875,
+          25.040149688720703,
+          27.71500015258789
+        ],
+        [
+          -7.95,
+          1.565,
+          2.6748504638671875,
+          25.040149688720703,
+          27.71500015258789
+        ],
+        [
+          -7.95,
+          1.865,
+          2.6748504638671875,
+          25.040149688720703,
+          27.71500015258789
+        ],
+        [
+          -7.95,
+          2.165,
+          4,
+          24,
+          28
+        ],
+        [
+          -7.95,
+          2.565,
+          4,
+          24,
+          28
+        ],
+        [
+          -7.95,
+          2.7678,
+          4,
+          24,
+          28
+        ],
+        [
+          -6,
+          1.065,
+          2.7749996185302734,
+          24.940000534057617,
+          27.71500015258789
+        ],
+        [
+          -6,
+          1.265,
+          3.7150001525878906,
+          24,
+          27.71500015258789
+        ],
+        [
+          -6,
+          1.565,
+          3.7150001525878906,
+          24,
+          27.71500015258789
+        ],
+        [
+          -6,
+          1.865,
+          3.7150001525878906,
+          24,
+          27.71500015258789
+        ],
+        [
+          -6,
+          2.165,
+          4,
+          24,
+          28
+        ],
+        [
+          -6,
+          2.565,
+          4,
+          24,
+          28
+        ],
+        [
+          -6,
+          2.7678,
+          4,
+          24,
+          28
+        ],
+        [
+          -4.2,
+          1.065,
+          2.960592269897461,
+          25.03940773010254,
+          28
+        ],
+        [
+          -4.2,
+          1.265,
+          2.960592269897461,
+          25.03940773010254,
+          28
+        ],
+        [
+          -4.2,
+          1.565,
+          2.6955909729003906,
+          25.03940773010254,
+          27.73499870300293
+        ],
+        [
+          -4.2,
+          1.865,
+          2.720590591430664,
+          25.03940773010254,
+          27.759998321533203
+        ],
+        [
+          -4.2,
+          2.165,
+          4,
+          24,
+          28
+        ],
+        [
+          -4.2,
+          2.565,
+          4,
+          24,
+          28
+        ],
+        [
+          -4.2,
+          2.7678,
+          4,
+          24,
+          28
+        ]
+      ]
+    },
+    {
+      "test": "Static central capsule envelope height 1.65",
+      "samples": 4972,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.01,
+      "passed": true,
+      "height_m": 1.65,
+      "diameter_m": 0.8,
+      "axis_interval_max_m": 0.02,
+      "route_station_interval_m": 0.1,
+      "minimum_obstacle_distance_from_axis_m": 0.8903948664665222,
+      "conservative_capsule_clearance_m": 0.48039486646652224,
+      "worst_axis_point": [
+        26.0,
+        -15.600000381469727,
+        0.9975581169128418
+      ],
+      "not_runtime_collision": true
+    },
+    {
+      "test": "Static central capsule envelope height 1.8028",
+      "samples": 5876,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.01,
+      "passed": true,
+      "height_m": 1.8028,
+      "diameter_m": 0.8,
+      "axis_interval_max_m": 0.02,
+      "route_station_interval_m": 0.1,
+      "minimum_obstacle_distance_from_axis_m": 0.8903948664665222,
+      "conservative_capsule_clearance_m": 0.48039486646652224,
+      "worst_axis_point": [
+        26.0,
+        -15.600000381469727,
+        0.9942078590393066
+      ],
+      "not_runtime_collision": true
+    },
+    {
+      "test": "Negative control detects support raised 0.60m",
+      "samples": 4,
+      "failures": 0,
+      "failure_examples": [],
+      "tolerance": 0.001,
+      "passed": true,
+      "object": "HEIGHT_fence_Node0",
+      "intentional_offset_m": 0.6,
+      "expected_failure_count": 4,
+      "expected_failures": [
+        [
+          [
+            27.744998931884766,
+            -16.05500030517578,
+            0.46000000834465027
+          ],
+          -0.05232524871826172
+        ],
+        [
+          [
+            27.744998931884766,
+            -15.944999694824219,
+            0.46000000834465027
+          ],
+          -0.034999847412109375
+        ],
+        [
+          [
+            27.854999542236328,
+            -16.05500030517578,
+            0.46000000834465027
+          ],
+          -0.05232429504394531
+        ],
+        [
+          [
+            27.854999542236328,
+            -15.944999694824219,
+            0.46000000834465027
+          ],
+          -0.034999847412109375
+        ]
+      ],
+      "transform_restored_in_memory": true,
+      "blend_saved": false
+    }
+  ],
+  "static_capsules": [
+    {
+      "height_m": 1.65,
+      "diameter_m": 0.8,
+      "axis_interval_max_m": 0.02,
+      "route_station_interval_m": 0.1,
+      "minimum_obstacle_distance_from_axis_m": 0.8903948664665222,
+      "conservative_capsule_clearance_m": 0.48039486646652224,
+      "worst_axis_point": [
+        26.0,
+        -15.600000381469727,
+        0.9975581169128418
+      ],
+      "not_runtime_collision": true
+    },
+    {
+      "height_m": 1.8028,
+      "diameter_m": 0.8,
+      "axis_interval_max_m": 0.02,
+      "route_station_interval_m": 0.1,
+      "minimum_obstacle_distance_from_axis_m": 0.8903948664665222,
+      "conservative_capsule_clearance_m": 0.48039486646652224,
+      "worst_axis_point": [
+        26.0,
+        -15.600000381469727,
+        0.9942078590393066
+      ],
+      "not_runtime_collision": true
+    }
+  ],
+  "master_mesh_review": [
+    {
+      "master": "KIT_Path_Flagstone_4x4_A",
+      "vertices": 1792,
+      "polygons": 1696,
+      "signed_volume": 0.9383440938092308,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet basalt 2",
+        "KIT_Wet basalt 3",
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 0"
+      ]
+    },
+    {
+      "master": "KIT_Path_Substrate_4x4",
+      "vertices": 8,
+      "polygons": 6,
+      "signed_volume": 1.9200000166893,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_WallLow_Run_4m",
+      "vertices": 448,
+      "polygons": 432,
+      "signed_volume": 1.7224766835600793,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet basalt 3",
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 2"
+      ]
+    },
+    {
+      "master": "KIT_WallLow_EndCornerPier",
+      "vertices": 112,
+      "polygons": 108,
+      "signed_volume": 1.0788362669157858,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 2"
+      ]
+    },
+    {
+      "master": "KIT_Fence_Rails_4m",
+      "vertices": 112,
+      "polygons": 108,
+      "signed_volume": 0.12902880463941724,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Aged cedar"
+      ]
+    },
+    {
+      "master": "KIT_Fence_SharedPost",
+      "vertices": 56,
+      "polygons": 54,
+      "signed_volume": 0.03589973017981585,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Aged cedar"
+      ]
+    },
+    {
+      "master": "KIT_LanternPost",
+      "vertices": 560,
+      "polygons": 540,
+      "signed_volume": 0.12559051968553958,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 112,
+      "degenerate_polygon_count": 112,
+      "degenerate_triangle_count": 224,
+      "zero_area_material_uv_polygons": 40,
+      "materials": [
+        "KIT_Aged cedar",
+        "KIT_Forged iron",
+        "KIT_Amber lantern glass",
+        "KIT_Lantern aged brass"
+      ]
+    },
+    {
+      "master": "KIT_Path_Ramp_4m_Rise1m",
+      "vertices": 1792,
+      "polygons": 1696,
+      "signed_volume": 0.9383441304118914,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet basalt 2",
+        "KIT_Wet basalt 3",
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 0"
+      ]
+    },
+    {
+      "master": "KIT_Substrate_Ramp_4m_Rise1m",
+      "vertices": 8,
+      "polygons": 6,
+      "signed_volume": 1.9199995696544643,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_Path_Foundation_4x4",
+      "vertices": 8,
+      "polygons": 6,
+      "signed_volume": 8.240000188350677,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_Wall_Footing_4m",
+      "vertices": 8,
+      "polygons": 6,
+      "signed_volume": 0.6936000145912171,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet basalt 1"
+      ]
+    },
+    {
+      "master": "KIT_WallLow_Rise_4m_1m",
+      "vertices": 448,
+      "polygons": 432,
+      "signed_volume": 1.7224766785446586,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet basalt 3",
+        "KIT_Wet basalt 1",
+        "KIT_Wet basalt 2"
+      ]
+    },
+    {
+      "master": "KIT_Wall_Footing_Rise_4m_1m",
+      "vertices": 8,
+      "polygons": 6,
+      "signed_volume": 0.6936000044584273,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet basalt 1"
+      ]
+    },
+    {
+      "master": "KIT_Fence_Rails_Rise_4m_1m",
+      "vertices": 112,
+      "polygons": 108,
+      "signed_volume": 0.12902878782949306,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Aged cedar"
+      ]
+    },
+    {
+      "master": "KIT_Shoulder_Straight_1m",
+      "vertices": 8,
+      "polygons": 6,
+      "signed_volume": 0.3575000148266554,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_Shoulder_Convex90_1m",
+      "vertices": 8,
+      "polygons": 7,
+      "signed_volume": 0.3050000158449014,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_Shoulder_Concave90_1m",
+      "vertices": 8,
+      "polygons": 7,
+      "signed_volume": 0.41000001380840934,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_Terrain_Patch_1m",
+      "vertices": 8,
+      "polygons": 6,
+      "signed_volume": 0.2000000178813934,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_Terrain_RaisedPatch_1m",
+      "vertices": 8,
+      "polygons": 6,
+      "signed_volume": 1.5149999856948853,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_Ramp_Bank_4m_Rise1m",
+      "vertices": 40,
+      "polygons": 66,
+      "signed_volume": 19.180000437423587,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_Raised_Landing_Bank_4m_Height1m",
+      "vertices": 40,
+      "polygons": 66,
+      "signed_volume": 29.180000662803646,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    },
+    {
+      "master": "KIT_Raised_EndBank_1m",
+      "vertices": 30,
+      "polygons": 50,
+      "signed_volume": 7.77499994635582,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 0,
+      "degenerate_polygon_count": 0,
+      "degenerate_triangle_count": 0,
+      "zero_area_material_uv_polygons": 0,
+      "materials": [
+        "KIT_Wet mountain earth"
+      ]
+    }
+  ],
+  "inherited_unused_master_limits": [
+    {
+      "master": "KIT_LanternPost",
+      "vertices": 560,
+      "polygons": 540,
+      "signed_volume": 0.12559051968553958,
+      "nonmanifold_edges": 0,
+      "inconsistent_face_winding_edges": 0,
+      "degenerate_faces": 112,
+      "degenerate_polygon_count": 112,
+      "degenerate_triangle_count": 224,
+      "zero_area_material_uv_polygons": 40,
+      "materials": [
+        "KIT_Aged cedar",
+        "KIT_Forged iron",
+        "KIT_Amber lantern glass",
+        "KIT_Lantern aged brass"
+      ]
+    }
+  ],
+  "summary": {
+    "tests": 22,
+    "passed": 22,
+    "failed": []
+  },
+  "metadata_refresh_comparison": {
+    "geometry_before_refresh_file_sha256": "f3644928a7e85e93fee67f8157a17b2a044c31f102bc1fc4173ba103c8a0870d",
+    "fixture_geometry_sha256_before": "ee2ae912ca6796d2cc9dd26711b0a8d149ce9706fd249c777ee62d11d198c457",
+    "fixture_geometry_sha256_after": "ee2ae912ca6796d2cc9dd26711b0a8d149ce9706fd249c777ee62d11d198c457",
+    "fixture_geometry_unchanged": true,
+    "author_full_mesh_uv_material_reference_transform_camera_fingerprint": "1e620efc234bc3a3c0a2744d7ec31ed7edc89c3829b4d1690fd13079d0f494a0",
+    "author_record": "Module_Interfaces.json"
+  },
+  "manual_visual_review": {
+    "verification_date_utc": "2026-10-01",
+    "preview_render_input_blend_sha256": "f3644928a7e85e93fee67f8157a17b2a044c31f102bc1fc4173ba103c8a0870d",
+    "final_blend_matches_preview_fixture_geometry": true,
+    "scope": "The five listed authored renders were opened and visually inspected. They predate socket-only metadata refresh; the fixture geometry fingerprint is identical before and after. Author Module_Interfaces.json independently records unchanged mesh/UV/material-reference/transforms/cameras.",
+    "previews": [
+      {
+        "path": "../previews/CoreKit_Overview.png",
+        "sha256": "18cb21c0c4085dc873f7cd0ea9d4c8f3ec026468162a22e895789b355d7a7a0d"
+      },
+      {
+        "path": "../previews/CoreKit_Road_Top.png",
+        "sha256": "bfc0c146e40136a90123048cd2f34977b74d748d0fe27006c3eee36834f88bd5"
+      },
+      {
+        "path": "../previews/CoreKit_Assembly_Close.png",
+        "sha256": "c9d85876d7295c96dee8073f1a460974f019481aa5af723295d6783d031fab01"
+      },
+      {
+        "path": "../previews/CoreKit_Height_Side.png",
+        "sha256": "a96ae719bb2b070e036e9c05249c9cb445e9b0c370cb3c046a8c5192d775f8bb"
+      },
+      {
+        "path": "../previews/CoreKit_Junction.png",
+        "sha256": "c51ec3ea364cc7042d8a3c06961601e8f6fed41b1cc5e665fe40bcb4d22cfb40"
+      }
+    ],
+    "extra_geometry_preview": {
+      "path": "Independent_Road_X_Top.png",
+      "renderer": "Workbench",
+      "sha256": "558d65b11041db6f6525f330e0de58d482605d5bb9bfd3f197e310d5c17f9395"
+    }
+  }
+}

@@ -1,0 +1,107 @@
+[
+  {
+    "filename": "CoreKit_Overview.png",
+    "camera": "CAM_Overview",
+    "world_location": [
+      48.0,
+      -52.0,
+      55.0
+    ],
+    "rotation": [
+      0.8814681768417358,
+      1.4655077151815021e-08,
+      0.5172873735427856
+    ],
+    "ortho_scale": 61.0,
+    "resolution": [
+      1500,
+      1200
+    ],
+    "source": "AetherLab_CoreKit_Interface_v2.blend",
+    "scope": "isolated fixture; not world/engine/performance approval"
+  },
+  {
+    "filename": "CoreKit_Assembly_Close.png",
+    "camera": "CAM_Connections_Close",
+    "world_location": [
+      43.0,
+      -32.0,
+      25.0
+    ],
+    "rotation": [
+      0.8664731979370117,
+      -1.7104831329106673e-08,
+      0.712357759475708
+    ],
+    "ortho_scale": 22.0,
+    "resolution": [
+      1300,
+      1100
+    ],
+    "source": "AetherLab_CoreKit_Interface_v2.blend",
+    "scope": "isolated fixture; not world/engine/performance approval"
+  },
+  {
+    "filename": "CoreKit_Road_Top.png",
+    "camera": "CAM_Road_Top",
+    "world_location": [
+      9.0,
+      8.0,
+      50.0
+    ],
+    "rotation": [
+      0.0,
+      -0.0,
+      0.0
+    ],
+    "ortho_scale": 24.0,
+    "resolution": [
+      1200,
+      1200
+    ],
+    "source": "AetherLab_CoreKit_Interface_v2.blend",
+    "scope": "isolated fixture; not world/engine/performance approval"
+  },
+  {
+    "filename": "CoreKit_Junction.png",
+    "camera": "CAM_Junction_Close",
+    "world_location": [
+      14.0,
+      10.0,
+      11.0
+    ],
+    "rotation": [
+      1.0019358396530151,
+      1.9127103456639816e-08,
+      0.6202495098114014
+    ],
+    "ortho_scale": 15.0,
+    "resolution": [
+      1100,
+      950
+    ],
+    "source": "AetherLab_CoreKit_Interface_v2.blend",
+    "scope": "isolated fixture; not world/engine/performance approval"
+  },
+  {
+    "filename": "CoreKit_Height_Side.png",
+    "camera": "CAM_Height_Side",
+    "world_location": [
+      42.0,
+      -8.0,
+      5.0
+    ],
+    "rotation": [
+      1.2871726751327515,
+      -7.238327714986781e-09,
+      1.6951513290405273
+    ],
+    "ortho_scale": 18.0,
+    "resolution": [
+      1300,
+      850
+    ],
+    "source": "AetherLab_CoreKit_Interface_v2.blend",
+    "scope": "isolated fixture; not world/engine/performance approval"
+  }
+]
