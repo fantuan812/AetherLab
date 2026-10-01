@@ -8,6 +8,19 @@ class AAetherFrontierMode;
 struct FAetherEncounterRule;
 UENUM()
 enum class EAetherEncounterPhase:uint8 { Idle, Front, Channel, Elite, Boss, Succeeded, Failed };
+
+enum class EAetherEncounterWaveState:uint8 { Active, Cleared, Unavailable };
+
+// 只保存成员离场时读取到的权威击败事实；仍在场的成员始终读取角色/GAS 当前状态。
+// 槽位属于单次生成的批次，新波次必须 Reset，不能把失效指针当作击败。
+struct AETHERGAMEPLAY_API FAetherEncounterWaveLifecycle
+{
+    EAetherEncounterWaveState State(const TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies,AAetherFrontierCharacter** ActiveEnemy=nullptr) const;
+    void RecordEnding(const TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies,AActor* Actor);
+    void Reset(){DefeatedOnEnd.Reset();}
+private:
+    TMap<int32,bool> DefeatedOnEnd;
+};
 USTRUCT()
 struct FAetherEncounterRun
 {
@@ -34,6 +47,7 @@ struct FAetherCamp
  bool bSpawned=false;
  bool bRewardCreated=false;
  bool bSpawnFailed=false;
+ FAetherEncounterWaveLifecycle Lifecycle;
  bool CanCreateClearReward() const;
 };
 UCLASS()
@@ -63,6 +77,13 @@ public:
     virtual void Tick(float Dt) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 private:
+    friend class FAetherEncounterLifecycleTest;
+    FAetherEncounterWaveLifecycle AbbeyLifecycle,RelayLifecycle;
+    void WatchEnemies(const TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies);
+    void ReleaseEnemies(TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies,FAetherEncounterWaveLifecycle& Lifecycle);
+    bool RefreshCampAvailability(FAetherCamp& Camp);
+    UFUNCTION() void EnemyDestroyed(AActor* Actor);
+    UFUNCTION() void EnemyEndPlay(AActor* Actor,EEndPlayReason::Type Reason);
     void SetPhase(FAetherEncounterRun& Run,EAetherEncounterPhase Phase);
     void SpawnWave(FAetherEncounterRun& Run,TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies);
     void UpdateRun(FAetherEncounterRun& Run,TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies,float Dt,float& EmptySince);

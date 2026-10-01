@@ -6,6 +6,54 @@
 #include "Net/UnrealNetwork.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
+EAetherEncounterWaveState FAetherEncounterWaveLifecycle::State(const TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies,AAetherFrontierCharacter** ActiveEnemy) const
+{
+    if(ActiveEnemy)*ActiveEnemy=nullptr;
+    if(Enemies.IsEmpty())return EAetherEncounterWaveState::Unavailable;
+    bool Active=false;
+    for(int32 Index=0;Index<Enemies.Num();++Index)
+    {
+        if(const bool* Defeated=DefeatedOnEnd.Find(Index))
+        {if(!*Defeated)return EAetherEncounterWaveState::Unavailable;continue;}
+        auto* Enemy=Enemies[Index].Get();
+        if(!IsValid(Enemy)||Enemy->IsActorBeingDestroyed())return EAetherEncounterWaveState::Unavailable;
+        if(Enemy->Alive()){Active=true;if(ActiveEnemy&&!*ActiveEnemy)*ActiveEnemy=Enemy;}
+    }
+    return Active?EAetherEncounterWaveState::Active:EAetherEncounterWaveState::Cleared;
+}
+void FAetherEncounterWaveLifecycle::RecordEnding(const TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies,AActor* Actor)
+{
+    for(int32 Index=0;Index<Enemies.Num();++Index)
+        if(Enemies[Index].Get()==Actor&&!DefeatedOnEnd.Contains(Index))
+        {
+            // EndPlay/Destroyed 广播期间对象尚可读取；第一条离场事实不可被后续回调改写。
+            const auto* Enemy=Enemies[Index].Get();
+            DefeatedOnEnd.Add(Index,Enemy&&Enemy->HasAuthority()&&!Enemy->Alive());
+        }
+}
+void AAetherEncounterDirector::WatchEnemies(const TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies)
+{
+    for(const auto& Enemy:Enemies)if(IsValid(Enemy))
+    {
+        Enemy->OnEndPlay.AddUniqueDynamic(this,&AAetherEncounterDirector::EnemyEndPlay);
+        Enemy->OnDestroyed.AddUniqueDynamic(this,&AAetherEncounterDirector::EnemyDestroyed);
+    }
+}
+void AAetherEncounterDirector::ReleaseEnemies(TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies,FAetherEncounterWaveLifecycle& Lifecycle)
+{
+    for(const auto& Enemy:Enemies)if(IsValid(Enemy))Enemy->Destroy();
+    Enemies.Reset();Lifecycle.Reset();
+}
+void AAetherEncounterDirector::EnemyDestroyed(AActor* Actor)
+{
+    if(!HasAuthority())return;
+    AbbeyLifecycle.RecordEnding(AbbeyEnemies,Actor);RelayLifecycle.RecordEnding(RelayEnemies,Actor);
+    for(auto& Camp:Camps)Camp.Lifecycle.RecordEnding(Camp.Enemies,Actor);
+}
+void AAetherEncounterDirector::EnemyEndPlay(AActor* Actor,EEndPlayReason::Type Reason)
+{EnemyDestroyed(Actor);}
+
 AAetherEncounterDirector::AAetherEncounterDirector()
 {bReplicates=true;bAlwaysRelevant=true;PrimaryActorTick.bCanEverTick=true;PrimaryActorTick.TickInterval=.1;Abbey.Definition="Abbey";Relay.Definition="Relay";}
 void AAetherEncounterDirector::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -49,7 +97,8 @@ FString AAetherEncounterDirector::Start(AAetherFrontierCharacter* C,bool Public)
 }
 void AAetherEncounterDirector::SpawnWave(FAetherEncounterRun& R,TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies)
 {
-    for(const auto& E:Enemies)if(IsValid(E))E->Destroy();Enemies.Reset();
+    auto& Lifecycle=R.Definition==TEXT("Relay")?RelayLifecycle:AbbeyLifecycle;
+    ReleaseEnemies(Enemies,Lifecycle);
     auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(!M){SetPhase(R,EAetherEncounterPhase::Failed);return;}
     const bool Public=R.Definition=="Relay",Boss=R.Phase==EAetherEncounterPhase::Boss;
     const FName Definition=Public?FName(*FString::Printf(TEXT("Relay%d"),R.Wave)):R.Phase==EAetherEncounterPhase::Front?FName("AbbeyFront"):R.Phase==EAetherEncounterPhase::Channel?FName("AbbeyChannel"):Boss?FName("AbbeyBoss"):FName("AbbeyElite");
@@ -59,6 +108,7 @@ void AAetherEncounterDirector::SpawnWave(FAetherEncounterRun& R,TArray<TObjectPt
     FString Reason;
     if(!M->SpawnFighterBatch(Rule->Types,Locations,Enemies,Reason))
     {SetPhase(R,EAetherEncounterPhase::Failed);UE_LOG(LogTemp,Error,TEXT("AETHER_ENCOUNTER_SPAWN_FAILED %s"),*Reason);return;}
+    WatchEnemies(Enemies);
     for(const auto& Entry:Enemies)
     {
         auto* E=Entry.Get();E->EncounterId=R.Definition;E->MaxHealth*=R.LockedSeats==2?1:R.LockedSeats==3?1.3:1.65;
@@ -123,12 +173,22 @@ void AAetherEncounterDirector::UpdateRun(FAetherEncounterRun& R,TArray<TObjectPt
         if(It->Fighter==EAetherFighter::Player&&It->Alive()&&Participates(*It,R.Definition)&&FVector::DistSquared(It->GetActorLocation(),Center)<FMath::Square(5500.)){Any=true;break;}
     if(Any)EmptySince=0;else if(EmptySince==0)EmptySince=Now;
     if((EmptySince>0&&Now-EmptySince>10)||Now-R.PhaseStarted>600)
-    {SetPhase(R,EAetherEncounterPhase::Failed);for(const auto& E:Enemies)if(IsValid(E))E->Destroy();Enemies.Reset();Channeler=nullptr;return;}
-    int32 Living=0;for(const auto& E:Enemies)if(IsValid(E)&&E->Alive())++Living;
+    {SetPhase(R,EAetherEncounterPhase::Failed);ReleaseEnemies(Enemies,Public?RelayLifecycle:AbbeyLifecycle);Channeler=nullptr;return;}
+    // Relay 存档恢复到引导阶段时没有剩余波次，这是唯一允许空成员表的活动阶段。
+    AAetherFrontierCharacter* ActiveEnemy=nullptr;
+    const auto EnemyState=Public&&R.Phase==EAetherEncounterPhase::Channel&&Enemies.IsEmpty()
+        ?EAetherEncounterWaveState::Cleared:(Public?RelayLifecycle:AbbeyLifecycle).State(Enemies,&ActiveEnemy);
+    if(EnemyState==EAetherEncounterWaveState::Unavailable)
+    {
+        SetPhase(R,EAetherEncounterPhase::Failed);ReleaseEnemies(Enemies,Public?RelayLifecycle:AbbeyLifecycle);
+        UE_LOG(LogTemp,Warning,TEXT("AETHER_ENCOUNTER_MEMBERS_UNAVAILABLE %s"),*R.Definition.ToString());return;
+    }
+    const bool Cleared=EnemyState==EAetherEncounterWaveState::Cleared;
     if(R.Phase==EAetherEncounterPhase::Boss)
     {
-        if(Living==0){SetPhase(R,EAetherEncounterPhase::Succeeded);Settle(R);return;}
-        auto* Boss=Enemies[0].Get();const float Age=Now-Boss->BossPhaseStarted;
+        if(Cleared){SetPhase(R,EAetherEncounterPhase::Succeeded);Settle(R);return;}
+        auto* Boss=ActiveEnemy;
+        const float Age=Now-Boss->BossPhaseStarted;
         if((Boss->BossPhase==0&&(Age>12||Boss->BossPressure>=40))||(Boss->BossPhase==1&&(Age>6||Boss->Reactive->State.ElectricalWetness01>.25))||(Boss->BossPhase==2&&Age>8))
         {Boss->BossPhase=(Boss->BossPhase+1)%3;Boss->BossPhaseStarted=Now;++Boss->BossVersion;Boss->BossPressure=0;Boss->ForceNetUpdate();}
         if(Boss->BossPhase==2){Boss->Equipment->CancelAttack();Boss->StunUntil=Now+.2f;}
@@ -153,7 +213,7 @@ void AAetherEncounterDirector::UpdateRun(FAetherEncounterRun& R,TArray<TObjectPt
                 if(!GetWorld()->LineTraceTestByChannel(Channeler->GetActorLocation(),Valve->GetActorLocation(),ECC_Visibility,Q))R.Progress+=FMath::Min(Dt,.2f);
             }
         }
-        if(R.Progress>=3*(R.Wave+1)&&Living==0)
+        if(R.Progress>=3*(R.Wave+1)&&Cleared)
         {
             if(Public){SetPhase(R,EAetherEncounterPhase::Succeeded);Channeler=nullptr;Settle(R);}
             else if(++R.Wave>=3){SetPhase(R,EAetherEncounterPhase::Elite);Channeler=nullptr;SpawnWave(R,Enemies);}
@@ -161,7 +221,7 @@ void AAetherEncounterDirector::UpdateRun(FAetherEncounterRun& R,TArray<TObjectPt
         }
         return;
     }
-    if(Living>0)return;
+    if(!Cleared)return;
     if(Public)
     {
         if(++R.Wave<3)SpawnWave(R,Enemies);else{R.Wave=0;SetPhase(R,EAetherEncounterPhase::Channel);}
@@ -175,12 +235,12 @@ void AAetherEncounterDirector::Tick(float Dt)
 bool FAetherCamp::CanCreateClearReward() const
 {
     if(!bSpawned||bSpawnFailed||bRewardCreated||!Instance.IsValid()||Enemies.IsEmpty())return false;
-    for(const auto& Enemy:Enemies)if(IsValid(Enemy)&&Enemy->Alive())return false;
-    return true;
+    return Lifecycle.State(Enemies)==EAetherEncounterWaveState::Cleared;
 }
 bool AAetherEncounterDirector::SpawnCamp(AAetherFrontierMode& Mode,FAetherCamp& Camp,const FAetherEncounterRule& Rule)
 {
     if(Camp.bSpawned||!Camp.Enemies.IsEmpty())return false;
+    Camp.Lifecycle.Reset();
     TArray<FVector> Locations;for(int32 I=0;I<Rule.Types.Num();++I)Locations.Add(Rule.Center+FVector(I*180,0,0));
     FString Reason;
     if(!Mode.SpawnFighterBatch(Rule.Types,Locations,Camp.Enemies,Reason))
@@ -188,7 +248,14 @@ bool AAetherEncounterDirector::SpawnCamp(AAetherFrontierMode& Mode,FAetherCamp& 
         Camp.bSpawned=false;Camp.bSpawnFailed=true;Camp.bRewardCreated=false;Camp.Instance.Invalidate();
         UE_LOG(LogTemp,Error,TEXT("AETHER_CAMP_SPAWN_FAILED %s"),*Reason);return false;
     }
+    WatchEnemies(Camp.Enemies);
     Camp.bSpawned=true;Camp.bSpawnFailed=false;Camp.Instance=FGuid::NewGuid();Camp.ClearedAt=0;Camp.bRewardCreated=false;return true;
+}
+bool AAetherEncounterDirector::RefreshCampAvailability(FAetherCamp& Camp)
+{
+    if(Camp.bRewardCreated||Camp.Lifecycle.State(Camp.Enemies)!=EAetherEncounterWaveState::Unavailable)return true;
+    ReleaseEnemies(Camp.Enemies,Camp.Lifecycle);Camp.bSpawned=false;Camp.bSpawnFailed=true;Camp.Instance.Invalidate();
+    UE_LOG(LogTemp,Warning,TEXT("AETHER_CAMP_MEMBERS_UNAVAILABLE %s"),*Camp.Definition.ToString());return false;
 }
 void AAetherEncounterDirector::UpdateCamps()
 {
@@ -206,11 +273,12 @@ void AAetherEncounterDirector::UpdateCamps()
         if(Camp.bSpawnFailed){if(Distance>3000)Camp.bSpawnFailed=false;continue;}
         if(!Camp.bSpawned&&Distance<2200&&!SpawnCamp(*M,Camp,*Rule))continue;
         if(!Camp.bSpawned)continue;
-        bool Alive=false;for(const auto& Enemy:Camp.Enemies)Alive|=IsValid(Enemy)&&Enemy->Alive();
+        if(!RefreshCampAvailability(Camp))continue;
+        const auto EnemyState=Camp.Lifecycle.State(Camp.Enemies);
         if(Camp.CanCreateClearReward())
         {if(!M->RecordCampClear(Camp.Definition,Camp.Instance))continue;Camp.bRewardCreated=true;Camp.ClearedAt=Now;}
 
-        if(!Alive&&Camp.bRewardCreated&&Now-Camp.ClearedAt>=Rule->RespawnSeconds&&Distance>3000)
-        {for(const auto& Enemy:Camp.Enemies)if(IsValid(Enemy))Enemy->Destroy();Camp.Enemies.Reset();Camp.bSpawned=false;}
+        if(EnemyState!=EAetherEncounterWaveState::Active&&Camp.bRewardCreated&&Now-Camp.ClearedAt>=Rule->RespawnSeconds&&Distance>3000)
+        {ReleaseEnemies(Camp.Enemies,Camp.Lifecycle);Camp.bSpawned=false;}
     }
 }
