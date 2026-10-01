@@ -10,6 +10,7 @@
 #include "Equipment/AetherElementDamage.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Skills/AetherNpcSkillDefinitions.h"
+#include "AI/AetherNpcPerceptionDefinitions.h"
 #include "Skills/AetherSkillCooldownState.h"
 #include "Framework/AetherAdventure.h"
 #include "Framework/AetherFrontier.h"
@@ -231,7 +232,7 @@ void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
 void AAetherCharacter::PossessedBy(AController* C)
-{ CancelActions();EnemySkillDecision.Reset(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
+{ CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
 void AAetherCharacter::CancelActions()
 {
     if(!HasAuthority())return;
@@ -242,13 +243,13 @@ void AAetherCharacter::CancelActions()
 }
 void AAetherCharacter::UnPossessed()
 {
-    CancelActions();EnemySkillDecision.Reset();
+    CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::UnPossessed();
 }
 void AAetherCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
-    CancelActions();EnemySkillDecision.Reset();
+    CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::EndPlay(Reason);
 }
@@ -590,28 +591,18 @@ void AAetherCharacter::Pacify() { if (HasAuthority()) { bPacified = true; Cancel
 void AAetherCharacter::Think(float Dt)
 {
     if (const auto* Mode = GetWorld()->GetAuthGameMode<AAetherAdventureMode>(); Mode && Mode->bSmoke) return;
-    if (Fighter == EAetherFighter::Player || !Alive()) return;
-    if(!FAetherNpcSkillDecision::IsControlled(*this)){EnemySkillDecision.Reset();bWindingUp=bBlocking=false;return;}
+    if (Fighter == EAetherFighter::Player || !Alive()) {EnemyPerception.Reset();return;}
+    if(!FAetherNpcSkillDecision::IsControlled(*this)){EnemySkillDecision.Reset();EnemyPerception.Reset();bWindingUp=bBlocking=false;return;}
+    const auto* Perception=FAetherNpcPerceptionDefinitions::Get().ForFighter(StaticEnum<EAetherFighter>()->GetNameStringByValue(int64(Fighter)));
+    if(!Perception){EnemyPerception.Reset();bWindingUp=bBlocking=false;SteeringDirection=FVector::ZeroVector;return;}
     const float T = CombatTime();
-    if(T>=NextPerceptionAt)
-    {
-    NextPerceptionAt=T+.25f;
-    AAetherCharacter* Target = nullptr; double Best = FMath::Square(1300.0);
-    for (TActorIterator<AAetherCharacter> It(GetWorld()); It; ++It)
-        if (It->Fighter == EAetherFighter::Player && It->Alive()&&(!Cast<AAetherCharacter>(GetOwner())||GetOwner()==*It))
-        { if(!FAetherNpcSkillDecision::CanTarget(*this,**It))continue;
-          const double D = FVector::DistSquared(It->GetActorLocation(), GetActorLocation());
-          if(D<Best&&FVector::DistSquared(It->GetActorLocation(),Home)<FMath::Square(2600.))
-          {FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherPerception),false,this);Q.AddIgnoredActor(*It);
-           if(!GetWorld()->LineTraceTestByChannel(GetActorLocation()+FVector(0,0,40),It->GetActorLocation()+FVector(0,0,40),ECC_Visibility,Q)){Target=*It;Best=D;}} }
-    if(Target){PerceivedTarget=Target;LastSeenAt=T;LastSeenPosition=Target->GetActorLocation();}
-    }
-    AAetherCharacter* Target=PerceivedTarget.Get();
-    if(Target&&(!FAetherNpcSkillDecision::CanTarget(*this,*Target)||T-LastSeenAt>4||FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(2800.))){PerceivedTarget.Reset();Target=nullptr;}
+    const auto Observed=EnemyPerception.Observe(*this,*Perception);
+    AAetherCharacter* Target=Observed.Target.Get();
     if (T < StunUntil) { bWindingUp = false; bBlocking = false; return; }
-    if (!Target) { bWindingUp = false;bBlocking=false;if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(120.)){const auto Dir=SafeMoveDirection(Home);SetActorRotation(Dir.Rotation());AddMovementInput(Dir,1);}return; }
-    if(T-LastSeenAt>.3f){bWindingUp=false;bBlocking=false;AddMovementInput(SafeMoveDirection(LastSeenPosition),1);return;}
-    FVector Toward = Target->GetActorLocation() - GetActorLocation(); Toward.Z = 0;
+    if (!Target) { bWindingUp = false;bBlocking=false;if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(Perception->HomeArrivalRadiusCm)){const auto Dir=SafeMoveDirection(Home);SetActorRotation(Dir.Rotation());AddMovementInput(Dir,1);}return; }
+    if(!Observed.bVisible){bWindingUp=false;bBlocking=false;AddMovementInput(SafeMoveDirection(Observed.LastSeenPosition),1);return;}
+    // 移动/面向只消费本次可见观察；能力与真实近战命中仍在正式入口复验。
+    FVector Toward = Observed.LastSeenPosition - GetActorLocation(); Toward.Z = 0;
     const auto* NpcLoadout=FAetherNpcSkillDefinitions::Get().Find(SkillLoadoutId);
     if(!NpcLoadout){bWindingUp=bBlocking=false;return;}
     if(!NpcLoadout->OffensiveSkills.IsEmpty())
@@ -620,7 +611,7 @@ void AAetherCharacter::Think(float Dt)
         const auto SkillChoice=EnemySkillDecision.Choose(*this,*Target);
         bWindingUp=bBlocking=false;
         if(SkillChoice.Kind==EAetherNpcSkillChoice::Ready)EnemySkillDecision.TryExecute(*this,*Target,SkillChoice.SkillId);
-        else if(SkillChoice.Kind==EAetherNpcSkillChoice::Approach)AddMovementInput(SafeMoveDirection(Target->GetActorLocation()),1);
+        else if(SkillChoice.Kind==EAetherNpcSkillChoice::Approach)AddMovementInput(SafeMoveDirection(Observed.LastSeenPosition),1);
         return;
     }
     if (bWindingUp)
@@ -638,7 +629,7 @@ void AAetherCharacter::Think(float Dt)
     const auto* Main=Equipment->InSlot(TEXT("MainHand")); const auto* Move=Main?Main->FindAttack(TEXT("Light")):nullptr;
     const float Range = Move?Move->ReachCm-10:130;
     if (Toward.Size() > Range)
-    { bBlocking = Fighter == EAetherFighter::ShieldGuard && Equipment->GuardDefinition(); AddMovementInput(SafeMoveDirection(Target->GetActorLocation()), 1); }
+    { bBlocking = Fighter == EAetherFighter::ShieldGuard && Equipment->GuardDefinition(); AddMovementInput(SafeMoveDirection(Observed.LastSeenPosition), 1); }
     else if (T >= NextAI)
     {
         FCollisionQueryParams Params(SCENE_QUERY_STAT(AetherAI),false,this); Params.AddIgnoredActor(Target);
