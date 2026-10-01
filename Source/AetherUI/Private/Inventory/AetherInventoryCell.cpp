@@ -16,6 +16,21 @@
 #include "Engine/StreamableManager.h"
 #include "InputCoreTypes.h"
 
+namespace
+{
+bool SameDragSource(const FAetherInspectRequest& A,const FAetherInspectRequest& B)
+{
+    // SnapshotRevision 可因其他格或倒计时更新；对象依赖与拥有者身份必须保持精确一致。
+    return A.Context.IsValid()&&B.Context.IsValid()&&A.Context.SessionId==B.Context.SessionId&&
+        A.Context.OwnerIdentity.Equals(B.Context.OwnerIdentity,ESearchCase::CaseSensitive)&&
+        A.Target.Kind==B.Target.Kind&&A.Target.InstanceId==B.Target.InstanceId&&
+        A.Target.SlotId.Equals(B.Target.SlotId,ESearchCase::CaseSensitive)&&
+        A.Target.ContainerId.Equals(B.Target.ContainerId,ESearchCase::CaseSensitive)&&
+        A.Target.DefinitionId.Equals(B.Target.DefinitionId,ESearchCase::CaseSensitive)&&
+        !A.DependencyKey.IsEmpty()&&A.DependencyKey.Equals(B.DependencyKey,ESearchCase::CaseSensitive);
+}
+}
+
 TSharedRef<SWidget> UAetherInventoryCell::RebuildWidget()
 {
     SetIsFocusable(true);if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);
@@ -61,6 +76,7 @@ void UAetherInventoryCell::SetItemState(const FAetherV10ItemInstance* I,const FA
 }
 void UAetherInventoryCell::Present(const FAetherInspectRequest& In,int32 SlotValue,const FString& Text,const FString& IconId,bool Filtered,bool Selected)
 {
+    if(PressedSource.IsSet()&&(Filtered||PressedSlot!=SlotValue||!SameDragSource(PressedSource.GetValue(),In)))PressedSource.Reset();
     const bool NewContext=Request.Context.SessionId!=In.Context.SessionId||Request.Target.InstanceId!=In.Target.InstanceId;
     Request=In;PhysicalSlot=SlotValue;bFiltered=Filtered;SetIsFocusable(!Filtered);TakeWidget();
     ShownText=Filtered?TEXT("筛选外"):Text;Label->SetText(FText::FromString(ShownText+(DropHint.IsEmpty()?FString():LINE_TERMINATOR+DropHint)));
@@ -87,16 +103,38 @@ void UAetherInventoryCell::Present(const FAetherInspectRequest& In,int32 SlotVal
 }
 FReply UAetherInventoryCell::NativeOnMouseButtonDown(const FGeometry& G,const FPointerEvent& E)
 {
+    PressedSource.Reset();
     if(bFiltered)return FReply::Handled();
     if(E.GetEffectingButton()==EKeys::RightMouseButton){OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Details);return FReply::Handled();}
     if(E.GetEffectingButton()==EKeys::LeftMouseButton)
     {
-        SetUserFocus(GetOwningPlayer());OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Select);
-        if(Request.Target.InstanceId.IsValid())return UWidgetBlueprintLibrary::DetectDragIfPressed(E,this,EKeys::LeftMouseButton).NativeReply;
+        CaptureDragSource(E);const auto Selected=Request;const int32 SelectedSlot=PhysicalSlot;
+        // 焦点或选择回调可同步发布新快照；不能在回调后改抓当前格里的替代物品。
+        SetUserFocus(GetOwningPlayer());OnIntent.ExecuteIfBound(Selected,SelectedSlot,EAetherCellIntent::Select);
+        if(PressedSource.IsSet())return UWidgetBlueprintLibrary::DetectDragIfPressed(E,this,EKeys::LeftMouseButton).NativeReply;
         return FReply::Handled();
     }
     return Super::NativeOnMouseButtonDown(G,E);
 }
+void UAetherInventoryCell::CaptureDragSource(const FPointerEvent& E)
+{
+    PressedSource.Reset();
+    if(bFiltered||!GetIsEnabled()||!Request.Context.IsValid()||Request.DependencyKey.IsEmpty()||!Request.Target.InstanceId.IsValid()||
+        (Request.Target.Kind!=EAetherInspectTarget::ItemInstance&&Request.Target.Kind!=EAetherInspectTarget::EquipmentSlot))return;
+    PressedSource=Request;PressedSlot=PhysicalSlot;PressedUser=E.GetUserIndex();PressedPointer=E.GetPointerIndex();bPressedTouch=E.IsTouchEvent();
+}
+bool UAetherInventoryCell::ConsumeDragSource(const FPointerEvent& E,FAetherInspectRequest& Source)
+{
+    Source={};const auto Pressed=MoveTemp(PressedSource);PressedSource.Reset();
+    if(!Pressed.IsSet()||bFiltered||!GetIsEnabled()||PressedSlot!=PhysicalSlot||PressedUser!=E.GetUserIndex()||
+        PressedPointer!=E.GetPointerIndex()||bPressedTouch!=E.IsTouchEvent()||
+        (!E.IsTouchEvent()&&!E.IsMouseButtonDown(EKeys::LeftMouseButton))||!SameDragSource(Pressed.GetValue(),Request))return false;
+    Source=Pressed.GetValue();return true;
+}
+FReply UAetherInventoryCell::NativeOnMouseButtonUp(const FGeometry& G,const FPointerEvent& E)
+{PressedSource.Reset();return Super::NativeOnMouseButtonUp(G,E);}
+void UAetherInventoryCell::NativeOnMouseCaptureLost(const FCaptureLostEvent& E)
+{PressedSource.Reset();Super::NativeOnMouseCaptureLost(E);}
 FReply UAetherInventoryCell::NativeOnKeyDown(const FGeometry& G,const FKeyEvent& E)
 {
     if(E.GetKey()==EKeys::Gamepad_FaceButton_Left)
@@ -112,20 +150,31 @@ void UAetherInventoryCell::NativeOnAddedToFocusPath(const FFocusEvent& InFocusEv
     Super::NativeOnAddedToFocusPath(InFocusEvent);
     if(!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Hover);
 }
+void UAetherInventoryCell::NativeOnRemovedFromFocusPath(const FFocusEvent& InFocusEvent)
+{
+    // DetectDrag 不持有鼠标捕获；切区域/弹窗失焦不能依赖 capture-lost 清理。
+    PressedSource.Reset();Super::NativeOnRemovedFromFocusPath(InFocusEvent);
+}
 void UAetherInventoryCell::NativeOnMouseEnter(const FGeometry& G,const FPointerEvent& E)
 {Super::NativeOnMouseEnter(G,E);if(!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Hover);}
 void UAetherInventoryCell::NativeOnMouseLeave(const FPointerEvent& E)
 {OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Leave);Super::NativeOnMouseLeave(E);}
-void UAetherInventoryCell::NativeOnDragDetected(const FGeometry&,const FPointerEvent&,UDragDropOperation*& Op)
+void UAetherInventoryCell::NativeOnDragDetected(const FGeometry&,const FPointerEvent& E,UDragDropOperation*& Op)
 {
-    if(bFiltered||!Request.Target.InstanceId.IsValid())return;
-    auto* Drag=NewObject<UAetherInventoryDrag>(this);Drag->Source=Request;
+    FAetherInspectRequest Source;if(!ConsumeDragSource(E,Source))return;
+    auto* Drag=NewObject<UAetherInventoryDrag>(this);Drag->Source=Source;
     auto* Visual=CreateWidget<UAetherInventoryCell>(GetOwningPlayer(),GetClass());
-    Visual->Present(Request,PhysicalSlot,Label->GetText().ToString(),ShownIcon,false,true);
+    Visual->Present(Source,PhysicalSlot,Label->GetText().ToString(),ShownIcon,false,true);
     if(Quantity&&Visual->Quantity)Visual->Quantity->SetText(Quantity->GetText());if(Badges&&Visual->Badges)Visual->Badges->SetText(Badges->GetText());
     if(Durability&&Visual->Durability){Visual->Durability->SetPercent(Durability->GetPercent());Visual->Durability->SetVisibility(Durability->GetVisibility());}
     Visual->SetVisibility(ESlateVisibility::HitTestInvisible);Drag->DefaultDragVisual=Visual;Drag->Pivot=EDragPivot::MouseDown;Op=Drag;
 }
+void UAetherInventoryCell::NativeOnDragCancelled(const FDragDropEvent& E,UDragDropOperation* Op)
+{PressedSource.Reset();Super::NativeOnDragCancelled(E,Op);}
+void UAetherInventoryCell::NativeDestruct()
+{PressedSource.Reset();Super::NativeDestruct();}
+void UAetherInventoryCell::ReleaseSlateResources(bool bReleaseChildren)
+{PressedSource.Reset();Super::ReleaseSlateResources(bReleaseChildren);}
 bool UAetherInventoryCell::NativeOnDrop(const FGeometry&,const FDragDropEvent&,UDragDropOperation* Op)
 {
     const auto* Drag=Cast<UAetherInventoryDrag>(Op);
