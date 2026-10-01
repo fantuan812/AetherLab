@@ -1,0 +1,14 @@
+{
+  "SchemaVersion": 1,
+  "Profiles": [
+    {
+      "Id": "Healer",
+      "SampleIntervalSeconds": 0.15,
+      "PatientHealthRatioBelow": 0.65,
+      "SelfHealing": {"Enabled": true, "SkillId": "Body.Mend"},
+      "FriendlyHealing": {"Enabled": true, "SkillId": "Body.Aid"},
+      "Cooling": {"Enabled": true, "SkillId": "Water.Draw", "AboveTemperatureC": 55, "Priority": "BeforeHealing"}
+    }
+  ],
+  "LoadoutProfiles": {"Companion.Healer": "Healer"}
+}
