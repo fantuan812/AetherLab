@@ -27,7 +27,7 @@ bool SameDragSource(const FAetherInspectRequest& A,const FAetherInspectRequest& 
         A.Target.SlotId.Equals(B.Target.SlotId,ESearchCase::CaseSensitive)&&
         A.Target.ContainerId.Equals(B.Target.ContainerId,ESearchCase::CaseSensitive)&&
         A.Target.DefinitionId.Equals(B.Target.DefinitionId,ESearchCase::CaseSensitive)&&
-        !A.DependencyKey.IsEmpty()&&A.DependencyKey==B.DependencyKey;
+        !A.DependencyKey.IsEmpty()&&A.DependencyKey.Equals(B.DependencyKey,ESearchCase::CaseSensitive);
 }
 }
 
@@ -153,7 +153,7 @@ void UAetherInventoryCell::NativeOnAddedToFocusPath(const FFocusEvent& InFocusEv
 void UAetherInventoryCell::NativeOnMouseEnter(const FGeometry& G,const FPointerEvent& E)
 {Super::NativeOnMouseEnter(G,E);if(!bFiltered)OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Hover);}
 void UAetherInventoryCell::NativeOnMouseLeave(const FPointerEvent& E)
-{PressedSource.Reset();OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Leave);Super::NativeOnMouseLeave(E);}
+{OnIntent.ExecuteIfBound(Request,PhysicalSlot,EAetherCellIntent::Leave);Super::NativeOnMouseLeave(E);}
 void UAetherInventoryCell::NativeOnDragDetected(const FGeometry&,const FPointerEvent& E,UDragDropOperation*& Op)
 {
     FAetherInspectRequest Source;if(!ConsumeDragSource(E,Source))return;

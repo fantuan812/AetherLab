@@ -55,7 +55,8 @@ private:
     // 仅保存尚未越过拖动阈值的按下意图；已发命令仍完全由 CommandClient 保管。
     TOptional<FAetherInspectRequest> PressedSource;
     int32 PressedSlot=INDEX_NONE;
-    uint32 PressedUser=0,PressedPointer=0;
+    int32 PressedUser=INDEX_NONE;
+    uint32 PressedPointer=0;
     bool bPressedTouch=false;
     TOptional<FAetherInspectRequest> DropTarget;
     int32 PhysicalSlot=INDEX_NONE;
