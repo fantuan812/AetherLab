@@ -212,11 +212,20 @@ void UAetherBuffRuntime::Advance(double Now,FGuid ExpectedLife)
         for(const auto& O:E.Operations)
         {
             if(!C->Alive()||!SameLife())break;
-            if(O.Kind==EAetherBuffOperation::Heal)C->SetVitals(C->Health()+float(O.Value*E.Stacks),C->Mana(),C->Stamina());
+            if(O.Kind==EAetherBuffOperation::Heal)ApplyHealingTick(O.Value*E.Stacks,ExpectedLife);
             else if(O.Kind==EAetherBuffOperation::Damage){FDamageEvent Damage;C->TakeDamage(float(O.Value*E.Stacks),Damage,nullptr,nullptr);}
         }
     }
     if(Changed&&SameLife())Publish();
+}
+void UAetherBuffRuntime::ApplyHealingTick(double Amount,FGuid ExpectedLife)
+{
+    auto* C=Cast<AAetherCharacter>(GetOwner());FGuid Current;
+    if(!C||!C->Alive()||!FMath::IsFinite(Amount)||Amount<=0||Amount>MAX_flt||!AetherSkillLives::Resolve(*C,Current)||Current!=ExpectedLife)return;
+    const TWeakObjectPtr<UAetherBuffRuntime> Self=this;
+    if(C->ResourceGate->Defer([Self,Amount,ExpectedLife]{if(Self.IsValid())Self->ApplyHealingTick(Amount,ExpectedLife);},EAetherEffectEventKind::BuffTick))return;
+    // 治疗只修改Health，属性集维持上限；Health通知换生命后没有旧MP/SP写回。
+    C->AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetHealthAttribute(),EGameplayModOp::Additive,float(Amount));
 }
 void UAetherBuffRuntime::FlushDue()
 {
@@ -232,8 +241,10 @@ void UAetherBuffRuntime::FlushDue()
             ++PendingDueEvents;
             C->ResourceGate->Defer([Self,At=E.Time,Life]{if(Self.IsValid()){
                 const auto* Owner=Cast<AAetherCharacter>(Self->GetOwner());FGuid Current;
-                if(!Owner||!AetherSkillLives::Resolve(*Owner,Current)||Current!=Life||Self->State.LifeId!=Life)return;
-                --Self->PendingDueEvents;Self->Advance(At,Life);
+                // 出队必须结清所属生命的票据；控制空窗不执行、不推进真实NextDue，重绑后可重试。
+                if(Self->State.LifeId!=Life)return;
+                if(Self->PendingDueEvents>0)--Self->PendingDueEvents;
+                if(Owner&&AetherSkillLives::Resolve(*Owner,Current)&&Current==Life)Self->Advance(At,Life);
                 if(Self->State.LifeId==Life&&Self->PendingDueEvents==0)Self->SchedulingState.Reset();
             }},E.bExpiry?EAetherEffectEventKind::BuffExpire:EAetherEffectEventKind::BuffTick);
         }

@@ -103,6 +103,7 @@ private:
     bool Publish();
     bool SynchronizeLife();
     void Advance(double Now,FGuid ExpectedLife);
+    void ApplyHealingTick(double Amount,FGuid ExpectedLife);
     void PublishTags();
     TWeakObjectPtr<UAbilitySystemComponent> TagOwner;
     bool bOwnedSilence=false,bOwnedStun=false;
