@@ -1,0 +1,2093 @@
+{
+  "schema_version": 1,
+  "title": "AetherLab 全场景素材需求与生产矩阵",
+  "updated_utc": "2026-10-01",
+  "baseline": {
+    "repository": "fantuan812/AetherLab",
+    "commit": "b7ab1f578d37548a4f2fd9f854117e0c91fcd628",
+    "design": "Docs/Design-v4.zh-CN.md"
+  },
+  "scope": {
+    "continuous_worlds": 1,
+    "regions": 6,
+    "scenes": 12,
+    "approx_world_m": [
+      800,
+      800
+    ],
+    "note": "设计建议范围；12场景在同一连续世界，Lab/Field不新增区域"
+  },
+  "production_order": [
+    "确定全游戏场景素材需求",
+    "优化现有共用素材",
+    "全局布局建模",
+    "局部细化"
+  ],
+  "status_counts": {
+    "已有源待模块化": 8,
+    "部分源待补齐": 7,
+    "专用生产模块未检出": 10
+  },
+  "audit_scope": [
+    "SCN01_TwoRoofs_Final.blend 的对象审计",
+    "SCN01_Shelter_TA_Candidate.blend 的对象审计",
+    "main commit下Art/AetherLab/Scenes目录"
+  ],
+  "status_note": "状态表示本审计范围的来源成熟度，不表示成品/运行时验收。未检出不等于用户其他文件不存在。",
+  "planning_note": "kit分组、material_families、production_route、roles、接口与验收项为本轮制作计划；asset_id为素材族ID，不是最终Mesh清单。",
+  "usage_note": "场景用量不从灰盒数量推定；used_in合并明确素材族需求与已列PROP身份，补充项有usage_added_from_prop_contract标记。",
+  "material_families": {
+    "stone": "湿石/玄武岩族，优先Wet basalt与已有石基材质",
+    "earth": "湿泥/山地土族，优先Wet mountain earth与已有地形材质",
+    "timber": "旧木/雪松族，优先Aged cedar、SHR与H01木材源",
+    "slate": "灰绿/深蓝瓦族，优先SHR/H01瓦源，避免每瓦复制材质",
+    "plaster": "抹灰族，优先H01_Lime_plaster等已有源",
+    "foliage": "自建叶草图集与Rain moss，核对AtlasUV/透明边缘",
+    "metal": "旧铁/铜族，优先Forged iron与Lantern aged brass；导体身份另记",
+    "glass": "灯罩/窗/温室玻璃族；现有灯窗源与待补变体分开",
+    "cloth": "亚麻/布篷/补给布族，优先已有棚屋/货车源",
+    "water": "独立水面族，优先Rainwater等源；冰/导电代理待补",
+    "ceramic": "陶/绝缘族；可回收SHR_Matte_stoneware，专用绝缘模块待补",
+    "fx": "火/烟/湿痕状态表现族，优先FX_ShelteredFire；不代表规则完成"
+  },
+  "regions": [
+    {
+      "id": "town",
+      "name": "余炉镇 Hub",
+      "scenes": [
+        "SCN_02",
+        "SCN_03",
+        "SCN_04",
+        "SCN_05",
+        "SCN_06",
+        "SCN_07"
+      ],
+      "center_m": [
+        0,
+        0
+      ],
+      "suggested_extent": "半径80～100米"
+    },
+    {
+      "id": "trail",
+      "name": "雨落山径",
+      "scenes": [
+        "SCN_01"
+      ],
+      "center_m": [
+        -65,
+        -290
+      ],
+      "suggested_extent": "约80×180米"
+    },
+    {
+      "id": "ashwood",
+      "name": "灰烬林地",
+      "scenes": [
+        "SCN_08"
+      ],
+      "center_m": [
+        -270,
+        0
+      ],
+      "suggested_extent": "约140×180米"
+    },
+    {
+      "id": "waterworks",
+      "name": "旧水工坊",
+      "scenes": [
+        "SCN_09"
+      ],
+      "center_m": [
+        270,
+        0
+      ],
+      "suggested_extent": "约130×150米；60×80米多解核心位于其内"
+    },
+    {
+      "id": "abbey",
+      "name": "断钟修道院",
+      "scenes": [
+        "SCN_10",
+        "SCN_11"
+      ],
+      "center_m": [
+        0,
+        270
+      ],
+      "suggested_extent": "约170×160米"
+    },
+    {
+      "id": "relay",
+      "name": "雷雨中继活动点",
+      "scenes": [
+        "SCN_12"
+      ],
+      "center_m": [
+        250,
+        220
+      ],
+      "suggested_extent": "约90×90米；塔高约12米"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "SCN_01",
+      "name": "雨落山径",
+      "region": "trail",
+      "purpose": "Q01出生、拾取、可选救援，接SCN_03",
+      "needs": [
+        "湿石路/坡/浅沟、岩壁植被、石基木顶驿站、栏墙/灯链/路标",
+        "PROP_01水桶+独立水面、02物资箱、03水囊、04炉灯、06路标、20货车、21药袋布卷",
+        "小火/焦痕/湿痕"
+      ],
+      "families": [
+        "landscape",
+        "road_path",
+        "masonry",
+        "timber_structure",
+        "roof_shelter",
+        "vegetation",
+        "lighting",
+        "container_supply",
+        "cart",
+        "water_surface",
+        "reactive_fire",
+        "furniture_signage"
+      ],
+      "prop_ids": [
+        "PROP_01",
+        "PROP_02",
+        "PROP_03",
+        "PROP_04",
+        "PROP_06",
+        "PROP_20",
+        "PROP_21"
+      ],
+      "constraints": [
+        "箱1、补给2、水桶1、小火1、路标2",
+        "货车轮轴/水桶/火源可分离",
+        "可见备用小径，不要求未学会的魔法"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L259-L271"
+    },
+    {
+      "id": "SCN_02",
+      "name": "余炉镇广场",
+      "region": "town",
+      "purpose": "Hub任务与公共恢复，南门进入，各服务与北/东西出路汇集",
+      "needs": [
+        "石路/排水槽、石基木框抹灰两层房屋、灰绿/深蓝屋瓦、雨棚、窗门",
+        "PROP_05中央炉灯+井/饮水槽、07布告架、04路灯",
+        "长凳/花箱/货架"
+      ],
+      "families": [
+        "road_path",
+        "masonry",
+        "timber_structure",
+        "roof_shelter",
+        "town_facade",
+        "lighting",
+        "water_surface",
+        "furniture_signage",
+        "hub_hearth"
+      ],
+      "prop_ids": [
+        "PROP_04",
+        "PROP_05",
+        "PROP_06",
+        "PROP_07"
+      ],
+      "constraints": [
+        "广场直径约35米",
+        "炉灯低矮",
+        "前后状态只改灯亮/供水，不换整城"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L274-L286"
+    },
+    {
+      "id": "SCN_03",
+      "name": "南门与入城小路",
+      "region": "town",
+      "purpose": "Q01终点、Q02登记，山径→广场，可指向旅舍",
+      "needs": [
+        "与山径共用道路/石墙/灯架/门构件",
+        "门洞、石墩、木门、带顶登记台、运货侧道",
+        "登记册/章/垫/收纳箱小物件"
+      ],
+      "families": [
+        "road_path",
+        "masonry",
+        "timber_structure",
+        "roof_shelter",
+        "town_facade",
+        "lighting",
+        "container_supply",
+        "furniture_signage",
+        "registration_station"
+      ],
+      "prop_ids": [
+        "PROP_02",
+        "PROP_04",
+        "PROP_06"
+      ],
+      "constraints": [
+        "门洞约5米宽×6米高",
+        "登记台放门内侧",
+        "主路进城不可被可破坏门卡死"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L289-L299"
+    },
+    {
+      "id": "SCN_04",
+      "name": "武馆",
+      "region": "town",
+      "purpose": "Q03剑术/格挡，Hub教学分区",
+      "needs": [
+        "城镇建筑套件室内版、木地板、边柱/梁/高窗/布幔、训练垫",
+        "PROP_08傀儡、09武器架",
+        "两训练位+导师示范区"
+      ],
+      "families": [
+        "masonry",
+        "timber_structure",
+        "town_facade",
+        "furniture_signage",
+        "training_equipment"
+      ],
+      "prop_ids": [
+        "PROP_08",
+        "PROP_09"
+      ],
+      "constraints": [
+        "约24×20米，净高至少5米",
+        "柱不进对练中心",
+        "受击件可拆、局部会话重置"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L302-L314"
+    },
+    {
+      "id": "SCN_05",
+      "name": "术院",
+      "region": "town",
+      "purpose": "Q03火/水教学，Hub教学分区",
+      "needs": [
+        "小型温室式教学工坊",
+        "石台/木抽屉/低玻璃顶/铜架/绝缘脚",
+        "PROP_10材料试验台，木材/金属片/独立水槽/耐热托盘、水壶布巾"
+      ],
+      "families": [
+        "masonry",
+        "timber_structure",
+        "town_facade",
+        "water_surface",
+        "reactive_fire",
+        "training_equipment",
+        "electrical_components"
+      ],
+      "prop_ids": [
+        "PROP_10"
+      ],
+      "constraints": [
+        "木/金属/水三试验位",
+        "干、点燃、浇湿状态可读",
+        "台间双人通道",
+        "电导部件与石绝缘分离"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L317-L329"
+    },
+    {
+      "id": "SCN_06",
+      "name": "工坊商店",
+      "region": "town",
+      "purpose": "补给交易/整装，沿Hub街边",
+      "needs": [
+        "共用半开放店铺壳、柜台、工作台、冷却水槽、浅盘/药瓶、木柜、工具卷/秤/小砧/夹具、材料短框",
+        "PROP_09武器架、21药袋布卷，生活照明"
+      ],
+      "families": [
+        "masonry",
+        "timber_structure",
+        "roof_shelter",
+        "town_facade",
+        "lighting",
+        "container_supply",
+        "water_surface",
+        "furniture_signage",
+        "training_equipment",
+        "shop_workbench"
+      ],
+      "prop_ids": [
+        "PROP_09",
+        "PROP_21"
+      ],
+      "constraints": [
+        "顾客站位和制作区分离",
+        "可交易陈列与背景工具分离",
+        "售罄用空格/收盘，不新建界面式场景物"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L332-L344"
+    },
+    {
+      "id": "SCN_07",
+      "name": "旅舍与队伍集结点",
+      "region": "town",
+      "purpose": "Q02恢复点、Q06组队，Hub往返落点",
+      "needs": [
+        "共用旅舍门廊/屋檐/圆角矮墙/院门/排水沟、长凳/毯子/饮水盆/花箱",
+        "PROP_07布告架、19休整灯座、04灯"
+      ],
+      "families": [
+        "road_path",
+        "masonry",
+        "timber_structure",
+        "roof_shelter",
+        "town_facade",
+        "vegetation",
+        "lighting",
+        "furniture_signage",
+        "rest_checkpoint"
+      ],
+      "prop_ids": [
+        "PROP_04",
+        "PROP_07",
+        "PROP_19"
+      ],
+      "constraints": [
+        "小院约18×16米，四人站位、AI通道",
+        "NPC等待点分开",
+        "昼夜同布局"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L347-L359"
+    },
+    {
+      "id": "SCN_08",
+      "name": "灰烬林地",
+      "region": "ashwood",
+      "purpose": "Q04灭火/救援，Hub西外勤",
+      "needs": [
+        "森林地表/湿草/河岸/浅水/岩块、树木与倒木、局部炭化落叶、货棚/木梁/可烧支撑",
+        "PROP_01水桶、15支撑、16绳",
+        "火/灭火残烟/焦痕"
+      ],
+      "families": [
+        "landscape",
+        "road_path",
+        "timber_structure",
+        "roof_shelter",
+        "vegetation",
+        "container_supply",
+        "water_surface",
+        "reactive_fire",
+        "bridge_support"
+      ],
+      "prop_ids": [
+        "PROP_01",
+        "PROP_15",
+        "PROP_16"
+      ],
+      "constraints": [
+        "三指定火点+湿河岸+货棚",
+        "主路、绕行、捷径都可读",
+        "普通树与可破坏结构视觉不同"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L362-L374"
+    },
+    {
+      "id": "SCN_09",
+      "name": "旧水工坊",
+      "region": "waterworks",
+      "purpose": "Q05复流，Hub东外勤，接东北环路",
+      "needs": [
+        "石渠槽/池底/步石/干平台、维护木栈道/桥/木板/栏杆、低塔/水轮",
+        "PROP_11机械水闸、12断路开关/移动导体变体、13线圈、15支撑、16绳、01有限水桶、02木箱",
+        "源/接收端/绝缘墩/独立水面"
+      ],
+      "families": [
+        "road_path",
+        "masonry",
+        "timber_structure",
+        "container_supply",
+        "water_surface",
+        "bridge_support",
+        "waterworks_mechanics",
+        "electrical_components"
+      ],
+      "prop_ids": [
+        "PROP_01",
+        "PROP_02",
+        "PROP_11",
+        "PROP_12",
+        "PROP_13",
+        "PROP_15",
+        "PROP_16"
+      ],
+      "constraints": [
+        "闸2、开关2、池1、石墩3",
+        "内部核心约60×80米，不另建地图",
+        "永久维护旁路、不要求鸣雷/凝霜",
+        "桥与绳、源与接点独立"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L377-L465"
+    },
+    {
+      "id": "SCN_10",
+      "name": "断钟修道院外部",
+      "region": "abbey",
+      "purpose": "Q07前庭→水道→侧廊，接北路与SCN_11",
+      "needs": [
+        "石拱/窗/墙/柱/局部瓦模块、门框、缺损钟楼与铜钟、石木桥/真实挂点/维护道、浅渠、协作平台、近路开关",
+        "复用PROP_15/16及水/断电构件"
+      ],
+      "families": [
+        "road_path",
+        "masonry",
+        "roof_shelter",
+        "lighting",
+        "water_surface",
+        "bridge_support",
+        "electrical_components",
+        "abbey_architecture"
+      ],
+      "prop_ids": [
+        "PROP_15",
+        "PROP_16"
+      ],
+      "constraints": [
+        "主楼2～3层、钟楼略过树冠",
+        "并行入口和短安全整备区",
+        "不堵唯一退路、不扩成新副本群"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L392-L404"
+    },
+    {
+      "id": "SCN_11",
+      "name": "钟炉大厅",
+      "region": "abbey",
+      "purpose": "Q07 Boss及供水机制，接SCN_10并保留返回",
+      "needs": [
+        "石地/嵌铜槽、圆形或宽八边大厅模块、外环/三主柱/供水平台/维修道、低中央炉台、断钟支架、百叶/炉窗/局部火线",
+        "复用水槽/闸阀/绝缘连接，PROP_17古印/18奖励箱若使用对应呈现"
+      ],
+      "families": [
+        "road_path",
+        "masonry",
+        "water_surface",
+        "reactive_fire",
+        "waterworks_mechanics",
+        "electrical_components",
+        "bell_furnace",
+        "reward_objects"
+      ],
+      "prop_ids": [
+        "PROP_11",
+        "PROP_17",
+        "PROP_18"
+      ],
+      "constraints": [
+        "直径34～40米、连续外环至少4米、两供水点",
+        "只开放明确机关与局部支撑破坏",
+        "失败后可重入、击败可返回"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L407-L419"
+    },
+    {
+      "id": "SCN_12",
+      "name": "雷雨中继活动场地",
+      "region": "relay",
+      "purpose": "三波公共防守，东北环路",
+      "needs": [
+        "石平台/可走外环/两条入侵小路/四低掩体",
+        "PROP_22中继塔核心、14接地杆×2、13铜环/陶绝缘族、04救援灯",
+        "真实地槽/导线/干石站位"
+      ],
+      "families": [
+        "landscape",
+        "road_path",
+        "masonry",
+        "lighting",
+        "electrical_components",
+        "relay_core"
+      ],
+      "prop_ids": [
+        "PROP_04",
+        "PROP_13",
+        "PROP_14",
+        "PROP_22"
+      ],
+      "constraints": [
+        "约90×90米、塔高约12米",
+        "常态/失稳/稳定状态",
+        "电危险来自源与接触，雨湿不自动导电",
+        "结算停止战斗危险"
+      ],
+      "source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L422-L434"
+    }
+  ],
+  "assets": [
+    {
+      "asset_id": "landscape",
+      "name": "基础地形与岩土",
+      "kit": "Landscape",
+      "used_in": [
+        "SCN_01",
+        "SCN_08",
+        "SCN_12"
+      ],
+      "regions": [
+        "ashwood",
+        "relay",
+        "trail"
+      ],
+      "purpose": "地形块、岩壁、坡、湿泥/河岸与背景岩层；远景不是新增可玩区域",
+      "production_route": [
+        "复用",
+        "改造",
+        "远景"
+      ],
+      "roles": [
+        "通用",
+        "连接"
+      ],
+      "dimension_interface": "近景地形/河岸与远景分件；按道路标高接合，岩地过渡待试拼",
+      "material_families": [
+        "earth",
+        "stone",
+        "foliage"
+      ],
+      "status": "已有源待模块化",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "REFINED_Valley"
+      ],
+      "source_note": "已有连续谷地/岩石/山地；抽取地形与岩块族，远景与近景拆清",
+      "required_acceptance": "近远分层、坡侧/河岸/岩地接合图与人物尺度图",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "road_path",
+      "name": "通路与地面",
+      "kit": "SharedCore",
+      "used_in": [
+        "SCN_01",
+        "SCN_02",
+        "SCN_03",
+        "SCN_07",
+        "SCN_08",
+        "SCN_09",
+        "SCN_10",
+        "SCN_11",
+        "SCN_12"
+      ],
+      "regions": [
+        "abbey",
+        "ashwood",
+        "relay",
+        "town",
+        "trail",
+        "waterworks"
+      ],
+      "purpose": "石路、坡道、台阶、栈道、平台、排水沟、栏墙/栏杆；统一拼接与净空",
+      "production_route": [
+        "复用",
+        "改造",
+        "新增"
+      ],
+      "roles": [
+        "通用",
+        "连接"
+      ],
+      "dimension_interface": "本批Path/Wall/Fence候选节距4m；净宽和视觉BBox另记；坡阶/交叉/端头待闭环",
+      "material_families": [
+        "stone",
+        "earth",
+        "timber"
+      ],
+      "status": "已有源待模块化",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SM_Path_4m",
+        "ENV_PathExtensions",
+        "SM_Wall_4m",
+        "SM_Fence_4m",
+        "SHR_Approved_EntryStep_Option"
+      ],
+      "source_note": "道路、墙、栏杆、台阶均有源；规范枢轴、连接、净空和边缘而非重造",
+      "required_acceptance": "实际锚点、接缝、标高、共享柱、净空；CoreKit只覆盖其中一部分",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "masonry",
+      "name": "石砌结构",
+      "kit": "StoneStructure",
+      "used_in": [
+        "SCN_01",
+        "SCN_02",
+        "SCN_03",
+        "SCN_04",
+        "SCN_05",
+        "SCN_06",
+        "SCN_07",
+        "SCN_09",
+        "SCN_10",
+        "SCN_11",
+        "SCN_12"
+      ],
+      "regions": [
+        "abbey",
+        "relay",
+        "town",
+        "trail",
+        "waterworks"
+      ],
+      "purpose": "石基、墙、柱、拱、地板、门框、石墩；普通结构与可破坏局部有明显区别",
+      "production_route": [
+        "复用",
+        "改造",
+        "新增"
+      ],
+      "roles": [
+        "通用",
+        "连接"
+      ],
+      "dimension_interface": "基础/墙/拱/门框分件；与门洞、地坪、屋檐连接；拱跨不预设统一值",
+      "material_families": [
+        "stone"
+      ],
+      "status": "部分源待补齐",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SM_Wall_4m",
+        "SCN01_Gate_Refinement",
+        "SCN01_House01_Refinement"
+      ],
+      "source_note": "石块/石基/门框来源可复用；修道院石拱和室内专用组合未检出",
+      "required_acceptance": "内外角、端头、门洞、拱脚、地坪接合及通行净空",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "timber_structure",
+      "name": "木构结构",
+      "kit": "TimberStructure",
+      "used_in": [
+        "SCN_01",
+        "SCN_02",
+        "SCN_03",
+        "SCN_04",
+        "SCN_05",
+        "SCN_06",
+        "SCN_07",
+        "SCN_08",
+        "SCN_09"
+      ],
+      "regions": [
+        "ashwood",
+        "town",
+        "trail",
+        "waterworks"
+      ],
+      "purpose": "梁、柱、木框、木门、木板、室内木地板",
+      "production_route": [
+        "复用",
+        "改造"
+      ],
+      "roles": [
+        "通用",
+        "连接"
+      ],
+      "dimension_interface": "梁柱墙板分件；锚点对应真实支承；普通结构与玩法受击件分开",
+      "material_families": [
+        "timber",
+        "metal"
+      ],
+      "status": "已有源待模块化",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SM_RestStop",
+        "SCN01_Shelter_Refinement",
+        "SCN01_House01_Refinement"
+      ],
+      "source_note": "木柱梁墙门板已有源；按用途抽取，勿把整栋合成单块",
+      "required_acceptance": "梁柱/墙顶交界、非均匀缩放清理和运动/受击边界",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "roof_shelter",
+      "name": "屋顶雨棚",
+      "kit": "RoofShelter",
+      "used_in": [
+        "SCN_01",
+        "SCN_02",
+        "SCN_03",
+        "SCN_06",
+        "SCN_07",
+        "SCN_08",
+        "SCN_10"
+      ],
+      "regions": [
+        "abbey",
+        "ashwood",
+        "town",
+        "trail"
+      ],
+      "purpose": "屋瓦、檐口、雨棚、棚架与挡雨区域",
+      "production_route": [
+        "复用",
+        "改造",
+        "远景"
+      ],
+      "roles": [
+        "通用",
+        "连接"
+      ],
+      "dimension_interface": "屋面/檐口/屋脊/端部/雨棚独立；两可见屋顶类型优先回收",
+      "material_families": [
+        "slate",
+        "timber"
+      ],
+      "status": "已有源待模块化",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SCN01_Shelter_Refinement",
+        "SCN01_House01_Refinement",
+        "SCN01_Two_Visible_Roof_Variants",
+        "REFINE_Staggered_Roofscape"
+      ],
+      "source_note": "已有驿棚、屋瓦、两种可见屋顶；背景轮廓不视为可进入建筑",
+      "required_acceptance": "内外角、檐口/墙头、背面、屋脊和近远轮廓",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "town_facade",
+      "name": "城镇建筑与室内套件",
+      "kit": "TownArchitecture",
+      "used_in": [
+        "SCN_02",
+        "SCN_03",
+        "SCN_04",
+        "SCN_05",
+        "SCN_06",
+        "SCN_07"
+      ],
+      "regions": [
+        "town"
+      ],
+      "purpose": "门窗、抹灰填充、店面、门廊、玻璃顶、基础两层房体",
+      "production_route": [
+        "复用",
+        "改造",
+        "新增",
+        "远景"
+      ],
+      "roles": [
+        "通用",
+        "连接"
+      ],
+      "dimension_interface": "门窗/抹灰填充/店面/门廊与室内地坪配对；温室顶待补",
+      "material_families": [
+        "stone",
+        "timber",
+        "plaster",
+        "glass"
+      ],
+      "status": "部分源待补齐",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SCN01_House01_Refinement",
+        "SCN01_Two_Visible_Roof_Variants",
+        "SET_DistantTownSilhouettes"
+      ],
+      "source_note": "已有门窗房体；近景重复模块、室内和术院玻璃顶仍需补齐",
+      "required_acceptance": "同套件至少完成服务建筑灰盒组合；远景壳不能当室内",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "vegetation",
+      "name": "植被与森林状态",
+      "kit": "ValleyVegetation",
+      "used_in": [
+        "SCN_01",
+        "SCN_07",
+        "SCN_08"
+      ],
+      "regions": [
+        "ashwood",
+        "town",
+        "trail"
+      ],
+      "purpose": "树、灌木、湿草、苔、倒木、落叶及局部烧灼变体",
+      "production_route": [
+        "复用",
+        "改造",
+        "远景"
+      ],
+      "roles": [
+        "通用",
+        "装饰"
+      ],
+      "dimension_interface": "树/草/灌木/倒木分层；落地锚点；普通植物与可破坏支撑区别",
+      "material_families": [
+        "foliage",
+        "timber"
+      ],
+      "status": "已有源待模块化",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "ENV_Foliage",
+        "REFINED_Valley",
+        "REFINE_Connected_Valley_Greenbelts"
+      ],
+      "source_note": "树、草、叶片与河谷植被已有源；有效复用/LOD/透明材质仍需审查",
+      "required_acceptance": "自建图集来源、卡片/透明边缘、遮挡路线和近中远轮廓",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "lighting",
+      "name": "生活照明与路标焦点",
+      "kit": "EverydayLights",
+      "used_in": [
+        "SCN_01",
+        "SCN_02",
+        "SCN_03",
+        "SCN_06",
+        "SCN_07",
+        "SCN_10",
+        "SCN_12"
+      ],
+      "regions": [
+        "abbey",
+        "relay",
+        "town",
+        "trail"
+      ],
+      "purpose": "灯架、铜灯、灯体与分离光效；昼夜材质参数复用",
+      "production_route": [
+        "复用",
+        "改造"
+      ],
+      "roles": [
+        "通用",
+        "装饰"
+      ],
+      "dimension_interface": "灯架挂点、灯体、发光和运行灯光职责分开；4m不限制灯间距",
+      "material_families": [
+        "metal",
+        "glass",
+        "timber"
+      ],
+      "status": "已有源待模块化",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SM_LanternPost",
+        "SCN01_Shelter_Refinement",
+        "SM_SouthGate"
+      ],
+      "source_note": "路灯与生活灯已有；灯体、发光材质、运行灯光独立",
+      "required_acceptance": "源材质/贴图可回读、灯体与光效边界、路口可读性",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "container_supply",
+      "name": "容器与补给",
+      "kit": "SupplyProps",
+      "used_in": [
+        "SCN_01",
+        "SCN_03",
+        "SCN_06",
+        "SCN_08",
+        "SCN_09"
+      ],
+      "regions": [
+        "ashwood",
+        "town",
+        "trail",
+        "waterworks"
+      ],
+      "purpose": "桶/箱/水囊/药袋/布卷；盖、水面、携带部件分离",
+      "production_route": [
+        "复用",
+        "改造",
+        "新增"
+      ],
+      "roles": [
+        "通用"
+      ],
+      "dimension_interface": "桶与水面、箱与盖分离；水囊/药袋/布卷按道具尺度补查",
+      "material_families": [
+        "timber",
+        "metal",
+        "cloth",
+        "water"
+      ],
+      "status": "部分源待补齐",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SM_WaterBarrel",
+        "SM_BrokenCart"
+      ],
+      "source_note": "桶、独立水面、货箱箱盖已有；旅行水囊/药袋/布卷等未逐项定位",
+      "required_acceptance": "干/满/倒地/开盖与携带状态；未定位小物逐项补查",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ],
+      "usage_added_from_prop_contract": [
+        "SCN_03"
+      ]
+    },
+    {
+      "asset_id": "cart",
+      "name": "货车族",
+      "kit": "CargoCart",
+      "used_in": [
+        "SCN_01"
+      ],
+      "regions": [
+        "trail"
+      ],
+      "purpose": "车身、布篷、轮、车轴、绳绑；事故只损坏指定连接件",
+      "production_route": [
+        "复用",
+        "改造"
+      ],
+      "roles": [
+        "通用"
+      ],
+      "dimension_interface": "车身/轮轴/布篷/货箱/绳绑保留零件界限；仅指定连接可损坏",
+      "material_families": [
+        "timber",
+        "metal",
+        "cloth"
+      ],
+      "status": "已有源待模块化",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SM_BrokenCart"
+      ],
+      "source_note": "车身、轮轴、布篷、货箱已有；保留零件边界",
+      "required_acceptance": "实际轮轴/锚点、指定损坏件和完整/事故状态图",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "water_surface",
+      "name": "水槽水面及冰代理",
+      "kit": "WaterChannels",
+      "used_in": [
+        "SCN_01",
+        "SCN_02",
+        "SCN_05",
+        "SCN_06",
+        "SCN_08",
+        "SCN_09",
+        "SCN_10",
+        "SCN_11"
+      ],
+      "regions": [
+        "abbey",
+        "ashwood",
+        "town",
+        "trail",
+        "waterworks"
+      ],
+      "purpose": "独立浅水/桶水、池底/渠底、可读水量与流向，冻结为指定通路代理",
+      "production_route": [
+        "复用",
+        "改造",
+        "新增"
+      ],
+      "roles": [
+        "通用",
+        "连接"
+      ],
+      "dimension_interface": "水面独立于容器/池底；水位/流向/指定冰通路代理分开",
+      "material_families": [
+        "water",
+        "stone"
+      ],
+      "status": "已有源待模块化",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SM_WaterBarrel",
+        "REFINED_Valley"
+      ],
+      "source_note": "桶水/雨水/溪流为独立源；正式可冻结/导电代理须按玩法另外验证",
+      "required_acceptance": "桶水/浅渠/水池接合；冻结/导电为待验证玩法代理",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "reactive_fire",
+      "name": "燃料及火湿状态",
+      "kit": "ReactiveSurfaces",
+      "used_in": [
+        "SCN_01",
+        "SCN_05",
+        "SCN_08",
+        "SCN_11"
+      ],
+      "regions": [
+        "abbey",
+        "ashwood",
+        "town",
+        "trail"
+      ],
+      "purpose": "燃料补丁、可烧件、火/灭火残烟/炭化/湿痕；渲染不代替规则",
+      "production_route": [
+        "复用",
+        "改造",
+        "新增"
+      ],
+      "roles": [
+        "通用",
+        "装饰"
+      ],
+      "dimension_interface": "燃料与火/湿痕/炭化/残烟分层；状态不换掉基础物件身份",
+      "material_families": [
+        "timber",
+        "earth",
+        "fx"
+      ],
+      "status": "部分源待补齐",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "FX_ShelteredFire",
+        "SM_BrokenCart"
+      ],
+      "source_note": "火焰/干草/焦草源存在；可复用燃料与状态绑定仍需加工",
+      "required_acceptance": "干/湿/燃烧/熄灭对照；渲染效果与规则代理分别记录",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "furniture_signage",
+      "name": "生活陈设与任务牌",
+      "kit": "TownFurnishings",
+      "used_in": [
+        "SCN_01",
+        "SCN_02",
+        "SCN_03",
+        "SCN_04",
+        "SCN_06",
+        "SCN_07"
+      ],
+      "regions": [
+        "town",
+        "trail"
+      ],
+      "purpose": "长凳、花箱、货架、布告架、路标、窗帘/毯子；文字为可替换内容",
+      "production_route": [
+        "复用",
+        "改造",
+        "新增"
+      ],
+      "roles": [
+        "通用",
+        "装饰"
+      ],
+      "dimension_interface": "长凳/花箱/架体共用；路标地名与布告纸页可替换",
+      "material_families": [
+        "timber",
+        "metal",
+        "cloth"
+      ],
+      "status": "部分源待补齐",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SCN01_Shelter_Refinement",
+        "SM_RestStop"
+      ],
+      "source_note": "长凳/工作台等已有；专用路标/布告架/花箱与纸页模块未逐项确认",
+      "required_acceptance": "文字面/纸页替换、站位和通道；专用架/标来源补查",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ],
+      "usage_added_from_prop_contract": [
+        "SCN_01",
+        "SCN_03"
+      ]
+    },
+    {
+      "asset_id": "registration_station",
+      "name": "登记站",
+      "kit": "TownServices",
+      "used_in": [
+        "SCN_03"
+      ],
+      "regions": [
+        "town"
+      ],
+      "purpose": "带顶桌台、册簿、印章、布垫、收纳箱",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "hero",
+        "通用"
+      ],
+      "dimension_interface": "门内带顶桌台；复用木桌棚；册簿/印章/布垫可分件",
+      "material_families": [
+        "timber",
+        "cloth",
+        "metal"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "木桌棚可借已有源；登记桌成套与册簿印章未检出",
+      "required_acceptance": "登记交互站位、侧道与入城主路；成套专用源待补",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "training_equipment",
+      "name": "教学训练设施",
+      "kit": "TrainingProps",
+      "used_in": [
+        "SCN_04",
+        "SCN_05",
+        "SCN_06"
+      ],
+      "regions": [
+        "town"
+      ],
+      "purpose": "傀儡、武器架、训练垫、材料台、托盘；可拆受击件与个人会话",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "通用"
+      ],
+      "dimension_interface": "傀儡受击块/武器架/三材料台分件；武馆净高≥5m；台间双人",
+      "material_families": [
+        "timber",
+        "metal",
+        "stone",
+        "water"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "武馆训练傀儡/武器架与术院材料台专用美术模块未检出；运行灰盒存在不等于美术完成",
+      "required_acceptance": "受击/重置边界、剑盾锤尺寸、材料分区和站位",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ],
+      "usage_added_from_prop_contract": [
+        "SCN_06"
+      ]
+    },
+    {
+      "asset_id": "shop_workbench",
+      "name": "商店与制作陈设",
+      "kit": "TownServices",
+      "used_in": [
+        "SCN_06"
+      ],
+      "regions": [
+        "town"
+      ],
+      "purpose": "柜台、工作台、冷却槽、工具、秤、砧、药瓶浅盘",
+      "production_route": [
+        "复用",
+        "改造",
+        "新增"
+      ],
+      "roles": [
+        "通用",
+        "装饰"
+      ],
+      "dimension_interface": "柜台/工作台/冷却槽/陈列分开；顾客与制作位分离",
+      "material_families": [
+        "timber",
+        "metal",
+        "ceramic",
+        "glass"
+      ],
+      "status": "部分源待补齐",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SCN01_Shelter_Refinement"
+      ],
+      "source_note": "工作台/长凳木件可复用；交易柜台/砧具/药瓶陈列专用套件待补",
+      "required_acceptance": "可交易陈列与背景工具分离、售罄变体、交互净空",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "hub_hearth",
+      "name": "Hub炉灯与水井",
+      "kit": "HubLandmarks",
+      "used_in": [
+        "SCN_02"
+      ],
+      "regions": [
+        "town"
+      ],
+      "purpose": "低中央炉灯、井/饮水槽；修复状态不替换结构",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "hero"
+      ],
+      "dimension_interface": "广场约35m；低炉灯/井/饮水槽独立；结构保留，灯亮和供水变状态",
+      "material_families": [
+        "stone",
+        "metal",
+        "water",
+        "glass"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "中央炉灯、水井及修复状态专用模块未检出",
+      "required_acceptance": "修复前后对照、广场视线和路口净空",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "rest_checkpoint",
+      "name": "休整与集结",
+      "kit": "TownServices",
+      "used_in": [
+        "SCN_07"
+      ],
+      "regions": [
+        "town"
+      ],
+      "purpose": "休整灯座、四人站位与NPC分离等待点",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "hero",
+        "通用"
+      ],
+      "dimension_interface": "院子约18×16m；低灯座、四人站位、NPC等待点与通道分开",
+      "material_families": [
+        "stone",
+        "metal",
+        "glass"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "休整灯座未检出；庭院建筑壳/灯/长凳来自共有族",
+      "required_acceptance": "四人/NPC尺度占位、昼夜同布局、返程落点",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "bridge_support",
+      "name": "桥绳与预置结构",
+      "kit": "BridgeStructure",
+      "used_in": [
+        "SCN_08",
+        "SCN_09",
+        "SCN_10"
+      ],
+      "regions": [
+        "abbey",
+        "ashwood",
+        "waterworks"
+      ],
+      "purpose": "桥、可割绳索、脆弱支撑、锚点、断裂/落桥状态；保留维护旁路",
+      "production_route": [
+        "复用",
+        "改造",
+        "新增"
+      ],
+      "roles": [
+        "连接",
+        "通用"
+      ],
+      "dimension_interface": "桥板/梁/绳/支撑/两个真实锚点；桥岸标高和永久维护旁路",
+      "material_families": [
+        "timber",
+        "metal",
+        "stone"
+      ],
+      "status": "部分源待补齐",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [
+        "SM_BrokenCart",
+        "SCN01_Shelter_Refinement"
+      ],
+      "source_note": "木板、绳、梁有源；可落桥总成、明确可割锚点、断裂状态和机械约束合规模块待制作",
+      "required_acceptance": "张紧/松落、破坏/落桥状态、桥岸接合；不能仅复用绳外观",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "waterworks_mechanics",
+      "name": "水利机械",
+      "kit": "Waterworks",
+      "used_in": [
+        "SCN_09",
+        "SCN_11"
+      ],
+      "regions": [
+        "abbey",
+        "waterworks"
+      ],
+      "purpose": "闸门、手轮、拉杆、调压塔、水轮、连通流路",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "hero",
+        "通用"
+      ],
+      "dimension_interface": "闸轨/手轮轴/拉杆/水轮/流路分离；水工坊2闸2开关1池3墩按设计",
+      "material_families": [
+        "stone",
+        "metal",
+        "timber",
+        "water"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "渠闸、手轮、水轮、调压塔专用源未检出",
+      "required_acceptance": "运动轴/开闭限位、流路、维护旁路和机械状态图",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "electrical_components",
+      "name": "古代导能与绝缘",
+      "kit": "AncientConduction",
+      "used_in": [
+        "SCN_05",
+        "SCN_09",
+        "SCN_10",
+        "SCN_11",
+        "SCN_12"
+      ],
+      "regions": [
+        "abbey",
+        "relay",
+        "town",
+        "waterworks"
+      ],
+      "purpose": "固定源、接收端、开关/可移动导体、线圈、陶/石绝缘、真实接点与地槽；雨电分离",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "通用",
+        "连接"
+      ],
+      "dimension_interface": "固定源/接收端/开关/导体/线圈/绝缘脚分件；真实接点与地槽",
+      "material_families": [
+        "metal",
+        "ceramic",
+        "stone"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "导能源/接收端/导体开关/线圈/陶绝缘成套生产模块未检出",
+      "required_acceptance": "接触/断开、操作端/危险端、导线连续；雨湿与通电独立",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "abbey_architecture",
+      "name": "修道院锚点",
+      "kit": "AbbeyLandmarks",
+      "used_in": [
+        "SCN_10"
+      ],
+      "regions": [
+        "abbey"
+      ],
+      "purpose": "钟楼、铜钟、石拱侧廊、水道协作区与返回近路",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "hero",
+        "连接"
+      ],
+      "dimension_interface": "石木瓦基件复用；主楼2～3层、钟楼略过树冠；前庭/水道/侧廊连接",
+      "material_families": [
+        "stone",
+        "metal",
+        "slate"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "修道院钟楼/铜钟/侧廊专用源未检出；基础石木瓦可复用",
+      "required_acceptance": "地标轮廓、并行入口、整备区、返回近路",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "bell_furnace",
+      "name": "钟炉大厅锚点",
+      "kit": "BellFurnace",
+      "used_in": [
+        "SCN_11"
+      ],
+      "regions": [
+        "abbey"
+      ],
+      "purpose": "低炉台、支架/断钟、炉窗/百叶及状态、两供水平台和连续外环",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "hero"
+      ],
+      "dimension_interface": "大厅直径34～40m；连续外环≥4m；低炉台/断钟支架/百叶/两供水点",
+      "material_families": [
+        "stone",
+        "metal",
+        "water",
+        "fx"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "钟炉、断钟支架、炉窗百叶专用源未检出",
+      "required_acceptance": "外环净空、局部破坏/炉窗状态、失败重入与击败后返回空间",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "reward_objects",
+      "name": "结算视觉物",
+      "kit": "RewardProps",
+      "used_in": [
+        "SCN_11"
+      ],
+      "regions": [
+        "abbey"
+      ],
+      "purpose": "古印和奖励箱按既有功能呈现；不新增奖励系统",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "hero",
+        "通用"
+      ],
+      "dimension_interface": "奖励箱可借货箱源派生；古印正背对应；领取/空箱身份一致",
+      "material_families": [
+        "timber",
+        "metal",
+        "stone"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "古印/奖励箱专用呈现未检出；货箱源可供合规变体",
+      "required_acceptance": "正背与开启状态对照；不新增奖励系统或未定展示位置",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    },
+    {
+      "asset_id": "relay_core",
+      "name": "中继设施锚点",
+      "kit": "RelayLandmark",
+      "used_in": [
+        "SCN_12"
+      ],
+      "regions": [
+        "relay"
+      ],
+      "purpose": "石座/铜环/青晶核心、接地杆、四低掩体；常态/失稳/稳定",
+      "production_route": [
+        "新增",
+        "复用"
+      ],
+      "roles": [
+        "hero"
+      ],
+      "dimension_interface": "场地约90×90m、塔约12m；两接地杆、四低掩体、两入侵路和外环",
+      "material_families": [
+        "stone",
+        "metal",
+        "ceramic",
+        "glass"
+      ],
+      "status": "专用生产模块未检出",
+      "production_status": "需求已登记；未完成族级验收",
+      "source_collections": [],
+      "source_note": "中继核心/接地杆专用模块未检出；平台与掩体可用共有基件",
+      "required_acceptance": "常态/失稳/稳定、源接点/干石站位、结算危险停止的美术状态",
+      "evidence": [
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/region_scope.json#/source_asset_reconciliation/families",
+        "Art/AetherLab/Kits/SharedCore_v1/docs/audit/asset_collections_summary.json"
+      ]
+    }
+  ],
+  "shared_props": [
+    {
+      "id": "PROP_01",
+      "name": "水桶",
+      "family": "container_supply",
+      "used_in": [
+        "SCN_01",
+        "SCN_08",
+        "SCN_09"
+      ],
+      "state": "独立水面；干/满水/倒地"
+    },
+    {
+      "id": "PROP_02",
+      "name": "物资箱",
+      "family": "container_supply",
+      "used_in": [
+        "SCN_01",
+        "SCN_03",
+        "SCN_09"
+      ],
+      "state": "箱盖独立"
+    },
+    {
+      "id": "PROP_03",
+      "name": "旅行水囊",
+      "family": "container_supply",
+      "used_in": [
+        "SCN_01"
+      ],
+      "state": "满/空"
+    },
+    {
+      "id": "PROP_04",
+      "name": "手提炉灯",
+      "family": "lighting",
+      "used_in": [
+        "SCN_01",
+        "SCN_02",
+        "SCN_03",
+        "SCN_07",
+        "SCN_12"
+      ],
+      "state": "灯体与光效分离"
+    },
+    {
+      "id": "PROP_05",
+      "name": "中央炉灯",
+      "family": "hub_hearth",
+      "used_in": [
+        "SCN_02"
+      ],
+      "state": "修复前/后"
+    },
+    {
+      "id": "PROP_06",
+      "name": "木路标",
+      "family": "furniture_signage",
+      "used_in": [
+        "SCN_01",
+        "SCN_02",
+        "SCN_03"
+      ],
+      "state": "地名后续贴花"
+    },
+    {
+      "id": "PROP_07",
+      "name": "布告架",
+      "family": "furniture_signage",
+      "used_in": [
+        "SCN_02",
+        "SCN_07"
+      ],
+      "state": "可替换纸页"
+    },
+    {
+      "id": "PROP_08",
+      "name": "训练傀儡",
+      "family": "training_equipment",
+      "used_in": [
+        "SCN_04"
+      ],
+      "state": "受击块可拆"
+    },
+    {
+      "id": "PROP_09",
+      "name": "武器架",
+      "family": "training_equipment",
+      "used_in": [
+        "SCN_04",
+        "SCN_06"
+      ],
+      "state": "剑盾锤尺寸真实"
+    },
+    {
+      "id": "PROP_10",
+      "name": "材料试验台",
+      "family": "training_equipment",
+      "used_in": [
+        "SCN_05"
+      ],
+      "state": "木/金属/水分区"
+    },
+    {
+      "id": "PROP_11",
+      "name": "机械水闸",
+      "family": "waterworks_mechanics",
+      "used_in": [
+        "SCN_09",
+        "SCN_11"
+      ],
+      "state": "轨道/轴一致"
+    },
+    {
+      "id": "PROP_12",
+      "name": "导体断路开关",
+      "family": "electrical_components",
+      "used_in": [
+        "SCN_09"
+      ],
+      "state": "接触/断开；可移动桥片变体"
+    },
+    {
+      "id": "PROP_13",
+      "name": "线圈导体",
+      "family": "electrical_components",
+      "used_in": [
+        "SCN_09",
+        "SCN_12"
+      ],
+      "state": "实际连接路径"
+    },
+    {
+      "id": "PROP_14",
+      "name": "接地杆",
+      "family": "electrical_components",
+      "used_in": [
+        "SCN_12"
+      ],
+      "state": "操作端与危险端区分"
+    },
+    {
+      "id": "PROP_15",
+      "name": "脆弱木支撑",
+      "family": "bridge_support",
+      "used_in": [
+        "SCN_08",
+        "SCN_09",
+        "SCN_10"
+      ],
+      "state": "受力、裂纹、连接明确"
+    },
+    {
+      "id": "PROP_16",
+      "name": "可割绳索",
+      "family": "bridge_support",
+      "used_in": [
+        "SCN_08",
+        "SCN_09",
+        "SCN_10"
+      ],
+      "state": "两真实锚点；张紧/松落"
+    },
+    {
+      "id": "PROP_17",
+      "name": "古印",
+      "family": "reward_objects",
+      "used_in": [
+        "SCN_11"
+      ],
+      "state": "正背一致"
+    },
+    {
+      "id": "PROP_18",
+      "name": "奖励箱",
+      "family": "reward_objects",
+      "used_in": [
+        "SCN_11"
+      ],
+      "state": "可领取/空箱"
+    },
+    {
+      "id": "PROP_19",
+      "name": "休整灯座",
+      "family": "rest_checkpoint",
+      "used_in": [
+        "SCN_07"
+      ],
+      "state": "低且不挡路"
+    },
+    {
+      "id": "PROP_20",
+      "name": "货车",
+      "family": "cart",
+      "used_in": [
+        "SCN_01"
+      ],
+      "state": "指定损坏连接件"
+    },
+    {
+      "id": "PROP_21",
+      "name": "药袋与布卷",
+      "family": "container_supply",
+      "used_in": [
+        "SCN_01",
+        "SCN_06"
+      ],
+      "state": "生活补给"
+    },
+    {
+      "id": "PROP_22",
+      "name": "中继塔核心",
+      "family": "relay_core",
+      "used_in": [
+        "SCN_12"
+      ],
+      "state": "闭合/失稳/稳定"
+    }
+  ],
+  "shared_props_source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Docs/Design-v4.zh-CN.md#L2584-L2613",
+  "connections": [
+    {
+      "from": "SCN_01",
+      "to": "SCN_03",
+      "kind": "主线步行",
+      "requirement": "野外出生到南门连续可走，救援可绕"
+    },
+    {
+      "from": "SCN_03",
+      "to": "SCN_02",
+      "kind": "主线步行",
+      "requirement": "门后可见广场炉灯，登记台不挡行走"
+    },
+    {
+      "from": "SCN_02",
+      "to": "SCN_04",
+      "kind": "Hub短步行往返",
+      "requirement": "服务容易辨认，AI与第三人称镜头可通行"
+    },
+    {
+      "from": "SCN_02",
+      "to": "SCN_05",
+      "kind": "Hub短步行往返",
+      "requirement": "服务容易辨认，AI与第三人称镜头可通行"
+    },
+    {
+      "from": "SCN_02",
+      "to": "SCN_06",
+      "kind": "Hub短步行往返",
+      "requirement": "服务容易辨认，AI与第三人称镜头可通行"
+    },
+    {
+      "from": "SCN_02",
+      "to": "SCN_07",
+      "kind": "Hub短步行往返",
+      "requirement": "服务容易辨认，AI与第三人称镜头可通行"
+    },
+    {
+      "from": "town",
+      "to": "SCN_08",
+      "kind": "西侧外勤",
+      "requirement": "西门主路与回环联系"
+    },
+    {
+      "from": "town",
+      "to": "SCN_09",
+      "kind": "东侧外勤",
+      "requirement": "东门主路与维护旁路"
+    },
+    {
+      "from": "town",
+      "to": "SCN_10",
+      "kind": "北侧挑战",
+      "requirement": "组队入口与可返程路"
+    },
+    {
+      "from": "SCN_10",
+      "to": "SCN_11",
+      "kind": "同一区内挑战",
+      "requirement": "前庭→水道→侧廊→钟炉，保留整备点与退路"
+    },
+    {
+      "from": "SCN_09",
+      "to": "SCN_12",
+      "kind": "东北环路东段",
+      "runtime_anchor": "RingEast",
+      "requirement": "按当前已定义环路联系，不另增区域"
+    },
+    {
+      "from": "SCN_12",
+      "to": "SCN_10",
+      "kind": "东北环路北段",
+      "runtime_anchor": "RingNorth",
+      "requirement": "按当前已定义环路联系，不另增区域"
+    }
+  ],
+  "existing_subpoints": [
+    {
+      "prefix": "Lab",
+      "context": "余炉镇范围内的现存反应教学/复用子点",
+      "items": "火/水桶/井/箱/台阶/旁路/绳桥/水面/电源/接收端/导体/手动泵"
+    },
+    {
+      "prefix": "Field",
+      "context": "当前Frontier连续世界西北连接带的既有反应子点；不擅自声明为独立主题区",
+      "items": "火/桶/箱/源/接收端/导体/绳桥/地板"
+    },
+    {
+      "prefix": "Patrol/SupplyCache",
+      "context": "林地、水工坊、修道院的日常子点",
+      "items": "巡逻锚点/补给箱"
+    }
+  ],
+  "existing_subpoints_source": "https://github.com/fantuan812/AetherLab/blob/b7ab1f578d37548a4f2fd9f854117e0c91fcd628/Content/AetherCore/Definitions/WorldObjects.json",
+  "scale_contract": {
+    "design_chr01_m": 1.65,
+    "baseline_mesh_with_hair_m": 1.8027965,
+    "baseline_bones": 65,
+    "baseline_scale": [
+      1,
+      1,
+      1
+    ],
+    "do_not_rescale_original_rig": true,
+    "review_camera_world_z_m": 1.65,
+    "review_camera_is_eye_height": false,
+    "candidate_path_wall_fence_pitch_m": 4,
+    "global_grid_confirmed": false,
+    "universal_road_width_confirmed": false,
+    "dcc_unit": "m, METRIC, scale_length=1",
+    "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/audit/character_scale_audit.json"
+  },
+  "prototype_modules": [
+    {
+      "asset_id": "KIT_Path_Flagstone_4x4_A",
+      "kit": "SharedCore_v1",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "4m连接节距候选；BBox与净空另记",
+      "source_objects": [
+        "Flagstone_00_0",
+        "Flagstone_00_1",
+        "Flagstone_00_2",
+        "Flagstone_00_3",
+        "Flagstone_01_0",
+        "Flagstone_01_1",
+        "Flagstone_01_2",
+        "Flagstone_01_3",
+        "Flagstone_02_0",
+        "Flagstone_02_1",
+        "Flagstone_02_2",
+        "Flagstone_02_3",
+        "Flagstone_03_0",
+        "Flagstone_03_1",
+        "Flagstone_03_2",
+        "Flagstone_03_3"
+      ],
+      "status": "接口候选，未完成套件门",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+    },
+    {
+      "asset_id": "KIT_Path_Substrate_4x4",
+      "kit": "SharedCore_v1",
+      "family": "road_path",
+      "route": "新增连接件，复用材质",
+      "role": "连接",
+      "interface": "4m连接节距候选；BBox与净空另记",
+      "source_objects": [],
+      "status": "接口候选，未完成套件门",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+    },
+    {
+      "asset_id": "KIT_WallLow_Run_4m",
+      "kit": "SharedCore_v1",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "4m连接节距候选；BBox与净空另记",
+      "source_objects": [
+        "Rubble parapet block.024",
+        "Rubble parapet block.025",
+        "Rubble parapet block.026",
+        "Rubble parapet block.027",
+        "Rubble parapet block.028",
+        "Rubble parapet block.029",
+        "Rubble parapet block.030",
+        "Rubble parapet block.031"
+      ],
+      "status": "接口候选，未完成套件门",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+    },
+    {
+      "asset_id": "KIT_WallLow_EndCornerPier",
+      "kit": "SharedCore_v1",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "共享柱，连接点单实例",
+      "source_objects": [
+        "Pillar base.003",
+        "Pillar cap.003"
+      ],
+      "status": "接口候选，未完成套件门",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+    },
+    {
+      "asset_id": "KIT_Fence_Rails_4m",
+      "kit": "SharedCore_v1",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "4m连接节距候选；BBox与净空另记",
+      "source_objects": [
+        "Fence rail",
+        "Fence rail.001"
+      ],
+      "status": "接口候选，未完成套件门",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+    },
+    {
+      "asset_id": "KIT_Fence_SharedPost",
+      "kit": "SharedCore_v1",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "共享柱，连接点单实例",
+      "source_objects": [
+        "Fence stake"
+      ],
+      "status": "接口候选，未完成套件门",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+    },
+    {
+      "asset_id": "KIT_LanternPost",
+      "kit": "SharedCore_v1",
+      "family": "lighting",
+      "route": "改造",
+      "role": "通用",
+      "interface": "灯架落地原点，尺寸以实际源回读",
+      "source_objects": [
+        "Road lantern post",
+        "Road lantern arm",
+        "Lantern hook.001",
+        "Lantern glowing paper.001",
+        "Lantern cage.004",
+        "Lantern cage.005",
+        "Lantern cage.006",
+        "Lantern cage.007",
+        "Lantern cap.002",
+        "Lantern cap.003"
+      ],
+      "status": "接口候选，未完成套件门",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+    },
+    {
+      "asset_id": "KIT_Path_Ramp_4m_Rise1m",
+      "kit": "SharedCore_v1",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "起止4m，升高1m；测试变体",
+      "source_objects": [
+        "KIT_Path_Flagstone_4x4_A"
+      ],
+      "status": "接口候选，未完成套件门",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+    },
+    {
+      "asset_id": "KIT_Substrate_Ramp_4m_Rise1m",
+      "kit": "SharedCore_v1",
+      "family": "road_path",
+      "route": "改造",
+      "role": "连接",
+      "interface": "起止4m，升高1m；测试变体",
+      "source_objects": [
+        "KIT_Path_Substrate_4x4"
+      ],
+      "status": "接口候选，未完成套件门",
+      "evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json"
+    }
+  ],
+  "prototype_note": "小型试拼，不是全图；仅以最终独立回读验证JSON为准，生成器预设test声明不作为通过证据。",
+  "prototype_evidence": "Art/AetherLab/Kits/SharedCore_v1/docs/CoreKit_Validation.json",
+  "gates": {
+    "requirements": "形成可审查清单；未代替缺口补查与验收",
+    "kit": "未放行，部分接口候选",
+    "world": "未开始全图生产铺设",
+    "detail": "未开始全图局部细化"
+  },
+  "unverified": [
+    "完整转角/交叉修边/端头系列",
+    "台阶与桥岸/路地/岩地过渡",
+    "角色设计身高与现有baseline差异决策",
+    "目标镜头材质/LOD",
+    "全图风格",
+    "UE导航/碰撞/性能（非本批要求）"
+  ],
+  "binary_delivery": {
+    "repository_has_binary": false,
+    "manifest": "../../Art/AetherLab/Kits/SharedCore_v1/docs/Delivery_Manifest.json",
+    "package_library_file_id": "libfile_6130d570bcd881918b29e7748d72f8ee",
+    "note": "prototype_evidence里的blend/png路径为Library恢复包内路径，不声称该二进制在本Git提交中存在"
+  }
+}
