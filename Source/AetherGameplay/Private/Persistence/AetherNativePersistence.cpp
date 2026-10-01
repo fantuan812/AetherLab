@@ -12,13 +12,14 @@
 bool UAetherNativePersistence::Prepare(const FString& InPrefix,bool NewWorld,FString& Reason)
 {
     check(IsInGameThread());
+    if(bStoppingScene){Reason=TEXT("Previous scene is still stopping");return false;}
     if(BoundScene.IsValid()&&BoundScene.Get()!=GetWorld()){StopScene();State=EAetherNativePersistencePhase::Dormant;}
     if(State!=EAetherNativePersistencePhase::Dormant||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!AetherSaveStartup::ValidPrefix(InPrefix))
     {Reason=TEXT("Invalid native startup state, server world or save prefix");return false;}
     if(auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();Runtime&&Runtime->HasBackend())
     {Reason=TEXT("Previous native backend is still draining accepted transactions");return false;}
     // 自此锁住旧总写入口；打开失败也保持失败状态，绝不能回退旧档继续写出分叉进度。
-    BoundScene=GetWorld();Prefix=InPrefix;AllowFresh=NewWorld;State=EAetherNativePersistencePhase::Inspecting;
+    BoundScene=GetWorld();SceneGeneration=FGuid::NewGuid();Prefix=InPrefix;AllowFresh=NewWorld;State=EAetherNativePersistencePhase::Inspecting;
     FAetherSqliteOptions O;O.DatabasePath=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("V10State")/Prefix/TEXT("state.sqlite"));
     auto Open=AetherSQLite::Open(MoveTemp(O));
     if(!Open.Store){Fail(Open.Detail);Reason=Detail;return false;}
@@ -126,14 +127,19 @@ TFuture<FAetherWorldCheckpointResult> UAetherNativePersistence::SaveLoadedPhysic
 TFuture<FAetherWorldCheckpointResult> UAetherNativePersistence::SaveWorldMutation(FAetherCaptureWorldCheckpoint Mutation)
 {
     check(IsInGameThread());auto Promise=MakeUnique<TPromise<FAetherWorldCheckpointResult>>();auto Future=Promise->GetFuture();
-    if(State!=EAetherNativePersistencePhase::Active||Checkpoint||!Store||!GetWorld())
+    if(State!=EAetherNativePersistencePhase::Active||Checkpoint||!Store||!BoundScene.IsValid()||!SceneGeneration.IsValid()||BoundScene.Get()!=GetWorld())
     {FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Busy;Promise->SetValue(MoveTemp(R));return Future;}
-    Checkpoint=MakeUnique<FAetherWorldCheckpoint>(Store.ToSharedRef());FString Why;
-    const TWeakObjectPtr<UWorld> Scene=GetWorld();
+    Checkpoint=MakeShared<FAetherWorldCheckpoint>(Store.ToSharedRef());FString Why;
+    const TWeakObjectPtr<UWorld> Scene=BoundScene;
+    const TWeakObjectPtr<UAetherNativePersistence> Self=this;const FGuid Generation=SceneGeneration;
     const auto Capture=DomainCapture;
-    if(!Checkpoint->Start([Scene,Capture,Mutation=MoveTemp(Mutation)](const auto& Previous,auto& Candidate,FString& Reason){
-        if(!Scene.IsValid()){Reason=TEXT("World destroyed during checkpoint");return false;}
+    if(!Checkpoint->Start([Self,Scene,Generation,Capture,Mutation=MoveTemp(Mutation)](const auto& Previous,auto& Candidate,FString& Reason){
+        const auto Current=[&]{return Self.IsValid()&&Scene.IsValid()&&Self->BoundScene==Scene&&
+            Self->SceneGeneration==Generation&&Self->State==EAetherNativePersistencePhase::Active;};
+        if(!Current()){Reason=TEXT("Scene changed during checkpoint");return false;}
         if(!(Capture?Capture(Previous,Candidate,Reason):AetherNativeWorldPhysics::CaptureLoaded(*Scene.Get(),Previous,Candidate,Reason)))return false;
+        // 领域捕获可触发 Travel/退出，旧请求不能在新场景继续执行变更。
+        if(!Current()){Reason=TEXT("Scene changed during checkpoint capture");return false;}
         return !Mutation||Mutation(Previous,Candidate,Reason);
     },Why))
     {Checkpoint.Reset();FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Invalid;R.Detail=Why;Promise->SetValue(MoveTemp(R));return Future;}
@@ -141,14 +147,18 @@ TFuture<FAetherWorldCheckpointResult> UAetherNativePersistence::SaveWorldMutatio
 }
 void UAetherNativePersistence::PollCheckpoint()
 {
-    if(!Checkpoint)return;Checkpoint->Poll();
-    const auto Phase=Checkpoint->Phase();
+    const auto Active=Checkpoint;const FGuid Generation=SceneGeneration;
+    if(!Active)return;Active->Poll();
+    // StopScene 可以撤下甚至替换成员；局部拥有者保护栈帧，代次保护新场景。
+    if(Checkpoint!=Active||SceneGeneration!=Generation)return;
+    const auto Phase=Active->Phase();
     if(Phase!=EAetherWorldCheckpointPhase::Complete&&Phase!=EAetherWorldCheckpointPhase::Failed)return;
-    auto Result=Checkpoint->Result();auto Promise=MoveTemp(CheckpointPromise);Checkpoint.Reset();
+    auto Result=Active->Result();auto Promise=MoveTemp(CheckpointPromise);const auto Published=CheckpointPublished;Checkpoint.Reset();
     // 先撤下运行中标志，再发布持久确认，回调可以安全安排下一次检查点。
     if(Result.Code!=EAetherStoreCode::Committed&&Result.Code!=EAetherStoreCode::Replayed)
         UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_CHECKPOINT_DEFERRED code=%d reason=%s"),int32(Result.Code),*Result.Detail);
-    if(Result.World.IsSet()&&(Result.Code==EAetherStoreCode::Committed||Result.Code==EAetherStoreCode::Replayed)&&CheckpointPublished)CheckpointPublished(Result.World.GetValue());
+    // 发布者也可能同步 ReleaseScene/ConfigureCheckpoints，不能销毁正在调用的成员函数对象。
+    if(Result.World.IsSet()&&(Result.Code==EAetherStoreCode::Committed||Result.Code==EAetherStoreCode::Replayed)&&Published)Published(Result.World.GetValue());
     if(Promise)Promise->SetValue(MoveTemp(Result));
 }
 void UAetherNativePersistence::Fail(FString Reason)
@@ -163,7 +173,8 @@ TStatId UAetherNativePersistence::GetStatId() const{RETURN_QUICK_DECLARE_CYCLE_S
 UWorld* UAetherNativePersistence::GetTickableGameObjectWorld() const{return GetWorld();}
 void UAetherNativePersistence::StopScene()
 {
-    State=EAetherNativePersistencePhase::Stopped;DomainCapture={};CheckpointPublished={};
+    if(bStoppingScene)return;TGuardValue<bool> Guard(bStoppingScene,true);
+    State=EAetherNativePersistencePhase::Stopped;SceneGeneration.Invalidate();DomainCapture={};CheckpointPublished={};
     auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();
     const bool RuntimeOwnsStore=Runtime&&Runtime->HasBackend();
     if(RuntimeOwnsStore)Runtime->UninstallBackend();
@@ -182,6 +193,6 @@ void UAetherNativePersistence::StopScene()
 
 void UAetherNativePersistence::ReleaseScene(UWorld* Scene)
 {
-    check(IsInGameThread());if(BoundScene.Get()!=Scene)return;StopScene();State=EAetherNativePersistencePhase::Dormant;
+    check(IsInGameThread());if(bStoppingScene||BoundScene.Get()!=Scene)return;StopScene();State=EAetherNativePersistencePhase::Dormant;
 }
 void UAetherNativePersistence::Deinitialize(){StopScene();Super::Deinitialize();}
