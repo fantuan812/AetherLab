@@ -1,9 +1,9 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "NavigationData.h"
-#include "NavigationSystemTypes.h"
 
 class ACharacter;
+struct FNavigationPath;
+struct FPathFindingResult;
 
 enum class EAetherNavigationRouteStatus : uint8
 {
@@ -16,7 +16,7 @@ enum class EAetherNavigationRouteStatus : uint8
 struct AETHERGAMEPLAY_API FAetherNavigationRoute
 {
     void Query(ACharacter& Character,const FVector& LocalGoal,const FVector& ProjectionExtent);
-    void AcceptQueryResult(ENavigationQueryResult::Type Result,const FNavPathSharedPtr& Path);
+    void AcceptQueryResult(const FPathFindingResult& Result);
     void Clear(EAetherNavigationRouteStatus Reason=EAetherNavigationRouteStatus::Empty);
     bool RefreshValidity();
     bool TakeWaypoint(const FVector& Position,double AcceptanceRadius,FVector& OutWaypoint);
@@ -24,7 +24,7 @@ struct AETHERGAMEPLAY_API FAetherNavigationRoute
     EAetherNavigationRouteStatus GetStatus() const { return Status; }
     uint32 GetRevision() const { return Revision; }
 private:
-    FNavPathSharedPtr NativePath;
+    TSharedPtr<FNavigationPath,ESPMode::ThreadSafe> NativePath;
     int32 PointIndex=0;
     uint32 Revision=0;
     EAetherNavigationRouteStatus Status=EAetherNavigationRouteStatus::Empty;

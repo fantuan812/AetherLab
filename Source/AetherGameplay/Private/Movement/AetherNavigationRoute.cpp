@@ -1,5 +1,7 @@
 #include "Movement/AetherNavigationRoute.h"
 #include "NavigationSystem.h"
+#include "NavigationData.h"
+#include "NavigationSystemTypes.h"
 #include "GameFramework/Character.h"
 
 void FAetherNavigationRoute::Clear(EAetherNavigationRouteStatus Reason)
@@ -25,13 +27,16 @@ void FAetherNavigationRoute::Query(ACharacter& Character,const FVector& LocalGoa
     FPathFindingQuery Request(&Character,*Data,Character.GetActorLocation(),End.Location);
     Request.SetNavAgentProperties(Character.GetNavAgentPropertiesRef());Request.SetAllowPartialPaths(true);
     const auto Result=Nav->FindPathSync(Request,EPathFindingMode::Regular);
-    AcceptQueryResult(Result.Result,Result.Path);
+    AcceptQueryResult(Result);
 }
 
-void FAetherNavigationRoute::AcceptQueryResult(ENavigationQueryResult::Type Result,const FNavPathSharedPtr& Path)
+void FAetherNavigationRoute::AcceptQueryResult(const FPathFindingResult& Result)
 {
-    if(Result!=ENavigationQueryResult::Success||!Path.IsValid()||!Path->IsValid()||!Path->IsUpToDate())
+    const auto& Path=Result.Path;
+    if(!Result.IsSuccessful()||!Path.IsValid()||!Path->IsValid()||!Path->IsUpToDate())
     {Clear(EAetherNavigationRouteStatus::QueryFailed);return;}
+    // 本组件按既有节流主动查询；原生路径只报告失效，不能另启自动重寻调度。
+    Path->EnableRecalculationOnInvalidation(false);
     NativePath=Path;PointIndex=0;++Revision;
     Status=Path->IsPartial()?EAetherNavigationRouteStatus::Partial:EAetherNavigationRouteStatus::Complete;
 }
