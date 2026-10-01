@@ -1,0 +1,99 @@
+{
+  "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "source_sha256_at_start": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "source_sha256_at_end": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "source_unchanged": true,
+  "all_geometry_visibility_unchanged": true,
+  "temporary_lights": [
+    {
+      "name": "TECH_FILL_Training",
+      "type": "AREA_DISK",
+      "position_m": [
+        -36,
+        4,
+        5.4
+      ],
+      "energy_W": 2000,
+      "size_m": 8,
+      "color_rgb": [
+        1,
+        0.94,
+        0.84
+      ],
+      "rotation_euler": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "TECH_FILL_Academy",
+      "type": "AREA_DISK",
+      "position_m": [
+        34,
+        6,
+        4.1
+      ],
+      "energy_W": 1600,
+      "size_m": 7,
+      "color_rgb": [
+        1,
+        0.94,
+        0.84
+      ],
+      "rotation_euler": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "TECH_FILL_Shop",
+      "type": "AREA_DISK",
+      "position_m": [
+        -35,
+        -31,
+        3.7
+      ],
+      "energy_W": 1400,
+      "size_m": 6,
+      "color_rgb": [
+        1,
+        0.94,
+        0.84
+      ],
+      "rotation_euler": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "views": [
+    {
+      "file": "Ground_Training_TechFill.png",
+      "camera": "CAM_Ground_Training",
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "sha256": "316942e42d673ef07952da1e88f27fe9664b8d7d0ce865a7eb02559ae8c0636e",
+      "samples": 32,
+      "interpretation": "TECHNICAL FILL LIGHTING ONLY; not the authored world-lighting state"
+    },
+    {
+      "file": "Ground_Academy_TechFill.png",
+      "camera": "CAM_Ground_Academy",
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "sha256": "77c596547767544876dbb67ec3d0277518999c88c13f5f3bfe59d9174cc854fc",
+      "samples": 32,
+      "interpretation": "TECHNICAL FILL LIGHTING ONLY; not the authored world-lighting state"
+    },
+    {
+      "file": "Ground_Shop_TechFill.png",
+      "camera": "CAM_Ground_Shop",
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "sha256": "822edb560931ec0be8f6650de5d585abab18d4761cf2ddfde69f4b3d988dc692",
+      "samples": 32,
+      "interpretation": "TECHNICAL FILL LIGHTING ONLY; not the authored world-lighting state"
+    }
+  ],
+  "source_not_saved": true
+}

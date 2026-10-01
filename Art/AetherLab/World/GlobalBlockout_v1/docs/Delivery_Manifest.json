@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "scope": "AetherLab six-region 12-scene Blender global blockout; no UE verification/final-art acceptance",
+  "canonical_source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "portable_source_sha256": "007c21056ce98b31fd4f4319bde214a486f02edc49c13007970d1b0b1c5f31f5",
+  "package_format": "three ordinary independent ZIPs, not multipart volumes",
+  "package_instructions_zh": "模型与贴图两包解压到同一目录，保留共同AetherLab_Global_Blockout_v1目录结构；预览包可单独查看；不需要拼接。",
+  "all_zip_under_14MiB": true,
+  "files": [
+    {
+      "file": "AetherLab_Global_World_Blockout_v1.blend",
+      "bytes": 21418863,
+      "sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "library_file_id": "libfile_7ea6ebe068e081918528deb1cc04fec3",
+      "library_version_number": 1,
+      "kind": "canonical_packed_blend",
+      "status": "saved"
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Model_v1.zip",
+      "bytes": 6701293,
+      "sha256": "020166074efab6aeb211ca0f1d547be3d0ddef2b2faa8f88f847ab950e1fe31f",
+      "library_file_id": "libfile_cf47e33c31288191a9f852f93c6062e3",
+      "library_version_number": 0,
+      "kind": "ordinary_independent_zip",
+      "status": "saved"
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Textures_v1.zip",
+      "bytes": 8477683,
+      "sha256": "2734a57f776fbca092266ebf87cdba1012977ad2667e558c9c2eb49823a6c51e",
+      "library_file_id": "libfile_54215a03ed388191a83ea81d3d5e2eb9",
+      "library_version_number": 0,
+      "kind": "ordinary_independent_zip",
+      "status": "saved"
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Views_v1.zip",
+      "bytes": 4777157,
+      "sha256": "3a1f05acd7b200325a20fad7c881acc19d3dec41dd16f77e5069b18c46fd65b9",
+      "library_file_id": "libfile_912f93e478188191a506443055d5ee4e",
+      "library_version_number": 0,
+      "kind": "ordinary_independent_zip",
+      "status": "saved"
+    },
+    {
+      "file": "Global_Annotated_Top.png",
+      "bytes": 5223318,
+      "sha256": "a2636bb0db3c90b82b295d98052f15e32be28b3dbbee66b584cc0641c464033f",
+      "library_file_id": "libfile_b1163081bbec8191992933bbdacf9b24",
+      "library_version_number": 0,
+      "kind": "render_image",
+      "status": "saved"
+    },
+    {
+      "file": "Global_Overview.png",
+      "bytes": 3048855,
+      "sha256": "50c58b4963f41bdba57f02e48cb5935036dfcd6df83ce39dd1a33741ea1f5240",
+      "library_file_id": "libfile_f3a9fff175f48191888e2e4d97fbefad",
+      "library_version_number": 0,
+      "kind": "render_image",
+      "status": "saved"
+    },
+    {
+      "file": "Ground_Waterworks.png",
+      "bytes": 1587451,
+      "sha256": "f78ccc795c89fe190bd1a16fd6430b8401f5b317b73f96da676d5b4e536800ac",
+      "library_file_id": "libfile_bed805f5f9548191a88ed090aea44572",
+      "library_version_number": 0,
+      "kind": "render_image",
+      "status": "saved"
+    },
+    {
+      "file": "Ground_Hall.png",
+      "bytes": 2028249,
+      "sha256": "07726fb50655fcf8718078714b0566d7f08eff5f5d24454548c3b92925296eb3",
+      "library_file_id": "libfile_73bb2d8fb93881919bed6cbdab07ede0",
+      "library_version_number": 0,
+      "kind": "render_image",
+      "status": "saved"
+    },
+    {
+      "file": "Ground_Training_TechFill.png",
+      "bytes": 3249039,
+      "sha256": "316942e42d673ef07952da1e88f27fe9664b8d7d0ce865a7eb02559ae8c0636e",
+      "library_file_id": "libfile_974aa0ff5f8c8191a803fa5187f4d11d",
+      "library_version_number": 0,
+      "kind": "render_image",
+      "status": "saved"
+    }
+  ],
+  "unverified": [
+    "UE compile/runtime/nav/collision/physics/performance",
+    "Final density/terrain composition/long-route pacing/lighting/LOD/local refinement"
+  ]
+}

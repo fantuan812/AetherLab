@@ -1,0 +1,317 @@
+{
+  "package_type": "three independent ordinary ZIP archives, not multipart volumes",
+  "canonical_frozen_source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "portable_source_sha256": "007c21056ce98b31fd4f4319bde214a486f02edc49c13007970d1b0b1c5f31f5",
+  "files": [
+    {
+      "file": "PREVIEWS_README.zh-CN.txt",
+      "bytes": 336,
+      "sha256": "1607b7d55b92b96d424fc8581013b84a5c3dabeb50e9a4caa065c2cb7ea84b9b"
+    },
+    {
+      "file": "START_HERE.zh-CN.txt",
+      "bytes": 967,
+      "sha256": "bbfa5e83314c5a4e292afdcc0464c14745d0d855b70ff2fad36b2e5956d931b5"
+    },
+    {
+      "file": "TEXTURES_README.zh-CN.txt",
+      "bytes": 217,
+      "sha256": "752a4e62c8c9a301b70d7cc37c9a5f8042c2eecd271ddc7c500f5a7096f99055"
+    },
+    {
+      "file": "docs/Independent_Global_Visual_Review.zh-CN.md",
+      "bytes": 4608,
+      "sha256": "ae7f7ed9b9404ed44a6d3f663d3c7d480c99ceb95087624256ed7dd3e2f183b9"
+    },
+    {
+      "file": "docs/Independent_Review.zh-CN.md",
+      "bytes": 13952,
+      "sha256": "8eadb781c95d3ac564413934579695d817e8711a7511ed2ae1f2b33f53dfe6ef"
+    },
+    {
+      "file": "docs/Independent_Visual_Review.json",
+      "bytes": 16832,
+      "sha256": "5f4951818e32afabd6bc1cd52f4b3b552f6f9b1e6461b7e3872ed0ece6c2ff44"
+    },
+    {
+      "file": "docs/Portable_Manifest.json",
+      "bytes": 2346,
+      "sha256": "3cf7db91c76d6742f70cb4855f94e602896b2ccae975722eee115e8ea2907815"
+    },
+    {
+      "file": "docs/Portable_Reopen_Validation.json",
+      "bytes": 1945,
+      "sha256": "64678c865d294c134a3a874e337b656273751e924499d4b3a68f0c0fc05da5ae"
+    },
+    {
+      "file": "docs/Preview_Conversion.json",
+      "bytes": 11265,
+      "sha256": "c79de1075452f86bcf5a9535d2139c91aaf853e97a121797909a747c603a6c7f"
+    },
+    {
+      "file": "docs/README.zh-CN.md",
+      "bytes": 10086,
+      "sha256": "3e1f120c1543b4093a8ec623e4cfb60263ecb58d4665350662a6cb111e1a2a40"
+    },
+    {
+      "file": "docs/Render_Hash_Negative_Control.json",
+      "bytes": 155,
+      "sha256": "85e575a60077ea0da6ef0d7d72187dd5f26c02dc9898f4a258b3ab5ab383c4ad"
+    },
+    {
+      "file": "docs/Render_Receipt_TechFill.json",
+      "bytes": 2535,
+      "sha256": "e190648f997206059b05fb089e04ae7116a3c20df25cefc338f38d32a4122ecd"
+    },
+    {
+      "file": "docs/Render_Receipt_TechWide.json",
+      "bytes": 2011,
+      "sha256": "380223328e73b8268bac82747bae886c6e74009412527755664f2a10e9da088e"
+    },
+    {
+      "file": "docs/Render_Receipt_all.json",
+      "bytes": 7993,
+      "sha256": "ba30e442b1de2a01cfa533de98c0232a71e66aef89597e2205567c4221eca39e"
+    },
+    {
+      "file": "docs/Reuse_Statistics.json",
+      "bytes": 237425,
+      "sha256": "1d4410af0e5c98b814689dc1f8eeb5e41d4bf64dde95739da615802f696bb4e9"
+    },
+    {
+      "file": "docs/Reuse_Summary.json",
+      "bytes": 1156,
+      "sha256": "7a032db34c962d115103f456b7eede8b959825b8ce33969525c92b894047031e"
+    },
+    {
+      "file": "docs/Visual_Review.json",
+      "bytes": 5699,
+      "sha256": "d0796681c9320e35ffdadafe0807c9e14b81ea57955ac6150002de31f9874ed0"
+    },
+    {
+      "file": "docs/Visual_Review.zh-CN.md",
+      "bytes": 1233,
+      "sha256": "bf87b8021aa0751378f8bcd5b1a46ae0af088e5fb53696f8af1974f99a725075"
+    },
+    {
+      "file": "docs/World_Manifest.json",
+      "bytes": 274154,
+      "sha256": "8889ff93b46f014c482f3797890c77ce8ec2394d5637c8f1adbc198a9098c594"
+    },
+    {
+      "file": "docs/independent_geometry_results.json",
+      "bytes": 194590,
+      "sha256": "a534300e9ebfb99812f129185bcd19635b2f77b4669650b66503f74bf5334a23"
+    },
+    {
+      "file": "docs/independent_source_preservation.json",
+      "bytes": 109696,
+      "sha256": "203f3274520fc29f2401005fcde82375a41331d5ad8468d86c849e7cf57e5d24"
+    },
+    {
+      "file": "docs/范围与缺口说明.txt",
+      "bytes": 10092,
+      "sha256": "88c931ff6a1366bef4504343068bec9e70947fa133ddb561fbd3e072eeae7a66"
+    },
+    {
+      "file": "docs/预览索引.zh-CN.md",
+      "bytes": 1581,
+      "sha256": "3c13da14a3cebf6692c12b82c4c4a24f5129047a290c170c8fbc1a0f91a8a74e"
+    },
+    {
+      "file": "previews/Abbey_And_Hall.jpg",
+      "bytes": 117391,
+      "sha256": "6c99efb4eeba8fbc6943b7b2a8eedb323c07aca64ed3505c5f5f6d9a1e3163c3"
+    },
+    {
+      "file": "previews/Forest_Routes.jpg",
+      "bytes": 208733,
+      "sha256": "853b406b3e4b329c84b8bdcbf3e5b85b7b1262c2fda994539a51295fa9b0723e"
+    },
+    {
+      "file": "previews/Global_Annotated_Top.jpg",
+      "bytes": 227617,
+      "sha256": "15add4494ac1eebf5828fb36f2499fc8263007048ecf48db1d41921726eb1902"
+    },
+    {
+      "file": "previews/Global_Overview.jpg",
+      "bytes": 145295,
+      "sha256": "4ceaf970ffda393831956fbcbaad1cd1cf83f33e92fec35b6524d1db3de2e1e8"
+    },
+    {
+      "file": "previews/Ground_Abbey.jpg",
+      "bytes": 115880,
+      "sha256": "3c0f24f77451fd998f9e894c6c20e548951518c6df68abf52fabe000cbb13d4e"
+    },
+    {
+      "file": "previews/Ground_Academy.jpg",
+      "bytes": 169414,
+      "sha256": "29726840a0050d44f78f5ece523f1a5a118eb1eea902242a4e9ec68e5902bc93"
+    },
+    {
+      "file": "previews/Ground_Academy_TechFill.jpg",
+      "bytes": 530222,
+      "sha256": "b91ba34529f3cfac2257b6c84db43e3ac1a18e6c73e549641b60e8b9ee8edf0d"
+    },
+    {
+      "file": "previews/Ground_Academy_TechWide.jpg",
+      "bytes": 529026,
+      "sha256": "fef7e57a1049cf5364def6c1bd5d97d4186ba3da8c09e02449288e70a8661fca"
+    },
+    {
+      "file": "previews/Ground_Forest.jpg",
+      "bytes": 168174,
+      "sha256": "74123046c4f63dd98af8f444b98761503f2ad7abcdf25a2be242d9557b2e140b"
+    },
+    {
+      "file": "previews/Ground_Gate.jpg",
+      "bytes": 127390,
+      "sha256": "803865450221ad915f4ec9c49f4e93fe5911931766d5291c167ccf294d1c0b45"
+    },
+    {
+      "file": "previews/Ground_Hall.jpg",
+      "bytes": 166028,
+      "sha256": "2a90c981f622cd18f302203219ab15242088ce0c1c103091b1db2d65a68e3e61"
+    },
+    {
+      "file": "previews/Ground_Inn.jpg",
+      "bytes": 125729,
+      "sha256": "aa0b03a4dd8eb605ebfa675ad4de7c283fbde1c8d90becba6bad82cecf4effb2"
+    },
+    {
+      "file": "previews/Ground_Maintenance.jpg",
+      "bytes": 72346,
+      "sha256": "d9c68b64071d412527a3c0846935a4f45849d36fbe1cf508a771181398a0d144"
+    },
+    {
+      "file": "previews/Ground_Plaza.jpg",
+      "bytes": 95777,
+      "sha256": "db7484f0df862b00c51568a32a1fa1e026e6e160c2d48c0050c825c890e6ffab"
+    },
+    {
+      "file": "previews/Ground_Relay.jpg",
+      "bytes": 84756,
+      "sha256": "8c192c5b76d30861127e1a811740a4320c810046649bb52a3299b4cf6db9ff0a"
+    },
+    {
+      "file": "previews/Ground_SCN01.jpg",
+      "bytes": 142677,
+      "sha256": "ef5b4cebf763a71b75ea3d8f36b0430e1fe90dadb28fc11bb49be7c8a7cde41e"
+    },
+    {
+      "file": "previews/Ground_SCN01_Shelter.jpg",
+      "bytes": 178732,
+      "sha256": "66eca18175642eaa435029a8b235063ec24a112b46cbaf02536faebecbbcc467"
+    },
+    {
+      "file": "previews/Ground_Shop.jpg",
+      "bytes": 167225,
+      "sha256": "4143446ebd62758cf17d211380d44ba6137d669ea1dfd73c65cda0d4301072fa"
+    },
+    {
+      "file": "previews/Ground_Shop_TechFill.jpg",
+      "bytes": 474687,
+      "sha256": "12d9c8b6bf8e5996e1619d5e0b0b887726f574d8e3fc32b6c1021143e9826cd6"
+    },
+    {
+      "file": "previews/Ground_Training.jpg",
+      "bytes": 72470,
+      "sha256": "82fe19d0daf8d4121865fa34752a93da9a721a57d33e361822f4067256187932"
+    },
+    {
+      "file": "previews/Ground_Training_TechFill.jpg",
+      "bytes": 562320,
+      "sha256": "9d1f27f691e40bf2c1e322144d8c9ac46856271907814d0178c30d5a9ce257c0"
+    },
+    {
+      "file": "previews/Ground_Waterworks.jpg",
+      "bytes": 77943,
+      "sha256": "045729133881e7487b110e9fa242f6390ced117645b881456a939184715f6319"
+    },
+    {
+      "file": "previews/Relay_Routes.jpg",
+      "bytes": 94736,
+      "sha256": "73c3534028969b0343830b568c12df76412b34cf6c2a213934d488d36f099301"
+    },
+    {
+      "file": "previews/Town_Scenes02_07.jpg",
+      "bytes": 156880,
+      "sha256": "d781d5010b9e2fdeca9693d7a937ad3b4d57e2898efa3a8e05633244b80d4392"
+    },
+    {
+      "file": "previews/Waterworks_Routes.jpg",
+      "bytes": 108596,
+      "sha256": "5d848dd5a0c0c858b6f67d023985aaa4145def801fdbd4518e14bb0441f66e5f"
+    },
+    {
+      "file": "scripts/build_global_blockout.py",
+      "bytes": 52322,
+      "sha256": "027ab4aab62afeda07cde4bbee10d41d44580e1124049a41c3b98dfd165a73ff"
+    },
+    {
+      "file": "scripts/finalize_world.py",
+      "bytes": 2107,
+      "sha256": "805fb614b164306bc96f94fcbdc570d0a71afcb1a153c0dc679a77fe5f0f9180"
+    },
+    {
+      "file": "scripts/independent_geometry_review.py",
+      "bytes": 22863,
+      "sha256": "01a95cce24230bf791dd2f60936cbaed44e659246b2e24b38325d949b73af77f"
+    },
+    {
+      "file": "scripts/independent_source_preservation.py",
+      "bytes": 10758,
+      "sha256": "b799b4ec309ec49c363bff046ad9407a94a0ab74d153a5fbed4330d68cefff2a"
+    },
+    {
+      "file": "scripts/make_portable_copy.py",
+      "bytes": 3387,
+      "sha256": "660d77cbea404da838a0f17fa0a8b5cab8f355c265971bfd294eef717c9e5165"
+    },
+    {
+      "file": "scripts/package_world.py",
+      "bytes": 5653,
+      "sha256": "4697651b17bc06cbe21b1347adc6425a4a23a9bcfaa5f7ddb5a37a2d3efd00ba"
+    },
+    {
+      "file": "scripts/render_technical_interiors.py",
+      "bytes": 2928,
+      "sha256": "7d9e4e1a4cb264fad928f5ccb0619e441c765fe9e53db5ba8202228b3454901d"
+    },
+    {
+      "file": "scripts/render_world.py",
+      "bytes": 3015,
+      "sha256": "f733758e82fdd4a8d196e8a14a6cc55b8a7e3e09afb26c82a103c0eee59b9923"
+    },
+    {
+      "file": "scripts/verify_portable_copy.py",
+      "bytes": 2391,
+      "sha256": "f392aad997984dc25861f4ef2184dee057efc39b4a23e61d21d831f10a707563"
+    },
+    {
+      "file": "scripts/write_delivery_docs.py",
+      "bytes": 12344,
+      "sha256": "ae5b3b3ff1df16e4e9c1c35d36b0e66bf938b41e96876cb39a233cdafda4ed66"
+    },
+    {
+      "file": "source/AetherLab_Global_World_Blockout_v1.blend",
+      "bytes": 6721813,
+      "sha256": "007c21056ce98b31fd4f4319bde214a486f02edc49c13007970d1b0b1c5f31f5"
+    },
+    {
+      "file": "source/textures/Texture_02b592976097774c.png",
+      "bytes": 2299799,
+      "sha256": "02b592976097774cc3e5028410f5cbe454ebfb7af71222e9c0625ce7ad3e54d8"
+    },
+    {
+      "file": "source/textures/Texture_581072ea65fe5909.png",
+      "bytes": 3484199,
+      "sha256": "581072ea65fe5909e01676a82789ab184bb6a7848d590fbc23c975b4f50824cf"
+    },
+    {
+      "file": "source/textures/Texture_b2b76f9cc6295166.png",
+      "bytes": 2745633,
+      "sha256": "b2b76f9cc629516624462326a42d89e5c5dde59185f763d1a3c9835cd7c43525"
+    }
+  ]
+}

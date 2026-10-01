@@ -2491,8 +2491,8 @@
   "gates": {
     "requirements": "形成可审查清单；未代替缺口补查与验收",
     "kit": "未整体放行；v2最小核心连接限定范围作者27/27组、独立22/22组及实看通过；v3最小过渡几何/元数据/负控/5图限定范围通过，仍未整体放行",
-    "world": "未开始全图生产铺设",
-    "detail": "未开始全图局部细化",
+    "world": "GlobalBlockout_v1全图灰盒空间里程碑完成；独立实际几何/来源/25图有限通过，不代表UE可玩或最终环境美术",
+    "detail": "本次止于全局灰盒，未继续局部精修",
     "base_layout": "v3最小连接已通过；可按Global-blockout-coverage-v3清单有条件开展六区基础铺设和功能粗模，未覆盖连接仅阻塞相关段"
   },
   "unverified": [
@@ -2758,5 +2758,27 @@
     "visual_review": "Art/AetherLab/Kits/SharedCore_v3/docs/Independent_Visual_Review.json",
     "inherited_v2_preservation": "Art/AetherLab/Kits/SharedCore_v3/docs/Inherited_v2_Preservation.json",
     "remaining": "族级门/全图门未通过；按覆盖表可有条件开始基础铺设与功能粗模"
+  },
+  "global_blockout_release": {
+    "version": 1,
+    "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+    "portable_sha256": "007c21056ce98b31fd4f4319bde214a486f02edc49c13007970d1b0b1c5f31f5",
+    "regions": 6,
+    "scenes": 12,
+    "extent_xy_m": [
+      800,
+      800
+    ],
+    "reused_instances": 1613,
+    "used_shared_master_meshes": 24,
+    "specialist_placeholder_records": 102,
+    "named_routes": 44,
+    "additional_access_checks": 6,
+    "reviewed_images": 25,
+    "summary": "Docs/Art/Global-world-blockout-v1.zh-CN.md",
+    "delivery": "Art/AetherLab/World/GlobalBlockout_v1/docs/Delivery_Manifest.json",
+    "scope": "Blender geometric/visual blockout only",
+    "all_asset_families_complete": false,
+    "ue_compiled_or_tested": false
   }
 }

@@ -1,5 +1,7 @@
 # AetherLab 场景素材与模块生产规范
 
+最新状态：已完成[GlobalBlockout_v1全图灰盒空间里程碑](Global-world-blockout-v1.zh-CN.md)。本文的v1/v2/v3小样记录保留历史范围；本次只有限放行全图布局/几何，不提升为25素材族、最终风格或UE验收完成。
+
 最新最小过渡批次为SharedCore_v3，见本文末节；v2段落保留其历史范围与证据。
 更新日期：2026-10-01。适用范围：首版四人联机 Demo 的一个连续世界、6 个地理区、12 个重点场景。范围核对基线为 main 的 [`b7ab1f5`](https://github.com/fantuan812/AetherLab/commit/b7ab1f578d37548a4f2fd9f854117e0c91fcd628)；设计事实继续以 [Design v4](../Design-v4.zh-CN.md) 为准。
 

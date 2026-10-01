@@ -1,0 +1,6 @@
+{
+  "action": "render invoked with deliberately wrong expected source SHA",
+  "exit_code": 1,
+  "detected": true,
+  "no_completion_receipt_written": true
+}
