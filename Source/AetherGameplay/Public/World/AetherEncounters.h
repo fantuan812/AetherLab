@@ -81,6 +81,7 @@ private:
     FAetherEncounterWaveLifecycle AbbeyLifecycle,RelayLifecycle;
     void WatchEnemies(const TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies);
     void ReleaseEnemies(TArray<TObjectPtr<AAetherFrontierCharacter>>& Enemies,FAetherEncounterWaveLifecycle& Lifecycle);
+    bool RefreshCampAvailability(FAetherCamp& Camp);
     UFUNCTION() void EnemyDestroyed(AActor* Actor);
     UFUNCTION() void EnemyEndPlay(AActor* Actor,EEndPlayReason::Type Reason);
     void SetPhase(FAetherEncounterRun& Run,EAetherEncounterPhase Phase);

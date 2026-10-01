@@ -251,6 +251,12 @@ bool AAetherEncounterDirector::SpawnCamp(AAetherFrontierMode& Mode,FAetherCamp& 
     WatchEnemies(Camp.Enemies);
     Camp.bSpawned=true;Camp.bSpawnFailed=false;Camp.Instance=FGuid::NewGuid();Camp.ClearedAt=0;Camp.bRewardCreated=false;return true;
 }
+bool AAetherEncounterDirector::RefreshCampAvailability(FAetherCamp& Camp)
+{
+    if(Camp.bRewardCreated||Camp.Lifecycle.State(Camp.Enemies)!=EAetherEncounterWaveState::Unavailable)return true;
+    ReleaseEnemies(Camp.Enemies,Camp.Lifecycle);Camp.bSpawned=false;Camp.bSpawnFailed=true;Camp.Instance.Invalidate();
+    UE_LOG(LogTemp,Warning,TEXT("AETHER_CAMP_MEMBERS_UNAVAILABLE %s"),*Camp.Definition.ToString());return false;
+}
 void AAetherEncounterDirector::UpdateCamps()
 {
     auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();if(!M||M->bSmoke)return;
@@ -267,12 +273,8 @@ void AAetherEncounterDirector::UpdateCamps()
         if(Camp.bSpawnFailed){if(Distance>3000)Camp.bSpawnFailed=false;continue;}
         if(!Camp.bSpawned&&Distance<2200&&!SpawnCamp(*M,Camp,*Rule))continue;
         if(!Camp.bSpawned)continue;
+        if(!RefreshCampAvailability(Camp))continue;
         const auto EnemyState=Camp.Lifecycle.State(Camp.Enemies);
-        if(!Camp.bRewardCreated&&EnemyState==EAetherEncounterWaveState::Unavailable)
-        {
-            ReleaseEnemies(Camp.Enemies,Camp.Lifecycle);Camp.bSpawned=false;Camp.bSpawnFailed=true;Camp.Instance.Invalidate();
-            UE_LOG(LogTemp,Warning,TEXT("AETHER_CAMP_MEMBERS_UNAVAILABLE %s"),*Camp.Definition.ToString());continue;
-        }
         if(Camp.CanCreateClearReward())
         {if(!M->RecordCampClear(Camp.Definition,Camp.Instance))continue;Camp.bRewardCreated=true;Camp.ClearedAt=Now;}
 
