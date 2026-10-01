@@ -3,6 +3,7 @@
 #include "Engine/EngineTypes.h"
 
 class ACharacter;
+struct FHitResult;
 
 struct FAetherNavigationProbeGeometry
 {

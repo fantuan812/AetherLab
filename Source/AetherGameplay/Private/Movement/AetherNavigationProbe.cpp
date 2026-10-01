@@ -3,6 +3,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
+#include "CollisionShape.h"
 
 bool AetherNavigationProbe::ReadGeometry(const ACharacter& Character,FAetherNavigationProbeGeometry& Out)
 {
