@@ -69,6 +69,10 @@ void UAetherDefinitionAbilitySystem::OnDefinitionHealthChanged(const FOnAttribut
 }
 void UAetherDefinitionAbilitySystem::InitAbilityActorInfo(AActor* OwnerActor,AActor* AvatarActor)
 {
+    // 先记录真实非空Avatar/权威边沿；Super回调即使往返原体，也不能复活旧生命。
+    // nullptr Avatar且同一Owner仅是控制空窗，不伪造新生命。
+    if((AvatarActor&&AvatarActor!=LifeAvatar.Get())||(OwnerActor&&OwnerActor!=GetOwner())||(AvatarActor&&OwnerActor!=GetOwner()))
+    {LifeId.Invalidate();LifeAvatar.Reset();}
     Super::InitAbilityActorInfo(OwnerActor,AvatarActor);
     // Super可重入绑定，始终检查返回后的当前ActorInfo，不能按旧实参重建生命。
     SynchronizeDefinitionLife();
@@ -89,7 +93,7 @@ FGuid UAetherDefinitionAbilitySystem::DefinitionLife() const
 bool AetherSkillLives::Resolve(const AAetherCharacter& C,FGuid& Out)
 {
     Out.Invalidate();const auto* ASC=C.AbilitySystem.Get();
-    if(!C.HasAuthority()||!C.Alive()||C.IsActorBeingDestroyed()||!ASC||ASC->GetAvatarActor()!=&C)return false;
+    if(!C.HasAuthority()||C.IsActorBeingDestroyed()||!ASC||ASC->GetAvatarActor()!=&C)return false;
     if(C.SkillAuthority==EAetherSkillAuthority::Profile)
     {
         const auto* PS=C.GetPlayerState<AAetherPlayerState>();const auto* Receiver=C.ResourceGate?C.ResourceGate->GetReceiver():nullptr;

@@ -77,7 +77,7 @@ public:
     bool Apply(const FString& BuffId,const FString& Source,FString& Reason,FGuid DeliveryId={});
     bool ApplyRestBlessing(FString& Reason);
     bool ApplyDelivery(const FAetherConsumableEffectV10& Effect);
-    bool CanApply(const FString& BuffId) const;
+    bool CanApply(const FString& BuffId,FString* Reason=nullptr) const;
     bool Dispel(const FString& Tag,FString& Reason);
     void RemoveSource(const FString& Source);
     void FlushDue();
@@ -101,7 +101,8 @@ private:
     int32 PendingDueEvents=0;
     TOptional<FAetherBuffState> SchedulingState;
     bool Publish();
-    void Advance(double Now);
+    bool SynchronizeLife();
+    void Advance(double Now,FGuid ExpectedLife);
     void PublishTags();
     TWeakObjectPtr<UAbilitySystemComponent> TagOwner;
     bool bOwnedSilence=false,bOwnedStun=false;

@@ -7,17 +7,37 @@
 #include "Misc/DateTime.h"
 #include "NativeGameplayTags.h"
 #include "Abilities/AetherSpellAbility.h"
+#include "Skills/AetherSkillCooldownState.h"
 #include "Definitions/AetherV10Definitions.h"
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_AetherBuffSilence,"State.Aether.Buff.Silenced");
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_AetherBuffStun,"State.Aether.Buff.Stunned");
 namespace
 {
-bool CanProject(const AAetherCharacter& C,const FAetherBuffState& Candidate)
+bool DefinitionEffectSupported(const FAetherBuffDefinition& Definition,FString* Why)
 {
-    const auto* PS=C.GetPlayerState<AAetherPlayerState>();const auto* P=PS?PS->GetNativeProfile():nullptr;if(!P)return false;
+    if(Definition.Period<=0||Definition.Operations.IsEmpty())
+    {if(Why)*Why=TEXT("Definition效果当前要求明确的周期治疗操作。");return false;}
+    for(const auto& O:Definition.Operations)
+        if(O.Kind!=EAetherBuffOperation::Heal||!O.Id.Equals(TEXT("Health"),ESearchCase::CaseSensitive))
+        {if(Why)*Why=FString::Printf(TEXT("Definition效果不支持操作%d/%s；当前仅支持周期Health治疗。"),int32(O.Kind),*O.Id);return false;}
+    return true;
+}
+bool CanProject(const AAetherCharacter& C,const FAetherBuffState& Candidate,FString* Why=nullptr)
+{
+    FGuid Life;if(!AetherSkillLives::Resolve(C,Life)||Candidate.LifeId!=Life)
+    {if(Why)*Why=TEXT("效果生命或技能权威尚未就绪。");return false;}
+    if(C.SkillAuthority==EAetherSkillAuthority::Definition)
+    {
+        for(const auto& I:Candidate.Instances)if(!DefinitionEffectSupported(I.Definition,Why))return false;
+        return true;
+    }
+    if(C.SkillAuthority!=EAetherSkillAuthority::Profile)return false;
+    const auto* PS=C.GetPlayerState<AAetherPlayerState>();const auto* P=PS?PS->GetNativeProfile():nullptr;
+    if(!P){if(Why)*Why=TEXT("Profile效果需要当前native档案，不使用Definition降级路径。");return false;}
     auto Grants=PS->GetNativeSkillGrants();Grants.RemoveAll([](const auto& G){return G.SourceId.StartsWith(TEXT("Buff."));});Grants.Append(Candidate.SkillGrants());
-    const auto& D=FAetherV10Definitions::Get();FAetherResolvedAttributes Out;FString Why;
-    return D.bValid&&FAetherSkillStateV10::ValidateExternalGrants(Grants,D.Skills)&&AetherAttributes::ResolveProfile(*P,D.Items,D.Skills,Grants,Candidate.Attributes(),Out,Why);
+    const auto& D=FAetherV10Definitions::Get();FAetherResolvedAttributes Out;FString Error;
+    const bool Valid=D.bValid&&FAetherSkillStateV10::ValidateExternalGrants(Grants,D.Skills)&&AetherAttributes::ResolveProfile(*P,D.Items,D.Skills,Grants,Candidate.Attributes(),Out,Error);
+    if(!Valid&&Why)*Why=TEXT("效果超出当前Profile属性或技能来源范围。");return Valid;
 }
 }
 
@@ -72,13 +92,20 @@ void UAetherBuffRuntime::OnRep_Movement()
 {MoveSpeedMultiplier=MovementConfig.Speed;ActionSpeedMultiplier=MovementConfig.ActionSpeed;MovementConfigRevision=MovementConfig.Revision;MovementConfigTime=MovementConfig.Time;}
 bool UAetherBuffRuntime::HasTag(const FString& Tag) const
 {
-    if(GetOwner()->HasAuthority())return State.HasTag(Tag);
+    if(GetOwner()->HasAuthority())
+    {const auto* C=Cast<AAetherCharacter>(GetOwner());FGuid Life;return C&&AetherSkillLives::Resolve(*C,Life)&&State.LifeId==Life&&State.HasTag(Tag);}
     return (Tag==TEXT("Silence")&&Snapshot.bSilenced)||(Tag==TEXT("Stun")&&Snapshot.bStunned);
 }
 bool UAetherBuffRuntime::Publish()
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority()||bPublishing)return false;
     TGuardValue<bool> Guard(bPublishing,true);
+    if(C->SkillAuthority==EAetherSkillAuthority::Definition)
+    {
+        if(!CanProject(*C,State)){bPublicationPending=true;return false;}
+        bPublicationPending=false;PublishTags();return true; // 不为NPC伪造Profile快照/属性投影。
+    }
+    if(C->SkillAuthority!=EAetherSkillAuthority::Profile)return false;
     auto* PS=C->GetPlayerState<AAetherPlayerState>();FString Why;
     if(!PS||!PS->RebindNativeSkills(Why)){bPublicationPending=true;return false;}
     bPublicationPending=false;PublishTags();RefreshSnapshot();return true;
@@ -143,36 +170,59 @@ void UAetherBuffRuntime::RefreshSnapshot()
     MovementConfig.Speed=MoveSpeedMultiplier;MovementConfig.ActionSpeed=ActionSpeedMultiplier;MovementConfig.Revision=MovementConfigRevision;MovementConfig.Time=MovementConfigTime;
     Snapshot=MoveTemp(Next);C->ForceNetUpdate();
 }
+bool UAetherBuffRuntime::SynchronizeLife()
+{
+    auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority())return false;
+    FGuid Life;
+    if(!AetherSkillLives::Resolve(*C,Life))
+    {
+        if(!C->Alive())
+        {
+            if(!State.Instances.IsEmpty()){State.Instances.Reset();++State.Revision;}
+            PendingDueEvents=0;SchedulingState.Reset();bPublicationPending=false;PublishTags();
+        }
+        return false;
+    }
+    if(State.LifeId!=Life)
+    {
+        State={};State.LifeId=Life;PendingDueEvents=0;SchedulingState.Reset();bPublicationPending=false;PublishTags();
+    }
+    FGuid Current;return AetherSkillLives::Resolve(*C,Current)&&Current==Life&&State.LifeId==Life;
+}
 bool UAetherBuffRuntime::HasDue() const
 {
-    const auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority())return false;
+    const auto* C=Cast<AAetherCharacter>(GetOwner());FGuid Life;
+    if(!C||!C->HasAuthority()||!AetherSkillLives::Resolve(*C,Life)||State.LifeId!=Life)return false;
     const double Now=C->CombatTime();
     for(const auto& I:State.Instances)if(I.ExpiresAt<=Now||(I.NextTickAt>0&&I.NextTickAt<=Now))return true;
     return PendingDueEvents>0||bPublicationPending;
 }
-void UAetherBuffRuntime::Advance(double Now)
+void UAetherBuffRuntime::Advance(double Now,FGuid ExpectedLife)
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority()||bPublishing)return;
+    const auto SameLife=[&]{FGuid Current;return State.LifeId==ExpectedLife&&AetherSkillLives::Resolve(*C,Current)&&Current==ExpectedLife;};
+    if(!SameLife())return;
     FAetherBuffDueEvent E;bool Changed=false;
     // At most 64 instances * 36000 periods in a complete lifetime. No expired tick is invented.
     // Drain a bounded number each frame; actions remain blocked while due work remains.
-    for(int32 Budget=0;Budget<64&&State.NextDue(Now,E);++Budget)
+    for(int32 Budget=0;Budget<64&&SameLife()&&State.NextDue(Now,E);++Budget)
     {
         Changed=true;
-        if(E.bExpiry){if(!Publish())return;continue;}
+        if(E.bExpiry){if(!Publish()||!SameLife())return;continue;}
         for(const auto& O:E.Operations)
         {
-            if(!C->Alive())break;
+            if(!C->Alive()||!SameLife())break;
             if(O.Kind==EAetherBuffOperation::Heal)C->SetVitals(C->Health()+float(O.Value*E.Stacks),C->Mana(),C->Stamina());
             else if(O.Kind==EAetherBuffOperation::Damage){FDamageEvent Damage;C->TakeDamage(float(O.Value*E.Stacks),Damage,nullptr,nullptr);}
         }
     }
-    if(Changed)Publish();
+    if(Changed&&SameLife())Publish();
 }
 void UAetherBuffRuntime::FlushDue()
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority()||bPublishing)return;
-    const double Now=C->CombatTime();
+    if(!SynchronizeLife())return;
+    const FGuid Life=State.LifeId;const double Now=C->CombatTime();
     if(C->ResourceGate->IsBlocked())
     {
         if(!SchedulingState.IsSet())SchedulingState=State;
@@ -180,39 +230,41 @@ void UAetherBuffRuntime::FlushDue()
         for(int32 Budget=0;Budget<64&&SchedulingState->NextDue(Now,E);++Budget)
         {
             ++PendingDueEvents;
-            C->ResourceGate->Defer([Self,At=E.Time]{if(Self.IsValid()){
-                --Self->PendingDueEvents;Self->Advance(At);
-                if(Self->PendingDueEvents==0)Self->SchedulingState.Reset();
+            C->ResourceGate->Defer([Self,At=E.Time,Life]{if(Self.IsValid()){
+                const auto* Owner=Cast<AAetherCharacter>(Self->GetOwner());FGuid Current;
+                if(!Owner||!AetherSkillLives::Resolve(*Owner,Current)||Current!=Life||Self->State.LifeId!=Life)return;
+                --Self->PendingDueEvents;Self->Advance(At,Life);
+                if(Self->State.LifeId==Life&&Self->PendingDueEvents==0)Self->SchedulingState.Reset();
             }},E.bExpiry?EAetherEffectEventKind::BuffExpire:EAetherEffectEventKind::BuffTick);
         }
         return;
     }
     // Queued deadlines must keep their positions relative to damage and treatment.
-    if(PendingDueEvents==0){SchedulingState.Reset();Advance(Now);}
+    if(PendingDueEvents==0){SchedulingState.Reset();Advance(Now,Life);}
 }
 bool UAetherBuffRuntime::Apply(const FString& Id,const FString& Source,FString& Why,FGuid Delivery)
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());
     if(!C||!C->HasAuthority()||!C->Alive()||C->ResourceGate->IsBlocked()||bPublishing)
     {Why=TEXT("效果正在结算，请稍后重试。");return false;}
-    const auto* Receiver=C->ResourceGate->GetReceiver();
-    if(!Receiver){Why=TEXT("当前生命尚未就绪。");return false;}
-    if(State.LifeId!=Receiver->State().LifeId){State={};State.LifeId=Receiver->State().LifeId;}
+    if(!SynchronizeLife()){Why=TEXT("当前技能生命或权威尚未就绪。");return false;}
     FlushDue();
     const auto& Definitions=FAetherBuffDefinitions::Get();const auto* D=Definitions.bValid?Definitions.Buffs.Find(Id):nullptr;
     if(HasDue()){Why=TEXT("效果正在按顺序结算。");return false;}
     if(!D){Why=TEXT("效果定义不可用。");return false;}
+    if(C->SkillAuthority==EAetherSkillAuthority::Definition&&!DefinitionEffectSupported(*D,&Why))return false;
     const auto Previous=State;const auto Result=State.Apply(*D,Source,C->CombatTime(),Delivery);
     if(Result==EAetherBuffResult::Replayed){Why=TEXT("该效果已经生效。");return true;}
     if(Result!=EAetherBuffResult::Applied&&Result!=EAetherBuffResult::Refreshed)
     {Why=Result==EAetherBuffResult::Immune?TEXT("当前免疫此效果。"):TEXT("效果层数已满或施加条件不满足。");return false;}
-    if(!CanProject(*C,State)){State=Previous;Why=TEXT("效果超出可应用的属性或技能来源范围。");return false;}
+    if(!CanProject(*C,State,&Why)){State=Previous;return false;}
     if(!Publish()){State=Previous;Publish();Why=TEXT("效果发布暂不可用。");return false;}
     Why=D->DisplayName+TEXT("已生效。");return true;
 }
 bool UAetherBuffRuntime::Dispel(const FString& Tag,FString& Why)
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority()||!C->Alive()||C->ResourceGate->IsBlocked()||bPublishing)return false;
+    if(!SynchronizeLife()){Why=TEXT("当前技能生命或权威尚未就绪。");return false;}
     FlushDue();if(HasDue()){Why=TEXT("效果正在按顺序结算。");return false;}
     const auto Previous=State;
     if(!State.Dispel(Tag)){Why=TEXT("没有可净化的效果；身体温度与水量不受普通净化影响。");return false;}
@@ -222,6 +274,7 @@ bool UAetherBuffRuntime::Dispel(const FString& Tag,FString& Why)
 bool UAetherBuffRuntime::ApplyRestBlessing(FString& Why)
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());
+    if(C&&C->SkillAuthority!=EAetherSkillAuthority::Profile){Why=TEXT("旅舍技能祝福需要Profile权威，Definition不支持技能授予效果。");return false;}
     if(!C||!C->HasAuthority()||!C->Alive()||C->ResourceGate->IsBlocked()||bPublishing)return false;
     const auto* Receiver=C->ResourceGate->GetReceiver();if(!Receiver)return false;
     if(State.LifeId!=Receiver->State().LifeId){State={};State.LifeId=Receiver->State().LifeId;}
@@ -237,19 +290,24 @@ bool UAetherBuffRuntime::ApplyRestBlessing(FString& Why)
     if(!Publish()){State=Previous;Publish();Why=TEXT("祝福暂不可用。");return false;}
     Why.Reset();return true;
 }
-bool UAetherBuffRuntime::CanApply(const FString& Id) const
+bool UAetherBuffRuntime::CanApply(const FString& Id,FString* Why) const
 {
-    const auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority()||!C->Alive()||C->ResourceGate->IsBlocked()||HasDue())return false;
-    const auto* Receiver=C->ResourceGate->GetReceiver();if(!Receiver)return false;
-    auto Candidate=State;Candidate.LifeId=Receiver->State().LifeId;
-    const auto* D=FAetherBuffDefinitions::Get().Buffs.Find(Id);if(!D)return false;
+    const auto Reject=[&](const TCHAR* Message){if(Why)*Why=Message;return false;};
+    const auto* C=Cast<AAetherCharacter>(GetOwner());
+    if(!C||!C->HasAuthority()||!C->Alive()||C->ResourceGate->IsBlocked()||HasDue())return Reject(TEXT("效果受体不可用或正在结算。"));
+    FGuid Life;if(!AetherSkillLives::Resolve(*C,Life))return Reject(TEXT("当前技能生命或权威尚未就绪。"));
+    auto Candidate=State.LifeId==Life?State:FAetherBuffState();Candidate.LifeId=Life;
+    const auto& Definitions=FAetherBuffDefinitions::Get();const auto* D=Definitions.bValid?Definitions.Buffs.Find(Id):nullptr;
+    if(!D)return Reject(TEXT("效果定义不可用。"));
+    if(C->SkillAuthority==EAetherSkillAuthority::Definition&&!DefinitionEffectSupported(*D,Why))return false;
     const auto Result=Candidate.Apply(*D,TEXT("Delivery.Preflight"),C->CombatTime(),FGuid::NewGuid());
-    return (Result==EAetherBuffResult::Applied||Result==EAetherBuffResult::Refreshed)&&CanProject(*C,Candidate);
+    if(Result!=EAetherBuffResult::Applied&&Result!=EAetherBuffResult::Refreshed)return Reject(TEXT("效果免疫、层数或重施策略拒绝。"));
+    if(!CanProject(*C,Candidate,Why))return false;if(Why)Why->Reset();return true;
 }
 bool UAetherBuffRuntime::ApplyDelivery(const FAetherConsumableEffectV10& E)
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());
-    if(!C||!C->HasAuthority()||!C->ResourceGate->IsEffectProjection())return false;
+    if(!C||!C->HasAuthority()||C->SkillAuthority!=EAetherSkillAuthority::Profile||!C->ResourceGate->IsEffectProjection())return false;
     const auto* Receiver=C->ResourceGate->GetReceiver();if(!Receiver)return false;
     // Explicit ExpiredLife closure: never grant a pending old-life buff to a replacement Pawn.
     if(E.Before.LifeId!=Receiver->State().LifeId)
@@ -269,16 +327,19 @@ bool UAetherBuffRuntime::ApplyDelivery(const FAetherConsumableEffectV10& E)
 void UAetherBuffRuntime::RemoveSource(const FString& Source)
 {
     auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority())return;
+    FGuid Life;if(!AetherSkillLives::Resolve(*C,Life))return;
     const TWeakObjectPtr<UAetherBuffRuntime> Self=this;
-    if(C->ResourceGate->Defer([Self,Source]{if(Self.IsValid())Self->RemoveSource(Source);}))return;
+    if(C->ResourceGate->Defer([Self,Source,Life]{if(Self.IsValid()){
+        const auto* Owner=Cast<AAetherCharacter>(Self->GetOwner());FGuid Current;
+        if(Owner&&AetherSkillLives::Resolve(*Owner,Current)&&Current==Life)Self->RemoveSource(Source);
+    }}))return;
     if(State.RemoveSource(Source))Publish();
 }
 void UAetherBuffRuntime::TickComponent(float Delta,ELevelTick Type,FActorComponentTickFunction* Function)
 {
     Super::TickComponent(Delta,Type,Function);auto* C=Cast<AAetherCharacter>(GetOwner());if(!C||!C->HasAuthority())return;
+    if(!SynchronizeLife())return;
     if(bPublicationPending&&!C->ResourceGate->IsBlocked()&&!Publish())return;
-    if(const auto* Receiver=C->ResourceGate->GetReceiver();Receiver&&State.LifeId!=Receiver->State().LifeId)
-    {State={};State.LifeId=Receiver->State().LifeId;PendingDueEvents=0;SchedulingState.Reset();Publish();}
     if(!C->Alive()&&!State.Instances.IsEmpty())
     {
         if(C->ResourceGate->IsBlocked())return;

@@ -79,18 +79,20 @@ void UAetherSpellAbility::FinishCast(FGuid ExpectedExecution)
     const auto Payment=PaymentExecution;
     const auto H=CurrentSpecHandle;const auto* Info=CurrentActorInfo;const auto A=CurrentActivationInfo;
     const auto Avatar=PreparedAvatar;const auto ASC=PreparedSystem;
-    if(!Avatar.IsValid()||!ASC.IsValid()||ASC->GetAvatarActor()!=Avatar.Get()||Avatar->CastExecutionId!=ExpectedExecution)
-    {EndAbility(H,Info,A,true,true);return;}
-    Avatar->CastLockUntil=0;Avatar->BuffRuntime->FlushDue();
-    const bool Committed=IsActive()&&CommitAbility(H,Info,A);
-    Cast.bCostApplied=Payment.IsValid()&&Payment->bCostApplied;
     const auto SameLife=[&]() {
         if(!Avatar.IsValid()||!ASC.IsValid()||ASC->GetAvatarActor()!=Avatar.Get()||Avatar->AbilitySystem!=ASC.Get()||!Avatar->Alive())return false;
         FGuid Life;return AetherSkillLives::Resolve(*Avatar,Life)&&Life==Cast.LifeId;
     };
+    const auto OwnsExecution=[&]{return Payment==PaymentExecution&&PreparedCast.IsSet()&&PreparedCast->ExecutionId==ExpectedExecution;};
+    const auto BeforePayment=[&]{return IsActive()&&OwnsExecution()&&SameLife()&&Avatar->CastExecutionId==ExpectedExecution;};
+    if(!BeforePayment()){if(IsActive()&&OwnsExecution())EndAbility(H,Info,A,true,true);return;}
+    Avatar->CastLockUntil=0;Avatar->BuffRuntime->FlushDue();
+    // FlushDue也可改变生命/执行。旧Windup在付款之前退出，不能先扣新生命再拒绝退款。
+    if(!BeforePayment()){if(IsActive()&&OwnsExecution())EndAbility(H,Info,A,true,true);return;}
+    const bool Committed=CommitAbility(H,Info,A);
+    Cast.bCostApplied=Payment.IsValid()&&Payment->bCostApplied;
     FString CurrentId;int32 CurrentRank=0;
-    const bool OwnsExecution=Payment==PaymentExecution&&PreparedCast.IsSet()&&PreparedCast->ExecutionId==ExpectedExecution;
-    const bool Valid=Committed&&OwnsExecution&&IsActive()&&SameLife()&&Avatar->CastExecutionId==ExpectedExecution&&Avatar->Ready()&&ResolveSkill(H,Info,CurrentId,CurrentRank)&&CurrentId==Id&&CurrentRank==Rank;
+    const bool Valid=Committed&&OwnsExecution()&&IsActive()&&SameLife()&&Avatar->CastExecutionId==ExpectedExecution&&Avatar->Ready()&&ResolveSkill(H,Info,CurrentId,CurrentRank)&&CurrentId==Id&&CurrentRank==Rank;
     Cast.bResultCommitted=Valid&&Avatar->ExecuteCast(Cast);
     if(Payment==PaymentExecution)bResultCommitted=Cast.bResultCommitted;
     UE_LOG(LogTemp,Verbose,TEXT("AETHER_SPELL_RESULT execution=%s committed=%d cost=%d"),*Cast.ExecutionId.ToString(),Cast.bResultCommitted,Cast.bCostApplied);
