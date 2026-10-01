@@ -37,13 +37,13 @@ FAetherNpcSkillDefinitions FAetherNpcSkillDefinitions::Parse(const FString& Json
     TSharedPtr<FJsonObject> Root;double Version=0;
     if(Json.Len()>128*1024||!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Root)||!Root||
         !Fields(*Root,{TEXT("SchemaVersion"),TEXT("Loadouts"),TEXT("FighterLoadouts")})||
-        !Root->TryGetNumberField(TEXT("SchemaVersion"),Version)||Version!=1)return Fail(TEXT("Unsupported NPC skill catalog schema"));
+        !Root->TryGetNumberField(TEXT("SchemaVersion"),Version)||Version!=2)return Fail(TEXT("Unsupported NPC skill catalog schema"));
     const TArray<TSharedPtr<FJsonValue>>* Rows=nullptr;
     if(!Root->TryGetArrayField(TEXT("Loadouts"),Rows)||Rows->IsEmpty()||Rows->Num()>64)return Fail(TEXT("Invalid NPC loadout count"));
     for(const auto& V:*Rows)
     {
         const TSharedPtr<FJsonObject>* O=nullptr;FAetherNpcSkillLoadout L;
-        if(!V->TryGetObject(O)||!O||!O->IsValid()||!Fields(**O,{TEXT("Id"),TEXT("InitialGrants")})||
+        if(!V->TryGetObject(O)||!O||!O->IsValid()||!Fields(**O,{TEXT("Id"),TEXT("InitialGrants"),TEXT("OffensiveSkills")})||
             !(*O)->TryGetStringField(TEXT("Id"),L.Id)||!Id(L.Id)||D.Loadouts.Contains(L.Id))return Fail(TEXT("Invalid/duplicate NPC loadout"));
         const TArray<TSharedPtr<FJsonValue>>* Grants=nullptr;
         if(!(*O)->TryGetArrayField(TEXT("InitialGrants"),Grants)||Grants->Num()>32)return Fail(TEXT("Invalid NPC grant count"));
@@ -62,6 +62,16 @@ FAetherNpcSkillDefinitions FAetherNpcSkillDefinitions::Parse(const FString& Json
                 (Grant.Slot>=0&&Slots.Contains(Grant.Slot)))return Fail(TEXT("Unknown/inactive NPC skill, rank or duplicate input slot"));
             Seen.Add(Grant.SkillId);if(Grant.Slot>=0)Slots.Add(Grant.Slot);L.InitialGrants.Add(MoveTemp(Grant));
         }
+        if(!(*O)->TryGetStringArrayField(TEXT("OffensiveSkills"),L.OffensiveSkills)||L.OffensiveSkills.Num()>32)
+            return Fail(TEXT("Missing or invalid NPC offensive strategy"));
+        TSet<FString> OffensiveSeen;
+        for(const auto& SkillId:L.OffensiveSkills)
+        {
+            const auto* Skill=Skills.Skills.Find(SkillId);
+            if(!Seen.Contains(SkillId)||OffensiveSeen.Contains(SkillId)||!Skill||!Skill->SkillId.Equals(SkillId,ESearchCase::CaseSensitive)||!SupportsOffensiveActorTarget(*Skill))
+                return Fail(TEXT("NPC offensive strategy requires unique granted directional hostile-actor skills"));
+            OffensiveSeen.Add(SkillId);
+        }
         const FString Key=L.Id;D.Loadouts.Add(Key,MoveTemp(L));
     }
     const TSharedPtr<FJsonObject>* Bindings=nullptr;
@@ -76,6 +86,13 @@ FAetherNpcSkillDefinitions FAetherNpcSkillDefinitions::Parse(const FString& Json
         D.FighterLoadouts.Add(P.Key,Target);
     }
     D.bValid=true;return D;
+}
+bool FAetherNpcSkillDefinitions::SupportsOffensiveActorTarget(const FAetherSkillDefinitionV10& Skill)
+{
+    // 当前只支持朝敌对 Actor 发射火球、霜/雷定向注入。区域/地面/支持技能不得猜测目标语义。
+    if(!Skill.bActive||(Skill.Mechanic!=EAetherSkillMechanic::Fire&&Skill.Mechanic!=EAetherSkillMechanic::Frost&&Skill.Mechanic!=EAetherSkillMechanic::Lightning)||Skill.Ranks.IsEmpty())return false;
+    for(const auto& Rank:Skill.Ranks)if(!FMath::IsFinite(Rank.RangeCm)||Rank.RangeCm<=0)return false;
+    return true;
 }
 const FAetherNpcSkillDefinitions& FAetherNpcSkillDefinitions::Get()
 {
