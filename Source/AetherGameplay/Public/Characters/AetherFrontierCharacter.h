@@ -73,6 +73,7 @@ public:
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierProp> Carried;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> CompanionOwner;
     UPROPERTY(Replicated) bool bHealer = false;
+    virtual void OnCastStarted(const FAetherCastExecution& Execution) override;
     virtual bool ValidateCastCommit(const FAetherCastExecution& Execution,const AAetherCharacter* ActualTarget) override;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> ReviveTarget;
     TWeakObjectPtr<AAetherFrontierCharacter> RescueHolder;

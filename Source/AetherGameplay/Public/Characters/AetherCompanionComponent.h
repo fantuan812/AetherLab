@@ -25,6 +25,7 @@ public:
     UAetherCompanionComponent();
     bool BeginCompanionControl();
     void EndCompanionControl();
+    void OnCastStarted(const FAetherCastExecution& Cast);
     bool ValidateSkillCommit(const FAetherCastExecution& Cast,const AAetherCharacter* ActualTarget);
     virtual void TickComponent(float Delta,ELevelTick Type,FActorComponentTickFunction* Tick) override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
@@ -49,9 +50,10 @@ private:
         TWeakObjectPtr<AAetherFrontierCharacter> Patient,Recruiter;
         TWeakObjectPtr<AController> Controller;
         uint64 Generation=0,DamageSerial=0;
-        bool bIssuing=false,bCanceled=false;
+        bool bIssuing=false,bCanceled=false,bOwnsFocus=false;
     };
     bool IsSupportIntentValid(const FSupportIntent& Intent) const;
+    void ReleaseSupportFocus(FSupportIntent& Intent);
     TSharedPtr<FSupportIntent> SupportIntent;
     FGuid CanceledSupportExecution;
     double NextSupportSample=0;

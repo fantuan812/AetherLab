@@ -370,6 +370,8 @@ void AAetherFrontierCharacter::Tick(float Dt)
     }
 }
 
+void AAetherFrontierCharacter::OnCastStarted(const FAetherCastExecution& Execution)
+{if(CompanionDecision)CompanionDecision->OnCastStarted(Execution);}
 bool AAetherFrontierCharacter::ValidateCastCommit(const FAetherCastExecution& Execution,const AAetherCharacter* ActualTarget)
 {return !CompanionDecision||CompanionDecision->ValidateSkillCommit(Execution,ActualTarget);}
 float AAetherFrontierCharacter::TakeDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer)

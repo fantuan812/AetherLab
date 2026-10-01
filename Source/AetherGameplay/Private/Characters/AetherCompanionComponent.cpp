@@ -3,6 +3,7 @@
 #include "Interaction/AetherNearbyRegistry.h"
 #include "Interaction/AetherActions.h"
 #include "AIController.h"
+#include "AITypes.h"
 #include "Effects/AetherBuffRuntime.h"
 #include "Skills/AetherSkillAbilityBinding.h"
 #include "Skills/AetherSkillCooldownState.h"
@@ -39,8 +40,13 @@ bool UAetherCompanionComponent::BeginCompanionControl()
     if(!C||!C->HasAuthority()||!IsValid(C->CompanionOwner)||C->CompanionOwner==C||
         C->CompanionId.IsNone()||C->Fighter!=EAetherFighter::Player||!Cast<AAIController>(C->GetController()))return false;
     if(bManaged&&RecruitmentOwner.Get()==C->CompanionOwner&&ManagedController.Get()==C->GetController())return true;
+    const TWeakObjectPtr<AAetherFrontierCharacter> Owner=C->CompanionOwner;const TWeakObjectPtr<AController> Controller=C->GetController();
     EndCompanionControl();
-    RecruitmentOwner=C->CompanionOwner;ManagedController=C->GetController();bManaged=true;++ControlGeneration;
+    if(!IsValid(C)||C->IsActorBeingDestroyed()||!C->HasAuthority()||!Owner.IsValid()||!Controller.IsValid()||C->CompanionOwner==C||
+        C->CompanionId.IsNone()||C->Fighter!=EAetherFighter::Player||!Cast<AAIController>(C->GetController())||
+        C->CompanionOwner!=Owner.Get()||C->GetController()!=Controller.Get())return false;
+    if(bManaged)return RecruitmentOwner==Owner&&ManagedController==Controller;
+    RecruitmentOwner=Owner;ManagedController=Controller;bManaged=true;++ControlGeneration;
     NextPerception=0;NextSupportSample=0;SupportDiagnostic.Reset();C->bFollowing=false;SetComponentTickEnabled(true);return true;
 }
 void UAetherCompanionComponent::ClearOwnedActions()
@@ -49,15 +55,15 @@ void UAetherCompanionComponent::ClearOwnedActions()
     CombatTarget.Reset();NextPerception=0;
     if(OwnedReviveTarget.IsValid()&&C->ReviveTarget==OwnedReviveTarget.Get())C->ReviveTarget=nullptr;
     OwnedReviveTarget.Reset();
-    CancelOwnedSupport();
-    if(bOwnsGuard){C->ServerBlock(false);bOwnsGuard=false;}
-    C->bFollowing=false;
+    const bool DropGuard=bOwnsGuard;bOwnsGuard=false;C->bFollowing=false;
+    if(DropGuard)C->ServerBlock(false);
+    CancelOwnedSupport(); // GAS结束广播之后不能再写旧控制的成员。
 }
 void UAetherCompanionComponent::EndCompanionControl()
 {
     if(!bManaged)return;
-    ClearOwnedActions();bManaged=false;++ControlGeneration;
-    RecruitmentOwner.Reset();ManagedController.Reset();SetComponentTickEnabled(false);
+    bManaged=false;++ControlGeneration;RecruitmentOwner.Reset();ManagedController.Reset();SetComponentTickEnabled(false);
+    ClearOwnedActions(); // 先撤销旧控制；取消回调建立的新控制由它自己持有。
 }
 void UAetherCompanionComponent::EndPlay(const EEndPlayReason::Type Reason)
 {EndCompanionControl();Super::EndPlay(Reason);}
@@ -70,15 +76,19 @@ void UAetherCompanionComponent::TickComponent(float Dt,ELevelTick Type,FActorCom
     {EndCompanionControl();return;}
     if(!C->Alive()||C->CombatTime()<C->StunUntil||C->bCompanionHold||C->bTravelPending)
     {ClearOwnedActions();return;}
-    if(SupportIntent&&!SupportIntent->bIssuing&&C->CastExecutionId!=SupportIntent->Execution)SupportIntent.Reset();
+    const uint64 FrameGeneration=ControlGeneration;const auto FrameOwner=RecruitmentOwner;const auto FrameController=ManagedController;
+    const auto SameFrameControl=[&]{return bManaged&&ControlGeneration==FrameGeneration&&FrameOwner.IsValid()&&RecruitmentOwner==FrameOwner&&ManagedController==FrameController&&
+        C->CompanionOwner==FrameOwner.Get()&&C->GetController()==FrameController.Get()&&C->Alive()&&!C->bCompanionHold&&!C->bTravelPending&&C->CombatTime()>=C->StunUntil;};
+    if(SupportIntent&&!SupportIntent->bIssuing&&C->CastExecutionId!=SupportIntent->Execution){auto Finished=MoveTemp(SupportIntent);ReleaseSupportFocus(*Finished);}
     if(SupportIntent&&!IsSupportIntentValid(*SupportIntent))CancelOwnedSupport();
+    if(!SameFrameControl())return;
     if(OwnedReviveTarget.IsValid()&&C->ReviveTarget!=OwnedReviveTarget.Get())OwnedReviveTarget.Reset();
     auto* Mode=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();
     if(Mode&&Mode->Encounters&&Mode->Encounters->IsChanneling(C)){CancelOwnedSupport();return;}
     const float Now=C->CombatTime();auto* Owner=RecruitmentOwner.Get();
     if(!Owner->Alive())
     {
-        CancelOwnedSupport();
+        CancelOwnedSupport();if(!SameFrameControl()||Owner->Alive())return;
         if(bOwnsGuard){C->ServerBlock(false);bOwnsGuard=false;}CombatTarget.Reset();
         if(FVector::DistSquared2D(C->GetActorLocation(),Owner->GetActorLocation())>FMath::Square(170.))C->AddMovementInput(C->SafeMoveDirection(Owner->GetActorLocation()));
         else if(!C->ReviveTarget&&AetherRelations::CanAssist(*C,*Owner))
@@ -87,6 +97,7 @@ void UAetherCompanionComponent::TickComponent(float Dt,ELevelTick Type,FActorCom
     }
     auto* Nearby=GetWorld()->GetSubsystem<UAetherNearbyRegistry>();if(!Nearby)return;
     if(C->bHealer&&TrySupport(*C))return;
+    if(!SameFrameControl())return;
     if(SupportIntent)return; // 保持本次实际瞄准；前摇/恢复仍归GAS，不能写第二张AI冷却表。
     if(Now>=NextPerception)
     {
@@ -169,29 +180,41 @@ bool UAetherCompanionComponent::IsSupportIntentValid(const FSupportIntent& I) co
         I.Recruiter.Get()!=C->CompanionOwner||I.System.Get()!=C->AbilitySystem||I.TargetSystem.Get()!=P->AbilitySystem||C->SkillLoadoutId!=I.Loadout||
         C->CombatRuntime->DamageReceivedCount!=I.DamageSerial||!ValidPatient(*C,*P,*Policy)||!AetherSkillLives::Resolve(*C,Life)||Life!=I.Life||
         !AetherSkillLives::Resolve(*P,TargetLife)||TargetLife!=I.TargetLife)return false;
+    const auto* AI=Cast<AAIController>(I.Controller.Get());
+    if(I.bOwnsFocus&&(!AI||AI->GetFocusActorForPriority(EAIFocusPriority::Gameplay)!=P))return false;
     const auto& Choice=Policy->Skill(I.Purpose);const auto* Spec=I.System->FindAbilitySpecFromHandle(I.Spec);
     if(!Choice.bEnabled||Choice.SkillId!=I.SkillId||!Spec||Spec->Level!=I.Rank||AetherSkillBinding::Identify(*Spec)!=I.SkillId||!C->SkillUnlocked(I.SkillId))return false;
     if(I.Purpose==EAetherCompanionSupportPurpose::SelfHealing)return P==C;
     if(P==C)return false;
     return I.Purpose!=EAetherCompanionSupportPurpose::Cooling||(P->Reactive&&P->Reactive->State.TemperatureC>Policy->CoolingAboveTemperatureC);
 }
+void UAetherCompanionComponent::ReleaseSupportFocus(FSupportIntent& I)
+{
+    if(!I.bOwnsFocus)return;I.bOwnsFocus=false;
+    auto* AI=Cast<AAIController>(I.Controller.Get());
+    if(AI&&AI->GetPawn()==GetOwner()&&AI->GetFocusActorForPriority(EAIFocusPriority::Gameplay)==I.Patient.Get())AI->ClearFocus(EAIFocusPriority::Gameplay);
+}
 void UAetherCompanionComponent::CancelOwnedSupport()
 {
     auto* C=Cast<AAetherFrontierCharacter>(GetOwner());auto I=SupportIntent;if(!I)return;
-    I->bCanceled=true;SupportIntent.Reset(); // 取消广播前释放成员，不能把回调中的新意图清掉。
+    I->bCanceled=true;SupportIntent.Reset();ReleaseSupportFocus(*I); // 取消广播前释放成员，不能把回调中的新意图清掉。
     if(!C||!I->System.IsValid())return;
     const auto* Spec=I->System->FindAbilitySpecFromHandle(I->Spec);
-    // 请求前已排空源/目标到期事件；同步零前摇付款时正式GA已公布这个真实ID。
-    if(!I->Execution.IsValid()&&I->bIssuing&&Spec&&Spec->IsActive()&&C->CastExecutionId.IsValid())I->Execution=C->CastExecutionId;
     if(!I->Execution.IsValid())return;CanceledSupportExecution=I->Execution;
     if(C->AbilitySystem==I->System.Get()&&I->System->GetAvatarActor()==C&&C->CastExecutionId==I->Execution&&Spec&&Spec->IsActive())
         I->System->CancelAbilityHandle(I->Spec);
+}
+void UAetherCompanionComponent::OnCastStarted(const FAetherCastExecution& Cast)
+{
+    auto I=SupportIntent;
+    if(!I||!I->bIssuing||I->Execution.IsValid()||I->SkillId!=Cast.SkillId)return;
+    I->Execution=Cast.ExecutionId; // 仅接收GA实际发布的首条身份，取消重开的执行不得重新归属旧意图。
+    if(!IsSupportIntentValid(*I))CancelOwnedSupport();
 }
 bool UAetherCompanionComponent::ValidateSkillCommit(const FAetherCastExecution& Cast,const AAetherCharacter* ActualTarget)
 {
     if(Cast.ExecutionId==CanceledSupportExecution&&Cast.ExecutionId.IsValid())return false;
     auto I=SupportIntent;if(!I)return true;
-    if(!I->Execution.IsValid()&&I->bIssuing&&I->SkillId==Cast.SkillId)I->Execution=Cast.ExecutionId;
     if(I->Execution!=Cast.ExecutionId)return true; // 未由本组件发出的玩家/其他行为保持正式能力语义。
     return IsSupportIntentValid(*I)&&ActualTarget==I->Patient.Get()&&Cast.SkillId==I->SkillId&&Cast.Rank==I->Rank&&Cast.LifeId==I->Life&&
         (I->Purpose!=EAetherCompanionSupportPurpose::FriendlyHealing||Cast.TargetLifeId==I->TargetLife);
@@ -214,14 +237,21 @@ bool UAetherCompanionComponent::TryIssueSupport(AAetherFrontierCharacter& C,AAet
     auto* Spec=I->System->FindAbilitySpecFromHandle(I->Spec);
     if(!Spec||!Spec->Ability||Spec->IsActive()||!I->System->AbilityActorInfo.IsValid()||
         !Spec->Ability->CanActivateAbility(I->Spec,I->System->AbilityActorInfo.Get(),nullptr,nullptr,nullptr))return false;
-    if(&Patient!=&C)C.GetController()->SetControlRotation((Patient.GetActorLocation()-C.SkillAimOrigin()).Rotation());
+    auto* AI=Cast<AAIController>(C.GetController());
+    if(&Patient!=&C&&(AI->GetFocusActorForPriority(EAIFocusPriority::Gameplay)||FAISystem::IsValidLocation(AI->GetFocalPointForPriority(EAIFocusPriority::Gameplay))))return false;
+    SupportIntent=I;
+    if(&Patient!=&C)
+    {
+        I->bOwnsFocus=true;AI->SetFocus(&Patient,EAIFocusPriority::Gameplay);
+        AI->SetControlRotation((Patient.GetActorLocation()-C.SkillAimOrigin()).Rotation());
+    }
     FHitResult Hit;FVector Origin,Direction;
-    if(!C.FindSkillTarget(Choice.SkillId,I->Rank,Hit,Origin,Direction)||(&Patient!=&C&&Hit.GetActor()!=&Patient)||!IsSupportIntentValid(*I))return false;
-    SupportIntent=I;I->bIssuing=true;const bool Activated=C.TrySkill(I->SkillId);I->bIssuing=false;
+    if(!C.FindSkillTarget(Choice.SkillId,I->Rank,Hit,Origin,Direction)||(&Patient!=&C&&Hit.GetActor()!=&Patient)||!IsSupportIntentValid(*I))
+    {if(SupportIntent==I)CancelOwnedSupport();return false;}
+    I->bIssuing=true;const bool Activated=C.TrySkill(I->SkillId);I->bIssuing=false;
     if(SupportIntent==I&&!I->bCanceled)
     {
-        if(Activated&&C.CastExecutionId.IsValid())I->Execution=C.CastExecutionId;
-        else SupportIntent.Reset(); // 零前摇可能已同步提交或失败；不伪造成功/恢复/CD。
+        if(!Activated||!I->Execution.IsValid()||C.CastExecutionId!=I->Execution){SupportIntent.Reset();ReleaseSupportFocus(*I);} // 零前摇可能已同步提交；不能认领回调重开的其他执行。
     }
     return Activated;
 }
