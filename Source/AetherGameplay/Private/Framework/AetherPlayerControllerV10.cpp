@@ -44,6 +44,30 @@ void AAetherPlayerController::ClientV10Channel_Implementation(FGuid Channel,cons
 }
 void AAetherPlayerController::ClientV10Reply_Implementation(const FAetherV10ReplyPacket& P)
 {if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveReply(this,P);}
+void AAetherPlayerController::ClientV10LootClaimResult_Implementation(FGuid Channel,FGuid OriginCommandId,FGuid LootInstanceId,EAetherLootClaimOutcome Outcome)
+{
+    auto* LP=GetLocalPlayer();auto* Client=LP?LP->GetSubsystem<UAetherCommandClient>():nullptr;
+    if(!Client||!Channel.IsValid()||Channel!=Client->GetChannel()||!Client->AcceptsControllerIdentity(this)||
+        !OriginCommandId.IsValid()||!LootInstanceId.IsValid())return;
+    auto* C=Cast<AAetherFrontierCharacter>(GetPawn());if(!C)return;
+    if(LootFeedbackChannel!=Channel){LootFeedbackChannel=Channel;CompletedLootFeedback.Reset();}
+    const TPair<FGuid,FGuid> Key(OriginCommandId,LootInstanceId);if(CompletedLootFeedback.Contains(Key))return;
+    FString Message;
+    switch(Outcome)
+    {
+    case EAetherLootClaimOutcome::Applied:Message=TEXT("领取已保存，物品以同步的库存快照为准。");break;
+    case EAetherLootClaimOutcome::AlreadyOwned:Message=TEXT("这份战利品已由你领取，不会重复发放。");break;
+    case EAetherLootClaimOutcome::InventoryFull:Message=TEXT("背包空间不足，战利品仍留在原处；整理背包后可重试。");break;
+    case EAetherLootClaimOutcome::ClaimedByOther:Message=TEXT("这份战利品已被其他玩家领取。");break;
+    case EAetherLootClaimOutcome::Missing:Message=TEXT("这份战利品已不存在，请刷新目标。");break;
+    case EAetherLootClaimOutcome::Invalid:Message=TEXT("领取未能确认，请稍后重试或重新同步库存。");break;
+    default:return;
+    }
+    if(CompletedLootFeedback.Num()>=128)CompletedLootFeedback.RemoveAt(0);
+    CompletedLootFeedback.Add(Key);
+    // 已在拥有者客户端；直接走既有表现通知，不能再伪造普通持久命令回执。
+    C->Notify_Implementation(Message);
+}
 void AAetherPlayerController::ClientV10Snapshot_Implementation(const FAetherV10SnapshotChunk& P)
 {if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveChunk(this,P);}
 
@@ -60,8 +84,11 @@ void AAetherPlayerController::ServerV10SceneInput_Implementation(const FAetherV1
 {
     auto* GI=GetGameInstance();auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();FAetherPlayerCommand C;
     if(!GI||!M||!GI->GetSubsystem<UAetherCommandRuntime>()->AuthorizeSceneInput(this,P,Sequence,C))return;
-    const FString Result=M->ExecuteNativeSceneService(*this,C);
-    if(auto* CharacterPawn=Cast<AAetherFrontierCharacter>(GetPawn()))CharacterPawn->Notify(Result);
+    bool bLootClaimAccepted=false;
+    const FString Result=M->ExecuteNativeSceneService(*this,C,bLootClaimAccepted);
+    // 已接受掉落已有客户端“已发送”反馈。初始 Pawn RPC 与终态 Controller RPC
+    // 不保证跨 Actor 到达顺序，因此这里只保留拒绝和其他场景服务的原提示。
+    if(!bLootClaimAccepted)if(auto* CharacterPawn=Cast<AAetherFrontierCharacter>(GetPawn()))CharacterPawn->Notify(Result);
 }
 
 void AAetherPlayerController::ServerV10ContainerQuery_Implementation(const FAetherV10ContainerQuery& Q)

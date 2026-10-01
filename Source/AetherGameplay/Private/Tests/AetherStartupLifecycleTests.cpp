@@ -122,9 +122,12 @@ bool FAetherStartupLifecycleTest::RunTest(const FString&)
     FAetherWorldStateV10 Initial;Initial.RealmId=FGuid::NewGuid();FAetherStoredAggregate World;World.Key={EAetherAggregateKind::World,TEXT("Main")};
     if(!TestTrue(TEXT("Seed world DTO"),AetherWorldCodec::Encode(Initial,D.Items,D.Rules,{{Identity,0}},World.Payload,Why)))return false;
     Store->Rows.Add(World.Key,World);
+    FAetherWorldStateV10 AuditedWorld;
+    if(!TestTrue(TEXT("Audit controlled world's persisted value before activation"),
+        AetherWorldCodec::Decode(World.Payload,D.Items,D.Rules,{{Identity,Profile.Revision}},AuditedWorld,Why)&&AuditedWorld.Revision==World.Revision))return false;
     const FAetherResolveConnectedContext Resolve=[](auto&,const auto&,const auto&,auto&){return false;};
     const FAetherPublishConnectedState Publish=[](auto&,const auto&,const auto*,const auto*){return true;};
-    if(!TestTrue(TEXT("Install real previous runtime"),Runtime->InstallBackend(Store,Resolve,Publish,Why)))return false;
+    if(!TestTrue(TEXT("Install real previous runtime"),Runtime->InstallBackend(Store,AuditedWorld,Resolve,Publish,Why)))return false;
     const FString Prefix=TEXT("StartupWait_")+FGuid::NewGuid().ToString(EGuidFormats::Digits);
     TestFalse(TEXT("Active world is not silently stopped for new preparation"),P->Prepare(Prefix,true,Why));
     TestTrue(TEXT("Active conflict preserves runtime and unopened new store"),Runtime->IsInstalled()&&!P->Store);
@@ -256,7 +259,12 @@ bool FAetherStartupLifecycleTest::RunTest(const FString&)
         !TestTrue(TEXT("Seed real profile"),Open.Store->CreateProfile(Profile).Get().Code==EAetherStoreCode::Found)){Open.Store->Close();return false;}
     auto Gate=MakeShared<FStartupSqliteGate,ESPMode::ThreadSafe>(Open.Store.ToSharedRef());
     ON_SCOPE_EXIT {Gate->Close();};
-    if(!TestTrue(TEXT("Install old real-database backend"),Runtime->InstallBackend(Gate,Resolve,Publish,Why)))return false;
+    FAetherStoreSnapshotQuery AuditQuery;AuditQuery.Keys={World.Key};AuditQuery.bIncludeProfileRevisions=true;
+    const auto Audit=Open.Store->ReadSnapshot(MoveTemp(AuditQuery)).Get();const auto* AuditedRow=Audit.Values.Find(World.Key);
+    FAetherWorldStateV10 AuditedSqliteWorld;
+    if(!TestTrue(TEXT("Audit real database before installing old backend"),Audit.Code==EAetherStoreCode::Found&&AuditedRow&&
+        AetherWorldCodec::Decode(AuditedRow->Payload,D.Items,D.Rules,Audit.ProfileRevisions,AuditedSqliteWorld,Why)&&AuditedSqliteWorld.Revision==AuditedRow->Revision))return false;
+    if(!TestTrue(TEXT("Install old real-database backend"),Runtime->InstallBackend(Gate,AuditedSqliteWorld,Resolve,Publish,Why)))return false;
     if(!TestTrue(TEXT("Accept fact before real-database shutdown"),Runtime->ObserveServerFact(Fact,Why)))return false;
     Runtime->UninstallBackend();Runtime->Tick(0);
     if(!TestTrue(TEXT("Hold accepted real-database work at its read boundary"),Gate->Held.IsValid()))return false;

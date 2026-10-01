@@ -2,6 +2,13 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
 #include "AetherSkillCooldownState.generated.h"
+class AAetherCharacter;
+
+namespace AetherSkillLives
+{
+    // 服务器正式资源生命：Profile取其Receiver；Definition取其唯一ASC。缺权威不降级。
+    AETHERGAMEPLAY_API bool Resolve(const AAetherCharacter& Character,FGuid& Out);
+}
 
 USTRUCT()
 struct FAetherSkillCooldownDeadline
@@ -26,9 +33,19 @@ class AETHERGAMEPLAY_API UAetherDefinitionAbilitySystem : public UAbilitySystemC
     GENERATED_BODY()
 public:
     double CooldownRemaining(const FString& Skill,const FString& Group,double Now) const;
+    FGuid DefinitionLife() const;
+    virtual void InitAbilityActorInfo(AActor* OwnerActor,AActor* AvatarActor) override;
+    virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 private:
     friend class AAetherCharacter;
     friend class FAetherNpcSkillCooldownTest;
     bool CommitCooldown(const FString& Skill,const FString& Group,double SkillSeconds,double GroupSeconds,double Now);
     UPROPERTY(Transient) TArray<FAetherSkillCooldownDeadline> SkillCooldowns;
+    FGuid LifeId;
+    TWeakObjectPtr<AAetherCharacter> LifeAvatar;
+    FDelegateHandle HealthChangedHandle;
+    bool bLifeStopped=false;
+    void SynchronizeDefinitionLife();
+    void OnDefinitionHealthChanged(const FOnAttributeChangeData& Change);
 };

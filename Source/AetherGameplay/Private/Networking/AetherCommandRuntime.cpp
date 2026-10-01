@@ -30,6 +30,7 @@ struct FAetherCommandRuntimeImpl
         int64 Revision=-1;
         uint32 Offset=0,Checksum=0;
         bool bReady=false,bNeedsRecovery=true,bNeedFullRecovery=true,bDeliveryRequested=false;
+        bool bNeedsWorldFactSettle=false;
         TUniquePtr<FAetherConsumableDeliveryPump> Delivery;
         TOptional<FAetherPlayerCommand> ResourceCommand;
         TOptional<FAetherCommandResult> ResourceReply;
@@ -45,6 +46,46 @@ struct FAetherCommandRuntimeImpl
         bool bContainerDirty=false,bPreferContainer=false;
         double NextContainerRead=0;
     };
+    struct FLootClaim
+    {
+        TWeakObjectPtr<AAetherPlayerController> Controller;
+        TWeakObjectPtr<APawn> Pawn;
+        FAetherProfileSession Session;
+        FGuid Channel,Realm,LootInstanceId,OriginCommandId;
+    };
+    // 生命周期只撤销提示意图；已经接受的值对象事务仍由 Facts 排空。
+    TArray<FLootClaim> LootClaims;
+    void RevokeLootFeedback(TWeakObjectPtr<AAetherPlayerController> Controller)
+    {LootClaims.RemoveAll([&](const auto& Claim){return Claim.Controller==Controller;});}
+    TArray<TOptional<FLootClaim>> TakeLootFeedback(const TArray<FAetherServerFactCompletion>& Completed)
+    {
+        TArray<TOptional<FLootClaim>> Taken;Taken.SetNum(Completed.Num());
+        // 必须整批摘下，之后 PublishWorld / Queue 才能重入并提交同一掉落的新请求。
+        for(int32 I=0;I<Completed.Num();++I)
+        {
+            const auto& Event=Completed[I].Event;if(Event.Kind!=EAetherServerFactKind::LegacyLoot)continue;
+            const int32 Index=LootClaims.IndexOfByPredicate([&](const auto& Claim){return Claim.LootInstanceId==Event.InstanceId&&
+                Claim.Session.CharacterId.Equals(Event.CharacterId,ESearchCase::CaseSensitive);});
+            if(Index!=INDEX_NONE){Taken[I]=MoveTemp(LootClaims[Index]);LootClaims.RemoveAt(Index);}
+        }
+        return Taken;
+    }
+    void PublishLootFeedback(const FLootClaim& Claim,const FAetherServerFactCompletion& Completion)
+    {
+        if(bShutdownRequested||Realm!=Claim.Realm||!Completion.LootOutcome.IsSet())return;
+        auto* Found=Bindings.Find(Claim.Controller);if(!Found)return;auto& B=**Found;
+        if(!Current(B)||!(B.Session==Claim.Session)||B.Channel!=Claim.Channel||B.Pawn!=Claim.Pawn)return;
+        if(!Completion.Profile.IsSet()&&(Completion.LootOutcome.GetValue()==EAetherLootClaimOutcome::Applied||
+            Completion.LootOutcome.GetValue()==EAetherLootClaimOutcome::AlreadyOwned))
+        {
+            // 提交已有证明，刷新失败不能声称未领取，也不能发布旧候选覆盖后续事务。
+            // 保持正式未就绪/最新读取恢复链，玩家只得到“已保存”的终态提示。
+            B.bReady=false;B.Outgoing.Reset();B.Read=Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});
+            // 复用一次正式 Settle 待办恢复缺失的最新 World；不重试领取，也不重复提示。
+            B.bNeedsWorldFactSettle=true;
+        }
+        B.Controller->ClientV10LootClaimResult(Claim.Channel,Claim.OriginCommandId,Claim.LootInstanceId,Completion.LootOutcome.GetValue());
+    }
     TSharedPtr<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
     TUniquePtr<FAetherProfileCoordinator> Coordinator;
     TUniquePtr<FAetherServerFactCoordinator> Facts;
@@ -59,6 +100,24 @@ struct FAetherCommandRuntimeImpl
     float SendElapsed=0;
     bool bPolling=false,bTicking=false,bShutdownRequested=false;
     FGuid Realm;
+    // Copied from the audited activation snapshot, never from a business
+    // completion. Backend replacement destroys both this baseline and bindings.
+    TMap<FString,FString> PublishedWorldFacts;
+    int64 WorldFactsBaselineRevision=-1;
+    void ObserveCommittedWorldFacts(const FAetherWorldStateV10& World)
+    {
+        if(bShutdownRequested||World.RealmId!=Realm||World.Revision<WorldFactsBaselineRevision)return;
+        bool Added=false;
+        // Facts are append-only. Keep a union, not the last snapshot: an older
+        // completion may arrive after a newer one and must not undo deduplication.
+        for(const auto& Fact:World.WorldFactSources)if(!PublishedWorldFacts.Contains(Fact.Key))
+        {PublishedWorldFacts.Add(Fact.Key,Fact.Value);Added=true;}
+        if(!Added)return;
+        // Even the originator may have refreshed a newer world than its own
+        // transaction. Retain intent for a live session even in its no-Pawn gap;
+        // enqueue/publication still require the current fully bound avatar.
+        for(auto& Pair:Bindings)if(Coordinator->IsCurrent(Pair.Value->Session))Pair.Value->bNeedsWorldFactSettle=true;
+    }
     bool HasPendingFacts(const FString& Id) const
     {return Facts->HasPendingForCharacter(Id)||DeferredFacts.ContainsByPredicate([&](const auto& E){return E.CharacterId.Equals(Id,ESearchCase::CaseSensitive);});}
     void PumpFacts()
@@ -244,20 +303,24 @@ struct FAetherCommandRuntimeImpl
 };
 UAetherCommandRuntime::UAetherCommandRuntime()=default;
 UAetherCommandRuntime::~UAetherCommandRuntime()=default;
-bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason)
+bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,const FAetherWorldStateV10& AuditedWorld,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason)
 {
     check(IsInGameThread());
     if(Impl||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!Resolve||!Publish)
     {Reason=TEXT("Native backend already installed or server context unavailable");return false;}
     const auto& D=FAetherV10Definitions::Get();if(!D.bValid){Reason=D.Error;return false;}
+    if(AuditedWorld.Revision<0||AuditedWorld.Revision==MAX_int64)
+    {Reason=TEXT("Native backend requires an audited world revision");return false;}
     Impl.Reset(new FAetherCommandRuntimeImpl());Impl->Store=Store;Impl->Resolve=MoveTemp(Resolve);Impl->Publish=MoveTemp(Publish);
     Impl->Coordinator=MakeUnique<FAetherProfileCoordinator>(Store,D.Items,D.Skills,D.Rules,D.Economy,D.Interactions,D.Progression);
     Impl->Facts=MakeUnique<FAetherServerFactCoordinator>(Store);
+    Impl->Realm=AuditedWorld.RealmId;Impl->WorldFactsBaselineRevision=AuditedWorld.Revision;
+    Impl->PublishedWorldFacts=AuditedWorld.WorldFactSources;
     Reason.Reset();return true;
 }
 bool UAetherCommandRuntime::SetBackendDomain(FGuid Realm)
 {
-    if(!IsInstalled()||!Realm.IsValid()||(!Impl->Bindings.IsEmpty()&&Impl->Realm!=Realm))return false;
+    if(!IsInstalled()||!Realm.IsValid()||(Impl->Realm.IsValid()&&Impl->Realm!=Realm))return false;
     Impl->Realm=Realm;return true;
 }
 FAetherCommandRuntimeMetrics UAetherCommandRuntime::Inspect() const
@@ -327,6 +390,32 @@ bool UAetherCommandRuntime::ObserveServerFact(FAetherServerFact Event,FString& R
     if(Impl->DeferredFacts.Num()>=1024){Reason=TEXT("Retained server fact queue exhausted");return false;}
     Impl->DeferredFacts.Add(MoveTemp(Event));Reason.Reset();return true;
 }
+bool UAetherCommandRuntime::SubmitLootClaim(AAetherPlayerController* C,FGuid Instance,FGuid Origin,FString& Reason)
+{
+    check(IsInGameThread());
+    if(!IsInstalled()||Impl->bPolling||!C||!Instance.IsValid()||!Origin.IsValid())
+    {Reason=TEXT("领取服务尚未就绪，请稍后重试。");return false;}
+    auto* Found=Impl->Bindings.Find(C);
+    if(!Found||!Impl->Current(**Found)||!(*Found)->bReady)
+    {Reason=TEXT("角色正在同步，请稍后再领取。");return false;}
+    const auto& B=**Found;
+    const auto* Gate=Impl->Gate(B);if(!Gate||Gate->IsBlocked())
+    {Reason=TEXT("角色事务仍在确认，请稍后再领取。");return false;}
+    const FString Character=B.Session.CharacterId;
+    if(Impl->Facts->HasPendingLootClaim(Character,Instance)||
+        Impl->DeferredFacts.ContainsByPredicate([&](const auto& E){return E.Kind==EAetherServerFactKind::LegacyLoot&&E.InstanceId==Instance&&E.CharacterId.Equals(Character,ESearchCase::CaseSensitive);})||
+        Impl->LootClaims.ContainsByPredicate([&](const auto& Claim){return Claim.LootInstanceId==Instance&&Claim.Session.CharacterId.Equals(Character,ESearchCase::CaseSensitive);}))
+    {Reason=TEXT("这份战利品的领取仍在确认，请等待结果。");return false;}
+    if(Impl->LootClaims.Num()>=128)
+    {Reason=TEXT("领取请求较多，请稍后重试；本次尚未接受。");return false;}
+    FAetherCommandRuntimeImpl::FLootClaim Claim;Claim.Controller=C;Claim.Pawn=B.Pawn;Claim.Session=B.Session;
+    Claim.Channel=B.Channel;Claim.Realm=Impl->Realm;Claim.LootInstanceId=Instance;Claim.OriginCommandId=Origin;
+    Impl->LootClaims.Add(Claim);
+    FAetherServerFact Event;Event.Kind=EAetherServerFactKind::LegacyLoot;Event.CharacterId=Character;Event.FactId=TEXT("Loot");Event.InstanceId=Instance;
+    if(ObserveServerFact(MoveTemp(Event),Reason)){Reason.Reset();return true;}
+    Impl->LootClaims.RemoveAll([&](const auto& Pending){return Pending.Session==Claim.Session&&Pending.LootInstanceId==Instance&&Pending.OriginCommandId==Origin;});
+    Reason=TEXT("领取暂不可用，请稍后重试；本次尚未接受。");return false;
+}
 bool UAetherCommandRuntime::BindVerifiedPlayer(AAetherPlayerController* C,const FString& Character)
 {
     check(IsInGameThread());
@@ -348,6 +437,9 @@ bool UAetherCommandRuntime::BindVerifiedPlayer(AAetherPlayerController* C,const 
     UnbindPlayer(C);if(Impl->Bindings.Num()>=16)return false;
     const auto Session=Impl->Coordinator->BeginSession(Character);if(!Session.SessionId.IsValid())return false;
     auto B=MakeUnique<FAetherCommandRuntimeImpl::FBinding>();B->Controller=C;B->PlayerState=PS;B->Pawn=C->GetPawn();B->Session=Session;B->Channel=FGuid::NewGuid();
+    // A prior connection's Settle may already have read an older world. Login's
+    // duplicate event cannot replace that read; retain a fresh pass after it drains.
+    B->bNeedsWorldFactSettle=Impl->HasPendingFacts(Character);
     FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=Character;FString Why;
     if(!ObserveServerFact(MoveTemp(Settle),Why)){Impl->Coordinator->EndSession(Session);return false;}
     if(auto* Resources=Impl->Gate(*B))Resources->BlockForInitialLoad();
@@ -357,6 +449,7 @@ bool UAetherCommandRuntime::BindVerifiedPlayer(AAetherPlayerController* C,const 
 void UAetherCommandRuntime::UnbindPlayer(AAetherPlayerController* C)
 {
     if(!IsInstalled()||Impl->bPolling||!C)return;
+    Impl->RevokeLootFeedback(C);
     if(auto* B=Impl->Bindings.Find(C))
     {Impl->CloseContainer(**B);Impl->Coordinator->EndSession((*B)->Session);Impl->Bindings.Remove(C);if(IsValid(C))C->ClientV10Channel({},{},{});}
 }
@@ -366,6 +459,7 @@ void UAetherCommandRuntime::NotifyPawnChanged(AAetherPlayerController* C)
     auto* Found=Impl->Bindings.Find(C);if(!Found)return;auto& B=**Found;
     if(B.Pawn.Get()==C->GetPawn()&&B.PlayerState.Get()==C->GetPlayerState<AAetherPlayerState>())return;
     if(B.PlayerState.Get()!=C->GetPlayerState<AAetherPlayerState>()){UnbindPlayer(C);return;}
+    Impl->RevokeLootFeedback(C);
     Impl->CloseContainer(B);
     B.Session=Impl->Coordinator->ReplacePawn(B.Session);
     B.Pawn=C->GetPawn();B.Channel=FGuid::NewGuid();B.SceneSequence=0;B.bReady=false;B.Outgoing.Reset();B.Read={};B.Revision=-1;B.InFlightTransfer.Invalidate();
@@ -435,7 +529,7 @@ void UAetherCommandRuntime::Tick(float Dt)
     for(const auto& Key:Keys)
     {
         auto* Found=Impl->Bindings.Find(Key);if(!Found)continue;
-        if(!Key.IsValid()){Impl->Coordinator->EndSession((*Found)->Session);Impl->Bindings.Remove(Key);continue;}
+        if(!Key.IsValid()){Impl->RevokeLootFeedback(Key);Impl->Coordinator->EndSession((*Found)->Session);Impl->Bindings.Remove(Key);continue;}
         NotifyPawnChanged(Key.Get());
     }
     const auto& D=FAetherV10Definitions::Get();
@@ -474,7 +568,12 @@ void UAetherCommandRuntime::Tick(float Dt)
     }
     for(const auto& Completion:Done)
     {
-        if(Completion.WorldSnapshot.IsSet()&&Impl->PublishWorld)Impl->PublishWorld(Completion.WorldSnapshot.GetValue());
+        if(Completion.WorldSnapshot.IsSet())
+        {
+            if(Completion.CommitCertainty==EAetherCommitCertainty::Committed)
+                Impl->ObserveCommittedWorldFacts(Completion.WorldSnapshot.GetValue());
+            if(Impl->PublishWorld)Impl->PublishWorld(Completion.WorldSnapshot.GetValue());
+        }
         if(Impl->bShutdownRequested)return;
         if(Completion.ContainerSnapshot.IsSet())
         {
@@ -495,9 +594,16 @@ void UAetherCommandRuntime::Tick(float Dt)
     }
     Impl->PumpFacts();
     const auto Facts=Impl->Facts->Poll(FPlatformTime::Seconds());
-    for(const auto& Fact:Facts)
+    const auto LootFeedback=Impl->TakeLootFeedback(Facts);
+    for(int32 FactIndex=0;FactIndex<Facts.Num();++FactIndex)
     {
-        if(Fact.World.IsSet()&&Impl->PublishWorld)Impl->PublishWorld(Fact.World.GetValue());
+        const auto& Fact=Facts[FactIndex];
+        if(Fact.World.IsSet())
+        {
+            if(Fact.Code==EAetherStoreCode::Committed||Fact.Code==EAetherStoreCode::Replayed)
+                Impl->ObserveCommittedWorldFacts(Fact.World.GetValue());
+            if(Impl->PublishWorld)Impl->PublishWorld(Fact.World.GetValue());
+        }
         if(Impl->bShutdownRequested)return;
         if(!Fact.Profile.IsSet())
         {
@@ -506,6 +612,8 @@ void UAetherCommandRuntime::Tick(float Dt)
                 for(auto& Pair:Impl->Bindings)
                     if(Pair.Value->Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive))
                         if(auto* Gate=Impl->Gate(*Pair.Value))Gate->Fault(TEXT("Equipment wear transaction failed"));
+            if(LootFeedback[FactIndex].IsSet())Impl->PublishLootFeedback(LootFeedback[FactIndex].GetValue(),Fact);
+            if(Impl->bShutdownRequested)return;
             continue;
         }
         for(auto& Pair:Impl->Bindings)
@@ -518,12 +626,21 @@ void UAetherCommandRuntime::Tick(float Dt)
                 B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});
             else Impl->Queue(B,Fact.Profile.GetValue(),Fact.World.IsSet()?&Fact.World.GetValue():nullptr);
         }
-        if(Fact.Event.Kind==EAetherServerFactKind::World)
-            for(const auto& Pair:Impl->Bindings)if(!Pair.Value->Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive))
-            {
-                FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=Pair.Value->Session.CharacterId;FString Why;
-                if(!ObserveServerFact(MoveTemp(Settle),Why))UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_SETTLE_DEFERRED %s"),*Why);
-            }
+        if(Impl->bShutdownRequested)return;
+        if(LootFeedback[FactIndex].IsSet())Impl->PublishLootFeedback(LootFeedback[FactIndex].GetValue(),Fact);
+        if(Impl->bShutdownRequested)return;
+    }
+    for(auto& Pair:Impl->Bindings)
+    {
+        auto& B=*Pair.Value;
+        // An in-flight Settle may already have read the previous world. Do not
+        // let Enqueue's duplicate suppression consume the newer delta's intent.
+        // The binding retains it across backpressure and same-character respawn;
+        // unbind/backend replacement discards it, and login has its own Settle.
+        if(!B.bNeedsWorldFactSettle||!Impl->Current(B)||Impl->HasPendingFacts(B.Session.CharacterId))continue;
+        FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=B.Session.CharacterId;FString Why;
+        if(ObserveServerFact(MoveTemp(Settle),Why))B.bNeedsWorldFactSettle=false;
+        else UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_SETTLE_DEFERRED %s"),*Why);
     }
     {
         TGuardValue<bool> Guard(Impl->bPolling,true);
@@ -561,6 +678,7 @@ UWorld* UAetherCommandRuntime::GetTickableGameObjectWorld() const{return GetWorl
 void UAetherCommandRuntime::UninstallBackend()
 {
     check(IsInGameThread());
+    if(Impl)Impl->LootClaims.Reset();
     if(Impl&&(Impl->bPolling||Impl->bTicking)){Impl->bShutdownRequested=true;return;}
     if(Impl&&(Impl->Facts->PendingCount()>0||Impl->Coordinator->PendingCount()>0||!Impl->DeferredFacts.IsEmpty()))
     {

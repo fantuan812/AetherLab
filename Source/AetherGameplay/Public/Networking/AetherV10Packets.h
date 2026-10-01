@@ -3,6 +3,13 @@
 #include "AetherV10Packets.generated.h"
 class UPackageMap;
 
+// 仅营地/旧世界掉落领取的领域结果；不复用存储错误码或普通命令回执。
+UENUM()
+enum class EAetherLootClaimOutcome : uint8
+{
+    Applied,AlreadyOwned,InventoryFull,ClaimedByOther,Missing,Invalid
+};
+
 namespace AetherV10Network
 {
     inline constexpr int32 CommandBytes=1024,ReplyBytes=16384,ChunkBytes=16384,SnapshotBytes=4*1024*1024;

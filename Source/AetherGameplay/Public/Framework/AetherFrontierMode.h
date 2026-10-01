@@ -60,7 +60,7 @@ public:
     void ReleaseNativePawn(AAetherFrontierCharacter* Pawn);
     bool RecoverNativePlayer(AAetherFrontierCharacter* Pawn);
     bool CanRecoverNativePlayer(AAetherFrontierCharacter* Pawn,FString& Reason) const;
-    FString ExecuteNativeSceneService(AAetherPlayerController& Controller,const FAetherPlayerCommand& Command);
+    FString ExecuteNativeSceneService(AAetherPlayerController& Controller,const FAetherPlayerCommand& Command,bool& bLootClaimAccepted);
     bool AuthorizeNativeContainer(AAetherPlayerController& Controller,const FString& Id,bool bOpen);
     const FAetherWorldStateV10* NativeWorldView() const{return NativeWorld.IsSet()?&NativeWorld.GetValue():nullptr;}
     bool bFailWrites = false;
@@ -136,7 +136,7 @@ private:
     TMap<FName,FNativeCampWrite> NativeCampWrites;
     bool RecordNativeCampClear(FName Definition,FGuid Instance);
     void SettleNativeEncounter(FAetherEncounterRun& Run);
-    FString ClaimNativeLegacyLoot(AAetherFrontierCharacter* Character,FName StableId);
+    FString ClaimNativeLegacyLoot(AAetherFrontierCharacter* Character,FName StableId,FGuid OriginCommandId,bool& bAccepted);
     bool CaptureNativeWorld(const FAetherWorldStateV10& Previous,FAetherWorldStateV10& Candidate,FString& Reason);
     void ApplyObjectDefinition(AAetherFrontierProp* A,FName Definition);
     AAetherFrontierProp* SpawnPlacement(const FAetherWorldPlacement& Placement);

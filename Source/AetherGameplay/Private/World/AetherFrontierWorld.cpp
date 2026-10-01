@@ -551,8 +551,8 @@ bool AAetherFrontierMode::RecordCampClear(FName Definition,FGuid Instance)
 }
 FString AAetherFrontierMode::ClaimLoot(AAetherFrontierCharacter* C,FName Id)
 {
- if(bNativeMode)return ClaimNativeLegacyLoot(C,Id);
- auto* PS=C?C->ProfileState():nullptr;auto* Actor=Prop(Id);if(!PS||!C->Alive()||C->bTravelPending||!Actor||Actor->Service!="Loot"||FVector::DistSquared(C->GetActorLocation(),Actor->GetActorLocation())>FMath::Square(250.))return TEXT("Loot out of reach.");
+ // 原生模式只通过已授权的 SceneServiceContext 领取，旧 RPC 不能绕过 CommandId 关联。
+ auto* PS=C?C->ProfileState():nullptr;auto* Actor=Prop(Id);if(bNativeMode||!PS||!C->Alive()||C->bTravelPending||!Actor||Actor->Service!="Loot"||FVector::DistSquared(C->GetActorLocation(),Actor->GetActorLocation())>FMath::Square(250.))return TEXT("Loot out of reach.");
  FCollisionQueryParams Q(SCENE_QUERY_STAT(Loot),false,C);Q.AddIgnoredActor(Actor);if(GetWorld()->LineTraceTestByChannel(C->GetActorLocation(),Actor->GetActorLocation(),ECC_Visibility,Q))return TEXT("Loot is obstructed.");
  auto* Next=DuplicateObject<UAetherFrontierSave>(Database,this);auto* Loot=Next->Loot.FindByPredicate([&](const auto& L){return Id==FName(*FString("Loot_"+L.ClaimId.ToString(EGuidFormats::Digits)));});
  if(!Loot||!Loot->ClaimedBy.IsEmpty())return TEXT("Already claimed.");auto Profile=PS->Profile;TMap<FName,int32> Items=Loot->Items;if(Items.IsEmpty())Items.Add(Loot->Definition,Loot->Count);if(Profile.Revision==MAX_int32||!AetherItems::Grant(Profile,Items,0,FAetherRules::Get()))return TEXT("Inventory full; loot remains.");

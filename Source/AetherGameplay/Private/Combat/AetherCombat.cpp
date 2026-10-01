@@ -10,6 +10,8 @@
 #include "Equipment/AetherElementDamage.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Skills/AetherNpcSkillDefinitions.h"
+#include "AI/AetherNpcPerceptionDefinitions.h"
+#include "AI/AetherNpcMeleeDefinitions.h"
 #include "Skills/AetherSkillCooldownState.h"
 #include "Framework/AetherAdventure.h"
 #include "Framework/AetherFrontier.h"
@@ -231,24 +233,25 @@ void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
 void AAetherCharacter::PossessedBy(AController* C)
-{ CancelActions();EnemySkillDecision.Reset(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
+{ CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
 void AAetherCharacter::CancelActions()
 {
     if(!HasAuthority())return;
-    EnemySkillDecision.CancelRequest(CastExecutionId);
+    if(!Alive())EnemyPerception.Reset(); // 死亡/安抚不会走 Think，必须在实际取消链清感知历史。
+    EnemySkillDecision.CancelRequest(CastExecutionId);EnemyMeleeDecision.Reset();
     Equipment->CancelAttack();
     // A PlayerState ASC may already have moved to a replacement pawn.
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->CancelAllAbilities();
 }
 void AAetherCharacter::UnPossessed()
 {
-    CancelActions();EnemySkillDecision.Reset();
+    CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::UnPossessed();
 }
 void AAetherCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
-    CancelActions();EnemySkillDecision.Reset();
+    CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::EndPlay(Reason);
 }
@@ -374,7 +377,8 @@ void AAetherCharacter::SetVitals(float HP, float MP, float SP)
 }
 void AAetherCharacter::ResetCombat()
 {
-    ActionUntil = CastLockUntil = StunUntil = CombatRuntime->InvulnerableUntil = 0; NextAI = 0; CombatRuntime->LastDamageAt = -100;
+    EnemyPerception.Reset();
+    ActionUntil = CastLockUntil = StunUntil = CombatRuntime->InvulnerableUntil = 0; CombatRuntime->LastDamageAt = -100;
     bWindingUp = bBlocking = false; NextShockStun = 0;
     CancelActions();
     AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetPostureAttribute(), bUseBasicAssets ? 100 : 0);
@@ -414,16 +418,20 @@ bool AAetherCharacter::FindSkillTarget(const FString& SkillId,int32 Rank,FHitRes
 }
 bool AAetherCharacter::ExecuteSkill(const FString& SkillId,int32 Rank)
 {
-    const auto& Definitions=FAetherSkillDefinitionsV10::Get();
-    const auto* D=Definitions.Skills.Find(SkillId);const auto* E=Definitions.Effect(SkillId,Rank);
-    if(!D||!E)return false;
-    FAetherCastExecution Cast;Cast.SkillId=SkillId;Cast.Rank=Rank;Cast.DefinitionRevision=Definitions.ContentSchemaVersion;
-    Cast.Mechanic=D->Mechanic;Cast.Effect=*E;
-    return ExecuteCast(Cast);
+    // 现有公开请求也收敛到GAS；不能自行制造未拥有的Cast绕过支付/生命/取消事实。
+    const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,SkillId):nullptr;
+    return Spec&&Spec->Level==Rank&&TrySkill(SkillId);
 }
 bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
 {
-    if(!HasAuthority()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||SkillCooldownRemaining(Cast.SkillId)>0)return false;
+    const TWeakObjectPtr<UAbilitySystemComponent> CastSystem=AbilitySystem;
+    const auto OwnsExecution=[&]
+    {
+        FGuid Life;
+        return Cast.ExecutionId.IsValid()&&CastExecutionId==Cast.ExecutionId&&CastSystem.IsValid()&&AbilitySystem==CastSystem.Get()&&
+            CastSystem->GetAvatarActor()==this&&AetherSkillLives::Resolve(*this,Life)&&Life==Cast.LifeId;
+    };
+    if(!HasAuthority()||!OwnsExecution()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||SkillCooldownRemaining(Cast.SkillId)>0)return false;
     // 执行前锁定唯一冷却所有者，效果回调不得把旧动作提交到替换 Pawn/ASC 的冷却表。
     const TWeakObjectPtr<AAetherPlayerState> ProfileCooldownOwner=SkillAuthority==EAetherSkillAuthority::Profile?GetPlayerState<AAetherPlayerState>():nullptr;
     const TWeakObjectPtr<UAetherDefinitionAbilitySystem> DefinitionCooldownOwner=SkillAuthority==EAetherSkillAuthority::Definition?::Cast<UAetherDefinitionAbilitySystem>(AbilitySystem):nullptr;
@@ -431,7 +439,9 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     const auto* E=&Cast.Effect;
     FHitResult Hit;FVector Origin,Direction;
     if(!FindSkillTarget(Cast.SkillId,Cast.Rank,Hit,Origin,Direction))return false;
-    bool Accepted=false;
+    // Friendly目标预检查会FlushDue并发出属性通知；正式效果前再次确认原施法生命/执行。
+    if(!OwnsExecution()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||!EnemySkillDecision.ValidateCommit(*this,Cast))return false;
+    const float CommittedAt=CombatTime();bool Accepted=false;
     if(Cast.Mechanic==EAetherSkillMechanic::Fire)
     {
         const FTransform SpawnTransform(Direction.Rotation(),Origin);
@@ -442,13 +452,13 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     }
     else if(Cast.Mechanic==EAetherSkillMechanic::SelfBuff)
     {
-        FString Why;Accepted=BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId,Why);Feedback=Why;
+        FString Why;Accepted=BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId,Why);if(OwnsExecution())Feedback=Why;
     }
     else if(Cast.Mechanic==EAetherSkillMechanic::FriendlyTargetBuff)
     {
-        auto* Target=::Cast<AAetherCharacter>(Hit.GetActor());const auto* Receiver=Target?Target->ResourceGate->GetReceiver():nullptr;
-        if(!Receiver||Receiver->State().LifeId!=Cast.TargetLifeId)return false;
-        FString Why;Accepted=Target->BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId+TEXT(".")+Cast.LifeId.ToString(EGuidFormats::Digits),Why);Feedback=Why;
+        auto* Target=::Cast<AAetherCharacter>(Hit.GetActor());FGuid TargetLife;
+        if(!Target||!AetherSkillLives::Resolve(*Target,TargetLife)||TargetLife!=Cast.TargetLifeId)return false;
+        FString Why;Accepted=Target->BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId+TEXT(".")+Cast.LifeId.ToString(EGuidFormats::Digits),Why);if(OwnsExecution())Feedback=Why;
     }
     else if(auto* Body=Hit.GetActor()?Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>():nullptr)
     {
@@ -456,13 +466,14 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
         FReactiveStimulus S;S.SourceActor=this;S.WaterKg=E->WaterKg;S.HeatJ=E->HeatJ;S.ElectricalJ=E->ElectricalJ;
         Accepted=Body->Inject(S);
         // 只扣除模拟接受的水量。等级提升不能凭空造水，也不能在注入失败时丢失水。
-        if(Accepted)WaterReserveKg-=float(E->WaterKg);
+        if(Accepted&&OwnsExecution())WaterReserveKg-=float(E->WaterKg);
     }
     if(Accepted)
     {
-        CastStartedAt=CombatTime();CastLockUntil=CastStartedAt+float(E->RecoverySeconds<0?E->Cooldown:E->RecoverySeconds);
-        if(ProfileCooldownOwner.IsValid())ProfileCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
-        else if(DefinitionCooldownOwner.IsValid())DefinitionCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
+        // 已成功的效果提交到先前锁定的唯一owner；旧栈不能覆盖回调中新执行的恢复/开始时刻。
+        if(OwnsExecution()){CastStartedAt=CommittedAt;CastLockUntil=CommittedAt+float(E->RecoverySeconds<0?E->Cooldown:E->RecoverySeconds);}
+        if(ProfileCooldownOwner.IsValid())ProfileCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CommittedAt);
+        else if(DefinitionCooldownOwner.IsValid())DefinitionCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CommittedAt);
         EnemySkillDecision.RecordCommitted(*this,Cast);
     }
     return Accepted;
@@ -496,12 +507,19 @@ void AAetherCharacter::PerformMelee(bool Heavy)
 { RequestMelee(Heavy?TEXT("Heavy"):TEXT("Light")); }
 bool AAetherCharacter::RequestMelee(FName Id)
 {
-    if(!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this||(Id!=TEXT("Light")&&Id!=TEXT("Heavy")))return false;
-    const uint64 Before=Equipment->AcceptedAttackCount;
-    for(const auto& Spec:AbilitySystem->GetActivatableAbilities())
-        if(Spec.Ability&&Spec.Ability->IsA<UAetherMeleeAbility>()&&Spec.Level==(Id==TEXT("Heavy")?2:1))
-        {AbilitySystem->TryActivateAbility(Spec.Handle);break;}
-    return Equipment->AcceptedAttackCount>Before;
+    if(!HasAuthority()||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this||!Equipment||(Id!=TEXT("Light")&&Id!=TEXT("Heavy")))return false;
+    auto* System=AbilitySystem.Get();auto* E=Equipment.Get();uint32 ExpectedSerial=E->Attack.Serial+1;if(!ExpectedSerial)++ExpectedSerial;
+    FGameplayAbilitySpecHandle Handle;
+    for(const auto& Spec:System->GetActivatableAbilities())
+        if(Spec.Ability&&Spec.Ability->IsA<UAetherMeleeAbility>()&&Spec.Level==(Id==TEXT("Heavy")?2:1)){Handle=Spec.Handle;break;}
+    const auto* BeforeSpec=Handle.IsValid()?System->FindAbilitySpecFromHandle(Handle):nullptr;
+    const auto* BeforeAbility=BeforeSpec?Cast<UAetherMeleeAbility>(BeforeSpec->GetPrimaryInstance()):nullptr;
+    const uint64 BeforeGeneration=BeforeAbility?BeforeAbility->ActivationGeneration():0;
+    if(!Handle.IsValid()||BeforeGeneration==MAX_uint64||!System->TryActivateAbility(Handle)||AbilitySystem!=System||Equipment!=E)return false;
+    const auto* Spec=System->FindAbilitySpecFromHandle(Handle);
+    const auto* Ability=Spec?Cast<UAetherMeleeAbility>(Spec->GetPrimaryInstance()):nullptr;
+    // 激活返回值/累计计数都不能证明Windup通知未同步取消；只接受本次真实且仍有效的执行。
+    return Ability&&Ability->ActivationGeneration()==BeforeGeneration+1&&Ability->ActiveExecution().IsValid()&&E->Attack.Serial==ExpectedSerial&&E->Attack.AttackId==Id;
 }
 void AAetherCharacter::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
 { if(!DeferEquipmentHit(Hit))ReceiveHit(Hit.Damage,Hit.PostureDamage,Cast<AAetherCharacter>(Hit.Source),true); }
@@ -590,62 +608,45 @@ void AAetherCharacter::Pacify() { if (HasAuthority()) { bPacified = true; Cancel
 void AAetherCharacter::Think(float Dt)
 {
     if (const auto* Mode = GetWorld()->GetAuthGameMode<AAetherAdventureMode>(); Mode && Mode->bSmoke) return;
-    if (Fighter == EAetherFighter::Player || !Alive()) return;
-    if(!FAetherNpcSkillDecision::IsControlled(*this)){EnemySkillDecision.Reset();bWindingUp=bBlocking=false;return;}
+    if (Fighter == EAetherFighter::Player || !Alive()) {EnemyPerception.Reset();EnemyMeleeDecision.Reset();return;}
+    if(!FAetherNpcSkillDecision::IsControlled(*this)){EnemySkillDecision.Reset();EnemyPerception.Reset();EnemyMeleeDecision.Reset();bWindingUp=bBlocking=false;return;}
+    const auto* Perception=FAetherNpcPerceptionDefinitions::Get().ForFighter(StaticEnum<EAetherFighter>()->GetNameStringByValue(int64(Fighter)));
+    if(!Perception){EnemyPerception.Reset();EnemyMeleeDecision.Reset();bWindingUp=bBlocking=false;SteeringDirection=FVector::ZeroVector;return;}
     const float T = CombatTime();
-    if(T>=NextPerceptionAt)
-    {
-    NextPerceptionAt=T+.25f;
-    AAetherCharacter* Target = nullptr; double Best = FMath::Square(1300.0);
-    for (TActorIterator<AAetherCharacter> It(GetWorld()); It; ++It)
-        if (It->Fighter == EAetherFighter::Player && It->Alive()&&(!Cast<AAetherCharacter>(GetOwner())||GetOwner()==*It))
-        { if(!FAetherNpcSkillDecision::CanTarget(*this,**It))continue;
-          const double D = FVector::DistSquared(It->GetActorLocation(), GetActorLocation());
-          if(D<Best&&FVector::DistSquared(It->GetActorLocation(),Home)<FMath::Square(2600.))
-          {FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherPerception),false,this);Q.AddIgnoredActor(*It);
-           if(!GetWorld()->LineTraceTestByChannel(GetActorLocation()+FVector(0,0,40),It->GetActorLocation()+FVector(0,0,40),ECC_Visibility,Q)){Target=*It;Best=D;}} }
-    if(Target){PerceivedTarget=Target;LastSeenAt=T;LastSeenPosition=Target->GetActorLocation();}
-    }
-    AAetherCharacter* Target=PerceivedTarget.Get();
-    if(Target&&(!FAetherNpcSkillDecision::CanTarget(*this,*Target)||T-LastSeenAt>4||FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(2800.))){PerceivedTarget.Reset();Target=nullptr;}
-    if (T < StunUntil) { bWindingUp = false; bBlocking = false; return; }
-    if (!Target) { bWindingUp = false;bBlocking=false;if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(120.)){const auto Dir=SafeMoveDirection(Home);SetActorRotation(Dir.Rotation());AddMovementInput(Dir,1);}return; }
-    if(T-LastSeenAt>.3f){bWindingUp=false;bBlocking=false;AddMovementInput(SafeMoveDirection(LastSeenPosition),1);return;}
-    FVector Toward = Target->GetActorLocation() - GetActorLocation(); Toward.Z = 0;
+    const auto Observed=EnemyPerception.Observe(*this,*Perception);
+    if(Equipment->IsBusy()){EnemyMeleeDecision.Reset();bWindingUp=bBlocking=false;return;} // 正式攻击保持提交朝向，含真实Recovery。
+    AAetherCharacter* Target=Observed.Target.Get();
+    if (T < StunUntil) { EnemyMeleeDecision.Reset();bWindingUp = false; bBlocking = false; return; }
+    if (!Target) { EnemyMeleeDecision.Reset();bWindingUp = false;bBlocking=false;if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(Perception->HomeArrivalRadiusCm)){const auto Dir=SafeMoveDirection(Home);SetActorRotation(Dir.Rotation());AddMovementInput(Dir,1);}return; }
+    if(!Observed.bVisible){EnemyMeleeDecision.Reset();bWindingUp=false;bBlocking=false;AddMovementInput(SafeMoveDirection(Observed.LastSeenPosition),1);return;}
+    // 移动/面向只消费本次可见观察；能力与真实近战命中仍在正式入口复验。
+    FVector Toward = Observed.LastSeenPosition - GetActorLocation(); Toward.Z = 0;
     const auto* NpcLoadout=FAetherNpcSkillDefinitions::Get().Find(SkillLoadoutId);
-    if(!NpcLoadout){bWindingUp=bBlocking=false;return;}
+    if(!NpcLoadout){EnemyMeleeDecision.Reset();bWindingUp=bBlocking=false;return;}
     if(!NpcLoadout->OffensiveSkills.IsEmpty())
     {
+        EnemyMeleeDecision.Reset();
         SetActorRotation(Toward.Rotation());if(Controller)Controller->SetControlRotation(Toward.Rotation());
         const auto SkillChoice=EnemySkillDecision.Choose(*this,*Target);
         bWindingUp=bBlocking=false;
         if(SkillChoice.Kind==EAetherNpcSkillChoice::Ready)EnemySkillDecision.TryExecute(*this,*Target,SkillChoice.SkillId);
-        else if(SkillChoice.Kind==EAetherNpcSkillChoice::Approach)AddMovementInput(SafeMoveDirection(Target->GetActorLocation()),1);
+        else if(SkillChoice.Kind==EAetherNpcSkillChoice::Approach)AddMovementInput(SafeMoveDirection(Observed.LastSeenPosition),1);
         return;
     }
-    if (bWindingUp)
+    const auto* Melee=FAetherNpcMeleeDefinitions::Get().ForFighter(StaticEnum<EAetherFighter>()->GetNameStringByValue(int64(Fighter)));
+    bWindingUp=bBlocking=false;
+    if(!Melee){EnemyMeleeDecision.Reset();return;}
+    SetActorRotation(Toward.Rotation());if(Controller)Controller->SetControlRotation(Toward.Rotation());
+    const auto Choice=EnemyMeleeDecision.Choose(*this,*Target,Observed.LastSeenPosition,*Melee);
+    if(Choice==EAetherNpcMeleeChoice::Approach)
     {
-        if (T >= NextAI)
-        {
-            bWindingUp = false;
-            if(Fighter==EAetherFighter::Wolf)LaunchCharacter(GetActorForwardVector()*450,false,false);PerformMelee(bAIHeavy);
-            ActionUntil = T + (Fighter == EAetherFighter::BellKnight ? 1.25f : .8f); NextAI = ActionUntil;
-        }
-        return;
+        bBlocking=Melee->bGuardWhileApproaching&&Equipment->GuardDefinition();
+        AddMovementInput(SafeMoveDirection(Observed.LastSeenPosition),1);
     }
-    if (T < ActionUntil) return;
-    SetActorRotation(Toward.Rotation()); if (Controller) Controller->SetControlRotation(Toward.Rotation());
-    const auto* Main=Equipment->InSlot(TEXT("MainHand")); const auto* Move=Main?Main->FindAttack(TEXT("Light")):nullptr;
-    const float Range = Move?Move->ReachCm-10:130;
-    if (Toward.Size() > Range)
-    { bBlocking = Fighter == EAetherFighter::ShieldGuard && Equipment->GuardDefinition(); AddMovementInput(SafeMoveDirection(Target->GetActorLocation()), 1); }
-    else if (T >= NextAI)
-    {
-        FCollisionQueryParams Params(SCENE_QUERY_STAT(AetherAI),false,this); Params.AddIgnoredActor(Target);
-        if (GetWorld()->LineTraceTestByChannel(GetActorLocation(),Target->GetActorLocation(),ECC_Visibility,Params)) return;
-        bBlocking = false; bWindingUp = true; bAIHeavy = Fighter == EAetherFighter::BellKnight || Fighter==EAetherFighter::Golem;
-        NextAI = T + (Fighter == EAetherFighter::BellKnight && Health() < 160 ? .6f : .95f);
-    }
+    else if(Choice==EAetherNpcMeleeChoice::Telegraph)bWindingUp=true;
+    else if(Choice==EAetherNpcMeleeChoice::Ready)EnemyMeleeDecision.TryExecute(*this);
+    // 提交后只等待正式Equipment/GAS占用与结束，不另写AI恢复期限或提前Launch。
+
 }
 void AAetherCharacter::Tick(float Dt)
 {
