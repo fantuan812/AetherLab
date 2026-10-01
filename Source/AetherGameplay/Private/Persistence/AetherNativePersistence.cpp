@@ -65,13 +65,24 @@ void UAetherNativePersistence::Tick(float DeltaSeconds)
 bool UAetherNativePersistence::Activate(FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FAetherRestoreNativeWorld Restore,FString& Reason)
 {
     check(IsInGameThread());
-    if(State!=EAetherNativePersistencePhase::Prepared||bActivating||!Bootstrap||!Bootstrap->World().IsSet()||!Resolve||!Publish||!Restore)
+    if(State!=EAetherNativePersistencePhase::Prepared||bActivating||!Bootstrap||!Bootstrap->World().IsSet()||!Store||
+        !BoundScene.IsValid()||BoundScene.Get()!=GetWorld()||!SceneGeneration.IsValid()||!Resolve||!Publish||!Restore)
     {Reason=TEXT("Native backend requires audited data and concrete restore/context/publication adapters");return false;}
     TGuardValue<bool> Guard(bActivating,true);
-    if(!Restore(Bootstrap->World().GetValue(),Bootstrap->ProfileRevisions(),Bootstrap->Containers(),Reason))
+    // Restore 会生成 Actor 并调用场景适配器；同步退出会 Stop/释放 Bootstrap。
+    // 实参必须属于这次调用，不能让回调继续读取已释放或被新审计替换的容器。
+    const auto World=Bootstrap->World().GetValue();const auto Profiles=Bootstrap->ProfileRevisions();
+    const auto Containers=Bootstrap->Containers();const auto Backend=Store;
+    const auto Scene=BoundScene;const FGuid Generation=SceneGeneration;
+    const bool Restored=Restore(World,Profiles,Containers,Reason);
+    // 先检查代次再处理失败，旧回调既不能安装新后端，也不能 Fail 新场景。
+    if(State!=EAetherNativePersistencePhase::Prepared||!Scene.IsValid()||BoundScene!=Scene||
+        SceneGeneration!=Generation||Store!=Backend||GetWorld()!=Scene.Get())
+    {Reason=TEXT("Scene changed during native restore");return false;}
+    if(!Restored)
     {Fail(Reason);return false;}
     auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();
-    if(!Runtime||!Runtime->InstallBackend(Store.ToSharedRef(),MoveTemp(Resolve),MoveTemp(Publish),Reason))
+    if(!Runtime||!Runtime->InstallBackend(Backend.ToSharedRef(),MoveTemp(Resolve),MoveTemp(Publish),Reason))
     {Fail(Reason);return false;}
     State=EAetherNativePersistencePhase::Active;Detail.Reset();return true;
 }
