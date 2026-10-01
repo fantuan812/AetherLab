@@ -10,6 +10,7 @@
 #include "Equipment/AetherElementDamage.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Skills/AetherNpcSkillDefinitions.h"
+#include "Skills/AetherSkillCooldownState.h"
 #include "Framework/AetherAdventure.h"
 #include "Framework/AetherFrontier.h"
 #include "Interaction/AetherActions.h"
@@ -86,7 +87,7 @@ AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Nameplate = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Nameplate")); Nameplate->SetupAttachment(RootComponent);
     Nameplate->SetRelativeLocation(FVector(0,0,120)); Nameplate->SetHorizontalAlignment(EHTA_Center); Nameplate->SetWorldSize(22); Nameplate->SetTextRenderColor(FColor::White);
-    AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("Abilities")); AbilitySystem->SetIsReplicated(true);
+    AbilitySystem = CreateDefaultSubobject<UAetherDefinitionAbilitySystem>(TEXT("Abilities")); AbilitySystem->SetIsReplicated(true);
     AbilitySystem->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
     Attributes = CreateDefaultSubobject<UAetherAttributes>(TEXT("Attributes"));
     Reactive = CreateDefaultSubobject<UReactiveBodyComponent>(TEXT("Reactive"));
@@ -321,9 +322,16 @@ float AAetherCharacter::SkillCooldownRemaining(const FString& Id) const
 {
     const auto* PS=GetPlayerState<AAetherPlayerState>();const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,Id):nullptr;
     const auto* E=FAetherSkillDefinitionsV10::Get().Effect(Id,Spec?Spec->Level:1);
-    if(!HasAuthority()&&PS&&E&&BuffRuntime->PresentationReady(PS->SkillGrants.ProfileRevision))
-        return float(FMath::Max(0.,FMath::Max(BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Skill.")+Id),BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Group.")+E->CooldownGroup))-CombatTime()));
-    return PS&&E?float(PS->CooldownRemaining(Id,E->CooldownGroup,CombatTime())):0;
+    if(!E||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this)return TNumericLimits<float>::Max();
+    if(SkillAuthority==EAetherSkillAuthority::Profile)
+    {
+        if(!PS||PS->AbilitySystem!=AbilitySystem)return TNumericLimits<float>::Max();
+        if(!HasAuthority()&&BuffRuntime->PresentationReady(PS->SkillGrants.ProfileRevision))
+            return float(FMath::Max(0.,FMath::Max(BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Skill.")+Id),BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Group.")+E->CooldownGroup))-CombatTime()));
+        return float(FMath::Min(PS->CooldownRemaining(Id,E->CooldownGroup,CombatTime()),double(TNumericLimits<float>::Max())));
+    }
+    const auto* DefinitionSystem=SkillAuthority==EAetherSkillAuthority::Definition&&!PS?Cast<UAetherDefinitionAbilitySystem>(AbilitySystem):nullptr;
+    return DefinitionSystem?float(FMath::Min(DefinitionSystem->CooldownRemaining(Id,E->CooldownGroup,CombatTime()),double(TNumericLimits<float>::Max()))):TNumericLimits<float>::Max();
 }
 bool AAetherCharacter::TrySpell(int32 Spell)
 {
@@ -413,7 +421,10 @@ bool AAetherCharacter::ExecuteSkill(const FString& SkillId,int32 Rank)
 }
 bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
 {
-    if(!HasAuthority()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None)return false;
+    if(!HasAuthority()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||SkillCooldownRemaining(Cast.SkillId)>0)return false;
+    // 执行前锁定唯一冷却所有者，效果回调不得把旧动作提交到替换 Pawn/ASC 的冷却表。
+    const TWeakObjectPtr<AAetherPlayerState> ProfileCooldownOwner=SkillAuthority==EAetherSkillAuthority::Profile?GetPlayerState<AAetherPlayerState>():nullptr;
+    const TWeakObjectPtr<UAetherDefinitionAbilitySystem> DefinitionCooldownOwner=SkillAuthority==EAetherSkillAuthority::Definition?::Cast<UAetherDefinitionAbilitySystem>(AbilitySystem):nullptr;
     const auto* E=&Cast.Effect;
     FHitResult Hit;FVector Origin,Direction;
     if(!FindSkillTarget(Cast.SkillId,Cast.Rank,Hit,Origin,Direction))return false;
@@ -447,7 +458,8 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     if(Accepted)
     {
         CastStartedAt=CombatTime();CastLockUntil=CastStartedAt+float(E->RecoverySeconds<0?E->Cooldown:E->RecoverySeconds);
-        if(auto* PS=GetPlayerState<AAetherPlayerState>())PS->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
+        if(ProfileCooldownOwner.IsValid())ProfileCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
+        else if(DefinitionCooldownOwner.IsValid())DefinitionCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
     }
     return Accepted;
 }

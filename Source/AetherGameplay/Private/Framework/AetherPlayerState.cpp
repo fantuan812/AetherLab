@@ -17,21 +17,17 @@ AAetherPlayerState::AAetherPlayerState()
 void AAetherPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 { Super::GetLifetimeReplicatedProps(OutLifetimeProps);DOREPLIFETIME_CONDITION(AAetherPlayerState,SkillCooldowns,COND_OwnerOnly); DOREPLIFETIME_CONDITION(AAetherPlayerState,Profile,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,bNativeSkillsEnabled,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,SkillGrants,COND_OwnerOnly);DOREPLIFETIME(AAetherPlayerState,DisplayName);DOREPLIFETIME(AAetherPlayerState,PartyLeader);DOREPLIFETIME(AAetherPlayerState,bPartyCaptain);DOREPLIFETIME_CONDITION(AAetherPlayerState,InvitationExpires,COND_OwnerOnly);DOREPLIFETIME_CONDITION(AAetherPlayerState,InvitedBy,COND_OwnerOnly); }
 double AAetherPlayerState::CooldownRemaining(const FString& Skill,const FString& Group,double Now) const
-{
-    double End=Now;for(const auto& D:SkillCooldowns)if(D.Key==TEXT("Skill.")+Skill||D.Key==TEXT("Group.")+Group)End=FMath::Max(End,D.EndsAt);
-    return End-Now;
-}
+{return AetherSkillCooldowns::Remaining(SkillCooldowns,Skill,Group,Now);}
 void AAetherPlayerState::CommitCooldown(const FString& Skill,const FString& Group,double SkillSeconds,double GroupSeconds,double Now)
 {
-    if(!HasAuthority())return;
-    SkillCooldowns.RemoveAll([Now](const auto& D){return D.EndsAt<=Now;});
-    const auto Put=[&](const FString& Key,double Seconds) {
-        if(Seconds<=0)return;
-        if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCooldownLedger>()->Put(Profile.CharacterId,Key,Seconds);
-        if(auto* D=SkillCooldowns.FindByPredicate([&](const auto& V){return V.Key==Key;}))D->EndsAt=FMath::Max(D->EndsAt,Now+Seconds);
-        else {FAetherSkillCooldownDeadline Entry;Entry.Key=Key;Entry.EndsAt=Now+Seconds;SkillCooldowns.Add(MoveTemp(Entry));}
-    };
-    Put(TEXT("Skill.")+Skill,SkillSeconds);Put(TEXT("Group.")+Group,GroupSeconds);ForceNetUpdate();
+    if(!HasAuthority()||!AetherSkillCooldowns::Commit(SkillCooldowns,Skill,Group,SkillSeconds,GroupSeconds,Now))return;
+    if(auto* GI=GetGameInstance())
+    {
+        auto* Ledger=GI->GetSubsystem<UAetherCooldownLedger>();
+        Ledger->Put(Profile.CharacterId,TEXT("Skill.")+Skill,SkillSeconds);
+        Ledger->Put(Profile.CharacterId,TEXT("Group.")+Group,GroupSeconds);
+    }
+    ForceNetUpdate();
 }
 
 bool AAetherPlayerState::PublishNativeSkills(const FAetherProfileStateV10& P,const TArray<FAetherExternalSkillGrant>& RequestedGrants,FString& Reason)
