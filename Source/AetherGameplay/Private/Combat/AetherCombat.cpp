@@ -230,23 +230,24 @@ void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
 void AAetherCharacter::PossessedBy(AController* C)
-{ CancelActions(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
+{ CancelActions();EnemySkillDecision.Reset(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
 void AAetherCharacter::CancelActions()
 {
     if(!HasAuthority())return;
+    EnemySkillDecision.CancelRequest();
     Equipment->CancelAttack();
     // A PlayerState ASC may already have moved to a replacement pawn.
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->CancelAllAbilities();
 }
 void AAetherCharacter::UnPossessed()
 {
-    CancelActions();
+    CancelActions();EnemySkillDecision.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::UnPossessed();
 }
 void AAetherCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
-    CancelActions();
+    CancelActions();EnemySkillDecision.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::EndPlay(Reason);
 }
@@ -425,6 +426,7 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     // 执行前锁定唯一冷却所有者，效果回调不得把旧动作提交到替换 Pawn/ASC 的冷却表。
     const TWeakObjectPtr<AAetherPlayerState> ProfileCooldownOwner=SkillAuthority==EAetherSkillAuthority::Profile?GetPlayerState<AAetherPlayerState>():nullptr;
     const TWeakObjectPtr<UAetherDefinitionAbilitySystem> DefinitionCooldownOwner=SkillAuthority==EAetherSkillAuthority::Definition?::Cast<UAetherDefinitionAbilitySystem>(AbilitySystem):nullptr;
+    if(!EnemySkillDecision.ValidateCommit(*this,Cast))return false;
     const auto* E=&Cast.Effect;
     FHitResult Hit;FVector Origin,Direction;
     if(!FindSkillTarget(Cast.SkillId,Cast.Rank,Hit,Origin,Direction))return false;
@@ -460,6 +462,7 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
         CastStartedAt=CombatTime();CastLockUntil=CastStartedAt+float(E->RecoverySeconds<0?E->Cooldown:E->RecoverySeconds);
         if(ProfileCooldownOwner.IsValid())ProfileCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
         else if(DefinitionCooldownOwner.IsValid())DefinitionCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
+        EnemySkillDecision.RecordCommitted(*this,Cast);
     }
     return Accepted;
 }
@@ -587,6 +590,7 @@ void AAetherCharacter::Think(float Dt)
 {
     if (const auto* Mode = GetWorld()->GetAuthGameMode<AAetherAdventureMode>(); Mode && Mode->bSmoke) return;
     if (Fighter == EAetherFighter::Player || !Alive()) return;
+    if(!FAetherNpcSkillDecision::IsControlled(*this)){EnemySkillDecision.Reset();bWindingUp=bBlocking=false;return;}
     const float T = CombatTime();
     if(T>=NextPerceptionAt)
     {
@@ -594,8 +598,7 @@ void AAetherCharacter::Think(float Dt)
     AAetherCharacter* Target = nullptr; double Best = FMath::Square(1300.0);
     for (TActorIterator<AAetherCharacter> It(GetWorld()); It; ++It)
         if (It->Fighter == EAetherFighter::Player && It->Alive()&&(!Cast<AAetherCharacter>(GetOwner())||GetOwner()==*It))
-        { if(const auto* FC=Cast<AAetherFrontierCharacter>(this);FC&&!FC->EncounterId.IsNone())
-            if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();M&&M->Encounters&&!M->Encounters->Participates(Cast<AAetherFrontierCharacter>(*It),FC->EncounterId))continue;
+        { if(!FAetherNpcSkillDecision::CanTarget(*this,**It))continue;
           const double D = FVector::DistSquared(It->GetActorLocation(), GetActorLocation());
           if(D<Best&&FVector::DistSquared(It->GetActorLocation(),Home)<FMath::Square(2600.))
           {FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherPerception),false,this);Q.AddIgnoredActor(*It);
@@ -603,17 +606,28 @@ void AAetherCharacter::Think(float Dt)
     if(Target){PerceivedTarget=Target;LastSeenAt=T;LastSeenPosition=Target->GetActorLocation();}
     }
     AAetherCharacter* Target=PerceivedTarget.Get();
-    if(Target&&(!Target->Alive()||T-LastSeenAt>4||FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(2800.))){PerceivedTarget.Reset();Target=nullptr;}
+    if(Target&&(!FAetherNpcSkillDecision::CanTarget(*this,*Target)||T-LastSeenAt>4||FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(2800.))){PerceivedTarget.Reset();Target=nullptr;}
     if (T < StunUntil) { bWindingUp = false; bBlocking = false; return; }
     if (!Target) { bWindingUp = false;bBlocking=false;if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(120.)){const auto Dir=SafeMoveDirection(Home);SetActorRotation(Dir.Rotation());AddMovementInput(Dir,1);}return; }
     if(T-LastSeenAt>.3f){bWindingUp=false;bBlocking=false;AddMovementInput(SafeMoveDirection(LastSeenPosition),1);return;}
     FVector Toward = Target->GetActorLocation() - GetActorLocation(); Toward.Z = 0;
+    const auto* NpcLoadout=FAetherNpcSkillDefinitions::Get().Find(SkillLoadoutId);
+    if(!NpcLoadout){bWindingUp=bBlocking=false;return;}
+    if(!NpcLoadout->OffensiveSkills.IsEmpty())
+    {
+        SetActorRotation(Toward.Rotation());if(Controller)Controller->SetControlRotation(Toward.Rotation());
+        const auto SkillChoice=EnemySkillDecision.Choose(*this,*Target);
+        bWindingUp=bBlocking=false;
+        if(SkillChoice.Kind==EAetherNpcSkillChoice::Ready)EnemySkillDecision.TryExecute(*this,*Target,SkillChoice.SkillId);
+        else if(SkillChoice.Kind==EAetherNpcSkillChoice::Approach)AddMovementInput(SafeMoveDirection(Target->GetActorLocation()),1);
+        return;
+    }
     if (bWindingUp)
     {
         if (T >= NextAI)
         {
             bWindingUp = false;
-            if (Fighter == EAetherFighter::FireCaster) TrySpell(0); else {if(Fighter==EAetherFighter::Wolf)LaunchCharacter(GetActorForwardVector()*450,false,false);PerformMelee(bAIHeavy);}
+            if(Fighter==EAetherFighter::Wolf)LaunchCharacter(GetActorForwardVector()*450,false,false);PerformMelee(bAIHeavy);
             ActionUntil = T + (Fighter == EAetherFighter::BellKnight ? 1.25f : .8f); NextAI = ActionUntil;
         }
         return;
@@ -621,7 +635,7 @@ void AAetherCharacter::Think(float Dt)
     if (T < ActionUntil) return;
     SetActorRotation(Toward.Rotation()); if (Controller) Controller->SetControlRotation(Toward.Rotation());
     const auto* Main=Equipment->InSlot(TEXT("MainHand")); const auto* Move=Main?Main->FindAttack(TEXT("Light")):nullptr;
-    const float Range = Fighter == EAetherFighter::FireCaster ? 1000 : Move?Move->ReachCm-10:130;
+    const float Range = Move?Move->ReachCm-10:130;
     if (Toward.Size() > Range)
     { bBlocking = Fighter == EAetherFighter::ShieldGuard && Equipment->GuardDefinition(); AddMovementInput(SafeMoveDirection(Target->GetActorLocation()), 1); }
     else if (T >= NextAI)
