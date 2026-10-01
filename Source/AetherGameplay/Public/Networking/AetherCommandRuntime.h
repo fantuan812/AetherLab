@@ -67,4 +67,3 @@ public:
 private:
     TUniquePtr<FAetherCommandRuntimeImpl,FAetherCommandRuntimeImplDeleter> Impl;
 };
-

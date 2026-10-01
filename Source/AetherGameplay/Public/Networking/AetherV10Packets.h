@@ -63,4 +63,3 @@ struct FAetherV10RequestBudget
     double Tokens=12,Bytes=12288,Last=-1;
     bool Consume(double Now,int32 Size,double Rate=6,double Burst=12);
 };
-

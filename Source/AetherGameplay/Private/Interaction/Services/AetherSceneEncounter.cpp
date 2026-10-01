@@ -28,6 +28,5 @@ FString FAetherSceneServiceHandlers::CollectLegacyLoot(const FAetherSceneService
     auto& M=X.Mode;auto* C=&X.Character;auto* PS=C->ProfileState();const auto* P=PS->GetNativeProfile();
     auto* Target=&X.Target;const auto* Action=&X.Action;const auto& D=FAetherV10Definitions::Get();
     auto* Reactive=M.GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();using K=EAetherInteractionActionKind;
-return M.ClaimNativeLegacyLoot(C,Target->Spec.Id,X.OriginCommandId);
+return M.ClaimNativeLegacyLoot(C,Target->Spec.Id,X.OriginCommandId,X.bLootClaimAccepted);
 }
-

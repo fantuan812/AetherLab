@@ -56,12 +56,14 @@ void AAetherPlayerController::ServerV10SceneInput_Implementation(const FAetherV1
 {
     auto* GI=GetGameInstance();auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();FAetherPlayerCommand C;
     if(!GI||!M||!GI->GetSubsystem<UAetherCommandRuntime>()->AuthorizeSceneInput(this,P,Sequence,C))return;
-    const FString Result=M->ExecuteNativeSceneService(*this,C);
-    if(auto* CharacterPawn=Cast<AAetherFrontierCharacter>(GetPawn()))CharacterPawn->Notify(Result);
+    bool bLootClaimAccepted=false;
+    const FString Result=M->ExecuteNativeSceneService(*this,C,bLootClaimAccepted);
+    // 已接受掉落已有客户端“已发送”反馈。初始 Pawn RPC 与终态 Controller RPC
+    // 不保证跨 Actor 到达顺序，因此这里只保留拒绝和其他场景服务的原提示。
+    if(!bLootClaimAccepted)if(auto* CharacterPawn=Cast<AAetherFrontierCharacter>(GetPawn()))CharacterPawn->Notify(Result);
 }
 
 void AAetherPlayerController::ServerV10ContainerQuery_Implementation(const FAetherV10ContainerQuery& Q)
 {if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->QueryContainer(this,Q);}
 void AAetherPlayerController::ClientV10ContainerClosed_Implementation(FGuid Channel,FGuid Context)
 {if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveContainerClosed(this,Channel,Context);}
-

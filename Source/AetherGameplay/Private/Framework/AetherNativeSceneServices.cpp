@@ -12,8 +12,9 @@
 #include "Engine/GameInstance.h"
 #include "EngineUtils.h"
 
-FString AAetherFrontierMode::ExecuteNativeSceneService(AAetherPlayerController& PC,const FAetherPlayerCommand& Command)
+FString AAetherFrontierMode::ExecuteNativeSceneService(AAetherPlayerController& PC,const FAetherPlayerCommand& Command,bool& bLootClaimAccepted)
 {
+    bLootClaimAccepted=false;
     using K=EAetherInteractionActionKind;
     auto* C=Cast<AAetherFrontierCharacter>(PC.GetPawn());auto* PS=PC.GetPlayerState<AAetherPlayerState>();
     const auto* P=PS?PS->GetNativeProfile():nullptr;const auto& D=FAetherV10Definitions::Get();
@@ -30,7 +31,7 @@ FString AAetherFrontierMode::ExecuteNativeSceneService(AAetherPlayerController& 
     const auto* Action=Definition->Actions.FindByPredicate([&](const auto& A){return A.Id.Equals(Command.ActionId,ESearchCase::CaseSensitive);});
     if(!Action||!AetherNativeInteraction::IsSceneService(Action->Kind))return TEXT("此动作不属于现场服务。");
     if(!X.bServiceRequirementsMet)return TEXT("请先完成此服务要求的现场条件。");
-    return FAetherSceneServiceHandlers::Execute({*this,*C,*Target,*Action,X.SafeForSeconds,Command.CommandId});
+    return FAetherSceneServiceHandlers::Execute({*this,*C,*Target,*Action,X.SafeForSeconds,Command.CommandId,bLootClaimAccepted});
 }
 
 void AAetherFrontierMode::ReleaseNativePawn(AAetherFrontierCharacter* Pawn)
@@ -45,4 +46,3 @@ void AAetherFrontierMode::ReleaseNativePawn(AAetherFrontierCharacter* Pawn)
     for(const auto& Buddy:Companions)if(IsValid(Buddy)&&Buddy->CompanionOwner==Pawn)Buddy->Destroy();
     Companions.RemoveAll([](const auto& B){return !IsValid(B);});
 }
-

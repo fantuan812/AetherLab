@@ -613,6 +613,7 @@ void UAetherCommandRuntime::Tick(float Dt)
                     if(Pair.Value->Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive))
                         if(auto* Gate=Impl->Gate(*Pair.Value))Gate->Fault(TEXT("Equipment wear transaction failed"));
             if(LootFeedback[FactIndex].IsSet())Impl->PublishLootFeedback(LootFeedback[FactIndex].GetValue(),Fact);
+            if(Impl->bShutdownRequested)return;
             continue;
         }
         for(auto& Pair:Impl->Bindings)
@@ -627,6 +628,7 @@ void UAetherCommandRuntime::Tick(float Dt)
         }
         if(Impl->bShutdownRequested)return;
         if(LootFeedback[FactIndex].IsSet())Impl->PublishLootFeedback(LootFeedback[FactIndex].GetValue(),Fact);
+        if(Impl->bShutdownRequested)return;
     }
     for(auto& Pair:Impl->Bindings)
     {
@@ -720,4 +722,3 @@ void UAetherCommandRuntime::Deinitialize()
 }
 
 void FAetherCommandRuntimeImplDeleter::operator()(FAetherCommandRuntimeImpl* Value) const { delete Value; }
-

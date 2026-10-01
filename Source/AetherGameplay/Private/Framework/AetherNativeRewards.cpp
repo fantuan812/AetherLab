@@ -55,8 +55,9 @@ bool AAetherFrontierMode::RecordNativeCampClear(FName Definition,FGuid Instance)
     });
     NativeCampWrites.Add(Definition,MoveTemp(Pending));return false;
 }
-FString AAetherFrontierMode::ClaimNativeLegacyLoot(AAetherFrontierCharacter* C,FName Id,FGuid OriginCommandId)
+FString AAetherFrontierMode::ClaimNativeLegacyLoot(AAetherFrontierCharacter* C,FName Id,FGuid OriginCommandId,bool& bAccepted)
 {
+    bAccepted=false;
     auto* PS=C?C->ProfileState():nullptr;auto* Actor=Prop(Id);
     if(!bNativeSceneReady||!NativeWorld.IsSet()||!PS||!C->Ready()||C->ResourceGate->IsBlocked()||C->bTravelPending||
         !Actor||Actor->Service!="Loot"||FVector::DistSquared(C->GetActorLocation(),Actor->GetActorLocation())>FMath::Square(250.))
@@ -66,8 +67,7 @@ FString AAetherFrontierMode::ClaimNativeLegacyLoot(AAetherFrontierCharacter* C,F
     const auto* Loot=NativeWorld->Loot.FindByPredicate([&](const auto& L){return Id.ToString()==TEXT("Loot_")+L.ClaimId.ToString(EGuidFormats::Digits);});
     if(!Loot||!Loot->ClaimedBy.IsEmpty())return TEXT("掉落已领取。");
     FString Why;
-    return GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SubmitLootClaim(
-        Cast<AAetherPlayerController>(C->GetController()),Loot->ClaimId,OriginCommandId,Why)?
-        TEXT("正在保存领取结果，物品以收到的库存快照为准。"):Why;
+    bAccepted=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->SubmitLootClaim(
+        Cast<AAetherPlayerController>(C->GetController()),Loot->ClaimId,OriginCommandId,Why);
+    return bAccepted?FString():Why;
 }
-

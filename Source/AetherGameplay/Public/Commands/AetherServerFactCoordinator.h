@@ -41,4 +41,3 @@ private:
     struct FImpl;
     TUniquePtr<FImpl> Impl;
 };
-

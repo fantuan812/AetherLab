@@ -41,4 +41,3 @@ private:
 public:
     virtual bool ShouldFlushKeysWhenViewportFocusChanges() const override {return true;}
 };
-

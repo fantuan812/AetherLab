@@ -587,4 +587,3 @@ void AAetherFrontierMode::RefreshWorldProgress()
     if(!CaptureWorldCandidate(Candidate)||!WriteDatabase(Candidate))return;
     for(auto& Pair:Publish){Pair.Key->Profile=MoveTemp(Pair.Value);Pair.Key->ForceNetUpdate();Pair.Key->OnProfilePublished.Broadcast();}
 }
-

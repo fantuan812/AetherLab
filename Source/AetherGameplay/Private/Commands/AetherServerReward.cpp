@@ -67,4 +67,3 @@ bool AetherServerRewards::Apply(const FAetherServerFact& E,FAetherProfileStateV1
     }
     Run.Settled.AddUnique(P.CharacterId);return true;
 }
-
