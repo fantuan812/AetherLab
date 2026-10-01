@@ -164,9 +164,15 @@ bool FAetherCompanionHealTest::RunTest(const FString&)
         });
         Advance(.8);
         Step([F,this,Mode]{
-            auto* C=F->Probe;TestTrue(TEXT("Interrupted or redirected request never commits a heal/cooldown"),C->Mana()==100&&C->SkillCooldownRemaining(TEXT("Body.Aid"))==0&&F->Patient->BuffRuntime->GetState().Instances.IsEmpty()&&F->Stranger->BuffRuntime->GetState().Instances.IsEmpty());
+            auto* C=F->Probe;
+            if(Mode==4)
+            {
+                FGuid Life;TestFalse(TEXT("Control gap is not a usable skill life"),AetherSkillLives::Resolve(*C,Life));
+                TestEqual(TEXT("Cooldown query is unavailable while ActorInfo is cleared"),C->SkillCooldownRemaining(TEXT("Body.Aid")),TNumericLimits<float>::Max());
+                F->Patient->CompanionOwner=F->Owner;F->ProbeController->Possess(C);TestTrue(TEXT("New controller generation may resume after cancelled tick"),C->CompanionDecision->bManaged);
+            }
+            TestTrue(TEXT("Interrupted or redirected request never commits a heal/cooldown"),C->Mana()==100&&C->SkillCooldownRemaining(TEXT("Body.Aid"))==0&&F->Patient->BuffRuntime->GetState().Instances.IsEmpty()&&F->Stranger->BuffRuntime->GetState().Instances.IsEmpty());
             C->CompanionDecision->CancelOwnedSupport();C->bCompanionHold=false;
-            if(Mode==4){F->Patient->CompanionOwner=F->Owner;F->ProbeController->Possess(C);TestTrue(TEXT("New controller generation may resume after cancelled tick"),C->CompanionDecision->bManaged);}
             if(Mode==2){TestTrue(TEXT("Releasing old intent does not clear another behavior's focus"),F->ProbeController->GetFocusActorForPriority(EAIFocusPriority::Gameplay)==F->Stranger);F->ProbeController->ClearFocus(EAIFocusPriority::Gameplay);}
         });
     }
