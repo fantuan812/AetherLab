@@ -22,6 +22,7 @@ public:
     UFUNCTION(Server,Reliable) void ServerV10SnapshotAck(FGuid Channel,FGuid Transfer,uint32 NextOffset);
     UFUNCTION(Client,Reliable) void ClientV10Channel(FGuid Channel,const FString& CanonicalOwner,FGuid Realm);
     UFUNCTION(Client,Reliable) void ClientV10Reply(const FAetherV10ReplyPacket& Packet);
+    UFUNCTION(Client,Reliable) void ClientV10LootClaimResult(FGuid Channel,FGuid OriginCommandId,FGuid LootInstanceId,EAetherLootClaimOutcome Outcome);
     UFUNCTION(Client,Reliable) void ClientV10Snapshot(const FAetherV10SnapshotChunk& Chunk);
     virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
     virtual void SpawnDefaultHUD() override;
@@ -35,6 +36,8 @@ private:
     void BindMenuPawn();
     FGuid SceneInputChannel;
     uint64 SceneInputSequence=0;
+    FGuid LootFeedbackChannel;
+    TArray<TPair<FGuid,FGuid>> CompletedLootFeedback; // 有界提示去重，不进入普通命令 Pending。
 public:
     virtual bool ShouldFlushKeysWhenViewportFocusChanges() const override {return true;}
 };

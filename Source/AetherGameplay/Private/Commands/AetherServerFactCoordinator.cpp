@@ -29,6 +29,8 @@ struct FAetherServerFactCoordinator::FImpl
         TFuture<FAetherStoreResult> Write;
         TOptional<FAetherTransaction> Transaction;
         double RetryAt=0;
+        TOptional<EAetherLootClaimOutcome> LootCandidate;
+        bool bLootCommitted=false;
         int64 WearSequence=0; // 首次读取时分配，重试/冲突不能重新分配。
     };
     TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store;
@@ -68,6 +70,8 @@ bool FAetherServerFactCoordinator::HasPendingRegionMutation(const TSet<FName>& S
 }
 bool FAetherServerFactCoordinator::HasPendingFact(const FString& Id,const FString& Fact) const
 {return Impl->Jobs.ContainsByPredicate([&](const auto& J){return J->Event.CharacterId.Equals(Id,ESearchCase::CaseSensitive)&&J->Event.FactId.Equals(Fact,ESearchCase::CaseSensitive);});}
+bool FAetherServerFactCoordinator::HasPendingLootClaim(const FString& Id,FGuid Instance) const
+{return Impl->Jobs.ContainsByPredicate([&](const auto& J){return J->Event.Kind==EAetherServerFactKind::LegacyLoot&&J->Event.InstanceId==Instance&&J->Event.CharacterId.Equals(Id,ESearchCase::CaseSensitive);});}
 bool FAetherServerFactCoordinator::Enqueue(FAetherServerFact E,FString& Reason)
 {
     check(IsInGameThread());const auto& D=FAetherV10Definitions::Get();
@@ -141,6 +145,13 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
         bool Finished=false;
         const auto Finish=[&](EAetherStoreCode Code,FString Why,TOptional<FAetherProfileStateV10> P={},TOptional<FAetherWorldStateV10> W={}){
             FAetherServerFactCompletion C;C.Event=J.Event;C.Code=Code;C.Detail=MoveTemp(Why);C.Profile=MoveTemp(P);C.World=MoveTemp(W);
+            if(J.Event.Kind==EAetherServerFactKind::LegacyLoot)
+            {
+                C.LootOutcome=EAetherLootClaimOutcome::Invalid;
+                if(J.LootCandidate.IsSet()&&(J.bLootCommitted||Code==EAetherStoreCode::Replayed||
+                    (J.LootCandidate.GetValue()!=EAetherLootClaimOutcome::Applied&&J.LootCandidate.GetValue()!=EAetherLootClaimOutcome::AlreadyOwned)))
+                    C.LootOutcome=J.LootCandidate;
+            }
             Done.Add(MoveTemp(C));Finished=true;
         };
         if(Now<J.RetryAt){++I;continue;}
@@ -150,11 +161,12 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
             if(J.Write.IsReady())
             {
                 auto R=J.Write.Get();J.Write={};
-                if(R.Code==EAetherStoreCode::Committed||R.Code==EAetherStoreCode::Replayed)Impl->Read(J,true);
+                if(R.Code==EAetherStoreCode::Committed||R.Code==EAetherStoreCode::Replayed)
+                {J.bLootCommitted=J.Event.Kind==EAetherServerFactKind::LegacyLoot;Impl->Read(J,true);}
                 else if(R.Code==EAetherStoreCode::Conflict||R.Code==EAetherStoreCode::Missing||R.Code==EAetherStoreCode::Expired)
                 {
                     // 集合事实、奖励 Claims 与持久磨损游标都可重读；磨损游标在 FJob 中保持不变。
-                    J.Transaction.Reset();J.Stage=S::Queued;J.RetryAt=Now+.1;
+                    J.Transaction.Reset();J.LootCandidate.Reset();J.bLootCommitted=false;J.Stage=S::Queued;J.RetryAt=Now+.1;
                 }
                 else if(R.Code==EAetherStoreCode::Invalid||R.Code==EAetherStoreCode::Corrupt||R.Code==EAetherStoreCode::UnsupportedSchema)
                     Finish(R.Code,R.Detail);
@@ -201,7 +213,12 @@ TArray<FAetherServerFactCompletion> FAetherServerFactCoordinator::Poll(double No
                             }
                         }
                     }
-                    else if(J.Event.Kind==EAetherServerFactKind::EncounterReward||J.Event.Kind==EAetherServerFactKind::LegacyLoot)
+                    else if(J.Event.Kind==EAetherServerFactKind::LegacyLoot)
+                    {
+                        J.LootCandidate=AetherServerRewards::ApplyLoot(J.Event,Next,World,D,Why);
+                        Allowed=J.LootCandidate.GetValue()==EAetherLootClaimOutcome::Applied||J.LootCandidate.GetValue()==EAetherLootClaimOutcome::AlreadyOwned;
+                    }
+                    else if(J.Event.Kind==EAetherServerFactKind::EncounterReward)
                         Allowed=AetherServerRewards::Apply(J.Event,Next,World,D,Why);
                     else if(J.Event.Kind==EAetherServerFactKind::Personal)
                     {

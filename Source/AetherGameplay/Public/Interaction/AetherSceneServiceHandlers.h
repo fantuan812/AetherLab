@@ -12,6 +12,8 @@ struct FAetherSceneServiceContext
     AAetherFrontierProp& Target;
     const FAetherInteractionActionDefinition& Action;
     double SafeForSeconds;
+    FGuid OriginCommandId; // 正式场景输入通过授权后传入；不是新建持久事务 ID。
+    bool& bLootClaimAccepted; // 仅 CollectLegacyLoot 设置，避免跨 Actor 的初始提示盖过终态。
 };
 struct FAetherSceneServiceHandlers
 {
