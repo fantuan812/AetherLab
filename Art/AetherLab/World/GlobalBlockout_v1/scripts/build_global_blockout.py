@@ -50,6 +50,7 @@ def merge_master(name,obs,anchor=None):
  for o in obs:
   ev=o.evaluated_get(dep);me=ev.to_mesh(preserve_all_data_layers=True,depsgraph=dep);off=len(vs);vs += [tuple(o.matrix_world@v.co-anchor) for v in me.vertices];remap={}
   for j,mat in enumerate(me.materials):
+   mat=mat.original if mat and mat.is_evaluated else mat
    if mat not in mats:mats.append(mat)
    remap[j]=mats.index(mat)
   ul=me.uv_layers.active
@@ -62,6 +63,9 @@ def merge_master(name,obs,anchor=None):
  for p,idx in zip(me.polygons,mi):p.material_index=idx
  ul=me.uv_layers.new(name='SurfaceUV')
  for i,uv in enumerate(uvs):ul.data[i].uv=uv
+ if any(mat and mat.use_nodes and any(nd.type=='UVMAP' and nd.uv_map=='AtlasUV' for nd in mat.node_tree.nodes) for mat in mats):
+  au=me.uv_layers.new(name='AtlasUV')
+  for i,uv in enumerate(uvs):au.data[i].uv=uv
  o=bpy.data.objects.new(name,me);M.objects.link(o);o['reuse_class']='legacy_geometry_normalized_translation';o['source_objects_json']=json.dumps([x.name for x in obs]);o['source_anchor_m']=list(anchor);o['origin_file']='SCN01_Shelter_TA_Candidate';master[name]=o
  source_records.append({'master':name,'source_objects':[x.name for x in obs],'source_anchor_m':list(anchor),'object_count':len(obs),'vertices':len(vs),'faces':len(fs),'change':'evaluated geometry joined for linked reuse; translated origin only; materials retained'})
  return o
@@ -92,6 +96,11 @@ proxy=mat('GB_Placeholder_Teal',(.18,.44,.43));glass=mat('GB_Greenhouse_Glass_Pr
 
 def mesh(n,vs,fs,ma,col,role=None):
  me=bpy.data.meshes.new(n);me.from_pydata(vs,[],fs);me.update()
+ uv=me.uv_layers.new(name='SurfaceUV')
+ for face in me.polygons:
+  ax=max(range(3),key=lambda k:abs(face.normal[k]));axes=[k for k in range(3) if k!=ax]
+  for li in face.loop_indices:
+   v=me.vertices[me.loops[li].vertex_index].co;uv.data[li].uv=(v[axes[0]],v[axes[1]])
  if ma:me.materials.append(ma)
  o=bpy.data.objects.new(n,me);col.objects.link(o)
  if role:o['role']=role
@@ -142,7 +151,7 @@ def room(n,x,y,z,w,d,h,col,door='east',roof_kind='gable'):
   else:box(n+'_'+side,(sx,y,z+h/2),(.5,d+1,h),plaster,col,'architecture_wall')
  for sy in [-1,1]:box(n+'_Wall'+str(sy),(x,y+sy*(d/2+.25),z+h/2),(w,.5,h),plaster,col,'architecture_wall')
  for xx in [-w/2,w/2]:
-  for yy in [-d/2,d/2]:box(n+'_TimberPost'+str((xx,yy)),(x+xx,y+yy,z+h/2),(.32,.32,h),wood,col,'architectural_blockout')
+  for yy in [-d/2,d/2]:box(n+'_TimberPost'+str((xx,yy)),(x+xx+(.16 if xx>0 else -.16),y+yy+(.16 if yy>0 else -.16),z+h/2),(.32,.32,h),wood,col,'architectural_blockout')
  if roof_kind=='gable':roof(n+'_Roof',x,y,z+h,w+1.8,d+1.8,2,col)
  if roof_kind=='glass':
   roof(n+'_GreenhouseRoof',x,y,z+h,w+1,d+1,1.7,col,glass)
@@ -153,18 +162,25 @@ def room(n,x,y,z,w,d,h,col,door='east',roof_kind='gable'):
 # Individual route widths and elevation choices are blockout choices, not new global standards.
 def route(n,pts,width=6,kind='main',skip=None):
  pts=[tuple(v) for v in pts];routes.append({'id':n,'points_m':pts,'width_m':width,'kind':kind,'skipped_segments':skip or []});vs=[];fs=[]
+ # One mitered edge at each polyline vertex; adjacent segments share exact corners.
+ sides=[]
+ for i,p in enumerate(pts):
+  tangents=[]
+  for aa,bb in ([(pts[i-1],p)] if i else [])+([(p,pts[i+1])] if i+1<len(pts) else []):
+   v=Vector((bb[0]-aa[0],bb[1]-aa[1],0)).normalized();tangents.append(Vector((-v.y,v.x,0)))
+  side=sum(tangents,Vector((0,0,0))).normalized();den=max(.5,side.dot(tangents[0]));sides.append(side*width/2/den)
  for j,(p,q) in enumerate(zip(pts,pts[1:])):
   if skip and j in skip:continue
   p=Vector(p);q=Vector(q);dif=q-p;steps=max(1,int(Vector((dif.x,dif.y)).length/2));side=Vector((-dif.y,dif.x,0)).normalized()*width/2
   for k in range(steps):
-   A=p+dif*k/steps;B=p+dif*(k+1)/steps;off=len(vs);vs += [tuple(A-side),tuple(A+side),tuple(B+side),tuple(B-side)];fs.append((off,off+3,off+2,off+1))
+   A=p+dif*k/steps;B=p+dif*(k+1)/steps;sa=sides[j].lerp(sides[j+1],k/steps);sb=sides[j].lerp(sides[j+1],(k+1)/steps);off=len(vs);vs += [tuple(A-sa),tuple(A+sa),tuple(B+sb),tuple(B-sb)];fs.append((off,off+3,off+2,off+1))
  o=mesh('ROUTE_'+n,vs,fs,roadmat,C['01_MAIN_ROUTES'],'walkable_route');o['route_id']=n;o['authored_choice_width_m']=width
  # Slightly embedded solid side walls for readable roadbed, separate from surface mesh.
  for j,(p,q) in enumerate(zip(pts,pts[1:])):
   if skip and j in skip:continue
   p=Vector(p);q=Vector(q);v=q-p;side=Vector((-v.y,v.x,0)).normalized()*width/2
   for sign in [-1,1]:
-   aa=p+side*sign;bb=q+side*sign;mesh(n+f'_BED_{j}_{sign}',[tuple(aa),tuple(bb),tuple(bb-Vector((0,0,.35))),tuple(aa-Vector((0,0,.35)))],[(0,1,2,3)],earth,C['01_MAIN_ROUTES'],'route_bed')
+   aa=p+sides[j]*sign;bb=q+sides[j+1]*sign;mesh(n+f'_BED_{j}_{sign}',[tuple(aa),tuple(bb),tuple(bb-Vector((0,0,.35))),tuple(aa-Vector((0,0,.35)))],[(0,1,2,3)],earth,C['01_MAIN_ROUTES'],'route_bed')
  return o
 # Region entry and exit anchor points fixed to v4 centers; turns/elevations are this build's choices.
 route('C01_Mountain_Main',[(-60,-376,16),(-60,-328,16),(-48,-292,13),(-32,-250,10),(-28,-205,7),(-12,-160,4),(0,-120,1.7),(0,-80,0),(0,-18,0)],6)
@@ -174,14 +190,14 @@ route('C03_Plaza_Training',[(-15,0,0),(-22,4,0),(-29,4,0)],4)
 route('C04_Plaza_Academy',[(15,0,0),(22,6,0),(28,6,0)],4)
 route('C05_Plaza_Shop',[(-12,-12,0),(-20,-30,0),(-25,-30,0)],4)
 route('C06_Plaza_Inn',[(12,-12,0),(24,-32,0),(34,-32,0)],4)
-route('C07_Town_Forest',[(-17,0,0),(-90,0,0),(-135,-8,1),(-175,-8,3),(-216,0,4),(-248,-8,4),(-272,0,4)],6)
+route('C07_Town_Forest',[(-17,0,0),(-17,-16,0),(-60,-16,0),(-90,0,0),(-135,-8,1),(-175,-8,3),(-216,0,4),(-248,-8,4),(-272,0,4)],6)
 route('Forest_Loop_South',[(-248,-8,4),(-277,-40,4),(-316,-36,4),(-328,-10,4),(-328,23,4)],4,'permanent_bypass')
 route('Forest_Loop_North',[(-328,29,4),(-328,56,4),(-296,66,4),(-248,48,4),(-216,0,4)],4,'permanent_bypass')
 route('Forest_Bridge',[(-328,23,4),(-328,29,4)],4,'bridge',skip=[0])
 route('Forest_Log_Shortcut',[(-272,0,4),(-282,14,4),(-300,14,4),(-328,5,4)],4,'shortcut')
-route('C08_Town_Waterworks',[(17,0,0),(90,0,0),(138,-12,.5),(187,-22,1.4),(226,-42,2),(270,-42,2)],6)
+route('C08_Town_Waterworks',[(17,0,0),(20,-8,0),(62,-8,0),(90,0,0),(138,-12,.5),(187,-22,1.4),(226,-42,2),(270,-42,2)],6)
 route('WW_West_Permanent_Maintenance',[(270,-42,2),(243,-42,2),(243,34,2),(270,34,2)],4,'permanent_bypass')
-route('WW_East_Return',[(270,34,2),(299,34,2),(299,-42,2),(270,-42,2)],4,'return')
+route('WW_East_Return',[(270,34,2),(270,30,2),(299,30,2),(299,-42,2),(270,-42,2)],4,'return')
 route('WW_Entry_Approach',[(270,-42,2),(270,-18,2)],4)
 route('WW_Lower_Deck',[(270,-18,2),(270,-12,2)],4,'bridge',skip=[0])
 route('WW_Middle_Approach',[(270,-12,2),(270,2,2)],4)
@@ -189,14 +205,15 @@ route('WW_Upper_Approach',[(270,8,2),(270,22,2)],4)
 route('WW_Upper_Deck',[(270,22,2),(270,28,2)],4,'bridge',skip=[0])
 route('WW_Control',[(270,28,2),(270,34,2)],4)
 route('WW_Craftsman_Access',[(299,-7,2),(290,-7,2)],4)
-route('C09_Town_Abbey',[(0,18,0),(0,90,0),(-16,135,4),(-10,178,8),(0,204,12),(0,234,12)],6)
+route('WW_Optional_East_Gate',[(299,14,2),(290,14,2)],3,'optional_mechanical_gate')
+route('C09_Town_Abbey',[(0,18,0),(0,90,0),(-16,135,4),(-10,178,10.8),(0,190,12),(0,204,12),(0,234,12)],6)
 route('Abbey_Water_Approach',[(0,234,12),(0,237,12)],6)
 route('Abbey_Bridge',[(0,237,12),(0,243,12)],4,'bridge',skip=[0])
 route('C10_Abbey_Hall',[(0,243,12),(0,264,12),(5,280,12),(5,284,12),(-5,289,12),(-10,299,12)],5)
 route('Abbey_Permanent_West_Bypass',[(0,220,12),(-57,220,12),(-57,255,12),(-12,266,12),(0,264,12)],4,'permanent_bypass')
-route('Abbey_Return_East',[(24,302,12),(35,302,12),(35,257,12),(0,248,12)],4,'return')
-route('C11_Waterworks_Relay',[(299,34,2),(305,80,3),(290,124,9),(280,174,16),(250,190,16)],6)
-route('C12_Relay_Abbey',[(220,220,16),(175,248,16),(110,260,13),(60,245,12),(0,248,12)],6)
+route('Abbey_Return_East',[(24,302,12),(31,302,12),(31,257,12),(0,248,12)],4,'return')
+route('C11_Waterworks_Relay',[(299,30,2),(305,80,3),(290,124,9),(280,174,16),(250,190,16)],6)
+route('C12_Relay_Abbey',[(220,220,16),(175,248,16),(110,260,13),(60,245,12),(60,229,12),(0,229,12)],6)
 route('Relay_Invasion_North',[(250,246,16),(264,264,16),(278,282,18)],4,'invasion')
 route('Relay_Invasion_East',[(276,220,16),(296,234,16),(316,241,18)],4,'invasion')
 route('Relay_Entry_Link',[(250,190,16),(250,192,16)],6)
@@ -205,9 +222,9 @@ ring=[(250+28*math.cos(t*2*math.pi/64),220+28*math.sin(t*2*math.pi/64),16) for t
 route('Relay_Core_South',[(250,192,16),(250,210,16)],5)
 route('Relay_Core_West',[(222,220,16),(240,220,16)],5)
 # Additional explicit service and gameplay access spurs.
-for n,pts,w in [('Forest_Fire1_Access',[(-248,-8,4),(-252,-19,4)],4),('Forest_Fire2_Access',[(-282,14,4),(-282,22,4)],4),('Forest_Fire3_Access',[(-296,66,4),(-305,53,4)],4),('Forest_Shelter_Access',[(-328,56,4),(-317,63,4)],4),('SCN01_Shelter_Access',[(-60,-345,16),(-65,-345,16)],4)]:route(n,pts,w,'local_access')
+for n,pts,w in [('Forest_Fire1_Access',[(-248,-8,4),(-252,-19,4)],4),('Forest_Fire2_Access',[(-282,14,4),(-282,22,4)],4),('Forest_Fire3_Access',[(-296,66,4),(-305,53,4)],4),('Forest_Shelter_Access',[(-304,63.5,4),(-308,67,4),(-311,67,4.35),(-313.9,67,4.35)],3),('SCN01_Shelter_Access',[(-60,-345,16),(-65,-345,16),(-66.6,-345,16.35)],4)]:route(n,pts,w,'local_access')
 # Surface stamps are intentional flat functional platforms, feathered into a single continuous terrain mesh.
-stamps=[('town',0,0,97,97,0,20),('entry',-65,-342,29,24,16,14),('forest',-270,0,70,90,4,20),('waterworks',270,0,65,75,2,15),('abbey',0,270,85,80,12,18),('relay',250,220,45,45,16,15)]
+stamps=[('town',0,0,97,97,0,40),('entry',-65,-342,29,24,16,35),('forest',-270,0,70,90,4,35),('waterworks',270,0,65,75,2,35),('abbey',0,270,85,80,12,35),('relay',250,220,45,45,16,35)]
 # Terrain channels: actual depressions. Their water surfaces remain separate objects.
 channels=[(-340,-279,24,28,2.8,3.3), (247,295,-17,-13,.6,1.25),(247,295,3,7,.6,1.25),(247,295,23,27,.6,1.25),(-40,45,238,242,10.5,11.1)]
 segments=[]
@@ -221,7 +238,7 @@ def distseg(x,y,seg):
 
 def ground(x,y):
  # Broad rolling valley with a higher rocky rim inside the same 800m footprint.
- z=7+5*math.sin(x/90)*math.cos(y/110)+.00023*(x*x+y*y)
+ z=3+2*math.sin(x/90)*math.cos(y/110)+.00005*(x*x+y*y)
  z += 28*math.exp(-((x+360)/75)**2-((y+210)/150)**2)+23*math.exp(-((x-345)/80)**2-((y-330)/80)**2)+27*math.exp(-((x+100)/200)**2-((y-383)/58)**2)
  for n,cx,cy,hx,hy,h,feather in stamps:
   dd=max(abs(x-cx)-hx,abs(y-cy)-hy,0);f=max(0,1-dd/feather)
@@ -266,8 +283,8 @@ def pave(n,pts,col):
 # Pavement effective surface is around local -0.035.
 pave('Town_South_Paving',[(0,y,0,0) for y in range(-78,-18,4)],C['02_TOWN_SCN02_07'])
 pave('Town_North_Paving',[(0,y,0,0) for y in range(18,90,4)],C['02_TOWN_SCN02_07'])
-pave('Town_West_Paving',[(x,0,0,-math.pi/2) for x in range(-90,-18,4)],C['02_TOWN_SCN02_07'])
-pave('Town_East_Paving',[(x,0,0,-math.pi/2) for x in range(18,90,4)],C['02_TOWN_SCN02_07'])
+pave('Town_West_Paving',[(x,-16,0,-math.pi/2) for x in range(-60,-18,4)],C['02_TOWN_SCN02_07'])
+pave('Town_East_Paving',[(x,-8,0,-math.pi/2) for x in range(22,62,4)],C['02_TOWN_SCN02_07'])
 pave('SCN01_Local_Paving',[(-60,y,16,0) for y in range(-372,-328,4)],C['03_MOUNTAIN_SCN01'])
 
 def barrier(n,p,q,col,which='wall'):
@@ -281,9 +298,13 @@ for x0,x1,y in [(-72,-12,-80),(16,72,-80),(-72,-12,80),(12,72,80)]:barrier('Town
 for x in [-80,80]:
  for y0,y1 in [(-68,-12),(12,68)]:barrier('Town_Boundary'+str((x,y0)),(x,y0,0),(x,y1,0),town)
 print('TOWN_PAVING_COMPLETE',flush=True)
+bpy.context.view_layer.update()
+print('TOWN_PAVING_COMPLETE_UPDATED',flush=True)
 # SCN02 plaza is an actual 35m diameter floor, not forced to the road tile grid.
 cyl('SCN02_Plaza_35m',(0,0,-.20),17.5,.4,stone,town,64,'walkable_floor');cyl('SCN02_PROP05_LowHearth_Base',(0,0,.35),1.6,.7,stone,town);cyl('SCN02_PROP05_Hearth',(0,0,1.05),.70,.70,copper,town);cyl('SCN02_PROP05_WarmLamp',(0,0,1.50),.35,.30,amber,town)
 cyl('SCN02_Well_Rim',(6,5,.45),1.35,.9,stone,town);cyl('SCN02_Well_Water',(6,5,.91),.95,.02,water,town,32,'water_proxy');box('SCN02_Drinking_Trough',(9,4,.45),(1,3,.9),stone,town);box('SCN02_Trough_Water',(9,4,.88),(.75,2.7,.03),water,town,'water_proxy')
+print('SCN03 modest_START',flush=True)
+bpy.context.view_layer.update()
 # SCN03 modest gate with measured clear hole 5x6m, literal open cargo side passage.
 for x in [-4,4]:box('SCN03_Gate_Pier'+str(x),(x,-80,3),(3,3.6,6),stone,town,'architecture_wall')
 box('SCN03_Gate_Lintel',(0,-80,6.5),(11,3.6,1),stone,town,'architecture_wall');roof('SCN03_Gate_Roof',0,-80,7,12.4,5.4,1.5,town)
@@ -295,12 +316,16 @@ roof('SCN03_Registration_Canopy',-10,-72,3.4,6,6,1.1,town)
 box('SCN03_Registration_Counter',(-10,-72,.52),(3.6,1,.98),wood,town)
 for i,(dx,ma) in enumerate([(-.8,dry),(0,copper),(.8,dark)]):box('SCN03_Register_Book_Seal_Mat'+str(i),(-10+dx,-72,1.05),(.45,.4,.1),ma,town)
 humanoid('SCN03_Clerk_Placeholder',(-10,-70.5,0),town)
+print('SCN04 measured_START',flush=True)
+bpy.context.view_layer.update()
 # SCN04 measured net activity volume 24x20x6m.
 room('SCN04_TrainingHall',-36,4,0,24,20,6,town,'east')
 for i,x in enumerate([-42,-31]):
  cyl('SCN04_Training_Station'+str(i),(x,2,.03),3,.06,dry,town,32,'walkable_floor')
  box('SCN04_PROP08_Dummy'+str(i),(x,4,1.05),(.45,.45,2.1),wood,town);box('SCN04_Dummy_Arms'+str(i),(x,4,1.2),(1.5,.25,.25),wood,town)
 floor('SCN04_DemonstrationZone',-36,10,.02,6,3,town,dry);box('SCN04_PROP09_WeaponRack',(-46,11,1),(2,.7,2),wood,town);humanoid('SCN04_Demonstrator',(-36,10,.02),town)
+print('SCN05 greenhouse_START',flush=True)
+bpy.context.view_layer.update()
 # SCN05 greenhouse and three separated material stations with a broad common aisle.
 room('SCN05_Academy',35,6,0,22,18,4.6,town,'west','glass')
 for i,(y,ma) in enumerate([(0,wood),(6,copper),(12,water)]):
@@ -309,21 +334,31 @@ for i,(y,ma) in enumerate([(0,wood),(6,copper),(12,water)]):
  if i==1:
   for xx in [38,40]:cyl('SCN05_Insulator'+str(xx),(xx,y,1.06),.16,.15,plaster,town)
 humanoid('SCN05_Aisle_Scale',(31,6,0),town)
+print('SCN06 half_START',flush=True)
+bpy.context.view_layer.update()
 # SCN06 half open store. No front wall: customer and production spaces stay distinct.
 floor('SCN06_ShopFloor',-34,-31,0,20,14,town)
 for yy in [-38,-24]:box('SCN06_SideWall'+str(yy),(-34,yy,2),(20,.5,4),plaster,town,'architecture_wall')
 box('SCN06_BackWall',(-44,-31,2),(.5,14,4),plaster,town,'architecture_wall');roof('SCN06_Roof',-34,-31,4.2,22,16,1.7,town)
 box('SCN06_TransactionCounter',(-29,-30,.55),(1.2,6,1.1),wood,town);box('SCN06_Workbench',(-38,-34,.55),(4,1.6,1.1),wood,town);box('SCN06_CoolingTrough',(-38,-27,.50),(3,1.8,1),stone,town);box('SCN06_CoolingWater',(-38,-27,.95),(2.7,1.5,.04),water,town,'water_proxy');humanoid('SCN06_Customer',(-25.5,-30,0),town)
+print('SCN07 exact_START',flush=True)
+bpy.context.view_layer.update()
 # SCN07 exact 18x16 court, four spots and separated NPC wait positions.
 floor('SCN07_Courtyard_18x16',35,-33,0,18,16,town);room('SCN07_Inn_Rear',35,-18,0,18,10,5.5,town,'west')
 for x in [31.5,38.5]:
  for y in [-35.5,-30.5]:humanoid('SCN07_PartySlot'+str((x,y)),(x,y,0),town)
 for x in [28,42]:humanoid('SCN07_NPC_Wait'+str(x),(x,-26,0),town)
 cyl('SCN07_PROP19_LowRestLamp',(35,-23,.4),.9,.8,amber,town);box('SCN07_PROP07_NoticeBoard',(43,-36,1.2),(.2,3,2.4),wood,town)
-for xx in [26,44]:barrier('SCN07_CourtSide'+str(xx),(xx,-41,0),(xx,-25,0),town,'fence')
+barrier('SCN07_CourtSideWest_South',(26,-41,0),(26,-37,0),town,'fence')
+barrier('SCN07_CourtSideWest_North',(26,-29,0),(26,-25,0),town,'fence')
+barrier('SCN07_CourtSideEast',(44,-41,0),(44,-25,0),town,'fence')
+print('Background houses_START',flush=True)
+bpy.context.view_layer.update()
 # Background houses reuse the original whole house geometry at original scale.
 for i,(x,y,rot) in enumerate([(-60,-49,0),(-56,-64,.3),(-37,-64,0),(-15,-61,0),(24,-62,0),(44,-62,0),(63,-48,-.2),(66,-27,math.pi/2),(63,18,math.pi/2),(60,40,math.pi/2),(40,59,math.pi),(22,66,math.pi),(-24,64,math.pi),(-45,56,math.pi),(-65,35,-math.pi/2),(-65,16,-math.pi/2)]):inst('SRC_TownHouse_Exact',f'TOWN_ReusedHouse{i:02d}',(x,y,0),rot,town,'background_building')
 print('TOWN_COMPLETE',flush=True)
+bpy.context.view_layer.update()
+print('TOWN_COMPLETE_UPDATED',flush=True)
 # Original local SCN01 preserved as a small embedded pocket, never enlarged into the whole world.
 entry=C['03_MOUNTAIN_SCN01'];inst('SRC_Shelter_Exact','SCN01_OriginalShelter_Retained',(-69,-345,16),0,entry,'retained_local_source')
 inst('SRC_AccidentCart_Exact','SCN01_PROP20_AccidentCart',(-54,-335,16),0,entry);inst('SRC_Barrel_Exact','SCN01_PROP01_WaterBarrel',(-55,-337,16.9),0,entry);inst('SRC_RescuePlatform_Exact','SCN01_Rescue_Platform',(-55,-336,16),0,entry)
@@ -332,7 +367,7 @@ for i in range(2):box('SCN01_Supply'+str(i),(-68+i*.7,-345,16.35),(.4,.5,.3),dry
 for i,(x,y) in enumerate([(-63,-371),(-45,-293)]):box('SCN01_PROP06_Sign'+str(i),(x,y,ground(x,y)+1.1),(.16,.16,2.2),wood,entry);box('SCN01_SignBoard'+str(i),(x,y,ground(x,y)+1.8),(1.8,.16,.55),wood,entry)
 # Solid gentle rescue approach, no magic/climbing prerequisite.
 mesh('SCN01_RescueRamp',[(-58,-340,16),(-54,-340,16),(-54,-337,16.9),(-58,-337,16.9),(-58,-340,15.8),(-54,-340,15.8),(-54,-337,15.8),(-58,-337,15.8)],[(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)],wood,entry,'walkable_floor')
-for x in [-64,-56]:barrier('SCN01_Rail'+str(x),(x,-368,16),(x,-352,16),entry,'fence')
+for x in [-64,-56]:barrier('SCN01_Rail'+str(x),(x,-368,16),(x,-360 if x==-64 else -352,16),entry,'fence')
 humanoid('SCN01_DesignScale165',(-60,-348,16),entry)
 # Shared maintenance bridge assembly uses v3 fixed 4m deck + 1m abutments, all instances scale1.
 def bridge(n,x,y,z,col,rot=0):
@@ -343,23 +378,28 @@ def bridge(n,x,y,z,col,rot=0):
   inst('KIT_Bridge_Bearer_4p5m',n+'_Bearer'+str(px),transform(px,1),rot,col,'bridge_support');inst('KIT_Fence_Rails_4m',n+'_Rail'+str(px),transform(px,1),rot,col,'boundary')
   for yy in [1,3,5]:inst('KIT_Fence_SharedPost',n+'_Post'+str((px,yy)),transform(px,yy,-.14),rot,col,'boundary')
 print('ENTRY_COMPLETE',flush=True)
+bpy.context.view_layer.update()
+print('ENTRY_COMPLETE_UPDATED',flush=True)
 # Forest core: three separated designated fires, clear banks, rescue shed, ordinary trees differentiated from supports.
 forest=C['04_FOREST_SCN08'];bridge('SCN08_MaintenanceBridge',-328,23,4,forest)
 for i,(x,y) in enumerate([(-252,-23),(-282,26),(-306,50)]):
  floor('SCN08_FireStationPad'+str(i),x,y,4,8,8,forest,earth);cyl('SCN08_DesignatedFire_'+str(i+1),(x,y,4.04),1.3,.08,dark,forest);inst('SRC_ShelteredFire_Exact','SCN08_FireVisual'+str(i),(x,y,4.1),0,forest,'fire_visual_proxy');box('SCN08_Fuel'+str(i),(x,y,4.3),(1.5,1,.6),wood,forest)
-inst('SRC_Shelter_Exact','SCN08_Cargo_Shed',(-317,65,4),math.pi/2,forest);inst('SRC_Barrel_Exact','SCN08_RescueWater',(-312,61,4),0,forest)
+inst('SRC_Shelter_Exact','SCN08_Cargo_Shed',(-317,67,4),0,forest);inst('SRC_Barrel_Exact','SCN08_RescueWater',(-312,72,4),0,forest)
 # Fallen trunk is reused exact local geometry, rotated to span the shortcut with >2.7m underside.
-log=inst('SRC_Trunk','SCN08_FallenLog_OverShortcut',(-291,14,7),0,forest,'overhead_obstacle');log.rotation_euler.y=math.pi/2
-for x in [-291,-285]:box('SCN08_PROP15_BurnableSupport'+str(x),(x,16.8,5.45),(.45,.45,2.9),copper,forest)
-humanoid('SCN08_RescuePlaceholder',(-317,63,4),forest)
+log=inst('SRC_Trunk','SCN08_FallenLog_OverShortcut',(-291,17.1,7),0,forest,'overhead_obstacle');log.rotation_euler.x=math.pi/2
+for yy in [11,17]:box('SCN08_PROP15_BurnableSupport'+str(yy),(-291,yy,5.45),(.45,.45,2.9),copper,forest)
+floor('SCN08_Cargo_SafePad',-312.9,67,4.35,3.8,4,forest)
+humanoid('SCN08_RescuePlaceholder',(-312.5,67,4.35),forest)
 print('FOREST_COMPLETE',flush=True)
+bpy.context.view_layer.update()
+print('FOREST_COMPLETE_UPDATED',flush=True)
 # Waterworks core markers and permanent mechanical route.
 ww=C['05_WATERWORKS_SCN09'];floor('SCN09_EntryObservation',270,-42,2,14,10,ww);bridge('SCN09_LowerBridge',270,-18,2,ww);bridge('SCN09_UpperBridge',270,22,2,ww)
-floor('SCN09_ControlPlatform',270,34,2,22,10,ww);floor('SCN09_CraftsmanPlatform',289,-7,2,10,8,ww);box('SCN09_RescuePushableObstacle',(285,-7,2.7),(1,1.5,1.4),wood,ww);inst('SRC_Barrel_Exact','SCN09_LimitedWaterBarrel',(291,-8,2),0,ww);humanoid('SCN09_Craftsman',(290,-5,2),ww)
+floor('SCN09_ControlPlatform',270,34,2,22,10,ww);floor('SCN09_CraftsmanPlatform',289,-7,2,10,8,ww);box('SCN09_RescuePushableObstacle',(285,-7,2.7),(1,1.5,1.4),wood,ww);inst('SRC_Barrel_Exact','SCN09_LimitedWaterBarrel',(292,-10,2),0,ww);humanoid('SCN09_Craftsman',(290,-5,2),ww)
 # Three stepping piers are optional, never the sole way across.
 for i,x in enumerate([263,270,277]):cyl('SCN09_StonePier'+str(i+1),(x,5,1.5),1.2,1,stone,ww,12,'optional_step')
 cyl('SCN09_LowPressureTower',(276,35,5),2.5,6,stone,ww);cyl('SCN09_TowerCopperRing',(276,35,6.5),2.7,.35,copper,ww)
-wheel=cyl('SCN09_Waterwheel_Proxy',(290,31,4.3),2.4,.5,wood,ww,20);wheel.rotation_euler.x=math.pi/2
+wheel=cyl('SCN09_Waterwheel_Proxy',(290,37,4.3),2.4,.5,wood,ww,20);wheel.rotation_euler.x=math.pi/2
 for i,(x,y) in enumerate([(286,-15),(286,25)]):
  box('SCN09_PROP11_Gate'+str(i+1),(x,y,1.55),(4,.3,1.6),copper,ww)
  for dx in [-2.2,2.2]:box('SCN09_GateRail'+str((i,dx)),(x+dx,y,2.5),(.2,.35,3.4),stone,ww)
@@ -370,6 +410,12 @@ for x,y,name in [(291,-24,'Source'),(296,17,'Receiver')]:
  for dx in [-.8,.8]:cyl('SCN09_'+name+'_Insulator'+str(dx),(x+dx,y,2.25),.25,.5,plaster,ww)
  box('SCN09_Electric_'+name,(x,y,2.8),(2,1,1),proxy,ww)
 line('SCN09_Conductor_Separated',[(291,-24,2.06),(296,-24,2.06),(296,-10,2.06),(296,12,2.06),(296,17,2.06)],.06,copper,ww)
+# Separate optional electrically operated east gate. The permanent return remains outside it.
+for yy in [11,17]:box('SCN09_EastGate_Jamb'+str(yy),(295,yy,4),(.5,.5,4),stone,ww,'architecture_wall')
+box('SCN09_EastGate_Lintel',(295,14,6.2),(.6,6.5,.4),stone,ww,'architecture_wall')
+box('SCN09_EastGate_OpenLeaf',(292.5,11,3.7),(5,.18,3.4),copper,ww)
+box('SCN09_EastGate_Motor',(296.4,17.5,2.6),(.5,.8,1.2),proxy,ww)
+line('SCN09_Receiver_To_GateMotor',[(296,17,2.9),(296.4,17,2.9),(296.4,17.5,2.9)],.055,copper,ww)
 # Raised optional dropbridge has visible hinge and two actual anchor endpoints. Mechanism is a proxy.
 for i in range(16):
  o=inst('KIT_Bridge_DeckPlank_4x0p25',f'SCN09_OptionalDropBridgePlank{i}',(270,3,2.035),0,ww,'mechanical_bridge_proxy');o.rotation_euler.x=math.radians(72);o.location.y+=math.cos(math.radians(72))*(i*.25);o.location.z+=math.sin(math.radians(72))*(i*.25)
@@ -381,9 +427,12 @@ box('SCN09_BridgeHinge',(270,3,2.08),(4.4,.25,.25),copper,ww)
 # Independent collecting pool with readable water connection to the north output.
 floor('SCN09_PoolBottom',309,24,.6,14,18,ww,dark);box('SCN09_PoolWater',(309,24,1.23),(14,18,.04),water,ww,'water_proxy')
 for x in [302,316]:box('SCN09_PoolBank'+str(x),(x,24,1.3),(.5,18,1.4),stone,ww,'bank')
-line('SCN09_Supply_Output_Flow',[(276,35,2.15),(309,35,2.15),(309,29,1.3)],.30,water,ww,'water_flow_proxy')
-for i,x in enumerate([266,273]):box('SCN09_EntryCrate'+str(i),(x,-43,2.55),(1.1,1.1,1.1),wood,ww)
+line('SCN09_Supply_Output_Flow',[(276,35,6.5),(309,35,4.8),(309,29,1.3)],.30,water,ww,'water_flow_proxy')
+for xx in [290,309]:box('SCN09_OutputPipeSupport'+str(xx),(xx,35,3.35),(.35,.35,2.7),copper,ww)
+for i,x in enumerate([263,276]):box('SCN09_EntryCrate'+str(i),(x,-46,2.55),(1.1,1.1,1.1),wood,ww)
 print('WATERWORKS_COMPLETE',flush=True)
+bpy.context.view_layer.update()
+print('WATERWORKS_COMPLETE_UPDATED',flush=True)
 # Abbey, 2 storeys plus modest broken bell tower, frontcourt and independent bypass.
 abb=C['06_ABBEY_SCN10_11'];floor('SCN10_Forecourt',0,213,12,50,38,abb);bridge('SCN10_WaterBridge',0,237,12,abb)
 room('SCN10_WestWing',-32,287,12,17,42,10.8,abb,'east');room('SCN10_EastWing',43,287,12,14,42,10.8,abb,'west')
@@ -409,25 +458,30 @@ cyl('SCN11_LowFurnace',(5,302,12.6),3.4,1.2,stone,abb);cyl('SCN11_FurnaceCore',(
 for x in [1,9]:box('SCN11_BrokenBellSupport'+str(x),(x,308,17),(.75,.75,10),stone,abb,'architecture_wall')
 box('SCN11_BellSupportBeam',(5,308,21.5),(9,.8,.7),wood,abb);cyl('SCN11_BrokenBell',(5,308,19.3),2.5,3,copper,abb)
 for i,x in enumerate([-19,29]):
- floor('SCN11_WaterPlatform'+str(i+1),x,302,12,10,10,abb);box('SCN11_WaterSupply'+str(i+1),(x,305,12.65),(3,2,1.3),stone,abb);box('SCN11_WaterSurface'+str(i+1),(x,305,13.2),(2.6,1.6,.04),water,abb,'water_proxy');line('SCN11_SupplyPipe'+str(i),[(x,305,12.05),(x,313,12.05),(5,313,12.05),(5,308,12.05)],.12,copper,abb)
-route('Hall_Rear_Maintenance',[(-19,302,12),(-23,329,12),(33,329,12),(29,302,12)],4,'permanent_bypass')
+ floor('SCN11_WaterPlatform'+str(i+1),x,302,12,10,10,abb);sx=x+1 if x<0 else x;box('SCN11_WaterSupply'+str(i+1),(sx,305,12.65),(3,2,1.3),stone,abb);box('SCN11_WaterSurface'+str(i+1),(sx,305,13.2),(2.6,1.6,.04),water,abb,'water_proxy');line('SCN11_SupplyPipe'+str(i),[(sx,305,12.05),(sx,313,12.05),(5,313,12.05),(5,308,12.05)],.12,copper,abb)
+route('Hall_Rear_Maintenance',[(-19,302,12),(-19,298,12),(-21,298,12),(-21,329,12),(33,329,12),(33,298,12),(29,298,12),(29,302,12)],3,'permanent_bypass')
 # Maintenance route built after terrain uses explicit continuous backing.
-for p,q in [((-19,302,12),(-23,329,12)),((-23,329,12),(33,329,12)),((33,329,12),(29,302,12))]:
- aa=Vector(p);bb=Vector(q);mid=(aa+bb)/2;o=box('SCN11_MaintenanceBackfill'+str(p),(mid.x,mid.y,11.5),(4,(bb-aa).length,1),earth,abb,'route_bed');o.rotation_euler.z=math.atan2(-(bb.x-aa.x),bb.y-aa.y)
-box('SCN11_PROP18_RewardCrate',(5,318,12.5),(1,.8,1),wood,abb);cyl('SCN11_PROP17_AncientSeal',(5,318,13.08),.3,.15,copper,abb);humanoid('SCN11_DesignScale165',(-10,294,12),abb)
+for p,q in zip(routes[-1]['points_m'],routes[-1]['points_m'][1:]):
+ aa=Vector(p);bb=Vector(q);mid=(aa+bb)/2;o=box('SCN11_MaintenanceBackfill'+str(p),(mid.x,mid.y,11.5),(3,(bb-aa).length,1),earth,abb,'route_bed');o.rotation_euler.z=math.atan2(-(bb.x-aa.x),bb.y-aa.y)
+box('SCN11_PROP18_RewardCrate',(5,313,12.5),(1,.8,1),wood,abb);cyl('SCN11_PROP17_AncientSeal',(5,313,13.08),.3,.15,copper,abb);humanoid('SCN11_DesignScale165',(-10,294,12),abb)
 print('ABBEY_COMPLETE',flush=True)
+bpy.context.view_layer.update()
+print('ABBEY_COMPLETE_UPDATED',flush=True)
 # Relay 12m tower plus 2 rods, 4 low covers, a safe dry stand, separate conductor contact boundary.
 rel=C['07_RELAY_SCN12'];cyl('SCN12_CorePlatform',(250,220,15.8),9,.4,stone,rel,48,'walkable_floor');cyl('SCN12_PROP22_Tower',(250,220,21.75),1.6,11.5,stone,rel)
 for z,r in [(17,2.3),(21,2.1),(25,1.9),(27.7,1.65)]:cyl('SCN12_TowerRing'+str(z),(250,220,z),r,.3,copper,rel)
 cyl('SCN12_CoreBeacon',(250,220,27.75),.75,.5,amber,rel)
 for i,x in enumerate([238,262]):
- cyl('SCN12_PROP14_GroundRod'+str(i+1),(x,221,18),.2,4,copper,rel);cyl('SCN12_RodInsulator'+str(i),(x,221,16.4),.65,.8,plaster,rel);line('SCN12_Conductor'+str(i),[(250,220,16.05),(x,220,16.05),(x,221,16.05)],.07,copper,rel)
+ cyl('SCN12_PROP14_GroundRod'+str(i+1),(x,223,18),.2,4,copper,rel);cyl('SCN12_RodInsulator'+str(i),(x,223,16.4),.65,.8,plaster,rel);line('SCN12_Conductor'+str(i),[(250,220,16.05),(x,220,16.05),(x,223,16.05)],.07,copper,rel)
 for i,(x,y) in enumerate([(238,208),(262,208),(238,232),(262,232)]):box('SCN12_LowCover'+str(i+1),(x,y,16.55),(4,1.4,1.1),stone,rel)
-floor('SCN12_DrySafeStand',245,195,16,7,4,rel,dry);cyl('SCN12_RescueLamp',(242.5,194.5,16.6),.45,1.2,amber,rel);humanoid('SCN12_Scale165',(247,195,16),rel)
+floor('SCN12_DrySafeStand',243,190,16,8,4,rel,dry);cyl('SCN12_RescueLamp',(240.5,190,16.6),.45,1.2,amber,rel);humanoid('SCN12_Scale165',(244,190,16),rel)
+for n,x,y in [('North',278,282),('East',316,241)]:cyl('SCN12_InvasionArrival_'+n,(x,y,17.8),3,.4,earth,rel,24,'walkable_floor')
 # Minimal shared Lab / Field / daily cache subpoints stay inside existing six regions.
-for name,x,y,z,col in [('Lab',52,27,0,town),('Field',-137,128,ground(-137,128),C['08_CONTEXT_FOLIAGE']),('ForestSupplyCache',-260,53,4,forest),('WWSupplyCache',320,-30,2,ww),('AbbeySupplyCache',-65,216,12,abb)]:
+for name,x,y,z,col in [('Lab',52,27,0,town),('Field',-137,128,ground(-137,128),C['08_CONTEXT_FOLIAGE']),('ForestSupplyCache',-261,42,4,forest),('WWSupplyCache',320,-30,2,ww),('AbbeySupplyCache',-65,216,12,abb)]:
  floor('SUBPOINT_'+name,x,y,z,6,6,col);box('SUBPOINT_'+name+'_Crate',(x,y,z+.5),(1,1,1),wood,col);inst('SRC_Barrel_Exact','SUBPOINT_'+name+'_Barrel',(x+1.8,y,z),0,col);anchor('SUBPOINT_'+name,(x,y,z))
 print('RELAY_COMPLETE',flush=True)
+bpy.context.view_layer.update()
+print('RELAY_COMPLETE_UPDATED',flush=True)
 # Reference trees/grass reused as actual shared mesh objects at unchanged scale. Keep routes and sites clear.
 fol=C['08_CONTEXT_FOLIAGE']
 def route_clear(x,y,margin=5):
@@ -467,6 +521,8 @@ root=bpy.data.objects.get('SCALE_REFERENCE_TRANSLATION_ONLY')
 if root:root.location=(-61.7,-348,16.006743584759533);root['reference_scope']='old 1.8027965m unchanged; not target protagonist'
 for o in character_collection.objects:o.hide_render=False;o.hide_set(False)
 print('FOLIAGE_COMPLETE',flush=True)
+bpy.context.view_layer.update()
+print('FOLIAGE_COMPLETE_UPDATED',flush=True)
 # Named scene anchors, fixed design footprint and adopted z.
 scene_rows=[('SCN_01',(-65,-290),[80,180],16),('SCN_02',(0,0),[35,35],0),('SCN_03',(0,-80),[5,6],0),('SCN_04',(-36,4),[24,20],0),('SCN_05',(35,6),[22,18],0),('SCN_06',(-34,-31),[20,14],0),('SCN_07',(35,-33),[18,16],0),('SCN_08',(-270,0),[140,180],4),('SCN_09',(270,0),[130,150],2),('SCN_10',(0,270),[170,160],12),('SCN_11',(5,302),[38,38],12),('SCN_12',(250,220),[90,90],16)]
 for n,p,d,z in scene_rows:
@@ -495,6 +551,7 @@ camera('CAM_Ground_Gate',(1,-101,2.34),(0,-77,3.0),groundz=.79)
 camera('CAM_Ground_Plaza',(1,-22,1.55),(0,3,1.9),groundz=0)
 camera('CAM_Ground_Training',(-26,0,1.55),(-39,5,2),groundz=0)
 camera('CAM_Ground_Academy',(27,3,1.55),(39,7,1.8),groundz=0)
+camera('CAM_Ground_Shop',(-24.5,-34,1.55),(-38,-29,1.8),groundz=0)
 camera('CAM_Ground_Inn',(26,-36,1.55),(36,-26,1.8),groundz=0)
 camera('CAM_Ground_Forest',(-274,0,5.55),(-290,24,5.3),groundz=4)
 camera('CAM_Ground_Waterworks',(270,-41,3.55),(270,27,4),groundz=2)
@@ -502,16 +559,35 @@ camera('CAM_Ground_Maintenance',(243,-24,3.55),(246,24,3.0),groundz=2)
 camera('CAM_Ground_Abbey',(0,219,13.55),(-15,288,21),groundz=12)
 camera('CAM_Ground_Hall',(-8,288,13.55),(5,305,16),groundz=12)
 camera('CAM_Ground_Relay',(247,194,17.55),(250,220,20),groundz=16)
+# Measure camera support from saved mesh-equivalent authored surfaces; relative eye height is explicit.
+from mathutils.bvhtree import BVHTree
+bpy.context.view_layer.update()
+vv=[];ff=[]
+for ob in s.objects:
+ if ob.type!='MESH' or ob.get('role') not in ['terrain','walkable_floor','walkable_route','walkable_paving','walkable_bridge','walkable_bridge_bank','walkable_stair']:continue
+ off=len(vv);vv += [ob.matrix_world@v.co for v in ob.data.vertices];ff += [tuple(off+j for j in p.vertices) for p in ob.data.polygons]
+ground_bvh=BVHTree.FromPolygons(vv,ff,all_triangles=False)
+for cs in cam_specs:
+ if cs['support_height_m'] is None:continue
+ cam=bpy.data.objects[cs['camera']];hit,normal,index,dist=ground_bvh.ray_cast(Vector((cam.location.x,cam.location.y,150)),Vector((0,0,-1)),400)
+ if hit:
+  cam.location.z=hit.z+1.55;cam.rotation_euler=(Vector(cs['target_m'])-cam.location).to_track_quat('-Z','Y').to_euler();cs['position_m']=list(cam.location);cs['support_height_m']=hit.z;cs['camera_height_above_ground_m']=1.55;cam['review_eye_height_above_surface_m']=1.55
 # Physical modelling light. No UE runtime/weather behavior is implied.
 li=bpy.data.lights.new('Overcast Sun','SUN');lo=bpy.data.objects.new('Overcast Sun',li);C['09_REVIEW_CAMERAS'].objects.link(lo);lo.rotation_euler=(.48,-.45,-.45);li.energy=2.2;li.angle=math.radians(30)
-s.render.engine='CYCLES';s.cycles.samples=16;s.cycles.use_denoising=True;s.render.resolution_x=1600;s.render.resolution_y=1100;s.render.resolution_percentage=100;s.view_settings.view_transform='AgX';s.render.image_settings.file_format='PNG'
+s.render.engine='CYCLES';s.cycles.samples=16;s.cycles.use_denoising=False;s.render.resolution_x=1600;s.render.resolution_y=1100;s.render.resolution_percentage=100;s.view_settings.view_transform='AgX';s.render.image_settings.file_format='PNG'
 s['scope']='Full-world Blender geographic blockout only; not final art; no UE nav/collision/runtime/performance acceptance';s['source_kit_sha256']=hashlib.sha256(open(a.kit,'rb').read()).hexdigest();s['source_legacy_sha256']=hashlib.sha256(open(a.legacy,'rb').read()).hexdigest();s['extent_m']=[800,800];s['reference_image']='exec-8e127206-514a-42b0-b346-1432f2864d48.png; inspected before construction';s['target_character_height_m']=1.65;s['legacy_character_height_m']=1.8027965;s['phase']='GLOBAL BLOCKOUT; STOP BEFORE LOCAL POLISH'
 # Default viewport opens into a useful global orthographic overview.
 for screen in bpy.data.screens:
  for area in screen.areas:
   if area.type=='VIEW_3D':
    area.spaces.active.region_3d.view_distance=900;area.spaces.active.region_3d.view_location=(0,0,6);area.spaces.active.region_3d.view_rotation=s.camera.rotation_euler.to_quaternion();area.spaces.active.clip_end=4000;area.spaces.active.shading.type='MATERIAL'
-bpy.context.view_layer.update();bpy.ops.file.pack_all()
+print('FINAL_UPDATE_BEGIN',flush=True)
+bpy.context.view_layer.update()
+print('FINAL_UPDATE_END',flush=True)
+bpy.data.orphans_purge(do_recursive=True)
+print('PACK_BEGIN',len(bpy.data.images),flush=True)
+bpy.ops.file.pack_all()
+print('PACK_END',flush=True)
 file=ROOT+'/source/AetherLab_Global_World_Blockout_v1.blend';bpy.ops.wm.save_as_mainfile(filepath=file,compress=True)
 manifest={'version':1,'stage':'global geographic blockout','source_main':'f230dae39ea24406520c2622fd69987b033061f4','world_bounds_xy_m':[[-400,400],[-400,400]],'source_kit_sha256':s['source_kit_sha256'],'source_legacy_sha256':s['source_legacy_sha256'],'source_file':os.path.basename(file),'source_sha256':hashlib.sha256(open(file,'rb').read()).hexdigest(),'scenes':scenes,'routes':routes,'reused_sources':source_records,'instance_count':len(instances),'instances':instances,'specialist_placeholder_count':len(proxies),'specialist_placeholders':proxies,'cameras':cam_specs,'limitations':['Source geometric / visual proxies only, not gameplay state logic','No UE project compilation/testing/nav/collision/physics/performance acceptance','No local asset refinement / final UV / LOD / material acceptance','12 scenes do not add new regions; Lab/Field/daily points retain existing subpoint identity','Adopted z and route widths are this blockout only; not universal production grid']}
 json.dump(manifest,open(ROOT+'/docs/World_Manifest.json','w'),ensure_ascii=False,indent=2)
