@@ -1,0 +1,644 @@
+{
+  "source_file": "SCN01_Shelter_TA_Candidate.blend",
+  "source_library_id": "libfile_7bdc97dcea808191af98e31eaff40bab",
+  "source_version": 7,
+  "scope": "Core kit production cleanup and isolated joint tests only; full world not assembled",
+  "module_count": 9,
+  "modules": [
+    {
+      "asset_id": "KIT_Path_Flagstone_4x4_A",
+      "source_objects": [
+        "Flagstone_00_0",
+        "Flagstone_00_1",
+        "Flagstone_00_2",
+        "Flagstone_00_3",
+        "Flagstone_01_0",
+        "Flagstone_01_1",
+        "Flagstone_01_2",
+        "Flagstone_01_3",
+        "Flagstone_02_0",
+        "Flagstone_02_1",
+        "Flagstone_02_2",
+        "Flagstone_02_3",
+        "Flagstone_03_0",
+        "Flagstone_03_1",
+        "Flagstone_03_2",
+        "Flagstone_03_3"
+      ],
+      "source_mesh_objects": 16,
+      "source_evaluated_triangles": 3520,
+      "output_triangles": 3520,
+      "materials": 4,
+      "output_mesh_objects": 1,
+      "uv_layer": "SurfaceUV"
+    },
+    {
+      "asset_id": "KIT_Path_Substrate_4x4",
+      "source_objects": [],
+      "source_mesh_objects": 0,
+      "source_evaluated_triangles": 0,
+      "output_triangles": 12,
+      "materials": 1,
+      "output_mesh_objects": 1,
+      "uv_layer": "SurfaceUV",
+      "note": "new connective substrate, using existing material"
+    },
+    {
+      "asset_id": "KIT_WallLow_Run_4m",
+      "source_objects": [
+        "Rubble parapet block.024",
+        "Rubble parapet block.025",
+        "Rubble parapet block.026",
+        "Rubble parapet block.027",
+        "Rubble parapet block.028",
+        "Rubble parapet block.029",
+        "Rubble parapet block.030",
+        "Rubble parapet block.031"
+      ],
+      "source_mesh_objects": 8,
+      "source_evaluated_triangles": 864,
+      "output_triangles": 864,
+      "materials": 3,
+      "output_mesh_objects": 1,
+      "uv_layer": "SurfaceUV"
+    },
+    {
+      "asset_id": "KIT_WallLow_EndCornerPier",
+      "source_objects": [
+        "Pillar base.003",
+        "Pillar cap.003"
+      ],
+      "source_mesh_objects": 2,
+      "source_evaluated_triangles": 216,
+      "output_triangles": 216,
+      "materials": 2,
+      "output_mesh_objects": 1,
+      "uv_layer": "SurfaceUV"
+    },
+    {
+      "asset_id": "KIT_Fence_Rails_4m",
+      "source_objects": [
+        "Fence rail",
+        "Fence rail.001"
+      ],
+      "source_mesh_objects": 2,
+      "source_evaluated_triangles": 216,
+      "output_triangles": 216,
+      "materials": 1,
+      "output_mesh_objects": 1,
+      "uv_layer": "SurfaceUV"
+    },
+    {
+      "asset_id": "KIT_Fence_SharedPost",
+      "source_objects": [
+        "Fence stake"
+      ],
+      "source_mesh_objects": 1,
+      "source_evaluated_triangles": 108,
+      "output_triangles": 108,
+      "materials": 1,
+      "output_mesh_objects": 1,
+      "uv_layer": "SurfaceUV"
+    },
+    {
+      "asset_id": "KIT_LanternPost",
+      "source_objects": [
+        "Road lantern post",
+        "Road lantern arm",
+        "Lantern hook.001",
+        "Lantern glowing paper.001",
+        "Lantern cage.004",
+        "Lantern cage.005",
+        "Lantern cage.006",
+        "Lantern cage.007",
+        "Lantern cap.002",
+        "Lantern cap.003"
+      ],
+      "source_mesh_objects": 10,
+      "source_evaluated_triangles": 1080,
+      "output_triangles": 1080,
+      "materials": 4,
+      "output_mesh_objects": 1,
+      "uv_layer": "SurfaceUV"
+    },
+    {
+      "asset_id": "KIT_Path_Ramp_4m_Rise1m",
+      "source_objects": [
+        "KIT_Path_Flagstone_4x4_A"
+      ],
+      "source_mesh_objects": 1,
+      "source_evaluated_triangles": 3520,
+      "output_triangles": 3520,
+      "materials": 4,
+      "output_mesh_objects": 1,
+      "uv_layer": "SurfaceUV",
+      "note": "derived slope connection variant"
+    },
+    {
+      "asset_id": "KIT_Substrate_Ramp_4m_Rise1m",
+      "source_objects": [
+        "KIT_Path_Substrate_4x4"
+      ],
+      "source_mesh_objects": 1,
+      "source_evaluated_triangles": 12,
+      "output_triangles": 12,
+      "materials": 1,
+      "output_mesh_objects": 1,
+      "uv_layer": "SurfaceUV",
+      "note": "derived slope connection variant"
+    }
+  ],
+  "assembly_mesh_objects": 34,
+  "assembly_unique_meshes": 9,
+  "assembly_linked_to_masters": 34,
+  "validation_status": "reopened_checks_complete",
+  "substrate_bounds": [
+    {
+      "name": "TEST_Substrate_00",
+      "min": [
+        6.0,
+        0.0,
+        -0.1550000011920929
+      ],
+      "max": [
+        10.0,
+        4.0,
+        -0.03500000014901161
+      ],
+      "space": "world_meters_after_reopen"
+    },
+    {
+      "name": "TEST_Substrate_01",
+      "min": [
+        6.0,
+        4.0,
+        -0.1550000011920929
+      ],
+      "max": [
+        10.0,
+        8.0,
+        -0.03500000014901161
+      ],
+      "space": "world_meters_after_reopen"
+    },
+    {
+      "name": "TEST_Substrate_02",
+      "min": [
+        6.0,
+        8.0,
+        -0.1550000011920929
+      ],
+      "max": [
+        10.0,
+        12.0,
+        -0.03500000014901161
+      ],
+      "space": "world_meters_after_reopen"
+    },
+    {
+      "name": "TEST_Substrate_03",
+      "min": [
+        2.0,
+        4.0,
+        -0.1550000011920929
+      ],
+      "max": [
+        6.0,
+        8.0,
+        -0.03500000014901161
+      ],
+      "space": "world_meters_after_reopen"
+    },
+    {
+      "name": "TEST_Substrate_04",
+      "min": [
+        10.0,
+        4.0,
+        -0.1550000011920929
+      ],
+      "max": [
+        14.0,
+        8.0,
+        -0.03500000014901161
+      ],
+      "space": "world_meters_after_reopen"
+    },
+    {
+      "name": "TEST_Substrate_05",
+      "min": [
+        10.0,
+        8.0,
+        -0.1550000011920929
+      ],
+      "max": [
+        14.0,
+        12.0,
+        -0.03500000014901161
+      ],
+      "space": "world_meters_after_reopen"
+    },
+    {
+      "name": "KIT_Substrate_Ramp_4m_Rise1m_Instance",
+      "min": [
+        6.0,
+        12.0,
+        -0.1550000011920929
+      ],
+      "max": [
+        10.0,
+        16.0,
+        0.9649999737739563
+      ],
+      "space": "world_meters_after_reopen"
+    },
+    {
+      "name": "KIT_Path_Substrate_4x4_Instance",
+      "min": [
+        6.0,
+        16.0,
+        0.8450000286102295
+      ],
+      "max": [
+        10.0,
+        20.0,
+        0.9649999737739563
+      ],
+      "space": "world_meters_after_reopen"
+    }
+  ],
+  "limitations": [
+    "No engine run, navigation, collision or GPU performance acceptance",
+    "No claim of final reference-image style match",
+    "No LOD or lightmap authored for this candidate",
+    "4m low walls retain visible stone seams; corner pier intentionally overlaps wall terminations",
+    "4x4 field tile supports intersection footprint; dedicated dressed corner/edge transitions remain required"
+  ],
+  "reopen_blender_version": [
+    4,
+    3,
+    2
+  ],
+  "measured_tests": [
+    {
+      "test": "straight seam 0→4",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "TEST_Paving_00",
+          "TEST_Paving_01"
+        ],
+        "sockets": [
+          "OUT",
+          "IN"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "straight seam 4→8",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "TEST_Paving_01",
+          "TEST_Paving_02"
+        ],
+        "sockets": [
+          "OUT",
+          "IN"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "ramp entry",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "TEST_Paving_02",
+          "KIT_Path_Ramp_4m_Rise1m_Instance"
+        ],
+        "sockets": [
+          "OUT",
+          "IN"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "ramp exit",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "KIT_Path_Ramp_4m_Rise1m_Instance",
+          "KIT_Path_Flagstone_4x4_A_Instance"
+        ],
+        "sockets": [
+          "OUT",
+          "IN"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "west branch",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "TEST_Paving_03",
+          "TEST_Paving_01"
+        ],
+        "sockets": [
+          "RIGHT",
+          "LEFT"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "east branch",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "TEST_Paving_01",
+          "TEST_Paving_04"
+        ],
+        "sockets": [
+          "RIGHT",
+          "LEFT"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "right angle route",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "TEST_Paving_04",
+          "TEST_Paving_05"
+        ],
+        "sockets": [
+          "OUT",
+          "IN"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "low wall corner",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "KIT_WallLow_Run_4m_Instance",
+          "KIT_WallLow_Run_4m_Instance.001"
+        ],
+        "sockets": [
+          "OUT",
+          "IN"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "fence straight shared post",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "KIT_Fence_Rails_4m_Instance",
+          "KIT_Fence_Rails_4m_Instance.001"
+        ],
+        "sockets": [
+          "OUT",
+          "IN"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "fence right angle shared post",
+      "value": 0.0,
+      "passed": true,
+      "details": {
+        "objects": [
+          "KIT_Fence_Rails_4m_Instance.001",
+          "KIT_Fence_Rails_4m_Instance.002"
+        ],
+        "sockets": [
+          "OUT",
+          "IN"
+        ],
+        "unit": "m"
+      }
+    },
+    {
+      "test": "one shared corner/support (14.5, 4, 0)",
+      "value": 1,
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "one shared corner/support (14.5, 8, 0)",
+      "value": 1,
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "one shared corner/support (5.7, 4, 0)",
+      "value": 1,
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "substrate straight boundary gap m",
+      "value": 0.0,
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "substrate cross-boundary height gap m",
+      "value": 0.0,
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "ramp substrate entry height gap m",
+      "value": 0.0,
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "ramp substrate exit height gap m",
+      "value": 0.0,
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "assembly uses shared master mesh",
+      "value": 34,
+      "passed": true,
+      "details": {
+        "mesh_instances": 34,
+        "unique_meshes": 9
+      }
+    },
+    {
+      "test": "unit scale mesh objects",
+      "value": 0,
+      "passed": true,
+      "details": []
+    },
+    {
+      "test": "master geometry plus material UV",
+      "value": 0,
+      "passed": true,
+      "details": []
+    },
+    {
+      "test": "referenced images packed",
+      "value": 2,
+      "passed": true,
+      "details": [
+        {
+          "name": "T_AgedCedar_Albedo.png",
+          "packed": true,
+          "size": [
+            1254,
+            1254
+          ]
+        },
+        {
+          "name": "T_WeatheredSlate_Albedo.png",
+          "packed": true,
+          "size": [
+            1254,
+            1254
+          ]
+        }
+      ]
+    },
+    {
+      "test": "existing character 65 bones",
+      "value": 65,
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "existing character unchanged geometric height",
+      "value": 1.8027965161018074,
+      "passed": true,
+      "details": {
+        "min_z": -3.306195139884949e-08,
+        "max_z": 1.802796483039856,
+        "design_height_m": 1.65,
+        "review_material": "clay only"
+      }
+    },
+    {
+      "test": "existing character unscaled",
+      "value": [
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0,
+          1.0
+        ]
+      ],
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "scene meters",
+      "value": [
+        "METRIC",
+        1.0
+      ],
+      "passed": true,
+      "details": null
+    },
+    {
+      "test": "Blender substrate route samples",
+      "value": {
+        "samples": 81,
+        "misses": 0
+      },
+      "passed": true,
+      "details": {
+        "misses": [],
+        "not_engine_navigation": true
+      }
+    }
+  ],
+  "all_measured_checks_pass": true,
+  "character_height_design_m": 1.65,
+  "character_height_actual_baseline_m": 1.8027965161018074,
+  "character_scale_modified": false,
+  "actual_character_material_override": "clay review only; source asset untouched",
+  "check_breakdown": {
+    "socket_coincidence": 10,
+    "shared_support_count": 3,
+    "substrate_boundary_and_height": 4,
+    "data_character_packing_and_units": 8,
+    "centerline_81_samples": 1
+  },
+  "passed_scope": "Blender anchor positions, 4 measured substrate boundaries/heights, shared-data/packing/character checks and 81 main-route centerline samples only. Not UV quality, normal quality, LOD, whole-surface seam, capsule clearance, collision, GPU performance or engine navigation acceptance",
+  "source_inputs": {
+    "scene_library_file_id": "libfile_7bdc97dcea808191af98e31eaff40bab",
+    "scene_version": 7,
+    "reference_library_file_id": "libfile_5be039fa03d88191b06649909169f1fa",
+    "character_local_source": "CHR_Peasant_Original65_Baseline.blend"
+  },
+  "verification_date_utc": "2026-10-01"
+}

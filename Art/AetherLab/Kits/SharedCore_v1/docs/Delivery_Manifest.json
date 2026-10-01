@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "delivery_date_utc": "2026-10-01",
+  "scope": "完整需求矩阵与9母件部分接口候选；套件门和全图未完成",
+  "repository_content": "Only text standards, matrix, actual build/validation scripts and verification records; binary artifacts are in user Library, not in this Git commit",
+  "access": "Library access belongs to the authorized user; these IDs are not public download links",
+  "artifacts": [
+    {
+      "filename": "AetherLab_CoreKit_Interface_v1.blend",
+      "library_file_id": "libfile_3dc1fbb1e36881919c4dce2f9c37a35e",
+      "file_id": "file_00000000bac0820dac39a9fb8de3952e",
+      "current_version_number": 0,
+      "bytes": 7356332,
+      "sha256": "451da979d79475cbed1ae9974dfe7193458d6d6899f9269434a125480fc18b25"
+    },
+    {
+      "filename": "CoreKit_Overview.png",
+      "library_file_id": "libfile_0e88c99c97508191a86003faf70875bd",
+      "file_id": "file_0000000094a4820cbd0fa571477f073e",
+      "current_version_number": 0,
+      "bytes": 2338610,
+      "sha256": "42cf95f6467dae64b9c4de67dd682f665771234544dc76f8c3411ff518b22a71"
+    },
+    {
+      "filename": "CoreKit_Assembly_Close.png",
+      "library_file_id": "libfile_d90b767a3a9c819184f4f97d67dd30e4",
+      "file_id": "file_000000001bf0820cbca8dfb9c37f6c2b",
+      "current_version_number": 0,
+      "bytes": 1820235,
+      "sha256": "6eb6aacad25d29d3c4066206be884bc9aac0d9c25768951b3395b7b6effef105"
+    },
+    {
+      "filename": "AetherLab_SceneAssets_CoreKit_v1.zip",
+      "library_file_id": "libfile_6130d570bcd881918b29e7748d72f8ee",
+      "file_id": "file_000000001b7081f5b871033ce51ea98e",
+      "current_version_number": 0,
+      "bytes": 11564213,
+      "sha256": "709e9913ef308620f6cad8a65b170f741cda504a52d320c5e6e85ef2185bf4b7"
+    }
+  ]
+}

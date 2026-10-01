@@ -1,0 +1,708 @@
+{
+  "visible_meshes": 3989,
+  "visible_base_triangles": 564124,
+  "collection_visibility": [
+    {
+      "name": "COLLISION",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "ENV_Foliage",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "ENV_PathExtensions",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "ENV_Rocks",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "ENV_Terrain",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "FX_ShelteredFire",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "LIGHTS",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "REFINE_Clustered_Town",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "REFINE_Connected_Valley_Greenbelts",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "REFINE_Staggered_Roofscape",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "REFINED_Valley",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SCN01_Gate_Refinement",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SCN01_House01_Refinement",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SCN01_Shelter_Collision_Candidate",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SCN01_Shelter_Refinement",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SCN01_Two_Visible_Roof_Variants",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SCN_01_Rain_Mountain_Path",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SET_DistantTownSilhouettes",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SHR_Approved_EntryStep_Option",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SHR_Candidate_LOD0",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SHR_Candidate_LOD1",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SHR_Candidate_LOD2",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SHR_TA_Atlas_Working",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SHR_TA_Frozen_High",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SM_BrokenCart",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SM_Fence_4m",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SM_LanternPost",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SM_Path_4m",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SM_RescuePlatform",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SM_RestStop",
+      "hide_viewport": true,
+      "hide_render": true,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SM_SouthGate",
+      "hide_viewport": true,
+      "hide_render": true,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SM_Wall_4m",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "SM_WaterBarrel",
+      "hide_viewport": false,
+      "hide_render": false,
+      "instance_offset": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "material_links": {
+    "Wet basalt 0": [
+      {
+        "node": "Principled BSDF",
+        "type": "BSDF_PRINCIPLED",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Material Output",
+        "type": "OUTPUT_MATERIAL",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Color Ramp",
+        "type": "VALTORGB",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture.001",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump.001",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "ImageGen_Albedo_Only",
+        "type": "TEX_IMAGE",
+        "uv": null,
+        "image": "T_WeatheredSlate_Albedo.png"
+      },
+      {
+        "node": "UV Map",
+        "type": "UVMAP",
+        "uv": "SurfaceUV",
+        "image": null
+      },
+      {
+        "node": "Mix (Legacy)",
+        "type": "MIX_RGB",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture.002",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Map Range",
+        "type": "MAP_RANGE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "RGB to BW",
+        "type": "RGBTOBW",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump.002",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      }
+    ],
+    "Wet basalt 1": [
+      {
+        "node": "Principled BSDF",
+        "type": "BSDF_PRINCIPLED",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Material Output",
+        "type": "OUTPUT_MATERIAL",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Color Ramp",
+        "type": "VALTORGB",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture.001",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump.001",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "ImageGen_Albedo_Only",
+        "type": "TEX_IMAGE",
+        "uv": null,
+        "image": "T_WeatheredSlate_Albedo.png"
+      },
+      {
+        "node": "UV Map",
+        "type": "UVMAP",
+        "uv": "SurfaceUV",
+        "image": null
+      },
+      {
+        "node": "Mix (Legacy)",
+        "type": "MIX_RGB",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture.002",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Map Range",
+        "type": "MAP_RANGE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "RGB to BW",
+        "type": "RGBTOBW",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump.002",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      }
+    ],
+    "Aged cedar": [
+      {
+        "node": "Principled BSDF",
+        "type": "BSDF_PRINCIPLED",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Material Output",
+        "type": "OUTPUT_MATERIAL",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Color Ramp",
+        "type": "VALTORGB",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "ImageGen_Albedo_Only",
+        "type": "TEX_IMAGE",
+        "uv": null,
+        "image": "T_AgedCedar_Albedo.png"
+      },
+      {
+        "node": "UV Map",
+        "type": "UVMAP",
+        "uv": "SurfaceUV",
+        "image": null
+      },
+      {
+        "node": "Mix (Legacy)",
+        "type": "MIX_RGB",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture.001",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Map Range",
+        "type": "MAP_RANGE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "RGB to BW",
+        "type": "RGBTOBW",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump.001",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      }
+    ],
+    "Mountain cliff": [
+      {
+        "node": "Principled BSDF",
+        "type": "BSDF_PRINCIPLED",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Material Output",
+        "type": "OUTPUT_MATERIAL",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Color Ramp",
+        "type": "VALTORGB",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture.001",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump.001",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "ImageGen_Albedo_Only",
+        "type": "TEX_IMAGE",
+        "uv": null,
+        "image": "T_WeatheredSlate_Albedo.png"
+      },
+      {
+        "node": "UV Map",
+        "type": "UVMAP",
+        "uv": "SurfaceUV",
+        "image": null
+      },
+      {
+        "node": "Mix (Legacy)",
+        "type": "MIX_RGB",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Noise Texture.002",
+        "type": "TEX_NOISE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Map Range",
+        "type": "MAP_RANGE",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "RGB to BW",
+        "type": "RGBTOBW",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Bump.002",
+        "type": "BUMP",
+        "uv": null,
+        "image": null
+      }
+    ],
+    "M_Authored_Foliage_Atlas": [
+      {
+        "node": "Material Output",
+        "type": "OUTPUT_MATERIAL",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Image Texture",
+        "type": "TEX_IMAGE",
+        "uv": null,
+        "image": "T_Foliage_Atlas_RGBA.png"
+      },
+      {
+        "node": "UV Map",
+        "type": "UVMAP",
+        "uv": "AtlasUV",
+        "image": null
+      },
+      {
+        "node": "Principled BSDF",
+        "type": "BSDF_PRINCIPLED",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Transparent BSDF",
+        "type": "BSDF_TRANSPARENT",
+        "uv": null,
+        "image": null
+      },
+      {
+        "node": "Mix Shader",
+        "type": "MIX_SHADER",
+        "uv": null,
+        "image": null
+      }
+    ]
+  }
+}
