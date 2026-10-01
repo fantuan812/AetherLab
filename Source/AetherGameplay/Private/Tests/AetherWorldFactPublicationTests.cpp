@@ -124,10 +124,11 @@ bool FAetherWorldFactPublicationTest::RunTest(const FString&)
 {
     const auto& D=FAetherV10Definitions::Get();FString Why;
     if(!TestTrue(TEXT("Definitions ready"),D.bValid))return false;
-    // Run once normally, then with Bob already holding a Settle read from before
-    // Alice's transaction. Bob never submits a player command in either case.
-    for(const bool HoldOldSettle:{false,true})
+    // Exercise ordinary publication, an old Settle read, and that same read
+    // spanning a same-identity reconnect. Bob never submits a player command.
+    for(const int32 Scenario:{0,1,2})
     {
+        const bool HoldOldSettle=Scenario!=0,ReconnectOldSettle=Scenario==2;
         FAetherWorldStateV10 InitialWorld;InitialWorld.RealmId=FGuid::NewGuid();
         InitialWorld.WorldFactSources.Add(TEXT("ForestFire0"),TEXT("ForestFire0"));
         FAetherProfileStateV10 Alice,Bob;Alice.CharacterId=TEXT("Alice");Bob.CharacterId=TEXT("Bob");
@@ -229,6 +230,13 @@ bool FAetherWorldFactPublicationTest::RunTest(const FString&)
         {
             if(!TestTrue(TEXT("Read Bob while old Settle is held"),ReadProfile(TEXT("Bob"),DiskBob)))return false;
             TestFalse(TEXT("Peer cannot gain a reward from an uncommitted candidate"),DiskBob.Claims.Contains(TEXT("Q_Main_05")));
+            if(ReconnectOldSettle)
+            {
+                const auto OldChannel=B.Client->GetChannel();Runtime->UnbindPlayer(B.Controller);
+                if(!TestTrue(TEXT("Reconnect creates a fresh resource life"),ReplaceWorldFactPawn(B))||
+                    !TestTrue(TEXT("Same identity reconnects while its old Settle read is held"),Runtime->BindVerifiedPlayer(B.Controller,TEXT("Bob"))))return false;
+                TestTrue(TEXT("Reconnect has a distinct valid owner channel"),B.Client->GetChannel().IsValid()&&B.Client->GetChannel()!=OldChannel);
+            }
             Store->ReleaseHeldRead();
         }
         if(!TestTrue(TEXT("Idle Bob automatically gets durable reward and owner snapshot"),PumpRuntimeUntil(*Runtime,[&]

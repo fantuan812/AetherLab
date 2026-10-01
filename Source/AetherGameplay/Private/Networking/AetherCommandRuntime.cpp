@@ -371,6 +371,9 @@ bool UAetherCommandRuntime::BindVerifiedPlayer(AAetherPlayerController* C,const 
     UnbindPlayer(C);if(Impl->Bindings.Num()>=16)return false;
     const auto Session=Impl->Coordinator->BeginSession(Character);if(!Session.SessionId.IsValid())return false;
     auto B=MakeUnique<FAetherCommandRuntimeImpl::FBinding>();B->Controller=C;B->PlayerState=PS;B->Pawn=C->GetPawn();B->Session=Session;B->Channel=FGuid::NewGuid();
+    // A prior connection's Settle may already have read an older world. Login's
+    // duplicate event cannot replace that read; retain a fresh pass after it drains.
+    B->bNeedsWorldFactSettle=Impl->HasPendingFacts(Character);
     FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=Character;FString Why;
     if(!ObserveServerFact(MoveTemp(Settle),Why)){Impl->Coordinator->EndSession(Session);return false;}
     if(auto* Resources=Impl->Gate(*B))Resources->BlockForInitialLoad();
