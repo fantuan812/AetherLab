@@ -30,6 +30,7 @@ struct FAetherCommandRuntimeImpl
         int64 Revision=-1;
         uint32 Offset=0,Checksum=0;
         bool bReady=false,bNeedsRecovery=true,bNeedFullRecovery=true,bDeliveryRequested=false;
+        bool bNeedsWorldFactSettle=false;
         TUniquePtr<FAetherConsumableDeliveryPump> Delivery;
         TOptional<FAetherPlayerCommand> ResourceCommand;
         TOptional<FAetherCommandResult> ResourceReply;
@@ -59,6 +60,23 @@ struct FAetherCommandRuntimeImpl
     float SendElapsed=0;
     bool bPolling=false,bTicking=false,bShutdownRequested=false;
     FGuid Realm;
+    // Copied from the audited activation snapshot, never from a business
+    // completion. Backend replacement destroys both this baseline and bindings.
+    TMap<FString,FString> PublishedWorldFacts;
+    int64 WorldFactsBaselineRevision=-1;
+    void ObserveCommittedWorldFacts(const FAetherWorldStateV10& World)
+    {
+        if(bShutdownRequested||World.RealmId!=Realm||World.Revision<WorldFactsBaselineRevision)return;
+        bool Added=false;
+        // Facts are append-only. Keep a union, not the last snapshot: an older
+        // completion may arrive after a newer one and must not undo deduplication.
+        for(const auto& Fact:World.WorldFactSources)if(!PublishedWorldFacts.Contains(Fact.Key))
+        {PublishedWorldFacts.Add(Fact.Key,Fact.Value);Added=true;}
+        if(!Added)return;
+        // Even the originator may have refreshed a newer world than its own
+        // transaction. Reuse durable Settle for every current character.
+        for(auto& Pair:Bindings)if(Current(*Pair.Value))Pair.Value->bNeedsWorldFactSettle=true;
+    }
     bool HasPendingFacts(const FString& Id) const
     {return Facts->HasPendingForCharacter(Id)||DeferredFacts.ContainsByPredicate([&](const auto& E){return E.CharacterId.Equals(Id,ESearchCase::CaseSensitive);});}
     void PumpFacts()
@@ -244,20 +262,24 @@ struct FAetherCommandRuntimeImpl
 };
 UAetherCommandRuntime::UAetherCommandRuntime()=default;
 UAetherCommandRuntime::~UAetherCommandRuntime()=default;
-bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason)
+bool UAetherCommandRuntime::InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,const FAetherWorldStateV10& AuditedWorld,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason)
 {
     check(IsInGameThread());
     if(Impl||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!Resolve||!Publish)
     {Reason=TEXT("Native backend already installed or server context unavailable");return false;}
     const auto& D=FAetherV10Definitions::Get();if(!D.bValid){Reason=D.Error;return false;}
+    if(AuditedWorld.Revision<0||AuditedWorld.Revision==MAX_int64)
+    {Reason=TEXT("Native backend requires an audited world revision");return false;}
     Impl.Reset(new FAetherCommandRuntimeImpl());Impl->Store=Store;Impl->Resolve=MoveTemp(Resolve);Impl->Publish=MoveTemp(Publish);
     Impl->Coordinator=MakeUnique<FAetherProfileCoordinator>(Store,D.Items,D.Skills,D.Rules,D.Economy,D.Interactions,D.Progression);
     Impl->Facts=MakeUnique<FAetherServerFactCoordinator>(Store);
+    Impl->Realm=AuditedWorld.RealmId;Impl->WorldFactsBaselineRevision=AuditedWorld.Revision;
+    Impl->PublishedWorldFacts=AuditedWorld.WorldFactSources;
     Reason.Reset();return true;
 }
 bool UAetherCommandRuntime::SetBackendDomain(FGuid Realm)
 {
-    if(!IsInstalled()||!Realm.IsValid()||(!Impl->Bindings.IsEmpty()&&Impl->Realm!=Realm))return false;
+    if(!IsInstalled()||!Realm.IsValid()||(Impl->Realm.IsValid()&&Impl->Realm!=Realm))return false;
     Impl->Realm=Realm;return true;
 }
 FAetherCommandRuntimeMetrics UAetherCommandRuntime::Inspect() const
@@ -474,7 +496,12 @@ void UAetherCommandRuntime::Tick(float Dt)
     }
     for(const auto& Completion:Done)
     {
-        if(Completion.WorldSnapshot.IsSet()&&Impl->PublishWorld)Impl->PublishWorld(Completion.WorldSnapshot.GetValue());
+        if(Completion.WorldSnapshot.IsSet())
+        {
+            if(Completion.CommitCertainty==EAetherCommitCertainty::Committed)
+                Impl->ObserveCommittedWorldFacts(Completion.WorldSnapshot.GetValue());
+            if(Impl->PublishWorld)Impl->PublishWorld(Completion.WorldSnapshot.GetValue());
+        }
         if(Impl->bShutdownRequested)return;
         if(Completion.ContainerSnapshot.IsSet())
         {
@@ -497,7 +524,12 @@ void UAetherCommandRuntime::Tick(float Dt)
     const auto Facts=Impl->Facts->Poll(FPlatformTime::Seconds());
     for(const auto& Fact:Facts)
     {
-        if(Fact.World.IsSet()&&Impl->PublishWorld)Impl->PublishWorld(Fact.World.GetValue());
+        if(Fact.World.IsSet())
+        {
+            if(Fact.Code==EAetherStoreCode::Committed||Fact.Code==EAetherStoreCode::Replayed)
+                Impl->ObserveCommittedWorldFacts(Fact.World.GetValue());
+            if(Impl->PublishWorld)Impl->PublishWorld(Fact.World.GetValue());
+        }
         if(Impl->bShutdownRequested)return;
         if(!Fact.Profile.IsSet())
         {
@@ -518,12 +550,18 @@ void UAetherCommandRuntime::Tick(float Dt)
                 B.Read=Impl->Store->Read({EAetherAggregateKind::Profile,B.Session.CharacterId});
             else Impl->Queue(B,Fact.Profile.GetValue(),Fact.World.IsSet()?&Fact.World.GetValue():nullptr);
         }
-        if(Fact.Event.Kind==EAetherServerFactKind::World)
-            for(const auto& Pair:Impl->Bindings)if(!Pair.Value->Session.CharacterId.Equals(Fact.Event.CharacterId,ESearchCase::CaseSensitive))
-            {
-                FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=Pair.Value->Session.CharacterId;FString Why;
-                if(!ObserveServerFact(MoveTemp(Settle),Why))UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_SETTLE_DEFERRED %s"),*Why);
-            }
+    }
+    for(auto& Pair:Impl->Bindings)
+    {
+        auto& B=*Pair.Value;
+        // An in-flight Settle may already have read the previous world. Do not
+        // let Enqueue's duplicate suppression consume the newer delta's intent.
+        // The binding retains it across backpressure and same-character respawn;
+        // unbind/backend replacement discards it, and login has its own Settle.
+        if(!B.bNeedsWorldFactSettle||!Impl->Current(B)||Impl->HasPendingFacts(B.Session.CharacterId))continue;
+        FAetherServerFact Settle;Settle.Kind=EAetherServerFactKind::Settle;Settle.CharacterId=B.Session.CharacterId;FString Why;
+        if(ObserveServerFact(MoveTemp(Settle),Why))B.bNeedsWorldFactSettle=false;
+        else UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_FACT_SETTLE_DEFERRED %s"),*Why);
     }
     {
         TGuardValue<bool> Guard(Impl->bPolling,true);
@@ -604,3 +642,4 @@ void UAetherCommandRuntime::Deinitialize()
 }
 
 void FAetherCommandRuntimeImplDeleter::operator()(FAetherCommandRuntimeImpl* Value) const { delete Value; }
+

@@ -29,8 +29,9 @@ class AETHERGAMEPLAY_API UAetherCommandRuntime : public UGameInstanceSubsystem,p
 public:
     UAetherCommandRuntime();
     virtual ~UAetherCommandRuntime() override;
-    // 由完成迁移/恢复的服务器启动流程注入。不会自行打开、创建、导入或覆盖玩家存档。
-    bool InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason);
+    // 由审计/恢复完成的启动流程注入值快照；同步复制世界身份与事实基线，不保留调用者引用。
+    // 不会自行打开、创建、导入或覆盖玩家存档，也不会将初始历史事实再次广播。
+    bool InstallBackend(TSharedRef<IAetherTransactionalStore,ESPMode::ThreadSafe> Store,const FAetherWorldStateV10& AuditedWorld,FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FString& Reason);
     bool IsInstalled() const;
     FAetherCommandRuntimeMetrics Inspect() const;
     bool HasPendingRegionMutation(const TSet<FName>& StableIds) const;
@@ -63,3 +64,4 @@ public:
 private:
     TUniquePtr<FAetherCommandRuntimeImpl,FAetherCommandRuntimeImplDeleter> Impl;
 };
+
