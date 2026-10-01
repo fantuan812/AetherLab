@@ -6,6 +6,7 @@
 #include "Persistence/AetherProfile.h"
 #include "Profile/AetherProfileState.h"
 #include "Attributes/AetherAttributeResolver.h"
+#include "Skills/AetherSkillCooldownState.h"
 #include "AetherProgression.generated.h"
 
 // 拥有者只读授权，不把临时来源写进永久技能账本。
@@ -39,13 +40,6 @@ struct FAetherTemporarySkillSource
     double ExpiresAt=0;
 };
 DECLARE_MULTICAST_DELEGATE(FOnAetherProfilePublished);
-USTRUCT()
-struct FAetherSkillCooldownDeadline
-{
-    GENERATED_BODY()
-    UPROPERTY() FString Key;
-    UPROPERTY() double EndsAt=0;
-};
 
 // Player-owned persistent gameplay state and ASC survive avatar replacement.
 UCLASS()

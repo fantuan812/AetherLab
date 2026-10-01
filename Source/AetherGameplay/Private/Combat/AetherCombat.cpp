@@ -10,6 +10,7 @@
 #include "Equipment/AetherElementDamage.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Skills/AetherNpcSkillDefinitions.h"
+#include "Skills/AetherSkillCooldownState.h"
 #include "Framework/AetherAdventure.h"
 #include "Framework/AetherFrontier.h"
 #include "Interaction/AetherActions.h"
@@ -17,6 +18,7 @@
 #include "Movement/AetherVaultAbility.h"
 #include "Interaction/AetherWorldActionComponent.h"
 #include "Movement/AetherTraversal.h"
+#include "Movement/AetherNavigationProbe.h"
 #include "Animation/AetherAnimation.h"
 #include "Assets/AetherContent.h"
 #include "Assets/AetherAssetPreload.h"
@@ -86,7 +88,7 @@ AAetherCharacter::AAetherCharacter(const FObjectInitializer& ObjectInitializer):
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Nameplate = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Nameplate")); Nameplate->SetupAttachment(RootComponent);
     Nameplate->SetRelativeLocation(FVector(0,0,120)); Nameplate->SetHorizontalAlignment(EHTA_Center); Nameplate->SetWorldSize(22); Nameplate->SetTextRenderColor(FColor::White);
-    AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("Abilities")); AbilitySystem->SetIsReplicated(true);
+    AbilitySystem = CreateDefaultSubobject<UAetherDefinitionAbilitySystem>(TEXT("Abilities")); AbilitySystem->SetIsReplicated(true);
     AbilitySystem->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
     Attributes = CreateDefaultSubobject<UAetherAttributes>(TEXT("Attributes"));
     Reactive = CreateDefaultSubobject<UReactiveBodyComponent>(TEXT("Reactive"));
@@ -229,23 +231,24 @@ void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
 void AAetherCharacter::PossessedBy(AController* C)
-{ CancelActions(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
+{ CancelActions();EnemySkillDecision.Reset(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
 void AAetherCharacter::CancelActions()
 {
     if(!HasAuthority())return;
+    EnemySkillDecision.CancelRequest(CastExecutionId);
     Equipment->CancelAttack();
     // A PlayerState ASC may already have moved to a replacement pawn.
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->CancelAllAbilities();
 }
 void AAetherCharacter::UnPossessed()
 {
-    CancelActions();
+    CancelActions();EnemySkillDecision.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::UnPossessed();
 }
 void AAetherCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
-    CancelActions();
+    CancelActions();EnemySkillDecision.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::EndPlay(Reason);
 }
@@ -321,9 +324,16 @@ float AAetherCharacter::SkillCooldownRemaining(const FString& Id) const
 {
     const auto* PS=GetPlayerState<AAetherPlayerState>();const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,Id):nullptr;
     const auto* E=FAetherSkillDefinitionsV10::Get().Effect(Id,Spec?Spec->Level:1);
-    if(!HasAuthority()&&PS&&E&&BuffRuntime->PresentationReady(PS->SkillGrants.ProfileRevision))
-        return float(FMath::Max(0.,FMath::Max(BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Skill.")+Id),BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Group.")+E->CooldownGroup))-CombatTime()));
-    return PS&&E?float(PS->CooldownRemaining(Id,E->CooldownGroup,CombatTime())):0;
+    if(!E||!AbilitySystem||AbilitySystem->GetAvatarActor()!=this)return TNumericLimits<float>::Max();
+    if(SkillAuthority==EAetherSkillAuthority::Profile)
+    {
+        if(!PS||PS->AbilitySystem!=AbilitySystem)return TNumericLimits<float>::Max();
+        if(!HasAuthority()&&BuffRuntime->PresentationReady(PS->SkillGrants.ProfileRevision))
+            return float(FMath::Max(0.,FMath::Max(BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Skill.")+Id),BuffRuntime->Snapshot.Cooldowns.FindRef(TEXT("Group.")+E->CooldownGroup))-CombatTime()));
+        return float(FMath::Min(PS->CooldownRemaining(Id,E->CooldownGroup,CombatTime()),double(TNumericLimits<float>::Max())));
+    }
+    const auto* DefinitionSystem=SkillAuthority==EAetherSkillAuthority::Definition&&!PS?Cast<UAetherDefinitionAbilitySystem>(AbilitySystem):nullptr;
+    return DefinitionSystem?float(FMath::Min(DefinitionSystem->CooldownRemaining(Id,E->CooldownGroup,CombatTime()),double(TNumericLimits<float>::Max()))):TNumericLimits<float>::Max();
 }
 bool AAetherCharacter::TrySpell(int32 Spell)
 {
@@ -413,7 +423,11 @@ bool AAetherCharacter::ExecuteSkill(const FString& SkillId,int32 Rank)
 }
 bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
 {
-    if(!HasAuthority()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None)return false;
+    if(!HasAuthority()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||SkillCooldownRemaining(Cast.SkillId)>0)return false;
+    // 执行前锁定唯一冷却所有者，效果回调不得把旧动作提交到替换 Pawn/ASC 的冷却表。
+    const TWeakObjectPtr<AAetherPlayerState> ProfileCooldownOwner=SkillAuthority==EAetherSkillAuthority::Profile?GetPlayerState<AAetherPlayerState>():nullptr;
+    const TWeakObjectPtr<UAetherDefinitionAbilitySystem> DefinitionCooldownOwner=SkillAuthority==EAetherSkillAuthority::Definition?::Cast<UAetherDefinitionAbilitySystem>(AbilitySystem):nullptr;
+    if(!EnemySkillDecision.ValidateCommit(*this,Cast))return false;
     const auto* E=&Cast.Effect;
     FHitResult Hit;FVector Origin,Direction;
     if(!FindSkillTarget(Cast.SkillId,Cast.Rank,Hit,Origin,Direction))return false;
@@ -447,7 +461,9 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     if(Accepted)
     {
         CastStartedAt=CombatTime();CastLockUntil=CastStartedAt+float(E->RecoverySeconds<0?E->Cooldown:E->RecoverySeconds);
-        if(auto* PS=GetPlayerState<AAetherPlayerState>())PS->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
+        if(ProfileCooldownOwner.IsValid())ProfileCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
+        else if(DefinitionCooldownOwner.IsValid())DefinitionCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
+        EnemySkillDecision.RecordCommitted(*this,Cast);
     }
     return Accepted;
 }
@@ -575,6 +591,7 @@ void AAetherCharacter::Think(float Dt)
 {
     if (const auto* Mode = GetWorld()->GetAuthGameMode<AAetherAdventureMode>(); Mode && Mode->bSmoke) return;
     if (Fighter == EAetherFighter::Player || !Alive()) return;
+    if(!FAetherNpcSkillDecision::IsControlled(*this)){EnemySkillDecision.Reset();bWindingUp=bBlocking=false;return;}
     const float T = CombatTime();
     if(T>=NextPerceptionAt)
     {
@@ -582,8 +599,7 @@ void AAetherCharacter::Think(float Dt)
     AAetherCharacter* Target = nullptr; double Best = FMath::Square(1300.0);
     for (TActorIterator<AAetherCharacter> It(GetWorld()); It; ++It)
         if (It->Fighter == EAetherFighter::Player && It->Alive()&&(!Cast<AAetherCharacter>(GetOwner())||GetOwner()==*It))
-        { if(const auto* FC=Cast<AAetherFrontierCharacter>(this);FC&&!FC->EncounterId.IsNone())
-            if(auto* M=GetWorld()->GetAuthGameMode<AAetherFrontierMode>();M&&M->Encounters&&!M->Encounters->Participates(Cast<AAetherFrontierCharacter>(*It),FC->EncounterId))continue;
+        { if(!FAetherNpcSkillDecision::CanTarget(*this,**It))continue;
           const double D = FVector::DistSquared(It->GetActorLocation(), GetActorLocation());
           if(D<Best&&FVector::DistSquared(It->GetActorLocation(),Home)<FMath::Square(2600.))
           {FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherPerception),false,this);Q.AddIgnoredActor(*It);
@@ -591,17 +607,28 @@ void AAetherCharacter::Think(float Dt)
     if(Target){PerceivedTarget=Target;LastSeenAt=T;LastSeenPosition=Target->GetActorLocation();}
     }
     AAetherCharacter* Target=PerceivedTarget.Get();
-    if(Target&&(!Target->Alive()||T-LastSeenAt>4||FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(2800.))){PerceivedTarget.Reset();Target=nullptr;}
+    if(Target&&(!FAetherNpcSkillDecision::CanTarget(*this,*Target)||T-LastSeenAt>4||FVector::DistSquared(GetActorLocation(),Home)>FMath::Square(2800.))){PerceivedTarget.Reset();Target=nullptr;}
     if (T < StunUntil) { bWindingUp = false; bBlocking = false; return; }
     if (!Target) { bWindingUp = false;bBlocking=false;if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(120.)){const auto Dir=SafeMoveDirection(Home);SetActorRotation(Dir.Rotation());AddMovementInput(Dir,1);}return; }
     if(T-LastSeenAt>.3f){bWindingUp=false;bBlocking=false;AddMovementInput(SafeMoveDirection(LastSeenPosition),1);return;}
     FVector Toward = Target->GetActorLocation() - GetActorLocation(); Toward.Z = 0;
+    const auto* NpcLoadout=FAetherNpcSkillDefinitions::Get().Find(SkillLoadoutId);
+    if(!NpcLoadout){bWindingUp=bBlocking=false;return;}
+    if(!NpcLoadout->OffensiveSkills.IsEmpty())
+    {
+        SetActorRotation(Toward.Rotation());if(Controller)Controller->SetControlRotation(Toward.Rotation());
+        const auto SkillChoice=EnemySkillDecision.Choose(*this,*Target);
+        bWindingUp=bBlocking=false;
+        if(SkillChoice.Kind==EAetherNpcSkillChoice::Ready)EnemySkillDecision.TryExecute(*this,*Target,SkillChoice.SkillId);
+        else if(SkillChoice.Kind==EAetherNpcSkillChoice::Approach)AddMovementInput(SafeMoveDirection(Target->GetActorLocation()),1);
+        return;
+    }
     if (bWindingUp)
     {
         if (T >= NextAI)
         {
             bWindingUp = false;
-            if (Fighter == EAetherFighter::FireCaster) TrySpell(0); else {if(Fighter==EAetherFighter::Wolf)LaunchCharacter(GetActorForwardVector()*450,false,false);PerformMelee(bAIHeavy);}
+            if(Fighter==EAetherFighter::Wolf)LaunchCharacter(GetActorForwardVector()*450,false,false);PerformMelee(bAIHeavy);
             ActionUntil = T + (Fighter == EAetherFighter::BellKnight ? 1.25f : .8f); NextAI = ActionUntil;
         }
         return;
@@ -609,7 +636,7 @@ void AAetherCharacter::Think(float Dt)
     if (T < ActionUntil) return;
     SetActorRotation(Toward.Rotation()); if (Controller) Controller->SetControlRotation(Toward.Rotation());
     const auto* Main=Equipment->InSlot(TEXT("MainHand")); const auto* Move=Main?Main->FindAttack(TEXT("Light")):nullptr;
-    const float Range = Fighter == EAetherFighter::FireCaster ? 1000 : Move?Move->ReachCm-10:130;
+    const float Range = Move?Move->ReachCm-10:130;
     if (Toward.Size() > Range)
     { bBlocking = Fighter == EAetherFighter::ShieldGuard && Equipment->GuardDefinition(); AddMovementInput(SafeMoveDirection(Target->GetActorLocation()), 1); }
     else if (T >= NextAI)
@@ -767,7 +794,22 @@ void AAetherCharacter::ServerSave_Implementation(bool Load)
 
 FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
 {
-    if(CombatTime()<NextSteeringAt)return SteeringDirection;NextSteeringAt=CombatTime()+.2f;
+    auto* FloorActor=GetCharacterMovement()->CurrentFloor.HitResult.GetActor();
+    auto* EscapeIce=IsValid(FloorActor)?FloorActor->FindComponentByClass<UReactiveBodyComponent>():nullptr;
+    const auto GroundAllowed=[&](const FHitResult& Floor)
+    {
+        auto* Actor=Floor.GetActor();if(!IsValid(Actor))return false;
+        if(auto* Bridge=Actor->FindComponentByClass<UAetherTraversalComponent>();Bridge&&Bridge->bAuthoredBridge&&!Bridge->bRouteOpen){NextPathAt=0;return false;}
+        if(auto* Ice=Actor->FindComponentByClass<UReactiveBodyComponent>();Ice&&Ice->bIceControlsPawnCollision&&Ice->IceSupport!=EReactiveIceSupport::Bearing&&!(Ice==EscapeIce&&Ice->IceSupport==EReactiveIceSupport::Thawing)){NextPathAt=0;return false;}
+        return true;
+    };
+    if(CombatTime()<NextSteeringAt)
+    {
+        FHitResult Floor;
+        if(SteeringDirection.IsNearlyZero()||(AetherNavigationProbe::IsLocalStepClear(*this,SteeringDirection*150,Floor)&&GroundAllowed(Floor)))return SteeringDirection;
+        SteeringDirection=FVector::ZeroVector;NavigationPoints.Reset();NextPathAt=0;
+    }
+    NextSteeringAt=CombatTime()+.2f;
     // Recast paths are bounded to the locally generated tiles. Missing paths fall back to guarded steering.
     if(CombatTime()>=NextPathAt||FVector::DistSquared2D(Destination,NavigationGoal)>FMath::Square(200.))
     {
@@ -779,9 +821,7 @@ FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
     }
     while(NavigationPoints.IsValidIndex(NavigationIndex)&&FVector::DistSquared2D(GetActorLocation(),NavigationPoints[NavigationIndex])<FMath::Square(90.))++NavigationIndex;
     FVector Waypoint=NavigationPoints.IsValidIndex(NavigationIndex)?NavigationPoints[NavigationIndex]:Destination;
-    auto* FloorActor=GetCharacterMovement()->CurrentFloor.HitResult.GetActor();
-    auto* EscapeIce=FloorActor?FloorActor->FindComponentByClass<UReactiveBodyComponent>():nullptr;
-    if(EscapeIce&&EscapeIce->bIceControlsPawnCollision&&EscapeIce->IceSupport==EReactiveIceSupport::Thawing)
+    if(IsValid(EscapeIce)&&EscapeIce->bIceControlsPawnCollision&&EscapeIce->IceSupport==EReactiveIceSupport::Thawing&&IsValid(EscapeIce->GetPrimitive()))
     {
         const FBox Box=EscapeIce->GetPrimitive()->Bounds.GetBox();const FVector Here=GetActorLocation();
         TArray<FVector> Exits={FVector(Box.Min.X-100,Here.Y,Here.Z),FVector(Box.Max.X+100,Here.Y,Here.Z),FVector(Here.X,Box.Min.Y-100,Here.Z),FVector(Here.X,Box.Max.Y+100,Here.Z)};
@@ -789,15 +829,11 @@ FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
         Waypoint=Exits[0];NextPathAt=0;NavigationPoints.Reset();
     }
     FVector Desired=(Waypoint-GetActorLocation()).GetSafeNormal2D();double Best=-1.e30;SteeringDirection=FVector::ZeroVector;
-    FCollisionQueryParams Q(SCENE_QUERY_STAT(AetherSteering),false,this);
     auto* World=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();const auto* Sim=World?World->GetSimulation():nullptr;
     for(float Angle:{0.f,45.f,-45.f,90.f,-90.f,135.f,-135.f})
     {
         FVector Dir=Desired.RotateAngleAxis(Angle,FVector::UpVector);FVector End=GetActorLocation()+Dir*150;
-        if(GetWorld()->SweepTestByChannel(GetActorLocation(),End,FQuat::Identity,ECC_Pawn,FCollisionShape::MakeCapsule(30,70),Q))continue;
-        FHitResult Floor;if(!GetWorld()->LineTraceSingleByChannel(Floor,End,End-FVector(0,0,200),ECC_Visibility,Q)||Floor.ImpactNormal.Z<.5||!Floor.GetComponent()->IsCollisionEnabled()||Floor.GetComponent()->GetCollisionResponseToChannel(ECC_Pawn)!=ECR_Block)continue;
-        if(auto* Bridge=Floor.GetActor()->FindComponentByClass<UAetherTraversalComponent>();Bridge&&Bridge->bAuthoredBridge&&!Bridge->bRouteOpen){NextPathAt=0;continue;}
-        if(auto* Ice=Floor.GetActor()->FindComponentByClass<UReactiveBodyComponent>();Ice&&Ice->bIceControlsPawnCollision&&Ice->IceSupport!=EReactiveIceSupport::Bearing&&!(Ice==EscapeIce&&Ice->IceSupport==EReactiveIceSupport::Thawing)){NextPathAt=0;continue;}
+        FHitResult Floor;if(!AetherNavigationProbe::IsLocalStepClear(*this,Dir*150,Floor)||!GroundAllowed(Floor))continue;
         double Score=FVector::DotProduct(Dir,Desired);if(Sim)for(auto Id:Sim->Query(End,70))
         {const auto* State=Sim->Find(Id);if(State&&(State->bBurning||State->TemperatureC>100))Score-=5;}
         if(Score>Best){Best=Score;SteeringDirection=Dir;}

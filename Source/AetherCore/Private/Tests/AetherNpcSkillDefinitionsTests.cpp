@@ -20,10 +20,17 @@ bool FAetherNpcSkillCatalogTest::RunTest(const FString&)
         TSharedPtr<FJsonObject> Root;FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Root);Edit(*Root);
         FString Text;FJsonSerializer::Serialize(Root.ToSharedRef(),TJsonWriterFactory<>::Create(&Text));return FAetherNpcSkillDefinitions::Parse(Text,Skills);
     };
-    TestFalse(TEXT("Unknown format rejected"),Mutate([](auto& R){R.SetNumberField(TEXT("SchemaVersion"),2);}).bValid);
+    TestFalse(TEXT("Old format has no implicit strategy fallback"),Mutate([](auto& R){R.SetNumberField(TEXT("SchemaVersion"),1);}).bValid);
+    TestFalse(TEXT("Unknown format rejected"),Mutate([](auto& R){R.SetNumberField(TEXT("SchemaVersion"),3);}).bValid);
     TestFalse(TEXT("Duplicate loadouts rejected"),Mutate([](auto& R){auto Rows=R.GetArrayField(TEXT("Loadouts"));Rows.Add(Rows[0]);R.SetArrayField(TEXT("Loadouts"),Rows);}).bValid);
     TestFalse(TEXT("Unknown actor binding rejected"),Mutate([](auto& R){R.GetObjectField(TEXT("FighterLoadouts"))->SetStringField(TEXT("FireCaster"),TEXT("Missing"));}).bValid);
     TestFalse(TEXT("Missing grants are not treated as defaults"),Mutate([](auto& R){R.GetArrayField(TEXT("Loadouts"))[0]->AsObject()->RemoveField(TEXT("InitialGrants"));}).bValid);
+    TestFalse(TEXT("Missing strategy is not an implicit melee fallback"),Mutate([](auto& R){R.GetArrayField(TEXT("Loadouts"))[0]->AsObject()->RemoveField(TEXT("OffensiveSkills"));}).bValid);
+    TestFalse(TEXT("Ungrantable offensive skill is rejected"),Mutate([](auto& R){R.GetArrayField(TEXT("Loadouts"))[0]->AsObject()->SetArrayField(TEXT("OffensiveSkills"),{MakeShared<FJsonValueString>(TEXT("Fire.Ignite"))});}).bValid);
+    TestFalse(TEXT("Repeated offensive identity is rejected"),Mutate([](auto& R){R.GetArrayField(TEXT("Loadouts"))[1]->AsObject()->SetArrayField(TEXT("OffensiveSkills"),{MakeShared<FJsonValueString>(TEXT("Fire.Ignite")),MakeShared<FJsonValueString>(TEXT("Fire.Ignite"))});}).bValid);
+    TestFalse(TEXT("Support water cannot silently use hostile actor targeting"),Mutate([](auto& R){R.GetArrayField(TEXT("Loadouts"))[3]->AsObject()->SetArrayField(TEXT("OffensiveSkills"),{MakeShared<FJsonValueString>(TEXT("Water.Draw"))});}).bValid);
+    const auto* Caster=D.Find(TEXT("FireCaster"));
+    TestTrue(TEXT("Caster strategy names both canonical skills independently of input slots"),Caster&&Caster->OffensiveSkills==TArray<FString>({TEXT("Fire.Ignite"),TEXT("Storm.Strike")}));
     return true;
 }
 #endif

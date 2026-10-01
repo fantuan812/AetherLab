@@ -19,16 +19,18 @@ class AETHERGAMEPLAY_API UAetherCommandClient : public ULocalPlayerSubsystem,pub
 {
     GENERATED_BODY()
 public:
-    const TOptional<FAetherProfileStateV10>& GetProfile() const{return Profile;}
+    const TOptional<FAetherProfileStateV10>& GetProfile() const;
     bool OpenContainer(const FString& Id);
     void CloseContainer();
     void RefreshContainer();
-    const TOptional<FAetherContainerStateV10>& GetContainer() const{return Container;}
-    FGuid GetContainerContext() const{return ContainerContext;}
-    int64 GetContainerWorldRevision() const{return ContainerWorldRevision;}
+    const TOptional<FAetherContainerStateV10>& GetContainer() const;
+    FGuid GetContainerContext() const;
+    int64 GetContainerWorldRevision() const;
     void ReceiveContainerClosed(AAetherPlayerController* C,FGuid ChannelId,FGuid Context);
-    FGuid GetChannel() const{return Channel;}
-    const FString& GetOwnerIdentity() const{return Owner;}
+    FGuid GetChannel() const;
+    const FString& GetOwnerIdentity() const;
+    // 同一LocalPlayer可以先接到新PC、后销毁旧PC；新通道与所有传输入口共用此身份门。
+    bool AcceptsControllerIdentity(AAetherPlayerController* C) const;
     bool HasPending() const;
     EAetherCommandPresentation PresentationState() const;
     FString PendingDescription() const;
@@ -49,6 +51,7 @@ public:
     virtual UWorld* GetTickableGameObjectWorld() const override;
     virtual void Deinitialize() override;
 private:
+    friend class FAetherCommandClientLifecycleTest;
     struct FPending
     {
         FString Owner;
@@ -82,6 +85,7 @@ private:
     double NextContainerSync=0;
     void ReceiveContainerChunk(const FAetherV10SnapshotChunk& Chunk);
     void ResetContainer();
+    void ResetActiveChannel();
     TArray<FPending> Pending;
     double NextSync=0;
 };

@@ -5,31 +5,52 @@
 #include "World/AetherContainerCodec.h"
 #include "Presentation/AetherMenuSubsystem.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/GameInstance.h"
 #include "HAL/PlatformTime.h"
 #include "Misc/Crc.h"
 
 int32 UAetherCommandClient::PendingIndex() const
 {return Pending.IndexOfByPredicate([&](const auto& P){return P.Realm==Realm&&P.Owner.Equals(Owner,ESearchCase::CaseSensitive);});}
 bool UAetherCommandClient::HasPending() const{return PendingIndex()!=INDEX_NONE;}
+const TOptional<FAetherProfileStateV10>& UAetherCommandClient::GetProfile() const
+{static const TOptional<FAetherProfileStateV10> Empty;return Matches(Controller.Get(),Channel)?Profile:Empty;}
+const TOptional<FAetherContainerStateV10>& UAetherCommandClient::GetContainer() const
+{static const TOptional<FAetherContainerStateV10> Empty;return Matches(Controller.Get(),Channel)?Container:Empty;}
+FGuid UAetherCommandClient::GetContainerContext() const
+{return Matches(Controller.Get(),Channel)?ContainerContext:FGuid();}
+int64 UAetherCommandClient::GetContainerWorldRevision() const
+{return Matches(Controller.Get(),Channel)?ContainerWorldRevision:-1;}
+FGuid UAetherCommandClient::GetChannel() const
+{return Matches(Controller.Get(),Channel)?Channel:FGuid();}
+const FString& UAetherCommandClient::GetOwnerIdentity() const
+{static const FString Empty;return Matches(Controller.Get(),Channel)?Owner:Empty;}
 EAetherCommandPresentation UAetherCommandClient::PresentationState() const
 {
-    if(!Channel.IsValid())return EAetherCommandPresentation::Closed;
+    if(!Matches(Controller.Get(),Channel))return EAetherCommandPresentation::Closed;
     if(!Profile.IsSet())return EAetherCommandPresentation::Loading;
     const int32 Index=PendingIndex();if(Index==INDEX_NONE)return EAetherCommandPresentation::Ready;
     const auto& P=Pending[Index];return P.Attempts>=5||P.AuthorizedChannel!=Channel?EAetherCommandPresentation::Recovering:EAetherCommandPresentation::Pending;
 }
 FString UAetherCommandClient::PendingDescription() const
 {
+    if(!Matches(Controller.Get(),Channel))return {};
     const int32 Index=PendingIndex();if(Index==INDEX_NONE)return {};
     if(Pending[Index].Receipt.IsSet())return TEXT("操作已提交，等待对应角色与容器快照。");
     return PresentationState()==EAetherCommandPresentation::Recovering?TEXT("原请求结果待恢复；使用同步 / 重试查询同一请求，请勿重复创建操作。"):TEXT("请求正在等待服务器确认。");
 }
+bool UAetherCommandClient::AcceptsControllerIdentity(AAetherPlayerController* C) const
+{
+    const auto* Player=GetLocalPlayer();const auto* GI=Player?Player->GetGameInstance():nullptr;
+    return IsValid(C)&&!C->IsActorBeingDestroyed()&&Player&&GI&&C->IsLocalController()&&
+        C->GetLocalPlayer()==Player&&C->GetGameInstance()==GI&&C->GetWorld()==GI->GetWorld()&&
+        C->GetWorld()==GetWorld()&&Player->GetPlayerController(C->GetWorld())==C;
+}
 bool UAetherCommandClient::Matches(AAetherPlayerController* C,FGuid Id) const
-{return C&&!C->IsActorBeingDestroyed()&&Controller.Get()==C&&C->GetLocalPlayer()==GetLocalPlayer()&&C->IsLocalController()&&Channel.IsValid()&&Id==Channel;}
+{return AcceptsControllerIdentity(C)&&Controller.Get()==C&&Channel.IsValid()&&Id==Channel;}
 
 void UAetherCommandClient::ReceiveChannel(AAetherPlayerController* C,FGuid Id,const FString& Identity,FGuid NewRealm)
 {
-    if(!C||C->IsActorBeingDestroyed()||!C->IsLocalController()||C->GetLocalPlayer()!=GetLocalPlayer()||GetLocalPlayer()->GetPlayerController(C->GetWorld())!=C)return;
+    if(!AcceptsControllerIdentity(C))return;
     // 延迟到达的旧 Controller 不能清除后来建立的拥有者通道。
     if(!Id.IsValid()){DetachController(C);return;}
     if(!NewRealm.IsValid()||Identity.IsEmpty()||Identity.Len()>32)return;
@@ -41,8 +62,13 @@ void UAetherCommandClient::ReceiveChannel(AAetherPlayerController* C,FGuid Id,co
 }
 void UAetherCommandClient::DetachController(AAetherPlayerController* C)
 {
-    if(Controller.Get()!=C)return;
-    ResetContainer();Controller.Reset();Channel.Invalidate();Realm.Invalidate();Owner.Reset();Profile.Reset();Assembly={};OnChanged.Broadcast();
+    if(!C||Controller.Get()!=C)return;
+    ResetActiveChannel();OnChanged.Broadcast();
+}
+void UAetherCommandClient::ResetActiveChannel()
+{
+    // 只撤销当前连接展示与自动发送资格，已接受请求的身份、规范字节和回执继续留存。
+    ResetContainer();Controller.Reset();Channel.Invalidate();Realm.Invalidate();Owner.Reset();Profile.Reset();Assembly={};NextSync=0;
 }
 bool UAetherCommandClient::Submit(FGuid ExpectedChannel,const FString& Identity,const TArray<uint8>& Bytes,FString& Reason)
 {
@@ -140,6 +166,11 @@ void UAetherCommandClient::ReceiveChunk(AAetherPlayerController* C,const FAether
 }
 void UAetherCommandClient::Tick(float)
 {
+    if(!Matches(Controller.Get(),Channel))
+    {
+        if(!Controller.IsExplicitlyNull()||Channel.IsValid()){ResetActiveChannel();OnChanged.Broadcast();}
+        return;
+    }
     if(Assembly.Transfer.IsValid()&&FPlatformTime::Seconds()-Assembly.LastChunkAt>30){Assembly={};RequestSnapshot();}
     if(ContainerContext.IsValid())
     {
@@ -154,12 +185,15 @@ void UAetherCommandClient::Tick(float)
     SendPending();
 }
 bool UAetherCommandClient::IsTickable() const
-{return !IsTemplate()&&Controller.IsValid()&&Channel.IsValid()&&(Assembly.Transfer.IsValid()||ContainerContext.IsValid()||HasPending());}
+{
+    // 空闲Ready也必须观察PC交接；弱PC已stale时仍需一次tick撤下缓存，随后自然休眠。
+    return !IsTemplate()&&(!Controller.IsExplicitlyNull()||Channel.IsValid());
+}
 TStatId UAetherCommandClient::GetStatId() const{RETURN_QUICK_DECLARE_CYCLE_STAT(UAetherCommandClient,STATGROUP_Tickables);}
 UWorld* UAetherCommandClient::GetTickableGameObjectWorld() const{return GetWorld();}
 void UAetherCommandClient::Deinitialize()
 {
-    ResetContainer();Controller.Reset();Channel.Invalidate();Realm.Invalidate();Owner.Reset();Profile.Reset();Assembly={};Pending.Reset();OnChanged.Clear();OnResult.Clear();
+    ResetActiveChannel();Pending.Reset();OnChanged.Clear();OnResult.Clear();
     Super::Deinitialize();
 }
 
