@@ -11,6 +11,7 @@ class AETHERGAMEPLAY_API UAetherNearbyRegistry : public UWorldSubsystem
 {
     GENERATED_BODY()
 public:
+    static bool IsSupportedRadius(double Radius);
     bool Register(AActor* Actor);
     void Unregister(AActor* Actor);
     bool Contains(const AActor* Actor) const;
@@ -24,3 +25,4 @@ private:
     void RemoveFromCell(TWeakObjectPtr<AActor> Actor,FIntVector Cell);
     static bool CellFor(FVector Position,FIntVector& Out);
 };
+

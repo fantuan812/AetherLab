@@ -13,7 +13,7 @@ struct FAetherCompanionSupportSkill
 struct AETHERCORE_API FAetherCompanionSupportProfile
 {
     FString Id;
-    double SampleIntervalSeconds=0,PatientHealthRatioBelow=0,CoolingAboveTemperatureC=0;
+    double SampleIntervalSeconds=0,PatientHealthRatioBelow=0,PatientSearchRadiusCm=0,CoolingAboveTemperatureC=0;
     FAetherCompanionSupportSkill SelfHealing,FriendlyHealing,Cooling;
     EAetherCompanionCoolingPriority CoolingPriority=EAetherCompanionCoolingPriority::BeforeHealing;
     const FAetherCompanionSupportSkill& Skill(EAetherCompanionSupportPurpose Purpose) const;

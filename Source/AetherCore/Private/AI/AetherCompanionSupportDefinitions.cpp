@@ -80,9 +80,10 @@ FAetherCompanionSupportDefinitions FAetherCompanionSupportDefinitions::Parse(con
     for(const auto& Row:*Rows)
     {
         const TSharedPtr<FJsonObject>* O=nullptr;FAetherCompanionSupportProfile P;const FJsonObject *Self=nullptr,*Friendly=nullptr,*Cooling=nullptr;
-        if(!Row->TryGetObject(O)||!O||!O->IsValid()||!Fields(**O,{TEXT("Id"),TEXT("SampleIntervalSeconds"),TEXT("PatientHealthRatioBelow"),TEXT("SelfHealing"),TEXT("FriendlyHealing"),TEXT("Cooling")})||
+        if(!Row->TryGetObject(O)||!O||!O->IsValid()||!Fields(**O,{TEXT("Id"),TEXT("SampleIntervalSeconds"),TEXT("PatientHealthRatioBelow"),TEXT("PatientSearchRadiusCm"),TEXT("SelfHealing"),TEXT("FriendlyHealing"),TEXT("Cooling")})||
             !String(**O,TEXT("Id"),P.Id)||!Id(P.Id)||Seen.Contains(P.Id.ToLower())||!Number(**O,TEXT("SampleIntervalSeconds"),P.SampleIntervalSeconds)||P.SampleIntervalSeconds<=0||
             !Number(**O,TEXT("PatientHealthRatioBelow"),P.PatientHealthRatioBelow)||P.PatientHealthRatioBelow<=0||P.PatientHealthRatioBelow>1||
+            !Number(**O,TEXT("PatientSearchRadiusCm"),P.PatientSearchRadiusCm)||P.PatientSearchRadiusCm<=0||
             !Choice(**O,TEXT("SelfHealing"),P.SelfHealing,Self)||!Choice(**O,TEXT("FriendlyHealing"),P.FriendlyHealing,Friendly)||!Choice(**O,TEXT("Cooling"),P.Cooling,Cooling))
             return Fail(TEXT("Missing/invalid/duplicate companion support policy"));
         for(const auto* Option:{Self,Friendly})if(Option->GetBoolField(TEXT("Enabled"))&&!Fields(*Option,{TEXT("Enabled"),TEXT("SkillId")}))return Fail(TEXT("Unexpected support skill fields"));

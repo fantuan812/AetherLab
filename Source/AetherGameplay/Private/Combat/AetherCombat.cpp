@@ -396,12 +396,14 @@ bool AAetherCharacter::ExecuteSpell(int32 Spell)
     const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,Id):nullptr;
     return Spec&&ExecuteSkill(Id,Spec->Level);
 }
+FVector AAetherCharacter::SkillAimOrigin() const
+{return GetActorLocation()+FVector(0,0,55);}
 bool AAetherCharacter::FindSkillTarget(const FString& SkillId,int32 Rank,FHitResult& Hit,FVector& Origin,FVector& Direction) const
 {
     const auto& Definitions=FAetherSkillDefinitionsV10::Get();
     const auto* D=Definitions.Skills.Find(SkillId);const auto* E=Definitions.Effect(SkillId,Rank);
     if(!D||!E||!SkillUnlocked(SkillId))return false;
-    Origin=GetActorLocation()+FVector(0,0,55);Direction=GetControlRotation().Vector();
+    Origin=SkillAimOrigin();Direction=GetControlRotation().Vector();
     if(D->Mechanic==EAetherSkillMechanic::SelfBuff)return true;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(AetherSpell),false,this);
     GetWorld()->SweepSingleByChannel(Hit,Origin,Origin+Direction*E->RangeCm,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(float(E->TargetRadiusCm)),Params);
@@ -441,6 +443,8 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     if(!FindSkillTarget(Cast.SkillId,Cast.Rank,Hit,Origin,Direction))return false;
     // Friendly目标预检查会FlushDue并发出属性通知；正式效果前再次确认原施法生命/执行。
     if(!OwnsExecution()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||!EnemySkillDecision.ValidateCommit(*this,Cast))return false;
+    const auto* ActualTarget=Cast.Mechanic==EAetherSkillMechanic::SelfBuff?this: ::Cast<AAetherCharacter>(Hit.GetActor());
+    if(!ValidateCastCommit(Cast,ActualTarget)||!OwnsExecution())return false;
     const float CommittedAt=CombatTime();bool Accepted=false;
     if(Cast.Mechanic==EAetherSkillMechanic::Fire)
     {
@@ -849,3 +853,4 @@ bool AAetherCharacter::AllowsGeneratedMotion() const
     return Alive()&&T>=StunUntil&&T>=CastLockUntil&&T>=ActionUntil&&!Equipment->IsBusy()&&!bBlocking&&!AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag())&&!AbilitySystem->HasMatchingGameplayTag(AetherVault::ActiveTag())&&
            !GetCharacterMovement()->IsFalling()&&!ResourceGate->IsBlocked();
 }
+

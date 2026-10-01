@@ -10,7 +10,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherCompanionSupportDefinitionsTest,"Aether.
  EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FAetherCompanionSupportDefinitionsTest::RunTest(const FString&)
 {
-    const FString Json=TEXT(R"JSON({"SchemaVersion":1,"Profiles":[{"Id":"Healer","SampleIntervalSeconds":0.15,"PatientHealthRatioBelow":0.65,"SelfHealing":{"Enabled":true,"SkillId":"Body.Mend"},"FriendlyHealing":{"Enabled":true,"SkillId":"Body.Aid"},"Cooling":{"Enabled":true,"SkillId":"Water.Draw","AboveTemperatureC":55,"Priority":"BeforeHealing"}}],"LoadoutProfiles":{"Companion.Healer":"Healer"}})JSON");
+    const FString Json=TEXT(R"JSON({"SchemaVersion":1,"Profiles":[{"Id":"Healer","SampleIntervalSeconds":0.15,"PatientHealthRatioBelow":0.65,"PatientSearchRadiusCm":600,"SelfHealing":{"Enabled":true,"SkillId":"Body.Mend"},"FriendlyHealing":{"Enabled":true,"SkillId":"Body.Aid"},"Cooling":{"Enabled":true,"SkillId":"Water.Draw","AboveTemperatureC":55,"Priority":"BeforeHealing"}}],"LoadoutProfiles":{"Companion.Healer":"Healer"}})JSON");
     const auto Change=[&](TFunction<void(FJsonObject&,FJsonObject&)> Edit)
     {
         TSharedPtr<FJsonObject> Root;FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Root);
@@ -29,9 +29,9 @@ bool FAetherCompanionSupportDefinitionsTest::RunTest(const FString&)
         Bad=*P;Bad.FriendlyHealing.SkillId=TEXT("Body.Haste");TestFalse(TEXT("Support cannot relabel arbitrary buffs as healing"),Bad.ValidateSkills(Skills,Buffs,Why));
         Bad=*P;Bad.Cooling.SkillId=TEXT("Fire.Ignite");TestFalse(TEXT("Cooling must use supported water delivery"),Bad.ValidateSkills(Skills,Buffs,Why));
     }
-    for(const auto* Key:{TEXT("Id"),TEXT("SampleIntervalSeconds"),TEXT("PatientHealthRatioBelow"),TEXT("SelfHealing"),TEXT("FriendlyHealing"),TEXT("Cooling")})
+    for(const auto* Key:{TEXT("Id"),TEXT("SampleIntervalSeconds"),TEXT("PatientHealthRatioBelow"),TEXT("PatientSearchRadiusCm"),TEXT("SelfHealing"),TEXT("FriendlyHealing"),TEXT("Cooling")})
         TestFalse(TEXT("Missing policy field is not a default"),Change([&](auto&,auto& P){P.RemoveField(Key);}).bValid);
-    for(const auto* Key:{TEXT("SampleIntervalSeconds"),TEXT("PatientHealthRatioBelow")})
+    for(const auto* Key:{TEXT("SampleIntervalSeconds"),TEXT("PatientHealthRatioBelow"),TEXT("PatientSearchRadiusCm")})
     {
         TestFalse(TEXT("Numeric string is not accepted"),Change([&](auto&,auto& P){P.SetStringField(Key,TEXT("0.5"));}).bValid);
         TestFalse(TEXT("Zero interval or threshold is invalid"),Change([&](auto&,auto& P){P.SetNumberField(Key,0);}).bValid);
