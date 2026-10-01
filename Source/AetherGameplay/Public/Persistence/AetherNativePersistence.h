@@ -39,13 +39,16 @@ public:
     virtual UWorld* GetTickableGameObjectWorld() const override;
     virtual void Deinitialize() override;
 private:
+    friend class FAetherNativeCheckpointLifecycleTest;
     void Fail(FString Reason);
     EAetherNativePersistencePhase State=EAetherNativePersistencePhase::Dormant;
     FString Prefix,Detail;
     TWeakObjectPtr<UWorld> BoundScene;
+    FGuid SceneGeneration;
     void StopScene();
-    bool AllowFresh=false,bActivating=false,bPollingLogins=false;
-    TUniquePtr<FAetherWorldCheckpoint> Checkpoint;
+    bool AllowFresh=false,bActivating=false,bPollingLogins=false,bStoppingScene=false;
+    // Capture 可同步退出场景；正在 Poll 的局部拥有者必须活到回调返回。
+    TSharedPtr<FAetherWorldCheckpoint> Checkpoint;
     TUniquePtr<TPromise<FAetherWorldCheckpointResult>> CheckpointPromise;
     void PollCheckpoint();
     float CheckpointElapsed=0;
