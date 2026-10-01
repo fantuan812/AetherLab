@@ -17,6 +17,6 @@ namespace AetherNavigationProbe
 {
     // 每次读取当前组件，不保存默认尺寸，也不缓存蹲伏前的几何。
     AETHERGAMEPLAY_API bool ReadGeometry(const ACharacter& Character,FAetherNavigationProbeGeometry& Out);
-    // 只验证局部候选段的碰撞/地面支撑，不证明整个导航路径可达，不移动角色。
+    // 只验证有界局部段的碰撞及起终支撑（高差不超过 CMC.MaxStepHeight），不证明整路径可达，不移动角色。
     AETHERGAMEPLAY_API bool IsLocalStepClear(const ACharacter& Character,FVector Delta,FHitResult& OutFloor);
 }

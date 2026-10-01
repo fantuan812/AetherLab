@@ -76,6 +76,13 @@ bool FAetherNavigationProbeTest::RunTest(const FString&)
     if(!TestTrue(TEXT("Real ramp fixture is found by production CMC"),RampFloor.IsWalkableFloor()&&RampFloor.HitResult.GetComponent()==Ramp))return false;
     Character->SetActorLocation(Character->GetActorLocation()+Movement->GetGravityDirection()*(RampFloor.GetDistanceToFloor()-UCharacterMovementComponent::MIN_FLOOR_DIST));
     TestTrue(TEXT("CMC-accepted ramp remains locally usable"),AetherNavigationProbe::IsLocalStepClear(*Character,FVector(150,0,0),Floor));
+    TestTrue(TEXT("Raised support search also resolves the downhill direction"),AetherNavigationProbe::IsLocalStepClear(*Character,FVector(-150,0,0),Floor));
+    const float StepHeight=Movement->MaxStepHeight;Movement->MaxStepHeight=25;
+    TestFalse(TEXT("Upward support change cannot exceed the current local step envelope"),AetherNavigationProbe::IsLocalStepClear(*Character,FVector(150,0,0),Floor));
+    TestFalse(TEXT("Expanded downward search cannot permit a deeper drop than the step envelope"),AetherNavigationProbe::IsLocalStepClear(*Character,FVector(-150,0,0),Floor));
+    Movement->MaxStepHeight=0;
+    TestFalse(TEXT("Zero vertical envelope cannot borrow a default step height"),AetherNavigationProbe::IsLocalStepClear(*Character,FVector(150,0,0),Floor));
+    Movement->MaxStepHeight=StepHeight;
     Movement->SetWalkableFloorAngle(5);
     TestFalse(TEXT("Current CMC slope limit replaces the old fixed normal threshold"),AetherNavigationProbe::IsLocalStepClear(*Character,FVector(150,0,0),Floor));
     Ramp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Increase,20));

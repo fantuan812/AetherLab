@@ -28,22 +28,32 @@ bool AetherNavigationProbe::IsLocalStepClear(const ACharacter& Character,FVector
 
     // 地面距离与坡度都由真实 CMC 判定，包含组件自身的坡度覆写与碰撞过滤。
     // 使用引擎支撑间距移开贴地接触，保留完整胶囊，不能忽略整块地面而漏掉同组件的墙。
-    const float Distance=Movement->MaxStepHeight+UCharacterMovementComponent::MAX_FLOOR_DIST;
+    const float StartSearchLift=UCharacterMovementComponent::MAX_FLOOR_DIST;
+    const float EndSearchLift=Movement->MaxStepHeight+UCharacterMovementComponent::MAX_FLOOR_DIST;
+    const FVector StartSearch=Geometry.Center-Down*StartSearchLift;
+    const FVector EndSearch=Geometry.Center+Delta-Down*EndSearchLift;
     FFindFloorResult StartFloor,EndFloor;
-    Movement->ComputeFloorDist(Geometry.Center,Distance,Distance,StartFloor,Geometry.Radius,nullptr);
-    Movement->ComputeFloorDist(Geometry.Center+Delta,Distance,Distance,EndFloor,Geometry.Radius,nullptr);
+    Movement->ComputeFloorDist(StartSearch,EndSearchLift,EndSearchLift,StartFloor,Geometry.Radius,nullptr);
+    Movement->ComputeFloorDist(EndSearch,EndSearchLift*2,EndSearchLift*2,EndFloor,Geometry.Radius,nullptr);
     const auto ValidFloor=[&](const FFindFloorResult& Floor)
     {
         const auto* Component=Floor.HitResult.GetComponent();
         return Floor.IsWalkableFloor()&&Movement->IsWalkable(Floor.HitResult)&&IsValid(Component)&&Component->IsRegistered()&&
-            Component->IsQueryCollisionEnabled()&&FMath::IsFinite(Floor.GetDistanceToFloor());
+            Component->IsQueryCollisionEnabled()&&FMath::IsFinite(Floor.GetDistanceToFloor())&&Floor.GetDistanceToFloor()>=0;
     };
     if(!ValidFloor(StartFloor)||!ValidFloor(EndFloor))return false;
-    const float Lift=FMath::Max(0.f,UCharacterMovementComponent::MIN_FLOOR_DIST-StartFloor.GetDistanceToFloor());
+    // 上移的只是地面搜索起点，不是实际扫掠身体；不依赖负 FloorDist 的穿透恢复细节。
+    const FVector StartSupport=StartSearch+Down*StartFloor.GetDistanceToFloor();
+    const FVector EndSupport=EndSearch+Down*EndFloor.GetDistanceToFloor();
+    const double SupportHeightChange=FVector::DotProduct(EndSupport-StartSupport,-Down);
+    // 本局部探针只接受当前 CMC 的有界支撑高差，不能因扩大下扫而允许更深跌落。
+    if(!FMath::IsFinite(SupportHeightChange)||FMath::Abs(SupportHeightChange)>Movement->MaxStepHeight+UE_KINDA_SMALL_NUMBER)return false;
+    const float StartDistance=StartFloor.GetDistanceToFloor()-StartSearchLift;
+    const float Lift=FMath::Max(0.f,UCharacterMovementComponent::MIN_FLOOR_DIST-StartDistance);
     // 只修正引擎允许的贴地间距；深陷地面的身体不是可通行起点。
     if(Lift>UCharacterMovementComponent::MAX_FLOOR_DIST)return false;
     const FVector Start=Geometry.Center-Down*Lift;
-    const FVector End=Geometry.Center+Delta+Down*(EndFloor.GetDistanceToFloor()-UCharacterMovementComponent::MIN_FLOOR_DIST);
+    const FVector End=EndSupport-Down*UCharacterMovementComponent::MIN_FLOOR_DIST;
     if(Start.ContainsNaN()||End.ContainsNaN())return false;
     FCollisionQueryParams Query(SCENE_QUERY_STAT(AetherNavigationProbe),false,&Character);
     FCollisionResponseParams Responses;Movement->InitCollisionParams(Query,Responses);
