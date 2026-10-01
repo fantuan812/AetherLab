@@ -604,6 +604,7 @@ void AAetherCharacter::Think(float Dt)
     if(!Perception){EnemyPerception.Reset();EnemyMeleeDecision.Reset();bWindingUp=bBlocking=false;SteeringDirection=FVector::ZeroVector;return;}
     const float T = CombatTime();
     const auto Observed=EnemyPerception.Observe(*this,*Perception);
+    if(Equipment->IsBusy()){EnemyMeleeDecision.Reset();bWindingUp=bBlocking=false;return;} // 正式攻击保持提交朝向，含真实Recovery。
     AAetherCharacter* Target=Observed.Target.Get();
     if (T < StunUntil) { EnemyMeleeDecision.Reset();bWindingUp = false; bBlocking = false; return; }
     if (!Target) { EnemyMeleeDecision.Reset();bWindingUp = false;bBlocking=false;if(FVector::DistSquared2D(GetActorLocation(),Home)>FMath::Square(Perception->HomeArrivalRadiusCm)){const auto Dir=SafeMoveDirection(Home);SetActorRotation(Dir.Rotation());AddMovementInput(Dir,1);}return; }

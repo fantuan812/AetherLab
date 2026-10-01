@@ -81,10 +81,12 @@ void UAetherMeleeAbility::StopOwnedMotion()
 {
  auto* Previous=OwnedMotion.Get();OwnedMotion=nullptr;if(Previous)Previous->EndTask();
 }
-void UAetherMeleeAbility::StartOwnedMotion()
+void UAetherMeleeAbility::StartOwnedMotion(FGuid ExpectedExecution,uint32 ExpectedSerial)
 {
- if(bMotionStarted||!NpcIntent.IsSet()||NpcIntent->Motion!=EAetherNpcAttackMotion::ForwardDuringActive||!ActiveExecution().IsValid())return;
- auto* C=ActiveCharacter.Get();auto* E=ActiveEquipment.Get();const auto* D=E->CurrentAttack();
+ if(bMotionStarted||!NpcIntent.IsSet()||NpcIntent->Motion!=EAetherNpcAttackMotion::ForwardDuringActive||!ExpectedExecution.IsValid()||ActiveExecution()!=ExpectedExecution||ActiveSerial!=ExpectedSerial)return;
+ auto* C=ActiveCharacter.Get();auto* E=ActiveEquipment.Get();
+ if(E->Attack.Serial!=ExpectedSerial||E->Attack.ExecutionId!=ExpectedExecution||E->Attack.Phase!=EAetherAttackPhase::Active)return;
+ const auto* D=E->CurrentAttack();
  if(!D||NpcIntent->Controller.Get()!=C->GetController()||NpcIntent->System.Get()!=ActiveSystem.Get()||MotionDirection.IsNearlyZero())return;
  // 相位通知可能跨过整个有效窗口；只推进该真实执行尚余的Active时段，不补迟到位移。
  const float Remaining=D->WindupSeconds+D->ActiveSeconds-(E->Clock()-E->Attack.StartedAt);
@@ -97,20 +99,25 @@ void UAetherMeleeAbility::StartOwnedMotion()
 }
 void UAetherMeleeAbility::ClearPhaseTag()
 {
- if(PhaseTag.IsValid()&&ActiveSystem.IsValid())ActiveSystem->RemoveLooseGameplayTag(PhaseTag,1,EGameplayTagReplicationState::TagOnly);
- PhaseTag=FGameplayTag();
+ const auto PreviousTag=PhaseTag;const auto PreviousSystem=ActiveSystem;PhaseTag=FGameplayTag();
+ // Remove可同步结束旧能力并启动新执行；旧栈不能在广播后覆盖新PhaseTag成员。
+ if(PreviousTag.IsValid()&&PreviousSystem.IsValid())PreviousSystem->RemoveLooseGameplayTag(PreviousTag,1,EGameplayTagReplicationState::TagOnly);
 }
 void UAetherMeleeAbility::AttackPhaseChanged(uint32 Serial,EAetherAttackPhase Phase)
 {
- if(Serial!=ActiveSerial||bEnding)return;
- if(Phase==EAetherAttackPhase::Windup&&ActiveEquipment.IsValid())ActiveExecutionId=ActiveEquipment->Attack.ExecutionId;
+ if(Serial!=ActiveSerial||bEnding||!ActiveEquipment.IsValid())return;
+ const FGuid ExpectedExecution=ActiveEquipment->Attack.ExecutionId;
+ if(Phase==EAetherAttackPhase::Windup)ActiveExecutionId=ExpectedExecution;
  ClearPhaseTag();
- if(!IsActive()||bEnding||Serial!=ActiveSerial||!ActiveEquipment.IsValid()||ActiveEquipment->Attack.Serial!=Serial)return;
+ const auto SamePhase=[&]()
+ {return ExpectedExecution.IsValid()&&ActiveExecution()==ExpectedExecution&&ActiveSerial==Serial&&ActiveEquipment.IsValid()&&ActiveEquipment->Attack.Phase==Phase;};
+ if(!SamePhase())return;
  if(Phase==EAetherAttackPhase::Windup)PhaseTag=TAG_MeleeWindup;
  else if(Phase==EAetherAttackPhase::Active)PhaseTag=TAG_MeleeActive;
  else if(Phase==EAetherAttackPhase::Recovery)PhaseTag=TAG_MeleeRecovery;
  if(PhaseTag.IsValid()&&ActiveSystem.IsValid())ActiveSystem->AddLooseGameplayTag(PhaseTag,1,EGameplayTagReplicationState::TagOnly);
- if(Phase==EAetherAttackPhase::Active)StartOwnedMotion();
+ // Add同样是重入边界；原Active通知绝不为刚开始Windup的新执行启动位移。
+ if(Phase==EAetherAttackPhase::Active&&SamePhase())StartOwnedMotion(ExpectedExecution,Serial);
 }
 void UAetherMeleeAbility::AttackFinished(uint32 Serial,bool Cancelled)
 { if(Serial==ActiveSerial&&IsActive()&&!bEnding)EndAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo,true,Cancelled); }

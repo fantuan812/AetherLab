@@ -20,7 +20,7 @@ public:
  virtual void OnAvatarSet(const FGameplayAbilityActorInfo* Info,const FGameplayAbilitySpec& Spec) override;
 private:
  friend class FAetherNpcMeleeLifecycleTest;
- void StartOwnedMotion();
+ void StartOwnedMotion(FGuid ExpectedExecution,uint32 ExpectedSerial);
  void StopOwnedMotion();
  void AttackFinished(uint32 Serial,bool Cancelled);
  void AttackPhaseChanged(uint32 Serial,EAetherAttackPhase Phase);
