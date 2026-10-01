@@ -1,0 +1,74 @@
+{
+  "portable_source_sha256": "007c21056ce98b31fd4f4319bde214a486f02edc49c13007970d1b0b1c5f31f5",
+  "geometry_objects_uv_digest": "49a6d15fc39d75c781ccecc5ec64e8c375c0846496fdc115e8d6796cde379fa5",
+  "matches_frozen_geometry": true,
+  "images": [
+    {
+      "image_id": "T_AgedCedar_Albedo.png",
+      "relative_path": "//textures/Texture_b2b76f9cc6295166.png",
+      "exists": true,
+      "decoded": true,
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB",
+      "unpacked": true,
+      "passed": true
+    },
+    {
+      "image_id": "T_AgedCedar_Albedo.png.001",
+      "relative_path": "//textures/Texture_b2b76f9cc6295166.png",
+      "exists": true,
+      "decoded": true,
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB",
+      "unpacked": true,
+      "passed": true
+    },
+    {
+      "image_id": "T_Foliage_Atlas_RGBA.png",
+      "relative_path": "//textures/Texture_02b592976097774c.png",
+      "exists": true,
+      "decoded": true,
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB",
+      "unpacked": true,
+      "passed": true
+    },
+    {
+      "image_id": "T_WeatheredSlate_Albedo.png",
+      "relative_path": "//textures/Texture_581072ea65fe5909.png",
+      "exists": true,
+      "decoded": true,
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB",
+      "unpacked": true,
+      "passed": true
+    },
+    {
+      "image_id": "T_WeatheredSlate_Albedo.png.001",
+      "relative_path": "//textures/Texture_581072ea65fe5909.png",
+      "exists": true,
+      "decoded": true,
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB",
+      "unpacked": true,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "scope": "Portable file read on a fresh Blender process; external image bytes, dimensions, color spaces and actual geometry/object transforms/UV. No runtime/UE claim."
+}

@@ -1,0 +1,94 @@
+{
+  "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "source_sha256_at_start": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "source_sha256_at_end": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "source_unchanged": true,
+  "all_geometry_visibility_unchanged": true,
+  "temporary_lights": [
+    {
+      "name": "TECH_FILL_Training",
+      "type": "AREA_DISK",
+      "position_m": [
+        -36,
+        4,
+        5.4
+      ],
+      "energy_W": 2000,
+      "size_m": 8,
+      "color_rgb": [
+        1,
+        0.94,
+        0.84
+      ],
+      "rotation_euler": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "TECH_FILL_Academy",
+      "type": "AREA_DISK",
+      "position_m": [
+        34,
+        6,
+        4.1
+      ],
+      "energy_W": 1600,
+      "size_m": 7,
+      "color_rgb": [
+        1,
+        0.94,
+        0.84
+      ],
+      "rotation_euler": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "TECH_FILL_Shop",
+      "type": "AREA_DISK",
+      "position_m": [
+        -35,
+        -31,
+        3.7
+      ],
+      "energy_W": 1400,
+      "size_m": 6,
+      "color_rgb": [
+        1,
+        0.94,
+        0.84
+      ],
+      "rotation_euler": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "views": [
+    {
+      "file": "Ground_Academy_TechWide.png",
+      "camera": "CAM_Ground_Academy",
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "sha256": "2acbb24b748dc5e8077b3ba89e022e5976a204521b97b8b2725a1c748caa4e4e",
+      "samples": 32,
+      "camera_position_m": [
+        26.5,
+        -0.5,
+        1.5499999523162842
+      ],
+      "lens_mm": 24.0,
+      "camera_rotation_euler": [
+        1.5885388851165771,
+        -3.36884653506786e-09,
+        -1.091277003288269
+      ],
+      "interpretation": "TECHNICAL FILL LIGHTING ONLY; not the authored world-lighting state"
+    }
+  ],
+  "source_not_saved": true
+}

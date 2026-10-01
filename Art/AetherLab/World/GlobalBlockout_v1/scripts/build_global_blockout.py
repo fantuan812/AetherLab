@@ -174,17 +174,20 @@ def route(n,pts,width=6,kind='main',skip=None):
   p=Vector(p);q=Vector(q);dif=q-p;steps=max(1,int(Vector((dif.x,dif.y)).length/2));side=Vector((-dif.y,dif.x,0)).normalized()*width/2
   for k in range(steps):
    A=p+dif*k/steps;B=p+dif*(k+1)/steps;sa=sides[j].lerp(sides[j+1],k/steps);sb=sides[j].lerp(sides[j+1],(k+1)/steps);off=len(vs);vs += [tuple(A-sa),tuple(A+sa),tuple(B+sb),tuple(B-sb)];fs.append((off,off+3,off+2,off+1))
- o=mesh('ROUTE_'+n,vs,fs,roadmat,C['01_MAIN_ROUTES'],'walkable_route');o['route_id']=n;o['authored_choice_width_m']=width
+ lift=.006+len(routes)*.0002
+ vs=[(v[0],v[1],v[2]+lift) for v in vs]
+ o=mesh('ROUTE_'+n,vs,fs,roadmat,C['01_MAIN_ROUTES'],'walkable_route');o['route_id']=n;o['authored_choice_width_m']=width;o['intentional_surface_lift_m']=lift
  # Slightly embedded solid side walls for readable roadbed, separate from surface mesh.
  for j,(p,q) in enumerate(zip(pts,pts[1:])):
   if skip and j in skip:continue
   p=Vector(p);q=Vector(q);v=q-p;side=Vector((-v.y,v.x,0)).normalized()*width/2
   for sign in [-1,1]:
-   aa=p+sides[j]*sign;bb=q+sides[j+1]*sign;mesh(n+f'_BED_{j}_{sign}',[tuple(aa),tuple(bb),tuple(bb-Vector((0,0,.35))),tuple(aa-Vector((0,0,.35)))],[(0,1,2,3)],earth,C['01_MAIN_ROUTES'],'route_bed')
+   aa=p+sides[j]*sign+Vector((0,0,lift));bb=q+sides[j+1]*sign+Vector((0,0,lift));mesh(n+f'_BED_{j}_{sign}',[tuple(aa),tuple(bb),tuple(bb-Vector((0,0,.35))),tuple(aa-Vector((0,0,.35)))],[(0,1,2,3)],earth,C['01_MAIN_ROUTES'],'route_bed')
  return o
 # Region entry and exit anchor points fixed to v4 centers; turns/elevations are this build's choices.
 route('C01_Mountain_Main',[(-60,-376,16),(-60,-328,16),(-48,-292,13),(-32,-250,10),(-28,-205,7),(-12,-160,4),(0,-120,1.7),(0,-80,0),(0,-18,0)],6)
 route('C01_Mountain_Rescue_Bypass',[(-60,-355,16),(-82,-349,16),(-82,-323,16),(-66,-306,14.2),(-48,-292,13)],4,'permanent_bypass')
+route('SCN01_Rescue_Access',[(-60,-340.5,16),(-56.1,-340.5,16),(-56.1,-336,16.89),(-56.1,-335.3,16.89),(-55.7,-335.45,16.89)],1.4,'raised_rescue')
 route('C02_Gate_Plaza',[(0,-80,0),(0,-18,0),(0,-4,0)],5)
 route('C03_Plaza_Training',[(-15,0,0),(-22,4,0),(-29,4,0)],4)
 route('C04_Plaza_Academy',[(15,0,0),(22,6,0),(28,6,0)],4)
@@ -212,10 +215,10 @@ route('Abbey_Bridge',[(0,237,12),(0,243,12)],4,'bridge',skip=[0])
 route('C10_Abbey_Hall',[(0,243,12),(0,264,12),(5,280,12),(5,284,12),(-5,289,12),(-10,299,12)],5)
 route('Abbey_Permanent_West_Bypass',[(0,220,12),(-57,220,12),(-57,255,12),(-12,266,12),(0,264,12)],4,'permanent_bypass')
 route('Abbey_Return_East',[(24,302,12),(31,302,12),(31,257,12),(0,248,12)],4,'return')
-route('C11_Waterworks_Relay',[(299,30,2),(305,80,3),(290,124,9),(280,174,16),(250,190,16)],6)
+route('C11_Waterworks_Relay',[(299,30,2),(299,40,2),(305,80,3),(290,124,9),(280,174,16),(250,190,16)],6)
 route('C12_Relay_Abbey',[(220,220,16),(175,248,16),(110,260,13),(60,245,12),(60,229,12),(0,229,12)],6)
-route('Relay_Invasion_North',[(250,246,16),(264,264,16),(278,282,18)],4,'invasion')
-route('Relay_Invasion_East',[(276,220,16),(296,234,16),(316,241,18)],4,'invasion')
+route('Relay_Invasion_North',[(250,246,16),(264,264,16),(274.5,277.5,18),(278,282,18)],4,'invasion')
+route('Relay_Invasion_East',[(276,220,16),(296,234,16),(312,239.6,18),(316,241,18)],4,'invasion')
 route('Relay_Entry_Link',[(250,190,16),(250,192,16)],6)
 # Closed outer loop is a real route surface, not only an annotation.
 ring=[(250+28*math.cos(t*2*math.pi/64),220+28*math.sin(t*2*math.pi/64),16) for t in range(65)];route('Relay_Outer_Ring',ring,5,'loop')
@@ -227,10 +230,11 @@ for n,pts,w in [('Forest_Fire1_Access',[(-248,-8,4),(-252,-19,4)],4),('Forest_Fi
 stamps=[('town',0,0,97,97,0,40),('entry',-65,-342,29,24,16,35),('forest',-270,0,70,90,4,35),('waterworks',270,0,65,75,2,35),('abbey',0,270,85,80,12,35),('relay',250,220,45,45,16,35)]
 # Terrain channels: actual depressions. Their water surfaces remain separate objects.
 channels=[(-340,-279,24,28,2.8,3.3), (247,295,-17,-13,.6,1.25),(247,295,3,7,.6,1.25),(247,295,23,27,.6,1.25),(-40,45,238,242,10.5,11.1)]
+pool_depression=(302,316,15,33,.6,1.25)
 segments=[]
 for rr in routes:
  for j,(p,q) in enumerate(zip(rr['points_m'],rr['points_m'][1:])):
-  if rr['kind']=='bridge':continue
+  if rr['kind'] in ['bridge','raised_rescue']:continue
   x,y,z=p;dx=q[0]-x;dy=q[1]-y;segments.append((x,y,z,dx,dy,q[2]-z,dx*dx+dy*dy,rr['width_m']))
 
 def distseg(x,y,seg):
@@ -249,11 +253,11 @@ def ground(x,y):
   if d<best[0]:best=(d,zz,ww)
  if best[0]<5:
   f=max(0,min(1,(5-best[0])/5));z=z*(1-f)+(best[1]-.09)*f
- for x0,x1,y0,y1,bottom,waterz in channels:
+ for x0,x1,y0,y1,bottom,waterz in channels+[pool_depression]:
   if x0<=x<=x1 and y0<=y<=y1:z=bottom
  return z
 # Add channel edges to the regular 4m terrain grid so channel banks are actual edges.
-xs=sorted(set(range(-400,401,4))|{v for ch in channels for v in ch[:2]});ys=sorted(set(range(-400,401,4))|{v for ch in channels for v in ch[2:4]});vs=[(x,y,ground(x,y)-.03) for y in ys for x in xs];nx=len(xs);fs=[]
+xs=sorted(set(range(-400,401,4))|{v for ch in channels+[pool_depression] for v in ch[:2]});ys=sorted(set(range(-400,401,4))|{v for ch in channels+[pool_depression] for v in ch[2:4]});vs=[(x,y,ground(x,y)-.03) for y in ys for x in xs];nx=len(xs);fs=[]
 for j in range(len(ys)-1):
  for i in range(nx-1):k=j*nx+i;fs.append((k,k+1,k+nx+1,k+nx))
 terr=mesh('WORLD_Terrain_Continuous_800x800m',vs,fs,earth,C['00_CONTINUOUS_TERRAIN'],'terrain');terr['extent_m']=[800,800];terr['production_status']='geographic_blockout';terr['orientation']='X east; Y north; Z up'
@@ -361,12 +365,14 @@ bpy.context.view_layer.update()
 print('TOWN_COMPLETE_UPDATED',flush=True)
 # Original local SCN01 preserved as a small embedded pocket, never enlarged into the whole world.
 entry=C['03_MOUNTAIN_SCN01'];inst('SRC_Shelter_Exact','SCN01_OriginalShelter_Retained',(-69,-345,16),0,entry,'retained_local_source')
-inst('SRC_AccidentCart_Exact','SCN01_PROP20_AccidentCart',(-54,-335,16),0,entry);inst('SRC_Barrel_Exact','SCN01_PROP01_WaterBarrel',(-55,-337,16.9),0,entry);inst('SRC_RescuePlatform_Exact','SCN01_Rescue_Platform',(-55,-336,16),0,entry)
-inst('SRC_ShelteredFire_Exact','SCN01_Sheltered_Fire',(-54,-335,16.65),0,entry,'fire_visual_proxy');box('SCN01_PROP02_Crate',(-67,-344,16.4),(.8,.8,.8),wood,entry)
-for i in range(2):box('SCN01_Supply'+str(i),(-68+i*.7,-345,16.35),(.4,.5,.3),dry,entry)
+inst('SRC_AccidentCart_Exact','SCN01_PROP20_AccidentCart',(-51,-333,16),0,entry);inst('SRC_Barrel_Exact','SCN01_PROP01_WaterBarrel',(-54.9,-334.95,16.92),0,entry);inst('SRC_RescuePlatform_Exact','SCN01_Rescue_Platform',(-55,-336,16),0,entry)
+inst('SRC_ShelteredFire_Exact','SCN01_Sheltered_Fire',(-51,-333,16.65),0,entry,'fire_visual_proxy');box('SCN01_PROP02_Crate',(-68,-343,16.75),(.8,.8,.8),wood,entry)
+for i in range(2):box(['SCN01_PROP03_WaterBag_Placeholder','SCN01_PROP21_MedSupply_Placeholder'][i],(-68.2+i*.4,-343,17.3),(.4,.5,.3),dry,entry)
 for i,(x,y) in enumerate([(-63,-371),(-45,-293)]):box('SCN01_PROP06_Sign'+str(i),(x,y,ground(x,y)+1.1),(.16,.16,2.2),wood,entry);box('SCN01_SignBoard'+str(i),(x,y,ground(x,y)+1.8),(1.8,.16,.55),wood,entry)
 # Solid gentle rescue approach, no magic/climbing prerequisite.
-mesh('SCN01_RescueRamp',[(-58,-340,16),(-54,-340,16),(-54,-337,16.9),(-58,-337,16.9),(-58,-340,15.8),(-54,-340,15.8),(-54,-337,15.8),(-58,-337,15.8)],[(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)],wood,entry,'walkable_floor')
+mesh('SCN01_RescueRamp',[(-57.1,-340.5,16),(-55.1,-340.5,16),(-55.1,-336,16.89),(-57.1,-336,16.89),(-57.1,-340.5,15.8),(-55.1,-340.5,15.8),(-55.1,-336,15.8),(-57.1,-336,15.8)],[(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)],wood,entry,'walkable_floor')
+box('SCN01_Rescue_Landing',(-56.1,-335.3,16.395),(2,1.4,.99),wood,entry,'walkable_floor')
+box('SCN01_Barrel_ContactPad',(-54.9,-334.95,16.90),(.75,.65,.04),wood,entry,'walkable_floor')
 for x in [-64,-56]:barrier('SCN01_Rail'+str(x),(x,-368,16),(x,-360 if x==-64 else -352,16),entry,'fence')
 humanoid('SCN01_DesignScale165',(-60,-348,16),entry)
 # Shared maintenance bridge assembly uses v3 fixed 4m deck + 1m abutments, all instances scale1.
@@ -388,7 +394,7 @@ inst('SRC_Shelter_Exact','SCN08_Cargo_Shed',(-317,67,4),0,forest);inst('SRC_Barr
 # Fallen trunk is reused exact local geometry, rotated to span the shortcut with >2.7m underside.
 log=inst('SRC_Trunk','SCN08_FallenLog_OverShortcut',(-291,17.1,7),0,forest,'overhead_obstacle');log.rotation_euler.x=math.pi/2
 for yy in [11,17]:box('SCN08_PROP15_BurnableSupport'+str(yy),(-291,yy,5.45),(.45,.45,2.9),copper,forest)
-floor('SCN08_Cargo_SafePad',-312.9,67,4.35,3.8,4,forest)
+floor('SCN08_Cargo_SafePad',-312.9,67,4.356,3.8,4,forest)
 humanoid('SCN08_RescuePlaceholder',(-312.5,67,4.35),forest)
 print('FOREST_COMPLETE',flush=True)
 bpy.context.view_layer.update()
@@ -427,6 +433,7 @@ box('SCN09_BridgeHinge',(270,3,2.08),(4.4,.25,.25),copper,ww)
 # Independent collecting pool with readable water connection to the north output.
 floor('SCN09_PoolBottom',309,24,.6,14,18,ww,dark);box('SCN09_PoolWater',(309,24,1.23),(14,18,.04),water,ww,'water_proxy')
 for x in [302,316]:box('SCN09_PoolBank'+str(x),(x,24,1.3),(.5,18,1.4),stone,ww,'bank')
+for yy in [15,33]:box('SCN09_PoolEndBank'+str(yy),(309,yy,1.3),(14,.5,1.4),stone,ww,'bank')
 line('SCN09_Supply_Output_Flow',[(276,35,6.5),(309,35,4.8),(309,29,1.3)],.30,water,ww,'water_flow_proxy')
 for xx in [290,309]:box('SCN09_OutputPipeSupport'+str(xx),(xx,35,3.35),(.35,.35,2.7),copper,ww)
 for i,x in enumerate([263,276]):box('SCN09_EntryCrate'+str(i),(x,-46,2.55),(1.1,1.1,1.1),wood,ww)
@@ -436,6 +443,13 @@ print('WATERWORKS_COMPLETE_UPDATED',flush=True)
 # Abbey, 2 storeys plus modest broken bell tower, frontcourt and independent bypass.
 abb=C['06_ABBEY_SCN10_11'];floor('SCN10_Forecourt',0,213,12,50,38,abb);bridge('SCN10_WaterBridge',0,237,12,abb)
 room('SCN10_WestWing',-32,287,12,17,42,10.8,abb,'east');room('SCN10_EastWing',43,287,12,14,42,10.8,abb,'west')
+# Two actual massing slabs make the two-storey wing reading explicit. Upper-floor stairs remain future work.
+for n,x,w in [('West',-32,17),('East',43,14)]:box('SCN10_'+n+'Wing_SecondStoreySlab',(x,287,17.3),(w+.6,42.6,.2),stone,abb,'architectural_blockout')
+# Basic stone arch proxy: 5m clear width, 3.5m springing level above the forecourt.
+for x in [-2.85,2.85]:box('SCN10_ArchPier'+str(x),(x,246,13.75),(.7,.8,3.5),stone,abb,'architecture_wall')
+for i in range(10):
+ t0=math.pi*i/10;t1=math.pi*(i+1)/10;vs=[(r*math.cos(t),yy,15.5+r*math.sin(t)) for yy in [245.6,246.4] for r,t in [(2.5,t0),(3.2,t0),(3.2,t1),(2.5,t1)]]
+ mesh('SCN10_StoneArch_Proxy'+str(i),vs,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],stone,abb,'architectural_blockout')
 # Low side colonnade along main approach keeps the middle route readable.
 for x in [-10,13]:
  for y in [247,254,261,268]:box('SCN10_Colonnade'+str((x,y)),(x,y,15),(.8,.8,6),stone,abb,'architecture_wall')
@@ -444,7 +458,7 @@ for x in [-10,13]:
 for x in [-50,-43]:
  for y in [300,307]:box('SCN10_BellTowerPier'+str((x,y)),(x,y,20.5),(1.3,1.3,17),stone,abb,'architecture_wall')
 box('SCN10_BellTowerUpper',(-46.5,303.5,28.7),(8.3,8.3,.7),stone,abb);roof('SCN10_BrokenBellRoof',-46.5,303.5,29.2,8.6,8.6,1.8,abb)
-cyl('SCN10_BellProxy',(-46.5,303.5,26.2),1.8,2.4,copper,abb);box('SCN10_ReturnShortcutSwitch',(34,258,13),(.4,.6,2),copper,abb);floor('SCN10_SafePreparation',-15,226,12,12,8,abb,dry)
+cyl('SCN10_BellProxy',(-46.5,303.5,26.2),1.8,2.4,copper,abb);box('SCN10_ReturnShortcutSwitch',(34,258,13),(.4,.6,2),copper,abb);floor('SCN10_SafePreparation',-15,226,12.016,12,8,abb,dry)
 # SCN11 clear 38m hall, continuous 5m outer circulation band, obstacles contained inside r<=12.5m.
 cyl('SCN11_HallFloor_38m',(5,302,11.75),19,.5,stone,abb,96,'walkable_floor')
 # Perimeter piers/walls beyond floor, leave 7m south and 7m side openings.
@@ -524,9 +538,10 @@ print('FOLIAGE_COMPLETE',flush=True)
 bpy.context.view_layer.update()
 print('FOLIAGE_COMPLETE_UPDATED',flush=True)
 # Named scene anchors, fixed design footprint and adopted z.
-scene_rows=[('SCN_01',(-65,-290),[80,180],16),('SCN_02',(0,0),[35,35],0),('SCN_03',(0,-80),[5,6],0),('SCN_04',(-36,4),[24,20],0),('SCN_05',(35,6),[22,18],0),('SCN_06',(-34,-31),[20,14],0),('SCN_07',(35,-33),[18,16],0),('SCN_08',(-270,0),[140,180],4),('SCN_09',(270,0),[130,150],2),('SCN_10',(0,270),[170,160],12),('SCN_11',(5,302),[38,38],12),('SCN_12',(250,220),[90,90],16)]
+scene_rows=[('SCN_01',(-65,-290),[80,180],16),('SCN_02',(0,0),[35,35],0),('SCN_03',(0,-80),[28,24],0),('SCN_04',(-36,4),[24,20],0),('SCN_05',(35,6),[22,18],0),('SCN_06',(-34,-31),[20,14],0),('SCN_07',(35,-33),[18,16],0),('SCN_08',(-270,0),[140,180],4),('SCN_09',(270,0),[130,150],2),('SCN_10',(0,270),[170,160],12),('SCN_11',(5,302),[38,38],12),('SCN_12',(250,220),[90,90],16)]
 for n,p,d,z in scene_rows:
  o=anchor(n+'_CENTER',(p[0],p[1],z),n);o['footprint_m']=d;o['position_scope']='v4 region center or adopted internal scene placement';scenes.append({'scene_id':n,'center_m':[p[0],p[1],z],'footprint_m':d})
+ if n=='SCN_03':o['opening_size_wh_m']=[5,6];scenes[-1]['opening_size_wh_m']=[5,6];scenes[-1]['footprint_semantics']='adopted plan service cluster; opening width/height stored separately'
 # Annotation uses Blender text objects; this is an explicitly separate technical overview layer.
 def text(n,body,p,size=5):
  cu=bpy.data.curves.new(n,'FONT');cu.body=body;cu.size=size;cu.align_x='CENTER';cu.materials.append(mark);o=bpy.data.objects.new(n,cu);ANN.objects.link(o);o.location=p;return o
@@ -547,6 +562,7 @@ camera('CAM_Abbey_Overview',(120,158,138),(0,278,15),ortho=196)
 camera('CAM_Forest_Overview',(-147,-138,128),(-275,12,4),ortho=192)
 camera('CAM_Relay_Overview',(340,117,110),(250,220,16),ortho=131)
 camera('CAM_Ground_SCN01',(-60,-354,17.55),(-61,-335,17.35),groundz=16)
+camera('CAM_Ground_SCN01_Shelter',(-61,-352,17.55),(-69,-345,18.3),groundz=16)
 camera('CAM_Ground_Gate',(1,-101,2.34),(0,-77,3.0),groundz=.79)
 camera('CAM_Ground_Plaza',(1,-22,1.55),(0,3,1.9),groundz=0)
 camera('CAM_Ground_Training',(-26,0,1.55),(-39,5,2),groundz=0)

@@ -1,5 +1,7 @@
 # AetherLab 全场景素材需求与生产矩阵
 
+最新状态：已完成[GlobalBlockout_v1全图灰盒空间里程碑](Global-world-blockout-v1.zh-CN.md)。本文的v1/v2/v3小样记录保留历史范围；本次只有限放行全图布局/几何，不提升为25素材族、最终风格或UE验收完成。
+
 最新最小过渡批次为SharedCore_v3，见本文末节；v2段落保留其历史范围与证据。
 更新日期：2026-10-01。范围基线：main [`b7ab1f5`](https://github.com/fantuan812/AetherLab/commit/b7ab1f578d37548a4f2fd9f854117e0c91fcd628)。本表回答全游戏需要什么、现有素材在哪里、先优化什么、如何验收；不表示全部素材已制作。机器可读版本为 [Scene-asset-matrix.json](Scene-asset-matrix.json)，制作方法见 [场景生产规范](Scene-production-standards.zh-CN.md)。
 

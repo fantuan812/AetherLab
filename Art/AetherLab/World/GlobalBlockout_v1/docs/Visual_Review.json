@@ -1,0 +1,138 @@
+{
+  "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "reference_inspected": "SCN01 source reference image exec-8e127206-514a-42b0-b346-1432f2864d48.png",
+  "all_25_images_opened_and_inspected": true,
+  "images": [
+    {
+      "file": "Global_Overview.png",
+      "sha256": "50c58b4963f41bdba57f02e48cb5935036dfcd6df83ce39dd1a33741ea1f5240",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Global_Annotated_Top.png",
+      "sha256": "a2636bb0db3c90b82b295d98052f15e32be28b3dbbee66b584cc0641c464033f",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Town_Scenes02_07.png",
+      "sha256": "51616d7a53cecf2898c01de1580fc013804c57b4494c0bed5f0c7f3268a8fd2d",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Waterworks_Routes.png",
+      "sha256": "f37110a5d064d6fc1f2ea081e1197d24f65f671e5e2971f4ca6c46a8875243a6",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Abbey_And_Hall.png",
+      "sha256": "7691a3da09fa40541da63b9361a6a18b6287a6fd068990c94a24e4bab6f53a82",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Forest_Routes.png",
+      "sha256": "36f3776b5c761b94cab8214f515e385e9bb5ab3bf34d6d36a8349cff95346d4e",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Relay_Routes.png",
+      "sha256": "bf18efdcbe1c673d8ff2b0f6b631117f410e781fab392663cc0dbc0fa3855c0b",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_SCN01.png",
+      "sha256": "81e5886b0a2219634f29f5a880743b605be838fa12d245010293bf1f57264ec7",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_SCN01_Shelter.png",
+      "sha256": "10177ffa5f86da04590c842b7a5019150254326921191a5522c6d55755409f52",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Gate.png",
+      "sha256": "c96b8a22ab0f47e0baeaf525b5901522084f8310daec8d477809ee58fce952fa",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Plaza.png",
+      "sha256": "28640457be88e1a22cb91490508bcf2ae7b79137610749c3e8ca8095124b0aaa",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Training.png",
+      "sha256": "18df94fcf6dd8bf5969f6271538c382f3cda7dc14b53c44bf27ef03a41416020",
+      "review": "baseline too dark; use matching TechFill"
+    },
+    {
+      "file": "Ground_Academy.png",
+      "sha256": "b745e6e347065bbb3e68ac1fdf6cfbf124ca4e33c4df08d92c874ac2ebd3cf2c",
+      "review": "partial framing; all three stations shown in TechWide"
+    },
+    {
+      "file": "Ground_Shop.png",
+      "sha256": "ca82184bdc76e96aec06f19874d03e5087d8854575f3d59a827fbd95649a0eb0",
+      "review": "baseline too dark; use matching TechFill"
+    },
+    {
+      "file": "Ground_Inn.png",
+      "sha256": "8f8f50f5fca804b3322e012fd61c2a6441487559e60c9f22f7185785de59a8a7",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Forest.png",
+      "sha256": "098267e8f3bf786d1ce1e2e346b273196fa3e89582b690c1ef2b890794391c9d",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Waterworks.png",
+      "sha256": "f78ccc795c89fe190bd1a16fd6430b8401f5b317b73f96da676d5b4e536800ac",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Maintenance.png",
+      "sha256": "751e5d8f910856d7885f80c09c8cc22b5cedcdcf7311e18c8bad3494b62faa37",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Abbey.png",
+      "sha256": "68aa461c19c8dba26ef235fb455818fd150dfa40036d3579c1bd0141dad425f4",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Hall.png",
+      "sha256": "07726fb50655fcf8718078714b0566d7f08eff5f5d24454548c3b92925296eb3",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Relay.png",
+      "sha256": "32395f1469e6727895dc1df23e7de532a83916b57228b0397d49717f2a7a7013",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Training_TechFill.png",
+      "sha256": "316942e42d673ef07952da1e88f27fe9664b8d7d0ce865a7eb02559ae8c0636e",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Academy_TechFill.png",
+      "sha256": "77c596547767544876dbb67ec3d0277518999c88c13f5f3bfe59d9174cc854fc",
+      "review": "partial framing; all three stations shown in TechWide"
+    },
+    {
+      "file": "Ground_Shop_TechFill.png",
+      "sha256": "822edb560931ec0be8f6650de5d585abab18d4761cf2ddfde69f4b3d988dc692",
+      "review": "readable for bounded blockout geometry evidence"
+    },
+    {
+      "file": "Ground_Academy_TechWide.png",
+      "sha256": "2acbb24b748dc5e8077b3ba89e022e5976a204521b97b8b2725a1c748caa4e4e",
+      "review": "readable for bounded blockout geometry evidence"
+    }
+  ],
+  "limitations": [
+    "Sparse context, angular terrain, long-route sightline/event pacing remain",
+    "Not final environment composition, illumination, style, UV or LOD acceptance",
+    "Technical fill/wide shots are explicitly supplementary; geometry visibility unchanged"
+  ],
+  "additional_overview_review": "全局总览/标注复核保留了稀疏度、块状地形与长路节奏缺口，未将本批称作成熟环境构图"
+}

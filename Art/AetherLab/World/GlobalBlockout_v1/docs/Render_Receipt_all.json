@@ -1,0 +1,260 @@
+{
+  "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "source_sha256_at_start": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "source_sha256_at_end": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "source_unchanged": true,
+  "views": [
+    {
+      "file": "Global_Overview.png",
+      "camera": "CAM_Global_Axonometric",
+      "resolution": [
+        1800,
+        1400
+      ],
+      "annotated": false,
+      "sha256": "50c58b4963f41bdba57f02e48cb5935036dfcd6df83ce39dd1a33741ea1f5240",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Global_Annotated_Top.png",
+      "camera": "CAM_Global_Top",
+      "resolution": [
+        2000,
+        2000
+      ],
+      "annotated": true,
+      "sha256": "a2636bb0db3c90b82b295d98052f15e32be28b3dbbee66b584cc0641c464033f",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Town_Scenes02_07.png",
+      "camera": "CAM_Town_Overview",
+      "resolution": [
+        1500,
+        1300
+      ],
+      "annotated": false,
+      "sha256": "51616d7a53cecf2898c01de1580fc013804c57b4494c0bed5f0c7f3268a8fd2d",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Waterworks_Routes.png",
+      "camera": "CAM_Waterworks_Overview",
+      "resolution": [
+        1450,
+        1250
+      ],
+      "annotated": false,
+      "sha256": "f37110a5d064d6fc1f2ea081e1197d24f65f671e5e2971f4ca6c46a8875243a6",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Abbey_And_Hall.png",
+      "camera": "CAM_Abbey_Overview",
+      "resolution": [
+        1450,
+        1250
+      ],
+      "annotated": false,
+      "sha256": "7691a3da09fa40541da63b9361a6a18b6287a6fd068990c94a24e4bab6f53a82",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Forest_Routes.png",
+      "camera": "CAM_Forest_Overview",
+      "resolution": [
+        1450,
+        1250
+      ],
+      "annotated": false,
+      "sha256": "36f3776b5c761b94cab8214f515e385e9bb5ab3bf34d6d36a8349cff95346d4e",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Relay_Routes.png",
+      "camera": "CAM_Relay_Overview",
+      "resolution": [
+        1450,
+        1250
+      ],
+      "annotated": false,
+      "sha256": "bf18efdcbe1c673d8ff2b0f6b631117f410e781fab392663cc0dbc0fa3855c0b",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_SCN01.png",
+      "camera": "CAM_Ground_SCN01",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "81e5886b0a2219634f29f5a880743b605be838fa12d245010293bf1f57264ec7",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_SCN01_Shelter.png",
+      "camera": "CAM_Ground_SCN01_Shelter",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "10177ffa5f86da04590c842b7a5019150254326921191a5522c6d55755409f52",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Gate.png",
+      "camera": "CAM_Ground_Gate",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "c96b8a22ab0f47e0baeaf525b5901522084f8310daec8d477809ee58fce952fa",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Plaza.png",
+      "camera": "CAM_Ground_Plaza",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "28640457be88e1a22cb91490508bcf2ae7b79137610749c3e8ca8095124b0aaa",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Training.png",
+      "camera": "CAM_Ground_Training",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "18df94fcf6dd8bf5969f6271538c382f3cda7dc14b53c44bf27ef03a41416020",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Academy.png",
+      "camera": "CAM_Ground_Academy",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "b745e6e347065bbb3e68ac1fdf6cfbf124ca4e33c4df08d92c874ac2ebd3cf2c",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Shop.png",
+      "camera": "CAM_Ground_Shop",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "ca82184bdc76e96aec06f19874d03e5087d8854575f3d59a827fbd95649a0eb0",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Inn.png",
+      "camera": "CAM_Ground_Inn",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "8f8f50f5fca804b3322e012fd61c2a6441487559e60c9f22f7185785de59a8a7",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Forest.png",
+      "camera": "CAM_Ground_Forest",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "098267e8f3bf786d1ce1e2e346b273196fa3e89582b690c1ef2b890794391c9d",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Waterworks.png",
+      "camera": "CAM_Ground_Waterworks",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "f78ccc795c89fe190bd1a16fd6430b8401f5b317b73f96da676d5b4e536800ac",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Maintenance.png",
+      "camera": "CAM_Ground_Maintenance",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "751e5d8f910856d7885f80c09c8cc22b5cedcdcf7311e18c8bad3494b62faa37",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Abbey.png",
+      "camera": "CAM_Ground_Abbey",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "68aa461c19c8dba26ef235fb455818fd150dfa40036d3579c1bd0141dad425f4",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Hall.png",
+      "camera": "CAM_Ground_Hall",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "07726fb50655fcf8718078714b0566d7f08eff5f5d24454548c3b92925296eb3",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    },
+    {
+      "file": "Ground_Relay.png",
+      "camera": "CAM_Ground_Relay",
+      "resolution": [
+        1400,
+        900
+      ],
+      "annotated": false,
+      "sha256": "32395f1469e6727895dc1df23e7de532a83916b57228b0397d49717f2a7a7013",
+      "samples": 24,
+      "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c"
+    }
+  ]
+}
