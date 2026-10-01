@@ -16,7 +16,7 @@ bool UAetherNativePersistence::Prepare(const FString& InPrefix,bool NewWorld,FSt
     check(IsInGameThread());
     if(bStoppingScene){Reason=TEXT("Previous scene is still stopping");return false;}
     if(BoundScene.IsValid()&&BoundScene.Get()!=GetWorld()){StopScene();State=EAetherNativePersistencePhase::Dormant;}
-    if(State!=EAetherNativePersistencePhase::Dormant||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!AetherSaveStartup::ValidPrefix(InPrefix))
+    if((State!=EAetherNativePersistencePhase::Dormant&&State!=EAetherNativePersistencePhase::Cancelled)||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!AetherSaveStartup::ValidPrefix(InPrefix))
     {Reason=TEXT("Invalid native startup state, server world or save prefix");return false;}
     double Deadline=0;
     if(!GetDefault<UAetherStartupSettings>()->DrainDeadline(FPlatformTime::Seconds(),Deadline,Reason))return false;
@@ -221,17 +221,20 @@ UWorld* UAetherNativePersistence::GetTickableGameObjectWorld() const{return GetW
 void UAetherNativePersistence::StopScene()
 {
     if(bStoppingScene)return;TGuardValue<bool> Guard(bStoppingScene,true);
+    const bool EndingUnopenedRequest=!Store&&(State==EAetherNativePersistencePhase::WaitingForBackend||
+        State==EAetherNativePersistencePhase::Failed||State==EAetherNativePersistencePhase::Cancelled);
     State=EAetherNativePersistencePhase::Stopped;SceneGeneration.Invalidate();DomainCapture={};CheckpointPublished={};
     auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();
     const bool RuntimeOwnsStore=Runtime&&Runtime->HasBackend();
-    if(RuntimeOwnsStore)Runtime->UninstallBackend();
+    const bool LeavePriorDrain=EndingUnopenedRequest&&RuntimeOwnsStore&&!Runtime->IsInstalled();
+    if(RuntimeOwnsStore&&!LeavePriorDrain)Runtime->UninstallBackend();
     auto Pending=MoveTemp(Logins);for(auto& Job:Pending){FAetherStoreReadResult R;R.Code=EAetherStoreCode::Unavailable;Job->Result.SetValue(MoveTemp(R));}
     if(Checkpoint)Checkpoint->Stop();Checkpoint.Reset();
     auto PendingCheckpoint=MoveTemp(CheckpointPromise);
     Probe={};if(Bootstrap)Bootstrap->Stop();Bootstrap.Reset();
     // 先停生产者，再收尾命令。重入/超时情况下 Runtime 继续持有并最终关闭 Store；
     // 这里绝不能 Close，否则后续 CAS 重读/提交会得到 Unavailable，丢失已接受事实。
-    if(RuntimeOwnsStore)Runtime->DrainBackend();
+    if(RuntimeOwnsStore&&!LeavePriorDrain)Runtime->DrainBackend();
     else if(Store)Store->Close();
     Store.Reset();
     if(PendingCheckpoint){FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Unavailable;R.Detail=TEXT("Shutdown drained writes; reload persisted world before retry");PendingCheckpoint->SetValue(MoveTemp(R));}

@@ -16,14 +16,14 @@
 #include "Engine/World.h"
 #include "UObject/UObjectGlobals.h"
 
-namespace
-{
-bool SameView(const FAetherStartupView& A,const FAetherStartupView& B)
+bool AetherStartup::SameView(const FAetherStartupView& A,const FAetherStartupView& B)
 {
     return A.LocalAttemptToken==B.LocalAttemptToken&&A.ServerAttemptId==B.ServerAttemptId&&A.Stage==B.Stage&&A.FailureCode==B.FailureCode&&
         A.bCanStart==B.bCanStart&&A.bCanCancel==B.bCanCancel&&A.bCanRetry==B.bCanRetry&&
         A.StartIssue==B.StartIssue&&A.CancelIssue==B.CancelIssue&&A.RetryIssue==B.RetryIssue;
 }
+namespace
+{
 bool ServerStage(EAetherStartupStage Stage)
 {
     return Stage==EAetherStartupStage::WaitingForBackend||Stage==EAetherStartupStage::ReadingStorage||
@@ -44,7 +44,7 @@ struct FAetherStartupClientImpl
     FDelegateHandle PreLoad,PostLoad,NetworkFailure,TravelFailure;
     uint32 ServerSequence=0;
     FString RetryURL,FrontendPackage,PlayablePackage;
-    bool bRetryRemote=false,bFrontendAvailable=false,bPlayableAvailable=false,bRouting=false,bTravelQueued=false;
+    bool bRetryRemote=false,bFrontendAvailable=false,bPlayableAvailable=false,bRouting=false,bTravelQueued=false,bStopped=false;
     explicit FAetherStartupClientImpl(UAetherStartupClient& In):Owner(In){}
     UGameInstance* GI() const{return Owner.GetGameInstance();}
     bool OwnWorld(UWorld* W) const
@@ -81,7 +81,7 @@ struct FAetherStartupClientImpl
         }
     }
     void Publish(const FAetherStartupView& Before)
-    {RefreshActions();if(!SameView(Before,View))Owner.OnChanged.Broadcast();}
+    {if(bStopped)return;RefreshActions();if(!AetherStartup::SameView(Before,View))Owner.OnChanged.Broadcast();}
     void Begin(EAetherStartupStage Stage,bool KeepFailure)
     {
         const auto Failure=KeepFailure?View.FailureCode:EAetherStartupFailure::None;
@@ -134,6 +134,7 @@ struct FAetherStartupClientImpl
         if(GEngine->PendingNetGameFromWorld(W))GEngine->CancelPending(W,nullptr);
         if(Cancel&&W->GetNetMode()!=NM_Client)
             if(auto* P=GI()->GetSubsystem<UAetherNativePersistence>())P->CancelPreparation(W,ServerAttempt);
+        if(bStopped||GI()->GetWorld()!=W)return false;
         GEngine->SetClientTravel(W,*Destination,TRAVEL_Absolute);
         Publish(Before);return true;
     }
@@ -174,78 +175,84 @@ struct FAetherStartupClientImpl
 
 UAetherStartupClient::UAetherStartupClient()=default;
 UAetherStartupClient::~UAetherStartupClient()=default;
-void FAetherStartupClientImplDeleter::operator()(FAetherStartupClientImpl* Value) const{delete Value;}
 const FAetherStartupView& UAetherStartupClient::GetView() const
 {static const FAetherStartupView Empty;return Impl?Impl->View:Empty;}
 void UAetherStartupClient::Initialize(FSubsystemCollectionBase& Collection)
 {
-    Super::Initialize(Collection);Impl.Reset(new FAetherStartupClientImpl(*this));Impl->ResolveRoutes();
+    Super::Initialize(Collection);Impl=MakeShared<FAetherStartupClientImpl>(*this);Impl->ResolveRoutes();
     Impl->PreLoad=FCoreUObjectDelegates::PreLoadMapWithContext.AddWeakLambda(this,[this](const FWorldContext& Context,const FString&)
     {
-        if(!Impl||Context.OwningGameInstance!=GetGameInstance())return;
-        const auto Before=Impl->View;
-        if(!Impl->bTravelQueued)Impl->Begin(EAetherStartupStage::Connecting,Terminal(Impl->View.Stage));
-        Impl->bTravelQueued=true;
-        Impl->Controller.Reset();Impl->ServerSequence=0;Impl->View.ServerAttemptId.Invalidate();Impl->Publish(Before);
+        const auto Active=Impl;
+        if(!Active||Context.OwningGameInstance!=GetGameInstance())return;
+        const auto Before=Active->View;
+        if(!Active->bTravelQueued)Active->Begin(EAetherStartupStage::Connecting,Terminal(Active->View.Stage));
+        Active->bTravelQueued=true;
+        Active->Controller.Reset();Active->ServerSequence=0;Active->View.ServerAttemptId.Invalidate();Active->Publish(Before);
     });
     Impl->PostLoad=FCoreUObjectDelegates::PostLoadMapWithWorld.AddWeakLambda(this,[this](UWorld* W)
-    {if(Impl&&Impl->OwnWorld(W)){const auto Before=Impl->View;Impl->BindWorld(W);Impl->Publish(Before);}});
+    {const auto Active=Impl;if(Active&&Active->OwnWorld(W)){const auto Before=Active->View;Active->BindWorld(W);Active->Publish(Before);}});
     if(GEngine)
     {
         Impl->NetworkFailure=GEngine->OnNetworkFailure().AddWeakLambda(this,[this](UWorld* W,UNetDriver* Driver,ENetworkFailure::Type,const FString&)
         {
-            if(!Impl||Impl->bRouting||!Impl->OwnWorld(W)||GetWorld()!=W)return;
+            const auto Active=Impl;
+            if(!Active||Active->bRouting||!Active->OwnWorld(W)||GetWorld()!=W)return;
             const auto* Pending=GEngine->PendingNetGameFromWorld(W);
             const bool CurrentPending=Pending&&(!Driver||Pending->GetNetDriver()==Driver);
-            if(!CurrentPending&&(Impl->bTravelQueued||Impl->World.Get()!=W||Driver!=W->GetNetDriver()))return;
-            if(CurrentPending)Impl->Remember(Pending->URL);
-            const auto Before=Impl->View;Impl->bTravelQueued=false;Impl->View.Stage=EAetherStartupStage::Failed;
-            Impl->View.FailureCode=EAetherStartupFailure::NetworkFailure;Impl->Publish(Before);
+            if(!CurrentPending&&(Active->bTravelQueued||Active->World.Get()!=W||Driver!=W->GetNetDriver()))return;
+            if(CurrentPending)Active->Remember(Pending->URL);
+            const auto Before=Active->View;Active->bTravelQueued=false;Active->View.Stage=EAetherStartupStage::Failed;
+            Active->View.FailureCode=EAetherStartupFailure::NetworkFailure;Active->Publish(Before);
         });
         Impl->TravelFailure=GEngine->OnTravelFailure().AddWeakLambda(this,[this](UWorld* W,ETravelFailure::Type,const FString&)
         {
-            if(!Impl||Impl->bRouting||!Impl->OwnWorld(W)||GetWorld()!=W)return;
-            const auto Before=Impl->View;Impl->bTravelQueued=false;Impl->View.Stage=EAetherStartupStage::Failed;
-            Impl->View.FailureCode=EAetherStartupFailure::TravelFailure;Impl->Publish(Before);
+            const auto Active=Impl;
+            if(!Active||Active->bRouting||!Active->OwnWorld(W)||GetWorld()!=W)return;
+            const auto Before=Active->View;Active->bTravelQueued=false;Active->View.Stage=EAetherStartupStage::Failed;
+            Active->View.FailureCode=EAetherStartupFailure::TravelFailure;Active->Publish(Before);
         });
     }
 }
 void UAetherStartupClient::ReceiveStartup(AAetherPlayerController* C,const FAetherStartupSnapshot& Snapshot)
 {
-    if(!Impl||!IsValid(C)||C->IsActorBeingDestroyed()||!C->IsLocalController()||!C->GetLocalPlayer()||
-        C->GetGameInstance()!=GetGameInstance()||!Impl->OwnWorld(C->GetWorld())||GetWorld()!=C->GetWorld()||
+    const auto Active=Impl;
+    if(!Active||!IsValid(C)||C->IsActorBeingDestroyed()||!C->IsLocalController()||!C->GetLocalPlayer()||
+        C->GetGameInstance()!=GetGameInstance()||!Active->OwnWorld(C->GetWorld())||GetWorld()!=C->GetWorld()||
         C->GetLocalPlayer()->GetPlayerController(C->GetWorld())!=C)return;
-    const auto Before=Impl->View;
-    if(Impl->World.Get()!=C->GetWorld())Impl->BindWorld(C->GetWorld());
-    if(Impl->bRouting||Impl->bTravelQueued||Terminal(Impl->View.Stage))return;
+    const auto Before=Active->View;
+    if(Active->World.Get()!=C->GetWorld())Active->BindWorld(C->GetWorld());
+    if(Impl!=Active||Active->bRouting||Active->bTravelQueued||Terminal(Active->View.Stage))return;
     // 同世界也可能先替换当前PC、后销毁旧PC；前置LocalPlayer核对已经排除了旧连接。
     // 新Controller必须可接收同一服务端阶段，但旧按钮/缓存身份不能跨连接继续使用。
-    if(!Impl->Controller.IsExplicitlyNull()&&Impl->Controller.Get()!=C)Impl->Begin(EAetherStartupStage::Connecting,false);
-    Impl->Controller=C;Impl->Accept(Snapshot);Impl->Publish(Before);
+    if(!Active->Controller.IsExplicitlyNull()&&Active->Controller.Get()!=C)Active->Begin(EAetherStartupStage::Connecting,false);
+    Active->Controller=C;Active->Accept(Snapshot);Active->Publish(Before);
 }
 bool UAetherStartupClient::RequestStart(FGuid Token)
 {
-    if(!Impl||Token!=Impl->View.LocalAttemptToken||!Token.IsValid())return false;
-    const auto Before=Impl->View;Impl->ResolveRoutes();Impl->Publish(Before);
-    if(!Impl||Token!=Impl->View.LocalAttemptToken||!Impl->View.bCanStart)return false;
-    const FString URL=Impl->PlayablePackage;Impl->RetryURL=URL;Impl->bRetryRemote=false;
-    return Impl->QueueTravel(URL,false);
+    const auto Active=Impl;
+    if(!Active||Token!=Active->View.LocalAttemptToken||!Token.IsValid())return false;
+    const auto Before=Active->View;Active->ResolveRoutes();Active->Publish(Before);
+    if(Impl!=Active||!Active||Token!=Active->View.LocalAttemptToken||!Active->View.bCanStart)return false;
+    const FString URL=Active->PlayablePackage;Active->RetryURL=URL;Active->bRetryRemote=false;
+    return Active->QueueTravel(URL,false);
 }
 bool UAetherStartupClient::RequestCancel(FGuid Token)
 {
-    if(!Impl||Token!=Impl->View.LocalAttemptToken||!Token.IsValid())return false;
-    const auto Before=Impl->View;Impl->ResolveRoutes();Impl->Publish(Before);
-    if(!Impl||Token!=Impl->View.LocalAttemptToken||!Impl->View.bCanCancel)return false;
-    return Impl->QueueTravel(Impl->FrontendPackage,true);
+    const auto Active=Impl;
+    if(!Active||Token!=Active->View.LocalAttemptToken||!Token.IsValid())return false;
+    const auto Before=Active->View;Active->ResolveRoutes();Active->Publish(Before);
+    if(Impl!=Active||!Active||Token!=Active->View.LocalAttemptToken||!Active->View.bCanCancel)return false;
+    return Active->QueueTravel(Active->FrontendPackage,true);
 }
 bool UAetherStartupClient::RequestRetry(FGuid Token)
 {
-    if(!Impl||Token!=Impl->View.LocalAttemptToken||!Token.IsValid())return false;
-    const auto Before=Impl->View;Impl->ResolveRoutes();Impl->Publish(Before);
-    if(!Impl||Token!=Impl->View.LocalAttemptToken||!Impl->View.bCanRetry)return false;
-    const FString URL=Impl->RetryURL;return Impl->QueueTravel(URL,false);
+    const auto Active=Impl;
+    if(!Active||Token!=Active->View.LocalAttemptToken||!Token.IsValid())return false;
+    const auto Before=Active->View;Active->ResolveRoutes();Active->Publish(Before);
+    if(Impl!=Active||!Active||Token!=Active->View.LocalAttemptToken||!Active->View.bCanRetry)return false;
+    const FString URL=Active->RetryURL;return Active->QueueTravel(URL,false);
 }
-void UAetherStartupClient::Tick(float){if(Impl)Impl->Tick();}
+void UAetherStartupClient::Tick(float){const auto Active=Impl;if(Active)Active->Tick();}
 bool UAetherStartupClient::IsTickable() const{return !IsTemplate()&&Impl.IsValid();}
 TStatId UAetherStartupClient::GetStatId() const{RETURN_QUICK_DECLARE_CYCLE_STAT(UAetherStartupClient,STATGROUP_Tickables);}
 UWorld* UAetherStartupClient::GetTickableGameObjectWorld() const{return GetWorld();}
@@ -253,6 +260,7 @@ void UAetherStartupClient::Deinitialize()
 {
     if(Impl)
     {
+        Impl->bStopped=true;
         FCoreUObjectDelegates::PreLoadMapWithContext.Remove(Impl->PreLoad);FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(Impl->PostLoad);
         if(GEngine){GEngine->OnNetworkFailure().Remove(Impl->NetworkFailure);GEngine->OnTravelFailure().Remove(Impl->TravelFailure);}
         Impl.Reset();

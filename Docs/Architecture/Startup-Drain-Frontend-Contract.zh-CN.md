@@ -1,6 +1,6 @@
 # 启动排空等待与正式前端停留点联合契约
 
-状态：接口草案。实现、原生地图资产与集成审阅完成前，不将后台半套或不存在的默认地图合入 main。
+状态：工作分支已形成后台与UI草稿，未集成、未编译、未测试。正式 L_Frontend.umap 尚未生成；默认地图及 Cook 入口未修改，不将半套或不存在的默认地图合入 main。
 
 ## 触发依据
 
@@ -46,7 +46,7 @@ Gameplay 负责新增 `Startup/AetherStartupState.h`、`Startup/AetherStartupCli
 - `bool RequestCancel(FGuid LocalAttemptToken)`
 - `bool RequestRetry(FGuid LocalAttemptToken)`
 
-`FAetherStartupView` 为只读本地值，含 `LocalAttemptToken, ServerAttemptId, Stage, FailureCode, bCanStart, bCanCancel, bCanRetry`。按钮可用性属于当前本地路由能力，不接受服务器指定按钮行为。
+`FAetherStartupView` 为只读本地值，含 `LocalAttemptToken, ServerAttemptId, Stage, FailureCode, bCanStart, bCanCancel, bCanRetry`，以及各动作独立的 `StartIssue, CancelIssue, RetryIssue`。本地路由原因枚举为 `None, FrontendUnavailable, PlayableUnavailable, NoRetryTarget, NoLocalWorld, Busy`；不会覆盖服务器 FailureCode。按钮可用性属于当前本地路由能力，不接受服务器指定按钮行为。
 
 Client 子系统唯一处理本 GI 的 PreLoad、网络失败、Travel 失败和当前 Controller 的可靠 owner RPC；UI 不另建 attempt 或加载订阅。RPC 入口 `AAetherPlayerController::ClientV10StartupStatus` 只更新当前本地 Controller/World 对应缓存；旧 Controller、旧 world、旧 attempt、乱序 sequence 和本地已取消 attempt 的消息均丢弃。
 
@@ -123,3 +123,4 @@ UI 实现线，独占以下五个新文件：
 - [UGameViewportClient](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UGameViewportClient)：每 GI 对应视口，不依赖玩法 HUD 的生成
 
 具体取消/重试引擎调用仍须在实现阶段按准确 UE5.8 API 和本 GI/context 核对；不得以设计稿当作已经运行验证。
+

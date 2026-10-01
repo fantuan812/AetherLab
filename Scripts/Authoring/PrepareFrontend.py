@@ -10,7 +10,7 @@ if settings_type is None or mode_type is None:
     raise RuntimeError("尚未编译正式 StartupSettings/FrontendMode；不能生成替代模式")
 
 settings = ue.get_default_object(settings_type)
-target = str(settings.get_editor_property("frontend_map"))
+target = settings.get_frontend_asset_path()
 # SoftObjectPath 的资产名形式 /Game/.../Map.Map；只接受项目地图包。
 if not target.startswith("/Game/") or "?" in target or ".." in target:
     raise RuntimeError("FrontendMap 配置不是有效项目地图软路径")
@@ -26,9 +26,7 @@ if library.does_asset_exist(package):
         raise RuntimeError("现有地图不是正式 FrontendMode，拒绝改写作者资产")
 else:
     # 现有脏地图不能因自动作者化被丢弃；此工具应只在专门进程里工作。
-    editor = ue.get_editor_subsystem(ue.UnrealEditorSubsystem)
-    current = editor.get_editor_world()
-    if current is not None and current.get_outermost().is_dirty():
+    if ue.EditorLoadingAndSavingUtils.get_dirty_map_packages():
         raise RuntimeError("当前编辑器地图未保存；请使用隔离作者进程")
     world = ue.EditorLoadingAndSavingUtils.new_blank_map(False)
     if world is None:

@@ -37,3 +37,7 @@ struct AETHERGAMEPLAY_API FAetherStartupView
     EAetherStartupRouteIssue CancelIssue=EAetherStartupRouteIssue::Busy;
     EAetherStartupRouteIssue RetryIssue=EAetherStartupRouteIssue::Busy;
 };
+namespace AetherStartup
+{
+    AETHERGAMEPLAY_API bool SameView(const FAetherStartupView& Before,const FAetherStartupView& After);
+}

@@ -13,6 +13,7 @@ public:
     UPROPERTY(Config,EditAnywhere,Category="Startup") double BackendDrainTimeoutSeconds=0;
     UPROPERTY(Config,EditAnywhere,Category="Startup") TSoftObjectPtr<UWorld> FrontendMap;
     UPROPERTY(Config,EditAnywhere,Category="Startup") TSoftObjectPtr<UWorld> PlayableMap;
+    UFUNCTION(BlueprintPure,Category="Startup") FString GetFrontendAssetPath() const{return FrontendMap.ToSoftObjectPath().ToString();}
     bool DrainDeadline(double Now,double& Deadline,FString& Reason) const;
     bool ResolveMap(bool Frontend,FString& Package) const;
 };

@@ -6,7 +6,6 @@
 
 class AAetherPlayerController;
 struct FAetherStartupClientImpl;
-struct AETHERGAMEPLAY_API FAetherStartupClientImplDeleter {void operator()(FAetherStartupClientImpl* Value) const;};
 DECLARE_MULTICAST_DELEGATE(FOnAetherStartupViewChanged);
 
 // UI 的唯一只读启动入口。当前 GI 拥有本地 attempt、目标和受限路由；没有服务端取消 RPC。
@@ -33,5 +32,6 @@ public:
     virtual UWorld* GetTickableGameObjectWorld() const override;
 private:
     friend class FAetherStartupLifecycleTest;
-    TUniquePtr<FAetherStartupClientImpl,FAetherStartupClientImplDeleter> Impl;
+    // 路由/通知栈持有局部共享引用，Deinitialize 撤下成员也不释放正在执行的栈帧。
+    TSharedPtr<FAetherStartupClientImpl> Impl;
 };
