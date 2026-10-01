@@ -11,7 +11,7 @@ col=bpy.data.collections['05_EXISTING_CHARACTER__UNSCALED_65_BONES'];outs={o.nam
 with bpy.data.libraries.load(os.path.abspath(args.character_source),link=False) as (src,dst):dst.objects=list(names)
 results=[]
 for name,ob in zip(names,dst.objects):results.append({'object':name,'unchanged_geometry_weights_or_rest':outs[name]==sig(ob),'source':sig(ob),'kit':outs[name]})
-rep={'all_passed':all(r['unchanged_geometry_weights_or_rest'] for r in results),'bone_count':65,'scope':'Geometry, mesh topology, weights, group names and armature rest compared to the approved baseline; material override intentionally excluded; translation only','source_library_file_id':'libfile_d49623233fe88191b50a13860ee7cb46','results':results}
+rep={'all_passed':all(r['unchanged_geometry_weights_or_rest'] for r in results),'bone_count':65,'scope':'Geometry, mesh topology, weights, group names and armature rest compared to the approved baseline; material override intentionally excluded; translation only','source_reference':os.path.basename(args.character_source),'source_sha256':hashlib.sha256(open(args.character_source,'rb').read()).hexdigest(),'results':results}
 json.dump(rep,open(args.output_report,'w'),ensure_ascii=False,indent=2);print('CHARACTER_PRESERVED',rep['all_passed'],len(results))
 
 if not rep["all_passed"]:raise SystemExit(1)

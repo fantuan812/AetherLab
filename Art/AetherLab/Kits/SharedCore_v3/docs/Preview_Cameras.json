@@ -1,0 +1,101 @@
+{
+  "source_sha256": "46fc07828d7b3a19d7362f41e0cf03da79df321ea92172fa421f8b6b841767b3",
+  "scope": "v3 connected fixture, not world",
+  "cameras": [
+    {
+      "file": "CoreKit_Overview.png",
+      "camera": "CAM_v3_Overview",
+      "position": [
+        27.0,
+        -32.0,
+        33.0
+      ],
+      "rotation": [
+        0.9700996279716492,
+        -4.830618749451787e-08,
+        0.6055447459220886
+      ],
+      "ortho_scale": 42.0,
+      "resolution": [
+        1250,
+        1450
+      ]
+    },
+    {
+      "file": "Transition_Stair.png",
+      "camera": "CAM_v3_Stair",
+      "position": [
+        10.0,
+        -7.0,
+        8.0
+      ],
+      "rotation": [
+        1.0351994037628174,
+        -2.4294312339634416e-08,
+        0.8960554003715515
+      ],
+      "ortho_scale": 12.0,
+      "resolution": [
+        1100,
+        900
+      ]
+    },
+    {
+      "file": "Transition_Bridge.png",
+      "camera": "CAM_v3_Bridge",
+      "position": [
+        10.0,
+        5.0,
+        7.0
+      ],
+      "rotation": [
+        1.0557935237884521,
+        6.996625501187737e-08,
+        1.0303767919540405
+      ],
+      "ortho_scale": 12.0,
+      "resolution": [
+        1100,
+        900
+      ]
+    },
+    {
+      "file": "Transition_Rock.png",
+      "camera": "CAM_v3_Rock",
+      "position": [
+        9.0,
+        -11.0,
+        4.0
+      ],
+      "rotation": [
+        1.1260308027267456,
+        2.4296069156548583e-08,
+        0.9505468010902405
+      ],
+      "ortho_scale": 8.0,
+      "resolution": [
+        1000,
+        850
+      ]
+    },
+    {
+      "file": "Transition_Side.png",
+      "camera": "CAM_v3_Side",
+      "position": [
+        15.0,
+        10.0,
+        4.0
+      ],
+      "rotation": [
+        1.3352513313293457,
+        -0.0,
+        1.5707963705062866
+      ],
+      "ortho_scale": 20.0,
+      "resolution": [
+        1300,
+        650
+      ]
+    }
+  ]
+}

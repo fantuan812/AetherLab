@@ -19,10 +19,16 @@ stone=bpy.data.materials['KIT_Wet basalt 1'];earth=bpy.data.materials['KIT_Wet m
 source_names=['H01_Door_stone_step','SHR_Workbench_top_plank','SHR_Tie_beam','River rock']
 with bpy.data.libraries.load(os.path.abspath(a.source_scene),link=False) as (fr,to):to.objects=source_names
 sources={o.name:o for o in to.objects};source_record=[]
+temp=bpy.data.collections.new('TEMP_SOURCE_EVALUATION');s.collection.children.link(temp)
+for o in sources.values():temp.objects.link(o)
+bpy.context.view_layer.update()
 for o in sources.values():
  source_record.append({'object':o.name,'vertices':len(o.data.vertices),'source_materials':[m.name for m in o.data.materials]})
 
 def finalize(o,name,role,source,sockets):
+ for key in list(o.keys()):del o[key]
+ o['forward_up']='+Y/+Z'
+ o['socket_semantics']=('BASE is lowest-height/front-origin datum only, not physical contact' if role=='rock' else 'IN is lower supporting grade; first tread is 0.125m above' if role=='stair' else 'IN/OUT delimit effective4m span; visual mesh extends0.25m at both ends' if role=='bridge_bearer' else 'local geometric edge reference; unit instance scale')
  o.name=name;o.data.name=name+'_Mesh';o.matrix_world=Matrix.Identity(4);masters.objects.link(o);o['asset_id']=name;o['role']=role;o['derived_from']=source;o['stage']='minimum transition candidate v3';o['local_sockets_json']=json.dumps(sockets);o['allowed_instance_scale']='1,1,1';o.asset_mark();o.hide_render=True;o.hide_set(True)
  for mod in list(o.modifiers):o.modifiers.remove(mod)
  bm=bmesh.new();bm.from_mesh(o.data);bmesh.ops.recalc_face_normals(bm,faces=bm.faces);bm.to_mesh(o.data);bm.free();o.data.update()
@@ -58,10 +64,11 @@ collar=base['KIT_Shoulder_Straight_1m'].copy();collar.data=base['KIT_Shoulder_St
 for v in collar.data.vertices:v.co.x*=2;v.co.y*=2;v.co.z-=.35 if v.co.z<-.54 else 0
 collar=finalize(collar,'KIT_RockToe_Earth_2m','rock_toe','KIT_Shoulder_Straight_1m topology and shared earth',{'ROAD_EDGE':[0,1,-.035],'TERRAIN_EDGE':[2,1,-.35]})
 rock=sources['River rock'].copy();rock.data=sources['River rock'].data.copy();raw=[sources['River rock'].matrix_world@v.co for v in rock.data.vertices];mi=[min(v[k] for v in raw) for k in range(3)];ma=[max(v[k] for v in raw) for k in range(3)]
-for v,w in zip(rock.data.vertices,raw):v.co=(w.x-(mi[0]+ma[0])/2,w.y-mi[1],w.z-mi[2]-.65)
+for v,w in zip(rock.data.vertices,raw):v.co=(w.x-(mi[0]+ma[0])/2,w.y-mi[1],w.z-mi[2]-.5)
 rock.data.materials.clear();rock.data.materials.append(stone)
-rock=finalize(rock,'KIT_Rock_River_A','rock','REFINED_Valley/River rock exact source topology, baked original world rotation/scale; translated to embedded datum; shared basalt',{'BASE':[0,0,-.65]})
+rock=finalize(rock,'KIT_Rock_River_A','rock','REFINED_Valley/River rock exact source topology, baked original world rotation/scale; translated to embedded datum; shared basalt',{'BASE':[0,0,-.5]})
 for o in sources.values():bpy.data.objects.remove(o,do_unlink=True)
+bpy.data.collections.remove(temp)
 # Purge only unused imported material datablocks, never replace existing shared materials.
 for m in list(bpy.data.materials):
  if m.users==0:bpy.data.materials.remove(m)

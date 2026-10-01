@@ -1,5 +1,6 @@
 # AetherLab 场景素材与模块生产规范
 
+最新最小过渡批次为SharedCore_v3，见本文末节；v2段落保留其历史范围与证据。
 更新日期：2026-10-01。适用范围：首版四人联机 Demo 的一个连续世界、6 个地理区、12 个重点场景。范围核对基线为 main 的 [`b7ab1f5`](https://github.com/fantuan812/AetherLab/commit/b7ab1f578d37548a4f2fd9f854117e0c91fcd628)；设计事实继续以 [Design v4](../Design-v4.zh-CN.md) 为准。
 
 本轮顺序是 **确定全游戏素材需求 → 优化共用素材 → 全局布局建模 → 局部细化**。先证明一套素材能反复拼出需要的空间，再扩展地图。当前产物是需求矩阵和 SharedCore_v2 核心道路/矮墙/围栏最小连接候选；独立22/22组及限定范围实看已通过，未完成全图建模或全图风格验收。
@@ -159,3 +160,12 @@ SharedCore_v2 从 v1 独立源模型继续派生，保留原9个母件并新增1
 - Markus Pichler：[Creating environments efficiently through iterations and trim sheets](https://markus3d.artstation.com/blog/wvY4/creating-environments-efficiently-through-iterations-and-trim-sheets)。用于先构图/灰盒迭代、再用共享纹理逐步细化的方法参考。
 - Epic 官方：[材质 UV 与 lightmap UV](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-uv-channels-with-static-meshes-in-unreal-engine)、[材质实例](https://dev.epicgames.com/documentation/unreal-engine/instanced-materials-in-unreal-engine)、[LOD 与屏幕占比](https://dev.epicgames.com/documentation/unreal-engine/creating-and-using-lods-in-unreal-engine?lang=en-US)、[静态网格枢轴与三角化](https://dev.epicgames.com/documentation/en-us/unreal-engine/fbx-static-mesh-pipeline-in-unreal-engine)。用于区分技术概念与后续交接注意事项；引用引擎文档不代表本批需要安装或验收 UE。
 - 项目范围、连接与角色规格：[Design v4](../Design-v4.zh-CN.md)；当前子点与服务对照：[V10 场景与旅程](../Planning/V10-scene-and-journey.zh-CN.md)；旧源交付边界：[SCN_01 Blender 记录](SCN_01-Blender-2026-09-30.zh-CN.md)。
+
+
+## 十一 v3基础铺设的有限放行
+
+SharedCore_v3以6个必要过渡母件连接77个关联实例，覆盖台阶上下口、固定维护桥及两岸、路侧岩土收边。旧v2的22母件和678实例保持几何/UV/材质/矩阵不变。具体尺寸、来源、独立检查和负控见[批次说明](../../Art/AetherLab/Kits/SharedCore_v3/README.zh-CN.md)。
+
+全套件门不等于必须在全图布局前完成所有尺寸排列。对[六区覆盖表](Global-blockout-coverage-v3.zh-CN.md)中已证明的接口，可开始基础铺设；建筑/独特地标/机关暂以可辨、可分离、真实尺寸的粗模占位。未覆盖连接先停止相关段的批量复制，按实际选择补最小可复用件，验证后继续；不以密集杂物掩盖缺口、不任意拉伸每个实例。仍需在全图逐条验证12条连接、旁路/退路、视线、门洞和关键空间净尺寸。
+
+v3桥面采样与静态净空不代表动态通行、结构承载或落桥机关通过。水位平面只作审查代理；继承灯母件的旧缺陷仍存在。新女主目标1.65m与旧1.8028m角色源参照继续分开，角色比例不因本批场景制作改变。

@@ -1,0 +1,279 @@
+{
+  "scope": "Local socket semantics compared with reopened mesh geometry; metadata treated as the subject of review, not expected geometry",
+  "modules": [
+    {
+      "master": "KIT_Stair_Solid_4m_Rise1m",
+      "role": "stair",
+      "local_bounds_m": [
+        [
+          -2.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          2.0,
+          4.0,
+          0.9649999737739563
+        ]
+      ],
+      "sockets": {
+        "IN": {
+          "coordinates_m": [
+            0,
+            0,
+            -0.035
+          ],
+          "closest_mesh_point_m": [
+            1.1920928955078125e-07,
+            0.0,
+            -0.03499980270862579
+          ],
+          "mesh_distance_m": 2.306372977045612e-07
+        },
+        "OUT": {
+          "coordinates_m": [
+            0,
+            4,
+            0.965
+          ],
+          "closest_mesh_point_m": [
+            0.0,
+            4.0,
+            0.9649999737739563
+          ],
+          "mesh_distance_m": 0.0
+        }
+      },
+      "interpretation": "IN is lower-road reference on the first riser plane, not the first tread. OUT is the upper exit/tread edge.",
+      "IN_to_first_tread_rise_m": 0.1250000335276127,
+      "pass": true
+    },
+    {
+      "master": "KIT_Bridge_DeckPlank_4x0p25",
+      "role": "bridge_deck",
+      "local_bounds_m": [
+        [
+          -2.0,
+          0.0,
+          -0.16500000655651093
+        ],
+        [
+          2.0,
+          0.25,
+          -0.03500000014901161
+        ]
+      ],
+      "sockets": {
+        "IN": {
+          "coordinates_m": [
+            0,
+            0,
+            -0.035
+          ],
+          "closest_mesh_point_m": [
+            0.0,
+            0.0,
+            -0.03500000014901161
+          ],
+          "mesh_distance_m": 0.0
+        },
+        "OUT": {
+          "coordinates_m": [
+            0,
+            0.25,
+            -0.035
+          ],
+          "closest_mesh_point_m": [
+            0.0,
+            0.25,
+            -0.03500000014901161
+          ],
+          "mesh_distance_m": 0.0
+        }
+      },
+      "interpretation": "Sockets lie on actual local surface/edge geometry.",
+      "pass": true
+    },
+    {
+      "master": "KIT_Bridge_Bearer_4p5m",
+      "role": "bridge_bearer",
+      "local_bounds_m": [
+        [
+          -0.1599999964237213,
+          -0.25,
+          -0.550000011920929
+        ],
+        [
+          0.1599999964237213,
+          4.25,
+          -0.16500000655651093
+        ]
+      ],
+      "sockets": {
+        "IN": {
+          "coordinates_m": [
+            0,
+            0,
+            -0.55
+          ],
+          "closest_mesh_point_m": [
+            0.0,
+            -1.4901161193847656e-08,
+            -0.550000011920929
+          ],
+          "mesh_distance_m": 1.4901161193847656e-08
+        },
+        "OUT": {
+          "coordinates_m": [
+            0,
+            4,
+            -0.55
+          ],
+          "closest_mesh_point_m": [
+            2.8312206268310547e-07,
+            4.0,
+            -0.550000011920929
+          ],
+          "mesh_distance_m": 2.8312206268310547e-07
+        }
+      },
+      "interpretation": "IN/OUT identify effective span boundaries on the beam bottom datum, not the visual bounding-box ends or deck-top height.",
+      "end_extensions_m": [
+        0.25,
+        0.25
+      ],
+      "effective_span_m": 4.0,
+      "socket_to_bearer_top_m": 0.38500000536441803,
+      "pass": true
+    },
+    {
+      "master": "KIT_Bridge_Abutment_6x1m",
+      "role": "bridge_abutment",
+      "local_bounds_m": [
+        [
+          -3.0,
+          0.0,
+          -1.649999976158142
+        ],
+        [
+          3.0,
+          1.0,
+          -0.03500000014901161
+        ]
+      ],
+      "sockets": {
+        "IN": {
+          "coordinates_m": [
+            0,
+            0,
+            -0.035
+          ],
+          "closest_mesh_point_m": [
+            0.0,
+            0.0,
+            -0.03500000014901161
+          ],
+          "mesh_distance_m": 0.0
+        },
+        "OUT": {
+          "coordinates_m": [
+            0,
+            1,
+            -0.035
+          ],
+          "closest_mesh_point_m": [
+            0.0,
+            1.0,
+            -0.03500000014901161
+          ],
+          "mesh_distance_m": 0.0
+        }
+      },
+      "interpretation": "Sockets lie on actual local surface/edge geometry.",
+      "pass": true
+    },
+    {
+      "master": "KIT_RockToe_Earth_2m",
+      "role": "rock_toe",
+      "local_bounds_m": [
+        [
+          0.0,
+          0.0,
+          -0.9000000357627869
+        ],
+        [
+          2.0,
+          2.0,
+          -0.03500000014901161
+        ]
+      ],
+      "sockets": {
+        "ROAD_EDGE": {
+          "coordinates_m": [
+            0,
+            1,
+            -0.035
+          ],
+          "closest_mesh_point_m": [
+            0.0,
+            1.0,
+            -0.03500000014901161
+          ],
+          "mesh_distance_m": 0.0
+        },
+        "TERRAIN_EDGE": {
+          "coordinates_m": [
+            2,
+            1,
+            -0.35
+          ],
+          "closest_mesh_point_m": [
+            2.0,
+            1.0,
+            -0.3499999940395355
+          ],
+          "mesh_distance_m": 0.0
+        }
+      },
+      "interpretation": "Sockets lie on actual local surface/edge geometry.",
+      "pass": true
+    },
+    {
+      "master": "KIT_Rock_River_A",
+      "role": "rock",
+      "local_bounds_m": [
+        [
+          -0.3802495002746582,
+          0.0,
+          -0.5
+        ],
+        [
+          0.3802495002746582,
+          1.4966087341308594,
+          0.44595253467559814
+        ]
+      ],
+      "sockets": {
+        "BASE": {
+          "coordinates_m": [
+            0,
+            0,
+            -0.5
+          ],
+          "closest_mesh_point_m": [
+            -0.042828526347875595,
+            0.24547432363033295,
+            -0.2434278428554535
+          ],
+          "mesh_distance_m": 0.357660710811615
+        }
+      },
+      "interpretation": "BASE is a local bottom-height/front-origin datum. It is not a vertex, contact point or proof of rock/ground contact; actual deepest-vertex embedding was separately tested.",
+      "BASE_z_minus_actual_bottom_m": 0.0,
+      "pass": true
+    }
+  ],
+  "pass": true,
+  "source_file": "AetherLab_CoreKit_Transitions_v3.blend",
+  "source_sha256": "46fc07828d7b3a19d7362f41e0cf03da79df321ea92172fa421f8b6b841767b3"
+}
