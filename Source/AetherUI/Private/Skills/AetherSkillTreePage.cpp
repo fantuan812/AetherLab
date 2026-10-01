@@ -91,19 +91,38 @@ void UAetherSkillTreePage::NativeDestruct()
     if(Menu.IsValid())Menu->OnChanged.RemoveAll(this);
     if(CommandClient.IsValid()){CommandClient->OnChanged.RemoveAll(this);CommandClient->OnResult.RemoveAll(this);}
     if(GetWorld())GetWorld()->GetTimerManager().ClearTimer(ViewTimer);
-    CommandClient.Reset();ClosePresentation();Menu.Reset();OnCommandReady.Clear();OnTrackQuest.Clear();Super::NativeDestruct();
+    CommandClient.Reset();ResetNativePresentation();Menu.Reset();OnCommandReady.Clear();OnTrackQuest.Clear();Super::NativeDestruct();
+}
+void UAetherSkillTreePage::ResetNativePresentation()
+{
+    // 本页缓存与未发送意图一起失效；已提交请求仍由 CommandClient 保存原字节与回执。
+    NativeSnapshotKey.Reset();bNativeSnapshot=false;NativePawn.Reset();LegacySource.Reset();LegacyRevision=-1;
+    Session=FAetherInspectionSession();Snapshot={};Selected.Reset();PendingNode.Reset();SourcePage=0;
+    if(Graph)Graph->CancelInteraction();HideConfirmation();Refresh();
+}
+void UAetherSkillTreePage::PublishNativeSnapshot(AAetherFrontierCharacter* Pawn,FAetherInspectionSnapshot S,const FString& Key)
+{
+    const bool NewSource=!bNativeSnapshot||NativePawn.Get()!=Pawn||Snapshot.Context.SessionId!=S.Context.SessionId||
+        !Snapshot.Context.OwnerIdentity.Equals(S.Context.OwnerIdentity,ESearchCase::CaseSensitive);
+    if(NewSource)ResetNativePresentation();
+    // bCanAct 汇总 PresentationReady、Ready 与 Pending；其中死亡、眩晕、动作门禁等
+    // 不一定改变档案/冷却版本，不能只按旧字符串键吞掉这些可用性变化。
+    if(!NewSource&&Key==NativeSnapshotKey&&Snapshot.bCanAct==S.bCanAct&&Snapshot.bPresentationReady==S.bPresentationReady)return;
+    NativeSnapshotKey=Key;S.Context.SnapshotRevision=++ViewGeneration;
+    PublishSnapshot(S);NativePawn=Pawn;
 }
 void UAetherSkillTreePage::HandleNativeProfile()
 {
-    if(!CommandClient.IsValid())return;
+    if(bHandlingNativeProfile||!CommandClient.IsValid())return;
+    TGuardValue<bool> Guard(bHandlingNativeProfile,true);
     const auto& P=CommandClient->GetProfile();
-    if(!P.IsSet())
+    auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());
+    // LocalPlayer 通道与当前菜单 Pawn 必须同时有效。换 Pawn 期间的旧回调只能清理展示，
+    // 不能仅凭相同档案版本重新发布旧生命；同一版本恢复后由清空的缓存正常重建。
+    if(!P.IsSet()||!IsValid(C)||!Menu.IsValid()||Menu->GetBoundPawn()!=C||
+        !CommandClient->GetChannel().IsValid()||!P->CharacterId.Equals(CommandClient->GetOwnerIdentity(),ESearchCase::CaseSensitive))
     {
-        if(bNativeSnapshot||CommandClient->GetChannel().IsValid())
-        {
-            HideConfirmation();Session=FAetherInspectionSession();Snapshot={};Selected.Reset();PendingNode.Reset();
-            NativePawn.Reset();bNativeSnapshot=false;LegacyRevision=-1;Refresh();
-        }
+        if(bNativeSnapshot||!NativeSnapshotKey.IsEmpty())ResetNativePresentation();
         return;
     }
     FAetherInspectionSnapshot S;
@@ -111,7 +130,7 @@ void UAetherSkillTreePage::HandleNativeProfile()
     S.ProfileRevision=P->Revision;S.Inventory=P->Inventory;S.Skills=P->Skills;
     S.SkillContext.CharacterLevel=FMath::Clamp(1+P->Experience/200,1,100);
     for(const auto& Claim:P->Claims)S.SkillContext.CompletedQuests.Add(Claim);
-    auto* C=Cast<AAetherFrontierCharacter>(GetOwningPlayerPawn());auto* PS=C?C->ProfileState():nullptr;
+    auto* PS=C->ProfileState();
     if(C)
     {
         S.SkillContext.bInCombat=C->HasRecentCombat(8);
@@ -128,8 +147,7 @@ void UAetherSkillTreePage::HandleNativeProfile()
     if(PS)Key+=TEXT("|grants:")+FString::FromInt(PS->SkillGrants.Sequence);
     Key+=S.bPresentationReady?TEXT("|ready"):TEXT("|sync");
     for(const auto& G:S.ExternalGrants)Key+=TEXT("|")+G.SourceId+TEXT(":")+G.SkillId+FString::FromInt(G.Rank);
-    if(Key==NativeSnapshotKey)return;NativeSnapshotKey=Key;S.Context.SnapshotRevision=++ViewGeneration;
-    PublishSnapshot(S);
+    PublishNativeSnapshot(C,MoveTemp(S),Key);
 }
 void UAetherSkillTreePage::DispatchNativeCommand(const FAetherInspectionDispatch& D)
 {
@@ -286,7 +304,7 @@ void UAetherSkillTreePage::HandleMenu()
     if(bNativeSnapshot&&(!Menu.IsValid()||!NativePawn.IsValid()||Menu->GetBoundPawn()!=NativePawn.Get()))
     {
         // 命令服务已经收到按值复制的请求；换 Pawn 只丢弃本页展示，禁止继续显示旧拥有者数据。
-        HideConfirmation();Session=FAetherInspectionSession();Snapshot={};NativePawn.Reset();Selected.Reset();PendingNode.Reset();Refresh();
+        ResetNativePresentation();
     }
     if(!Menu.IsValid()||Menu->GetPage()!=EAetherMenuPage::Skills){if(GetWorld())GetWorld()->GetTimerManager().ClearTimer(ViewTimer);ClosePresentation();return;}
     if(GetWorld()&&!GetWorld()->GetTimerManager().IsTimerActive(ViewTimer))GetWorld()->GetTimerManager().SetTimer(ViewTimer,this,&UAetherSkillTreePage::HandleNativeProfile,.25f,true);
