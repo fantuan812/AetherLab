@@ -123,4 +123,3 @@ UI 实现线，独占以下五个新文件：
 - [UGameViewportClient](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UGameViewportClient)：每 GI 对应视口，不依赖玩法 HUD 的生成
 
 具体取消/重试引擎调用仍须在实现阶段按准确 UE5.8 API 和本 GI/context 核对；不得以设计稿当作已经运行验证。
-
