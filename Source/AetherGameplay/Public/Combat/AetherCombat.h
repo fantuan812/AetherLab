@@ -111,6 +111,9 @@ public:
     bool FindSkillTarget(const FString& SkillId,int32 Rank,FHitResult& Hit,FVector& Origin,FVector& Direction) const;
     bool ExecuteSkill(const FString& SkillId,int32 Rank);
     bool ExecuteCast(const FAetherCastExecution& Execution);
+    FVector SkillAimOrigin() const;
+    virtual void OnCastStarted(const FAetherCastExecution& Execution){}
+    virtual bool ValidateCastCommit(const FAetherCastExecution& Execution,const AAetherCharacter* ActualTarget){return true;}
     bool TrySkill(const FString& SkillId);
     float SkillCooldownRemaining(const FString& SkillId) const;
     UPROPERTY(Replicated) FGuid CastExecutionId;
@@ -198,3 +201,4 @@ private:
     bool bNetProbeFinished = false;
     void NetworkProbe(float Dt);
 };
+

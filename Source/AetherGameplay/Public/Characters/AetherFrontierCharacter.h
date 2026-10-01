@@ -73,11 +73,8 @@ public:
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierProp> Carried;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> CompanionOwner;
     UPROPERTY(Replicated) bool bHealer = false;
-    void ExecuteCompanionHeal(TWeakObjectPtr<AAetherFrontierCharacter> Target,uint64 Request=0);
-    void CancelCompanionHeal(){bCompanionHealPending=false;}
-    bool bCompanionHealPending=false;
-    uint64 CompanionHealRequest=0,CompanionHealDamageSerial=0;
-    TWeakObjectPtr<AAetherFrontierCharacter> CompanionHealOwner;
+    virtual void OnCastStarted(const FAetherCastExecution& Execution) override;
+    virtual bool ValidateCastCommit(const FAetherCastExecution& Execution,const AAetherCharacter* ActualTarget) override;
     UPROPERTY(Replicated) TObjectPtr<AAetherFrontierCharacter> ReviveTarget;
     TWeakObjectPtr<AAetherFrontierCharacter> RescueHolder;
     float RescueLeaseUntil=0;
@@ -226,3 +223,4 @@ private:
     void GuardOn(){if(!bPanel)ServerBlock(true);} void GuardOff(){ServerBlock(false);}
     void Dodge(){if(!bPanel&&!UtilityModifierHeld())TryDodge();} void JumpV4(){StartJumpInput();}
 };
+
