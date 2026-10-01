@@ -15,6 +15,7 @@ class AETHERGAMEPLAY_API AAetherPlayerController : public APlayerController
 public:
     UFUNCTION(Client,Reliable) void ClientV10StartupStatus(const FAetherStartupSnapshot& Snapshot);
     void PublishStartupStatus(const FAetherStartupSnapshot& Snapshot);
+    void PublishStartupFailure(FAetherStartupSnapshot Snapshot,EAetherStartupFailure Failure);
     // 服务器只从拥有此 Controller 的连接解析身份；包内只有通道和固定协议字节。
     UFUNCTION(Server,Reliable) void ServerV10SceneInput(const FAetherV10CommandPacket& Packet,uint64 Sequence);
     bool SendV10SceneInput(FAetherPlayerCommand Command,FString& Reason);
@@ -40,6 +41,7 @@ private:
     uint64 SceneInputSequence=0;
     FGuid StartupAttempt;
     uint32 StartupSequence=0;
+    bool bStartupTerminal=false;
 public:
     virtual bool ShouldFlushKeysWhenViewportFocusChanges() const override {return true;}
 };

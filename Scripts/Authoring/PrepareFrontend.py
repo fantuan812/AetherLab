@@ -15,6 +15,9 @@ target = settings.get_frontend_asset_path()
 if not target.startswith("/Game/") or "?" in target or ".." in target:
     raise RuntimeError("FrontendMap 配置不是有效项目地图软路径")
 package = target.rsplit(".", 1)[0] if "." in target.rsplit("/", 1)[-1] else target
+expected = package + "." + package.rsplit("/", 1)[-1]
+if target != expected:
+    raise RuntimeError("FrontendMap 必须明确引用与地图包同名的 World 对象")
 library = ue.EditorAssetLibrary
 
 if library.does_asset_exist(package):
@@ -37,6 +40,8 @@ else:
 
 if not library.does_asset_exist(package):
     raise RuntimeError("作者化没有产生可读的原生地图")
+if library.load_asset(target) != world:
+    raise RuntimeError("原始 FrontendMap 配置未解析到作者化的同一 World")
 if world.get_world_settings().get_editor_property("default_game_mode") != mode_type.static_class():
     raise RuntimeError("前端地图模式核对失败")
 ue.log("AETHER_FRONTEND_ASSET_AUTHORED " + package)

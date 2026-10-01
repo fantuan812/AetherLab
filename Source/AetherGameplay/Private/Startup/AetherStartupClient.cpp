@@ -40,6 +40,8 @@ struct FAetherStartupClientImpl
     FAetherStartupView View;
     TWeakObjectPtr<UWorld> World;
     TWeakObjectPtr<AAetherPlayerController> Controller;
+    TWeakObjectPtr<AAetherPlayerController> CommandController;
+    FGuid CommandChannel;
     TWeakObjectPtr<UPendingNetGame> PendingConnection;
     FDelegateHandle PreLoad,PostLoad,NetworkFailure,TravelFailure;
     uint32 ServerSequence=0;
@@ -86,7 +88,7 @@ struct FAetherStartupClientImpl
     {
         const auto Failure=KeepFailure?View.FailureCode:EAetherStartupFailure::None;
         View={};View.LocalAttemptToken=FGuid::NewGuid();View.Stage=Stage;View.FailureCode=Failure;
-        Controller.Reset();ServerSequence=0;
+        Controller.Reset();CommandController.Reset();CommandChannel.Invalidate();ServerSequence=0;
     }
     void Remember(const FURL& URL)
     {
@@ -120,6 +122,13 @@ struct FAetherStartupClientImpl
         if(View.ServerAttemptId.IsValid()&&View.ServerAttemptId!=S.AttemptId)return;
         if(S.Sequence<=ServerSequence)return;
         View.ServerAttemptId=S.AttemptId;ServerSequence=S.Sequence;View.Stage=S.Stage;View.FailureCode=S.FailureCode;
+    }
+    void SynchronizeController(AAetherPlayerController* Current)
+    {
+        if(bRouting||bTravelQueued||View.Stage==EAetherStartupStage::Cancelled)return;
+        if(Current&&(!IsValid(Current)||Current->IsActorBeingDestroyed()))Current=nullptr;
+        if(!Controller.IsExplicitlyNull()&&Controller.Get()!=Current)Begin(EAetherStartupStage::Connecting,false);
+        Controller=Current;
     }
     bool QueueTravel(const FString& URL,bool Cancel)
     {
@@ -156,6 +165,7 @@ struct FAetherStartupClientImpl
                 Remember(Pending->URL);
             }
         }
+        if(!IsFrontend(W))SynchronizeController(Cast<AAetherPlayerController>(GI()->GetFirstLocalPlayerController(W)));
         if(!bTravelQueued&&View.Stage==EAetherStartupStage::Idle&&IsFrontend(W))View.Stage=EAetherStartupStage::Frontend;
         if(!bTravelQueued&&W->GetNetMode()!=NM_Client&&W->GetAuthGameMode<AAetherFrontierMode>())
             if(auto* P=GI()->GetSubsystem<UAetherNativePersistence>())Accept(P->StartupStatus());
@@ -164,7 +174,7 @@ struct FAetherStartupClientImpl
             auto* PC=Cast<AAetherPlayerController>(GI()->GetFirstLocalPlayerController(W));
             auto* LP=PC?PC->GetLocalPlayer():nullptr;auto* C=PC?Cast<AAetherFrontierCharacter>(PC->GetPawn()):nullptr;
             auto* Commands=LP?LP->GetSubsystem<UAetherCommandClient>():nullptr;
-            if(C&&Commands&&Commands->GetChannel().IsValid()&&Commands->GetProfile().IsSet()&&
+            if(C&&Commands&&Owner.OwnsCommandChannel(PC,Commands->GetChannel())&&Commands->GetProfile().IsSet()&&
                 Commands->GetProfile()->CharacterId.Equals(Commands->GetOwnerIdentity(),ESearchCase::CaseSensitive)&&
                 C->ProfileState()&&C->ProfileState()->Profile.CharacterId.Equals(Commands->GetOwnerIdentity(),ESearchCase::CaseSensitive)&&
                 C->BuffRuntime->PresentationReady(Commands->GetProfile()->Revision)&&!C->bTravelPending&&C->Ready())View.Stage=EAetherStartupStage::Ready;
@@ -221,11 +231,31 @@ void UAetherStartupClient::ReceiveStartup(AAetherPlayerController* C,const FAeth
         C->GetLocalPlayer()->GetPlayerController(C->GetWorld())!=C)return;
     const auto Before=Active->View;
     if(Active->World.Get()!=C->GetWorld())Active->BindWorld(C->GetWorld());
-    if(Impl!=Active||Active->bRouting||Active->bTravelQueued||Terminal(Active->View.Stage))return;
+    if(Impl!=Active||Active->bRouting||Active->bTravelQueued||Active->View.Stage==EAetherStartupStage::Cancelled)return;
     // 同世界也可能先替换当前PC、后销毁旧PC；前置LocalPlayer核对已经排除了旧连接。
     // 新Controller必须可接收同一服务端阶段，但旧按钮/缓存身份不能跨连接继续使用。
-    if(!Active->Controller.IsExplicitlyNull()&&Active->Controller.Get()!=C)Active->Begin(EAetherStartupStage::Connecting,false);
-    Active->Controller=C;Active->Accept(Snapshot);Active->Publish(Before);
+    Active->SynchronizeController(C);Active->Accept(Snapshot);Active->Publish(Before);
+}
+void UAetherStartupClient::ObserveCommandChannel(AAetherPlayerController* C,FGuid Channel)
+{
+    const auto Active=Impl;
+    if(!Active||!IsValid(C)||C->IsActorBeingDestroyed()||!C->IsLocalController()||!C->GetLocalPlayer()||
+        C->GetGameInstance()!=GetGameInstance()||GetWorld()!=C->GetWorld()||!Active->OwnWorld(C->GetWorld())||
+        C->GetLocalPlayer()->GetPlayerController(C->GetWorld())!=C||Active->bRouting||Active->bTravelQueued||
+        Active->View.Stage==EAetherStartupStage::Cancelled)return;
+    const auto Before=Active->View;if(Active->World.Get()!=C->GetWorld())Active->BindWorld(C->GetWorld());
+    Active->SynchronizeController(C);
+    if(Active->CommandController.Get()!=C||Active->CommandChannel!=Channel)
+    {
+        Active->View.LocalAttemptToken=FGuid::NewGuid();Active->CommandController=C;Active->CommandChannel=Channel;
+        if(Active->View.Stage==EAetherStartupStage::Ready)Active->View.Stage=EAetherStartupStage::WorldReady;
+    }
+    Active->Publish(Before);
+}
+bool UAetherStartupClient::OwnsCommandChannel(AAetherPlayerController* C,FGuid Channel) const
+{
+    return Impl&&IsValid(C)&&Channel.IsValid()&&Impl->Controller.Get()==C&&Impl->CommandController.Get()==C&&
+        Impl->CommandChannel==Channel&&Impl->World.Get()==C->GetWorld()&&GetWorld()==C->GetWorld();
 }
 bool UAetherStartupClient::RequestStart(FGuid Token)
 {

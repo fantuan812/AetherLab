@@ -24,6 +24,8 @@ public:
     bool RequestRetry(FGuid LocalAttemptToken);
     // 仅供拥有者 RPC；仍复验当前 GI、Controller、World、attempt 与序号。
     void ReceiveStartup(AAetherPlayerController* Controller,const FAetherStartupSnapshot& Snapshot);
+    // CommandClient 接受拥有者通道后通知；UI 不可把旧 Controller 的缓存当作当前角色就绪。
+    void ObserveCommandChannel(AAetherPlayerController* Controller,FGuid Channel);
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
     virtual void Tick(float DeltaSeconds) override;
@@ -32,6 +34,8 @@ public:
     virtual UWorld* GetTickableGameObjectWorld() const override;
 private:
     friend class FAetherStartupLifecycleTest;
+    friend struct FAetherStartupClientImpl;
+    bool OwnsCommandChannel(AAetherPlayerController* Controller,FGuid Channel) const;
     // 路由/通知栈持有局部共享引用，Deinitialize 撤下成员也不释放正在执行的栈帧。
     TSharedPtr<FAetherStartupClientImpl> Impl;
 };

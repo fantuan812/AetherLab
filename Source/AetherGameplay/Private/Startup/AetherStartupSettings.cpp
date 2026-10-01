@@ -17,10 +17,11 @@ bool UAetherStartupSettings::ResolveMap(bool Frontend,FString& Package) const
     if(Map.IsNull())return false;
     const auto Path=Map.ToSoftObjectPath();const auto Name=Path.GetLongPackageName();
     if(!FPackageName::IsValidLongPackageName(Name)||!FPackageName::DoesPackageExist(Name))return false;
+    const auto* World=Map.LoadSynchronous();if(!World)return false;
     if(Frontend)
     {
         // 包存在仍不足以保证安全停留；正式前端必须具有不装持久后端的明确模式。
-        const auto* World=Map.LoadSynchronous();const auto* Settings=World?World->GetWorldSettings():nullptr;
+        const auto* Settings=World->GetWorldSettings();
         if(!Settings||Settings->DefaultGameMode!=AAetherFrontendMode::StaticClass())return false;
     }
     Package=Name;return true;

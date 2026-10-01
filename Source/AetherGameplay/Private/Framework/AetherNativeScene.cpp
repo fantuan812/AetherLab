@@ -52,8 +52,10 @@ bool ValidateV10SceneReferences(FString& Reason)
 void AAetherFrontierMode::FailNativeScene(const FString& Reason)
 {
     bWorldRestoreFailed=true;bNativeSceneReady=false;
+    bool HadReadyWorld=false;
     if(auto* Persistence=GetGameInstance()->GetSubsystem<UAetherNativePersistence>())
     {
+        HadReadyWorld=Persistence->StartupStatus().Stage==EAetherStartupStage::WorldReady;
         Persistence->ReportSceneFailure(GetWorld(),Reason);
         for(auto It=GetWorld()->GetPlayerControllerIterator();It;++It)
             if(auto* PC=Cast<AAetherPlayerController>(It->Get()))PC->PublishStartupStatus(Persistence->StartupStatus());
@@ -61,7 +63,7 @@ void AAetherFrontierMode::FailNativeScene(const FString& Reason)
     if(bNativeFailureReported)return;bNativeFailureReported=true;
     UE_LOG(LogTemp,Error,TEXT("AETHER_NATIVE_SCENE_FAILED %s"),*Reason);
     // 启动失败由明确终态页面承接；不能自动回默认 Frontier 再次开库。
-    if(!bNativeBaselineReady)return;
+    if(!HadReadyWorld)return;
     // 失败不会清库或回退旧档；每个已入场连接均退出，避免操作半恢复场景。
     const FString Message=(Reason.StartsWith(TEXT("AETHER_SAVE_FORMAT_UNSUPPORTED:"))||Reason.StartsWith(TEXT("AETHER_SAVE_SCHEMA_UNSUPPORTED:")))?
         TEXT("此世界的存档格式不受支持，已停止加载且保留原件。请恢复当前格式备份，或明确选择新的存档名称开始新游戏。"):
@@ -216,7 +218,13 @@ void AAetherFrontierMode::TickNativeStartup()
         const auto& D=FAetherV10Definitions::Get();FAetherProfileStateV10 P;FString Why;
         if(!PS||R.Code!=EAetherStoreCode::Found||!R.Value.IsSet()||
             !AetherProfileCodec::Decode(R.Value->Payload,D.Items,D.Skills,D.Rules,P,Why)||!PS->PublishNativeProfile(P,Why))
-        {NativeLoginRejected.Add(PC);PC->ClientReturnToMainMenuWithTextReason(FText::FromString(TEXT("角色存档暂不可用，请稍后重新连接。")));continue;}
+        {
+            NativeLoginRejected.Add(PC);
+            // 角色失败属于当前连接，不能污染全服世界状态或自动返回默认可玩地图。
+            PC->PublishStartupFailure(Persistence->StartupStatus(),EAetherStartupFailure::ProfileUnavailable);
+            UE_LOG(LogTemp,Warning,TEXT("AETHER_NATIVE_PROFILE_STARTUP_FAILED code=%d reason=%s"),int32(R.Code),*Why);
+            continue;
+        }
         NativePlayersReady.Add(PC);
         for(auto& C:NativeContainers)if(IsValid(C.Value)&&C.Value->bOnlyRelevantToOwner&&C.Value->OwnerCharacterId.Equals(P.CharacterId,ESearchCase::CaseSensitive))C.Value->SetOwner(PC);
         RestartPlayer(PC);
