@@ -450,8 +450,8 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     }
     else if(Cast.Mechanic==EAetherSkillMechanic::FriendlyTargetBuff)
     {
-        auto* Target=::Cast<AAetherCharacter>(Hit.GetActor());const auto* Receiver=Target?Target->ResourceGate->GetReceiver():nullptr;
-        if(!Receiver||Receiver->State().LifeId!=Cast.TargetLifeId)return false;
+        auto* Target=::Cast<AAetherCharacter>(Hit.GetActor());FGuid TargetLife;
+        if(!Target||!AetherSkillLives::Resolve(*Target,TargetLife)||TargetLife!=Cast.TargetLifeId)return false;
         FString Why;Accepted=Target->BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId+TEXT(".")+Cast.LifeId.ToString(EGuidFormats::Digits),Why);Feedback=Why;
     }
     else if(auto* Body=Hit.GetActor()?Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>():nullptr)

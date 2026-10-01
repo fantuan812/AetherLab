@@ -2,6 +2,7 @@
 #include "Combat/AetherCombat.h"
 #include "Skills/AetherSkillDefinitions.h"
 #include "Skills/AetherSkillAbilityBinding.h"
+#include "Skills/AetherSkillCooldownState.h"
 #include "Inventory/AetherResourceGate.h"
 #include "Framework/AetherProgression.h"
 #include "Effects/AetherBuffRuntime.h"
@@ -54,8 +55,9 @@ void UAetherSpellAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
     const auto& Definitions=FAetherSkillDefinitionsV10::Get();
     Cast.DefinitionRevision=Definitions.ContentSchemaVersion;Cast.Effect=*Definitions.Effect(Id,Rank);
     Cast.Mechanic=Definitions.Skills.FindChecked(Id).Mechanic;
-    if(const auto* Receiver=C->ResourceGate->GetReceiver())Cast.LifeId=Receiver->State().LifeId;
-    if(auto* Target=::Cast<AAetherCharacter>(Hit.GetActor()))if(const auto* Receiver=Target->ResourceGate->GetReceiver())Cast.TargetLifeId=Receiver->State().LifeId;
+    if(!AetherSkillLives::Resolve(*C,Cast.LifeId)){EndAbility(H,Info,A,true,true);return;}
+    if(auto* Target=::Cast<AAetherCharacter>(Hit.GetActor());Target&&Cast.Mechanic==EAetherSkillMechanic::FriendlyTargetBuff)
+        if(!AetherSkillLives::Resolve(*Target,Cast.TargetLifeId)){EndAbility(H,Info,A,true,true);return;}
     const double Speed=FMath::Clamp(double(C->BuffRuntime->ActionSpeedMultiplier),.1,3.);
     Cast.Effect.WindupSeconds/=Speed;
     Cast.Effect.RecoverySeconds=(Cast.Effect.RecoverySeconds<0?Cast.Effect.Cooldown:Cast.Effect.RecoverySeconds)/Speed;
@@ -84,8 +86,7 @@ void UAetherSpellAbility::FinishCast(FGuid ExpectedExecution)
     Cast.bCostApplied=Payment.IsValid()&&Payment->bCostApplied;
     const auto SameLife=[&]() {
         if(!Avatar.IsValid()||!ASC.IsValid()||ASC->GetAvatarActor()!=Avatar.Get()||Avatar->AbilitySystem!=ASC.Get()||!Avatar->Alive())return false;
-        const auto* Receiver=Avatar->ResourceGate->GetReceiver();
-        return Cast.LifeId.IsValid() ? Receiver&&Receiver->State().LifeId==Cast.LifeId : !Receiver;
+        FGuid Life;return AetherSkillLives::Resolve(*Avatar,Life)&&Life==Cast.LifeId;
     };
     FString CurrentId;int32 CurrentRank=0;
     const bool OwnsExecution=Payment==PaymentExecution&&PreparedCast.IsSet()&&PreparedCast->ExecutionId==ExpectedExecution;
@@ -98,8 +99,7 @@ void UAetherSpellAbility::FinishCast(FGuid ExpectedExecution)
         Cast.bRefunded=true;Payment->bRefunded=true;
         const auto Refund=[Avatar,ASC,Life=Cast.LifeId,Cost=float(Cast.Effect.ManaCost)] {
             if(!Avatar.IsValid()||!ASC.IsValid()||ASC->GetAvatarActor()!=Avatar.Get()||!Avatar->Alive())return;
-            const auto* Receiver=Avatar->ResourceGate->GetReceiver();
-            if(Life.IsValid()?(!Receiver||Receiver->State().LifeId!=Life):Receiver!=nullptr)return;
+            FGuid CurrentLife;if(!AetherSkillLives::Resolve(*Avatar,CurrentLife)||CurrentLife!=Life)return;
             ASC->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(),EGameplayModOp::Additive,Cost);
         };
         if(!Avatar->ResourceGate->Defer(Refund))Refund();
