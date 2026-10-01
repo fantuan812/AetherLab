@@ -32,9 +32,12 @@ bool AetherNavigationProbe::IsLocalStepClear(const ACharacter& Character,FVector
     const float EndSearchLift=Movement->MaxStepHeight+UCharacterMovementComponent::MAX_FLOOR_DIST;
     const FVector StartSearch=Geometry.Center-Down*StartSearchLift;
     const FVector EndSearch=Geometry.Center+Delta-Down*EndSearchLift;
+    // 搜索预算包含原身体与地面的有效间距；零步高仍允许在正常离地间距的平地行走。
+    const float StartSearchDepth=StartSearchLift+UCharacterMovementComponent::MAX_FLOOR_DIST;
+    const float EndSearchDepth=EndSearchLift+UCharacterMovementComponent::MAX_FLOOR_DIST+Movement->MaxStepHeight;
     FFindFloorResult StartFloor,EndFloor;
-    Movement->ComputeFloorDist(StartSearch,EndSearchLift,EndSearchLift,StartFloor,Geometry.Radius,nullptr);
-    Movement->ComputeFloorDist(EndSearch,EndSearchLift*2,EndSearchLift*2,EndFloor,Geometry.Radius,nullptr);
+    Movement->ComputeFloorDist(StartSearch,StartSearchDepth,StartSearchDepth,StartFloor,Geometry.Radius,nullptr);
+    Movement->ComputeFloorDist(EndSearch,EndSearchDepth,EndSearchDepth,EndFloor,Geometry.Radius,nullptr);
     const auto ValidFloor=[&](const FFindFloorResult& Floor)
     {
         const auto* Component=Floor.HitResult.GetComponent();

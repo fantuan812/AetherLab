@@ -36,6 +36,14 @@ bool FAetherNavigationProbeTest::RunTest(const FString&)
     TestTrue(TEXT("An exactly grounded capsule is not permanently blocked by ground contact"),AetherNavigationProbe::IsLocalStepClear(*Character,FVector(150,0,0),Floor));
     TestTrue(TEXT("Production CMC recognizes the returned support"),Movement->IsWalkable(Floor)&&Floor.GetComponent()==Ground);
     TestFalse(TEXT("Missing endpoint support is not a traversable local step"),AetherNavigationProbe::IsLocalStepClear(*Character,FVector(4000,0,0),Floor));
+    const float InitialStepHeight=Movement->MaxStepHeight;Movement->MaxStepHeight=0;
+    for(float Gap:{UCharacterMovementComponent::MIN_FLOOR_DIST,UCharacterMovementComponent::MAX_FLOOR_DIST})
+    {
+        Character->SetActorLocation(FVector(0,0,Capsule->GetScaledCapsuleHalfHeight()+Gap));
+        TestTrue(TEXT("Zero step height still admits flat ground at the normal CMC floor gap"),AetherNavigationProbe::IsLocalStepClear(*Character,FVector(150,0,0),Floor));
+        TestTrue(TEXT("Zero-step flat support is the actual ground"),Floor.GetComponent()==Ground&&Movement->IsWalkable(Floor));
+    }
+    Movement->MaxStepHeight=InitialStepHeight;Character->SetActorLocation(FVector(0,0,Capsule->GetScaledCapsuleHalfHeight()));
 
     auto* Left=Box(FVector(230,-60,150),FVector(150,20,150));
     auto* Right=Box(FVector(230,60,150),FVector(150,20,150));
