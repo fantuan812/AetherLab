@@ -418,16 +418,20 @@ bool AAetherCharacter::FindSkillTarget(const FString& SkillId,int32 Rank,FHitRes
 }
 bool AAetherCharacter::ExecuteSkill(const FString& SkillId,int32 Rank)
 {
-    const auto& Definitions=FAetherSkillDefinitionsV10::Get();
-    const auto* D=Definitions.Skills.Find(SkillId);const auto* E=Definitions.Effect(SkillId,Rank);
-    if(!D||!E)return false;
-    FAetherCastExecution Cast;Cast.SkillId=SkillId;Cast.Rank=Rank;Cast.DefinitionRevision=Definitions.ContentSchemaVersion;
-    Cast.Mechanic=D->Mechanic;Cast.Effect=*E;
-    return ExecuteCast(Cast);
+    // 现有公开请求也收敛到GAS；不能自行制造未拥有的Cast绕过支付/生命/取消事实。
+    const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,SkillId):nullptr;
+    return Spec&&Spec->Level==Rank&&TrySkill(SkillId);
 }
 bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
 {
-    if(!HasAuthority()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||SkillCooldownRemaining(Cast.SkillId)>0)return false;
+    const TWeakObjectPtr<UAbilitySystemComponent> CastSystem=AbilitySystem;
+    const auto OwnsExecution=[&]
+    {
+        FGuid Life;
+        return Cast.ExecutionId.IsValid()&&CastExecutionId==Cast.ExecutionId&&CastSystem.IsValid()&&AbilitySystem==CastSystem.Get()&&
+            CastSystem->GetAvatarActor()==this&&AetherSkillLives::Resolve(*this,Life)&&Life==Cast.LifeId;
+    };
+    if(!HasAuthority()||!OwnsExecution()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||SkillCooldownRemaining(Cast.SkillId)>0)return false;
     // 执行前锁定唯一冷却所有者，效果回调不得把旧动作提交到替换 Pawn/ASC 的冷却表。
     const TWeakObjectPtr<AAetherPlayerState> ProfileCooldownOwner=SkillAuthority==EAetherSkillAuthority::Profile?GetPlayerState<AAetherPlayerState>():nullptr;
     const TWeakObjectPtr<UAetherDefinitionAbilitySystem> DefinitionCooldownOwner=SkillAuthority==EAetherSkillAuthority::Definition?::Cast<UAetherDefinitionAbilitySystem>(AbilitySystem):nullptr;
@@ -435,7 +439,9 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     const auto* E=&Cast.Effect;
     FHitResult Hit;FVector Origin,Direction;
     if(!FindSkillTarget(Cast.SkillId,Cast.Rank,Hit,Origin,Direction))return false;
-    bool Accepted=false;
+    // Friendly目标预检查会FlushDue并发出属性通知；正式效果前再次确认原施法生命/执行。
+    if(!OwnsExecution()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||!EnemySkillDecision.ValidateCommit(*this,Cast))return false;
+    const float CommittedAt=CombatTime();bool Accepted=false;
     if(Cast.Mechanic==EAetherSkillMechanic::Fire)
     {
         const FTransform SpawnTransform(Direction.Rotation(),Origin);
@@ -446,13 +452,13 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     }
     else if(Cast.Mechanic==EAetherSkillMechanic::SelfBuff)
     {
-        FString Why;Accepted=BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId,Why);Feedback=Why;
+        FString Why;Accepted=BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId,Why);if(OwnsExecution())Feedback=Why;
     }
     else if(Cast.Mechanic==EAetherSkillMechanic::FriendlyTargetBuff)
     {
-        auto* Target=::Cast<AAetherCharacter>(Hit.GetActor());const auto* Receiver=Target?Target->ResourceGate->GetReceiver():nullptr;
-        if(!Receiver||Receiver->State().LifeId!=Cast.TargetLifeId)return false;
-        FString Why;Accepted=Target->BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId+TEXT(".")+Cast.LifeId.ToString(EGuidFormats::Digits),Why);Feedback=Why;
+        auto* Target=::Cast<AAetherCharacter>(Hit.GetActor());FGuid TargetLife;
+        if(!Target||!AetherSkillLives::Resolve(*Target,TargetLife)||TargetLife!=Cast.TargetLifeId)return false;
+        FString Why;Accepted=Target->BuffRuntime->Apply(E->BuffId,TEXT("Skill.")+Cast.SkillId+TEXT(".")+Cast.LifeId.ToString(EGuidFormats::Digits),Why);if(OwnsExecution())Feedback=Why;
     }
     else if(auto* Body=Hit.GetActor()?Hit.GetActor()->FindComponentByClass<UReactiveBodyComponent>():nullptr)
     {
@@ -460,13 +466,14 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
         FReactiveStimulus S;S.SourceActor=this;S.WaterKg=E->WaterKg;S.HeatJ=E->HeatJ;S.ElectricalJ=E->ElectricalJ;
         Accepted=Body->Inject(S);
         // 只扣除模拟接受的水量。等级提升不能凭空造水，也不能在注入失败时丢失水。
-        if(Accepted)WaterReserveKg-=float(E->WaterKg);
+        if(Accepted&&OwnsExecution())WaterReserveKg-=float(E->WaterKg);
     }
     if(Accepted)
     {
-        CastStartedAt=CombatTime();CastLockUntil=CastStartedAt+float(E->RecoverySeconds<0?E->Cooldown:E->RecoverySeconds);
-        if(ProfileCooldownOwner.IsValid())ProfileCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
-        else if(DefinitionCooldownOwner.IsValid())DefinitionCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CastStartedAt);
+        // 已成功的效果提交到先前锁定的唯一owner；旧栈不能覆盖回调中新执行的恢复/开始时刻。
+        if(OwnsExecution()){CastStartedAt=CommittedAt;CastLockUntil=CommittedAt+float(E->RecoverySeconds<0?E->Cooldown:E->RecoverySeconds);}
+        if(ProfileCooldownOwner.IsValid())ProfileCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CommittedAt);
+        else if(DefinitionCooldownOwner.IsValid())DefinitionCooldownOwner->CommitCooldown(Cast.SkillId,E->CooldownGroup,E->SkillCooldown,E->Cooldown,CommittedAt);
         EnemySkillDecision.RecordCommitted(*this,Cast);
     }
     return Accepted;
