@@ -18,6 +18,8 @@ bool ValidId(const FString& Id)
     for(TCHAR C:Id)if(!((C>='A'&&C<='Z')||(C>='a'&&C<='z')||(C>='0'&&C<='9')||C=='.'||C=='_'))return false;
     return true;
 }
+bool Number(const FJsonObject& Object,const TCHAR* Key,double& Out)
+{return Object.HasTypedField<EJson::Number>(Key)&&Object.TryGetNumberField(Key,Out);}
 bool Positive(double Value){return FMath::IsFinite(Value)&&Value>0&&FMath::IsFinite(Value*Value);}
 }
 bool FAetherNpcPerceptionProfile::IsValid() const
@@ -42,7 +44,7 @@ FAetherNpcPerceptionDefinitions FAetherNpcPerceptionDefinitions::Parse(const FSt
     TSharedPtr<FJsonObject> Root;double Version=0;
     if(Json.Len()>128*1024||!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Root)||!Root||
         !Fields(*Root,{TEXT("SchemaVersion"),TEXT("Profiles"),TEXT("FighterProfiles")})||
-        !Root->TryGetNumberField(TEXT("SchemaVersion"),Version)||Version!=1)return Fail(TEXT("Unsupported NPC perception schema"));
+        !Number(*Root,TEXT("SchemaVersion"),Version)||Version!=1)return Fail(TEXT("Unsupported NPC perception schema"));
     const TArray<TSharedPtr<FJsonValue>>* Rows=nullptr;
     if(!Root->TryGetArrayField(TEXT("Profiles"),Rows)||Rows->IsEmpty()||Rows->Num()>64)return Fail(TEXT("Invalid NPC perception profile count"));
     FAetherNpcPerceptionDefinitions D;TSet<FString> Seen;
@@ -51,10 +53,10 @@ FAetherNpcPerceptionDefinitions FAetherNpcPerceptionDefinitions::Parse(const FSt
         const TSharedPtr<FJsonObject>* O=nullptr;FAetherNpcPerceptionProfile P;
         if(!Row->TryGetObject(O)||!O||!O->IsValid()||!Fields(**O,{TEXT("Id"),TEXT("SampleIntervalSeconds"),TEXT("SightRadiusCm"),
             TEXT("TargetHomeRadiusCm"),TEXT("SelfLeashRadiusCm"),TEXT("MemorySeconds"),TEXT("ObservationFreshnessSeconds"),TEXT("HomeArrivalRadiusCm")})||
-            !(*O)->TryGetStringField(TEXT("Id"),P.Id)||!(*O)->TryGetNumberField(TEXT("SampleIntervalSeconds"),P.SampleIntervalSeconds)||
-            !(*O)->TryGetNumberField(TEXT("SightRadiusCm"),P.SightRadiusCm)||!(*O)->TryGetNumberField(TEXT("TargetHomeRadiusCm"),P.TargetHomeRadiusCm)||
-            !(*O)->TryGetNumberField(TEXT("SelfLeashRadiusCm"),P.SelfLeashRadiusCm)||!(*O)->TryGetNumberField(TEXT("MemorySeconds"),P.MemorySeconds)||
-            !(*O)->TryGetNumberField(TEXT("ObservationFreshnessSeconds"),P.ObservationFreshnessSeconds)||!(*O)->TryGetNumberField(TEXT("HomeArrivalRadiusCm"),P.HomeArrivalRadiusCm)||
+            !(*O)->HasTypedField<EJson::String>(TEXT("Id"))||!(*O)->TryGetStringField(TEXT("Id"),P.Id)||!Number(**O,TEXT("SampleIntervalSeconds"),P.SampleIntervalSeconds)||
+            !Number(**O,TEXT("SightRadiusCm"),P.SightRadiusCm)||!Number(**O,TEXT("TargetHomeRadiusCm"),P.TargetHomeRadiusCm)||
+            !Number(**O,TEXT("SelfLeashRadiusCm"),P.SelfLeashRadiusCm)||!Number(**O,TEXT("MemorySeconds"),P.MemorySeconds)||
+            !Number(**O,TEXT("ObservationFreshnessSeconds"),P.ObservationFreshnessSeconds)||!Number(**O,TEXT("HomeArrivalRadiusCm"),P.HomeArrivalRadiusCm)||
             !P.IsValid()||Seen.Contains(P.Id.ToLower()))return Fail(TEXT("Missing/invalid/duplicate NPC perception profile"));
         Seen.Add(P.Id.ToLower());const FString Id=P.Id;D.Profiles.Add(Id,MoveTemp(P));
     }
@@ -65,7 +67,7 @@ FAetherNpcPerceptionDefinitions FAetherNpcPerceptionDefinitions::Parse(const FSt
     for(const auto& Entry:(*Bindings)->Values)
     {
         FString Target;
-        if(!ValidId(Entry.Key)||Seen.Contains(Entry.Key.ToLower())||!Entry.Value->TryGetString(Target))return Fail(TEXT("Invalid/duplicate NPC perception fighter identity"));
+        if(!ValidId(Entry.Key)||Seen.Contains(Entry.Key.ToLower())||Entry.Value->Type!=EJson::String||!Entry.Value->TryGetString(Target))return Fail(TEXT("Invalid/duplicate NPC perception fighter identity"));
         const auto* P=D.Profiles.Find(Target);
         if(!P||!P->Id.Equals(Target,ESearchCase::CaseSensitive))return Fail(TEXT("Unknown NPC perception profile binding"));
         Seen.Add(Entry.Key.ToLower());D.FighterProfiles.Add(Entry.Key,Target);

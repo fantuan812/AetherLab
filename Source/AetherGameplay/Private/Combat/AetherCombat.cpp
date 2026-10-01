@@ -236,6 +236,7 @@ void AAetherCharacter::PossessedBy(AController* C)
 void AAetherCharacter::CancelActions()
 {
     if(!HasAuthority())return;
+    if(!Alive())EnemyPerception.Reset(); // 死亡/安抚不会走 Think，必须在实际取消链清感知历史。
     EnemySkillDecision.CancelRequest(CastExecutionId);
     Equipment->CancelAttack();
     // A PlayerState ASC may already have moved to a replacement pawn.
@@ -375,6 +376,7 @@ void AAetherCharacter::SetVitals(float HP, float MP, float SP)
 }
 void AAetherCharacter::ResetCombat()
 {
+    EnemyPerception.Reset();
     ActionUntil = CastLockUntil = StunUntil = CombatRuntime->InvulnerableUntil = 0; NextAI = 0; CombatRuntime->LastDamageAt = -100;
     bWindingUp = bBlocking = false; NextShockStun = 0;
     CancelActions();

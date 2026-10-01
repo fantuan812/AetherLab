@@ -19,7 +19,7 @@ FAetherNpcObservation FAetherNpcPerception::Observe(AAetherCharacter& C,const FA
     LastUpdateAt=Now;
     if(FVector::DistSquared(C.GetActorLocation(),C.Home)>FMath::Square(Profile.SelfLeashRadiusCm))
     {Observation={};return Observation;}
-    if(auto* Target=Observation.Target.Get();!Target||!FAetherNpcSkillDecision::CanTarget(C,*Target)||Now-Observation.LastSeenAt>Profile.MemorySeconds)
+    if(auto* Target=Observation.Target.Get();!Target||!Target->HasActorBegunPlay()||!FAetherNpcSkillDecision::CanTarget(C,*Target)||Now-Observation.LastSeenAt>Profile.MemorySeconds)
         Observation={};
     if(Now>=NextSampleAt)
     {
@@ -28,7 +28,7 @@ FAetherNpcObservation FAetherNpcPerception::Observe(AAetherCharacter& C,const FA
         double Best=FMath::Square(Profile.SightRadiusCm);
         if(!Eye.ContainsNaN())for(TActorIterator<AAetherCharacter> It(C.GetWorld());It;++It)
         {
-            auto* Candidate=*It;if(!FAetherNpcSkillDecision::CanTarget(C,*Candidate))continue;
+            auto* Candidate=*It;if(!Candidate->HasActorBegunPlay()||!FAetherNpcSkillDecision::CanTarget(C,*Candidate))continue;
             const FVector Position=Candidate->GetActorLocation();
             const double Distance=FVector::DistSquared(Position,C.GetActorLocation());
             if(Position.ContainsNaN()||Distance>=Best||FVector::DistSquared(Position,C.Home)>=FMath::Square(Profile.TargetHomeRadiusCm))continue;
