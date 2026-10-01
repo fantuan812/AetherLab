@@ -160,11 +160,15 @@ void UAetherStartupOverlay::RequestIntent(EAetherStartupIntent Intent,FGuid Toke
     if(!IsActivated()||!Client.IsValid()||Client->GetGameInstance()!=GetGameInstance())return;
     const auto& Current=Client->GetView();
     if(!Token.IsValid()||Token!=View.LocalAttemptToken||Token!=Current.LocalAttemptToken||View.Stage!=Current.Stage)return;
-    if(StartButton)StartButton->InvalidatePress();if(CancelButton)CancelButton->InvalidatePress();if(RetryButton)RetryButton->InvalidatePress();
+    InvalidateIntents();
     // 每次路由再次由客户端服务复验；回调可能立即 Travel，调用后不再访问本 Widget。
     if(Intent==EAetherStartupIntent::Start&&Current.bCanStart){Client->RequestStart(Token);return;}
     if(Intent==EAetherStartupIntent::Cancel&&Current.bCanCancel){Client->RequestCancel(Token);return;}
     if(Intent==EAetherStartupIntent::Retry&&Current.bCanRetry){Client->RequestRetry(Token);return;}
+}
+void UAetherStartupOverlay::InvalidateIntents()
+{
+    if(StartButton)StartButton->InvalidatePress();if(CancelButton)CancelButton->InvalidatePress();if(RetryButton)RetryButton->InvalidatePress();
 }
 void UAetherStartupOverlay::ClearPresentation()
 {

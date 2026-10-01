@@ -30,8 +30,9 @@ void UAetherStartupPresentationSubsystem::Initialize(FSubsystemCollectionBase& C
 }
 void UAetherStartupPresentationSubsystem::ViewChanged()
 {
-    // RPC/Travel 回调只标脏；不在其广播栈里创建或拆除 Slate 树。
-    bViewDirty=true;
+    // 回调先失效纯值按压状态，避免同帧禁用→恢复被合并成一次刷新后复活旧点击。
+    // 不在 RPC/Travel 广播栈里创建、拆除或重建 Slate 树。
+    if(Overlay)Overlay->InvalidateIntents();bViewDirty=true;
 }
 bool UAetherStartupPresentationSubsystem::IsTickable() const
 {return !IsTemplate()&&Client.IsValid()&&(bViewDirty||Overlay||NeedsOverlay(Client->GetView().Stage));}

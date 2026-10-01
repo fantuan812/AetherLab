@@ -78,6 +78,13 @@ bool FAetherStartupPresentationTest::RunTest(const FString&)
     auto* Host=NewObject<UAetherStartupPresentationSubsystem>(GI);Host->Client=Client;
     Client->OnChanged.AddUObject(Host,&UAetherStartupPresentationSubsystem::ViewChanged);
     Host->bViewDirty=false;Client->OnChanged.Broadcast();TestTrue(TEXT("Provider event marks presentation dirty"),Host->bViewDirty);
+    Host->Overlay=Overlay;
+    Button->Present(EAetherStartupIntent::Cancel,Second,EAetherStartupStage::WaitingForBackend,true);
+    Button->OnPressed.Broadcast();Client->OnChanged.Broadcast();
+    Button->Present(EAetherStartupIntent::Cancel,Second,EAetherStartupStage::WaitingForBackend,true);
+    Button->OnClicked.Broadcast();
+    TestEqual(TEXT("Provider notifications invalidate presses before the deferred render"),Requests,2);
+    Host->Overlay=nullptr;
     Host->Deinitialize();
     TestFalse(TEXT("Shutdown removes provider subscription"),Client->OnChanged.IsBoundToObject(Host));
     Host->bViewDirty=false;Client->OnChanged.Broadcast();

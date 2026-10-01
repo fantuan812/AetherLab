@@ -39,6 +39,7 @@ public:
     UAetherStartupOverlay();
     void Present(UAetherStartupClient* Client,const FAetherStartupView& View);
     void ClearPresentation();
+    void InvalidateIntents();
     static FString StageTitle(EAetherStartupStage Stage);
     static FString FailureMessage(EAetherStartupFailure Failure);
     static FString RouteMessage(EAetherStartupRouteIssue Issue);
