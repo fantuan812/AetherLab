@@ -1,11 +1,11 @@
 {
-  "SchemaVersion": 1,
+  "SchemaVersion": 2,
   "Loadouts": [
-    {"Id":"MeleeOnly","InitialGrants":[]},
-    {"Id":"FireCaster","InitialGrants":[{"SkillId":"Fire.Ignite","Rank":1,"Slot":0},{"SkillId":"Storm.Strike","Rank":1,"Slot":3}]},
-    {"Id":"Companion.Guard","InitialGrants":[]},
-    {"Id":"Companion.Healer","InitialGrants":[{"SkillId":"Water.Draw","Rank":1,"Slot":1}]},
-    {"Id":"TrainingElementalist","InitialGrants":[{"SkillId":"Fire.Ignite","Rank":1,"Slot":0},{"SkillId":"Water.Draw","Rank":1,"Slot":1},{"SkillId":"Frost.Freeze","Rank":1,"Slot":2},{"SkillId":"Storm.Strike","Rank":1,"Slot":3}]}
+    {"Id":"MeleeOnly","InitialGrants":[],"OffensiveSkills":[]},
+    {"Id":"FireCaster","InitialGrants":[{"SkillId":"Fire.Ignite","Rank":1,"Slot":0},{"SkillId":"Storm.Strike","Rank":1,"Slot":3}],"OffensiveSkills":["Fire.Ignite","Storm.Strike"]},
+    {"Id":"Companion.Guard","InitialGrants":[],"OffensiveSkills":[]},
+    {"Id":"Companion.Healer","InitialGrants":[{"SkillId":"Water.Draw","Rank":1,"Slot":1}],"OffensiveSkills":[]},
+    {"Id":"TrainingElementalist","InitialGrants":[{"SkillId":"Fire.Ignite","Rank":1,"Slot":0},{"SkillId":"Water.Draw","Rank":1,"Slot":1},{"SkillId":"Frost.Freeze","Rank":1,"Slot":2},{"SkillId":"Storm.Strike","Rank":1,"Slot":3}],"OffensiveSkills":["Fire.Ignite","Frost.Freeze","Storm.Strike"]}
   ],
   "FighterLoadouts": {
     "Player":"TrainingElementalist",

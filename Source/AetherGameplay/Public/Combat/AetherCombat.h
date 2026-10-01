@@ -12,6 +12,7 @@
 #include "Animation/AetherActionPresentation.h"
 #include "Skills/AetherCastExecution.h"
 #include "Actions/AetherActionPolicy.h"
+#include "AI/AetherNpcSkillDecision.h"
 #include "AetherCombat.generated.h"
 class UAetherMotionComponent;
 
@@ -155,6 +156,8 @@ public:
     UFUNCTION(Server, Reliable) void ServerSave(bool bLoad);
 private:
     friend class FAetherElectricalSnapshotTest;
+    friend class FAetherNpcSkillDecisionTest;
+    FAetherNpcSkillDecision EnemySkillDecision;
     void MoveForward(float V);
     void MoveRight(float V);
     void Turn(float V) { AddControllerYawInput(V); }
