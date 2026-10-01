@@ -6,6 +6,7 @@
 #include "AetherActions.generated.h"
 class AAetherFrontierCharacter;
 class UAbilityTask_ApplyRootMotionConstantForce;
+struct FAetherMeleePayment;
 UCLASS()
 class UAetherMeleeAbility:public UGameplayAbility
 {
@@ -13,6 +14,7 @@ class UAetherMeleeAbility:public UGameplayAbility
 public:
  UAetherMeleeAbility();
  FGuid ActiveExecution() const;
+ uint64 ActivationGeneration() const{return Generation;}
  virtual void ActivateAbility(FGameplayAbilitySpecHandle Handle,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo Activation,const FGameplayEventData* Event) override;
  virtual bool CheckCost(FGameplayAbilitySpecHandle Handle,const FGameplayAbilityActorInfo* Info,FGameplayTagContainer* Tags=nullptr) const override;
  virtual void ApplyCost(FGameplayAbilitySpecHandle Handle,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo Activation) const override;
@@ -36,8 +38,8 @@ private:
  UPROPERTY() TObjectPtr<UAbilityTask_ApplyRootMotionConstantForce> OwnedMotion;
  bool bMotionStarted=false;
  uint32 ActiveSerial=0;
- float PreparedCost=0;
- mutable bool bCostApplied=false;
+ uint64 Generation=0;
+ mutable TSharedPtr<FAetherMeleePayment> PaymentExecution;
  bool bEnding=false;
 
 };

@@ -8,6 +8,24 @@ UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_MeleeWindup,"Aether.Action.Melee.Windup");
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_MeleeActive,"Aether.Action.Melee.Active");
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_MeleeRecovery,"Aether.Action.Melee.Recovery");
 
+struct FAetherMeleePayment
+{
+ TWeakObjectPtr<UAbilitySystemComponent> System;
+ TWeakObjectPtr<AAetherCharacter> Avatar;
+ float Cost=0;
+ bool bPaid=false,bEquipmentStarted=false;
+};
+namespace
+{
+void RefundUnstartedMelee(const TSharedPtr<FAetherMeleePayment>& Payment)
+{
+ if(!Payment||!Payment->bPaid||Payment->bEquipmentStarted)return;
+ Payment->bPaid=false; // 退款通知同样可重入；先结清本凭据，绝不通过GA新成员找收款人。
+ auto* C=Payment->Avatar.Get();auto* S=Payment->System.Get();
+ if(C&&S&&C->Alive()&&C->AbilitySystem==S&&S->GetAvatarActor()==C)
+     S->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,Payment->Cost);
+}
+}
 UAetherMeleeAbility::UAetherMeleeAbility()
 {
  NetExecutionPolicy=EGameplayAbilityNetExecutionPolicy::ServerOnly;
@@ -26,19 +44,26 @@ bool UAetherMeleeAbility::CheckCost(FGameplayAbilitySpecHandle H,const FGameplay
 }
 void UAetherMeleeAbility::ApplyCost(FGameplayAbilitySpecHandle,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo) const
 {
- if (!bCostApplied&&Info&&Info->AbilitySystemComponent.IsValid())
+ const auto Payment=PaymentExecution;
+ if(Payment&&!Payment->bPaid&&Info&&Payment->System.IsValid()&&Info->AbilitySystemComponent.Get()==Payment->System.Get())
  {
-  bCostApplied=true;
-  Info->AbilitySystemComponent->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,-PreparedCost);
+  Payment->bPaid=true;
+  Payment->System->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,-Payment->Cost);
  }
 }
 void UAetherMeleeAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGameplayAbilityActorInfo* Info,FGameplayAbilityActivationInfo A,const FGameplayEventData*)
 {
+ if(Generation==MAX_uint64){EndAbility(H,Info,A,true,true);return;}
+ const uint64 ThisGeneration=++Generation;
+ const auto SameGeneration=[&]{return Generation==ThisGeneration;};
  StopOwnedMotion(); // 旧任务先结束；新执行不继承旧RootMotionSource。
- bEnding=false;bCostApplied=false;PreparedCost=0;ActiveSerial=0;ActiveExecutionId.Invalidate();NpcIntent.Reset();bMotionStarted=false;
+ if(!SameGeneration())return;
+ bEnding=false;ActiveSerial=0;ActiveExecutionId.Invalidate();NpcIntent.Reset();bMotionStarted=false;
+ const auto Payment=MakeShared<FAetherMeleePayment>();PaymentExecution=Payment;
  auto* C=Info?Cast<AAetherCharacter>(Info->AvatarActor.Get()):nullptr;
  const FName Id=GetAbilityLevel(H,Info)>1?TEXT("Heavy"):TEXT("Light");
- if (!IsValid(C)||!CheckCost(H,Info)) {EndAbility(H,Info,A,true,true);return;}
+ if (!IsValid(C)||!CheckCost(H,Info)) {if(SameGeneration()&&IsActive())EndAbility(H,Info,A,true,true);return;}
+ if(!SameGeneration())return;
  if(C->EnemyMeleeDecision.IsIssuing())
  {
   FAetherNpcMeleeIntent Request;if(!C->EnemyMeleeDecision.CaptureIssued(*C,Id,Request)){EndAbility(H,Info,A,true,true);return;}
@@ -47,27 +72,27 @@ void UAetherMeleeAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
  ActiveCharacter=C;MotionDirection=C->GetActorForwardVector().GetSafeNormal2D();
  auto* E=C->Equipment.Get(); const auto* Item=E->InSlot(TEXT("MainHand"));
  const FName ItemId=Item->ItemId; const int32 Revision=E->LoadoutRevision;
- PreparedCost=Item->FindAttack(Id)->StaminaCost;
- ActiveEquipment=E;ActiveSystem=Info->AbilitySystemComponent;
- // A commit can run callbacks. Revalidate the same avatar/loadout before starting a window.
+ Payment->Cost=Item->FindAttack(Id)->StaminaCost;Payment->System=Info->AbilitySystemComponent;Payment->Avatar=C;
+ ActiveEquipment=E;ActiveSystem=Info->AbilitySystemComponent;const auto Request=NpcIntent;
+ // 本次支付凭据保活到原栈退回；同步取消后再激活不会替换原owner/amount/paid事实。
  const bool Committed=CommitAbility(H,Info,A);
- if (!Committed||!IsActive()||!IsValid(C)||!C->AbilitySystem||C->AbilitySystem!=ActiveSystem.Get()||C->AbilitySystem->GetAvatarActor()!=C||
-     (NpcIntent.IsSet()&&!C->EnemyMeleeDecision.ValidateIssued(*C,NpcIntent.GetValue())))
+ if(!SameGeneration()){RefundUnstartedMelee(Payment);return;}
+ if (!Committed||!IsActive()||!IsValid(C)||!IsValid(E)||C->Equipment!=E||!C->AbilitySystem||C->AbilitySystem!=Payment->System.Get()||C->AbilitySystem->GetAvatarActor()!=C||
+     (Request.IsSet()&&!C->EnemyMeleeDecision.ValidateIssued(*C,Request.GetValue())))
  {
-  if(bCostApplied&&ActiveSystem.IsValid()&&IsValid(C)&&C->Alive()&&C->AbilitySystem==ActiveSystem.Get()&&ActiveSystem->GetAvatarActor()==C)
-      ActiveSystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,PreparedCost);
-  bCostApplied=false;
-  if(IsActive())EndAbility(H,Info,A,true,true);return;
+  RefundUnstartedMelee(Payment);
+  if(SameGeneration()&&IsActive())EndAbility(H,Info,A,true,true);return;
  }
  FinishedDelegate=E->OnAttackFinished.AddUObject(this,&UAetherMeleeAbility::AttackFinished);
  PhaseDelegate=E->OnAttackPhaseChanged.AddUObject(this,&UAetherMeleeAbility::AttackPhaseChanged);
  ActiveSerial=E->Attack.Serial+1;if(ActiveSerial==0)++ActiveSerial;
- if (!E->BeginCommittedAttack(Id,ItemId,Revision))
+ const bool Started=E->BeginCommittedAttack(Id,ItemId,Revision);
+ Payment->bEquipmentStarted=Started; // 正式Windup接受后取消保留其成本，不误当未提交退款。
+ if(!SameGeneration()){RefundUnstartedMelee(Payment);return;}
+ if(!Started)
  {
-  if(bCostApplied&&ActiveSystem.IsValid()&&IsValid(C)&&C->Alive()&&ActiveSystem->GetAvatarActor()==C)
-      ActiveSystem->ApplyModToAttribute(UAetherAttributes::GetStaminaAttribute(),EGameplayModOp::Additive,PreparedCost);
-  bCostApplied=false;
-  EndAbility(H,Info,A,true,true);
+  RefundUnstartedMelee(Payment);
+  if(SameGeneration()&&IsActive())EndAbility(H,Info,A,true,true);
  }
  else if(!ActiveExecution().IsValid()&&IsActive())EndAbility(H,Info,A,true,true);
 }
@@ -132,8 +157,8 @@ void UAetherMeleeAbility::EndAbility(FGameplayAbilitySpecHandle H,const FGamepla
   E->OnAttackFinished.Remove(FinishedDelegate);E->OnAttackPhaseChanged.Remove(PhaseDelegate);
   if(ActiveSerial&&E->Attack.Serial==ActiveSerial)E->CancelAttack();
  }
- ClearPhaseTag();ActiveEquipment.Reset();ActiveCharacter.Reset();ActiveSerial=0;ActiveExecutionId.Invalidate();NpcIntent.Reset();
- // Keep the cost receipt until ActivateAbility returns, including synchronous commit cancellation.
+ ClearPhaseTag();ActiveEquipment.Reset();ActiveCharacter.Reset();ActiveSystem.Reset();ActiveSerial=0;ActiveExecutionId.Invalidate();NpcIntent.Reset();
+ PaymentExecution.Reset(); // 原Activate/ApplyCost栈仍各自持有共享凭据；不能在Super后的新激活上清理。
  Super::EndAbility(H,Info,A,Replicate,Cancelled);
 }
 void UAetherMeleeAbility::OnAvatarSet(const FGameplayAbilityActorInfo* Info,const FGameplayAbilitySpec& Spec)

@@ -1,6 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "AI/AetherNpcMeleeDecision.h"
 #include "AI/AetherNpcMeleeDefinitions.h"
+#include "AI/AetherNpcPerceptionDefinitions.h"
 #include "Combat/AetherCombat.h"
 #include "Interaction/AetherActions.h"
 #include "Abilities/Tasks/AbilityTask_ApplyRootMotionConstantForce.h"
@@ -89,6 +90,27 @@ bool FAetherNpcMeleeLifecycleTest::RunTest(const FString&)
     TestTrue(TEXT("Payment branch was entered and refunded exactly once"),CancelledDuringPayment&&Debits==1&&Refunds==1&&Npc->Stamina()==100);
     TestTrue(TEXT("Canceled payment never creates physical motion or another recovery timer"),NoMotion(Ability(1))&&Npc->ActionUntil==0);
 
+    bool ReplacedDuringPayment=false,PaymentReplacementAccepted=false;FGuid PaymentReplacement;Debits=Refunds=0;
+    const auto ReplacePayment=Npc->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetStaminaAttribute()).AddLambda([&](const FOnAttributeChangeData& Change)
+    {
+        if(Change.NewValue<Change.OldValue)
+        {
+            ++Debits;if(!ReplacedDuringPayment)
+            {
+                ReplacedDuringPayment=true;Npc->CancelActions();
+                PaymentReplacementAccepted=Prepare()&&Decision.TryExecute(*Npc);
+                if(auto* ReplacementAbility=Ability(1))PaymentReplacement=ReplacementAbility->ActiveExecution();
+            }
+        }
+        else if(Change.NewValue>Change.OldValue)++Refunds;
+    });
+    if(!Prepare())return false;TestFalse(TEXT("Outer request cannot claim the replacement execution created during its payment"),Decision.TryExecute(*Npc));
+    Npc->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetStaminaAttribute()).Remove(ReplacePayment);
+    TestTrue(TEXT("Old payment refunded only itself and did not end new committed execution"),ReplacedDuringPayment&&PaymentReplacementAccepted&&
+        PaymentReplacement.IsValid()&&Ability(1)->ActiveExecution()==PaymentReplacement&&E->IsBusy()&&Debits==2&&Refunds==1&&Npc->Stamina()==92);
+    TestTrue(TEXT("Replacement remains in Windup without early motion"),E->Attack.Phase==EAetherAttackPhase::Windup&&!Ability(1)->OwnedMotion);
+    Npc->CancelActions();Npc->SetVitals(100,100,100);
+
     bool ChangedLoadout=false;Debits=Refunds=0;
     const auto EquipDuringPayment=Npc->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetStaminaAttribute()).AddLambda([&](const FOnAttributeChangeData& Change)
     {
@@ -131,7 +153,10 @@ bool FAetherNpcMeleeLifecycleTest::RunTest(const FString&)
     GA->AttackPhaseChanged(Serial,EAetherAttackPhase::Active);
     TestTrue(TEXT("Repeated same-execution phase cannot duplicate the task"),GA->OwnedMotion.Get()==Motion);
     const auto CommittedFacing=Npc->GetActorRotation();const auto CommittedControl=Npc->GetController()->GetControlRotation();
-    Target->SetActorLocation(FVector(0,100,88));Npc->Think(.01f);
+    Target->SetActorLocation(FVector(0,100,88));Advance(.15f);Npc->Think(.01f);
+    const auto* Perception=FAetherNpcPerceptionDefinitions::Get().ForFighter(TEXT("Wolf"));
+    const auto ChangedBearing=Npc->EnemyPerception.Observe(*Npc,*Perception);
+    TestTrue(TEXT("Direction test actually consumed a new visible bearing while still Active"),ChangedBearing.bVisible&&ChangedBearing.LastSeenPosition==Target->GetActorLocation()&&E->IsAttackActive());
     TestTrue(TEXT("A busy authoritative attack cannot track the new target bearing"),Npc->GetActorRotation().Equals(CommittedFacing)&&Npc->GetController()->GetControlRotation().Equals(CommittedControl));
     Target->SetActorLocation(FVector(100,0,88));
     Npc->CancelActions();

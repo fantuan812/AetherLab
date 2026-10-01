@@ -51,5 +51,7 @@ bool FAetherNpcMeleeDecision::ValidateIssued(const AAetherCharacter& C,const FAe
 bool FAetherNpcMeleeDecision::TryExecute(AAetherCharacter& C)
 {
     if(bIssuing||!Pending.RequestId.IsValid()||C.CombatTime()<TelegraphUntil)return false;
-    bIssuing=true;const bool Result=C.RequestMelee(Pending.AttackId);Reset();return Result;
+    const FGuid Request=Pending.RequestId;bIssuing=true;const bool Result=C.RequestMelee(Pending.AttackId);
+    if(Pending.RequestId==Request)Reset(); // 旧调用不能抹掉回调中创建的新意图。
+    return Result;
 }

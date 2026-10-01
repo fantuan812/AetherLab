@@ -505,11 +505,14 @@ bool AAetherCharacter::RequestMelee(FName Id)
     FGameplayAbilitySpecHandle Handle;
     for(const auto& Spec:System->GetActivatableAbilities())
         if(Spec.Ability&&Spec.Ability->IsA<UAetherMeleeAbility>()&&Spec.Level==(Id==TEXT("Heavy")?2:1)){Handle=Spec.Handle;break;}
-    if(!Handle.IsValid()||!System->TryActivateAbility(Handle)||AbilitySystem!=System||Equipment!=E)return false;
+    const auto* BeforeSpec=Handle.IsValid()?System->FindAbilitySpecFromHandle(Handle):nullptr;
+    const auto* BeforeAbility=BeforeSpec?Cast<UAetherMeleeAbility>(BeforeSpec->GetPrimaryInstance()):nullptr;
+    const uint64 BeforeGeneration=BeforeAbility?BeforeAbility->ActivationGeneration():0;
+    if(!Handle.IsValid()||BeforeGeneration==MAX_uint64||!System->TryActivateAbility(Handle)||AbilitySystem!=System||Equipment!=E)return false;
     const auto* Spec=System->FindAbilitySpecFromHandle(Handle);
     const auto* Ability=Spec?Cast<UAetherMeleeAbility>(Spec->GetPrimaryInstance()):nullptr;
     // 激活返回值/累计计数都不能证明Windup通知未同步取消；只接受本次真实且仍有效的执行。
-    return Ability&&Ability->ActiveExecution().IsValid()&&E->Attack.Serial==ExpectedSerial&&E->Attack.AttackId==Id;
+    return Ability&&Ability->ActivationGeneration()==BeforeGeneration+1&&Ability->ActiveExecution().IsValid()&&E->Attack.Serial==ExpectedSerial&&E->Attack.AttackId==Id;
 }
 void AAetherCharacter::ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit)
 { if(!DeferEquipmentHit(Hit))ReceiveHit(Hit.Damage,Hit.PostureDamage,Cast<AAetherCharacter>(Hit.Source),true); }
