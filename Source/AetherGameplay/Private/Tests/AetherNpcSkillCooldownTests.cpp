@@ -89,6 +89,14 @@ bool FAetherNpcSkillCooldownTest::RunTest(const FString&)
     TestTrue(TEXT("Definition authority with the wrong ASC type fails closed"),Fresh->SkillCooldownRemaining(TEXT("Fire.Ignite"))>0);
     Fresh->AbilitySystem=FreshSystem;
 
+    // Adventure 的正式 Definition 探针可由普通 PlayerState 控制，只有持久 Profile 所有者改走 PS 权威。
+    auto* Probe=Spawn();auto* BasicPlayerState=World->SpawnActor<APlayerState>();
+    if(!TestNotNull(TEXT("Definition probe"),Probe)||!TestNotNull(TEXT("Ordinary engine player state"),BasicPlayerState))return false;
+    Probe->SetPlayerState(BasicPlayerState);
+    TestEqual(TEXT("Non-profile PlayerState does not replace definition ASC authority"),Probe->SkillCooldownRemaining(TEXT("Fire.Ignite")),0.f);
+    TestTrue(TEXT("Definition probe still executes its granted GAS skill"),Probe->TrySkill(TEXT("Fire.Ignite")));
+    TestTrue(TEXT("Definition probe commits to its own ASC"),Probe->SkillCooldownRemaining(TEXT("Storm.Strike"))>0);
+
     auto* ProfilePawn=World->SpawnActor<AAetherFrontierCharacter>();
     auto* PlayerState=World->SpawnActor<AAetherPlayerState>();
     if(!TestNotNull(TEXT("Profile pawn"),ProfilePawn)||!TestNotNull(TEXT("Persistent owner"),PlayerState))return false;

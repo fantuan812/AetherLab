@@ -1,5 +1,6 @@
 #include "Skills/AetherSkillCooldownState.h"
 #include "Combat/AetherCombat.h"
+#include "Framework/AetherProgression.h"
 
 double AetherSkillCooldowns::Remaining(const TArray<FAetherSkillCooldownDeadline>& Deadlines,const FString& Skill,const FString& Group,double Now)
 {
@@ -30,7 +31,7 @@ double UAetherDefinitionAbilitySystem::CooldownRemaining(const FString& Skill,co
 {
     const auto* Character=Cast<AAetherCharacter>(GetOwner());
     if(!Character||!Character->HasAuthority()||Character->SkillAuthority!=EAetherSkillAuthority::Definition||
-        Character->GetPlayerState()||Character->AbilitySystem.Get()!=this||GetAvatarActor()!=Character)return TNumericLimits<double>::Max();
+        Character->GetPlayerState<AAetherPlayerState>()||Character->AbilitySystem.Get()!=this||GetAvatarActor()!=Character)return TNumericLimits<double>::Max();
     return AetherSkillCooldowns::Remaining(SkillCooldowns,Skill,Group,Now);
 }
 bool UAetherDefinitionAbilitySystem::CommitCooldown(const FString& Skill,const FString& Group,double SkillSeconds,double GroupSeconds,double Now)

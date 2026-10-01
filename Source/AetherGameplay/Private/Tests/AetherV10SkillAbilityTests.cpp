@@ -77,6 +77,17 @@ bool FAetherSkillWaterTest::RunTest(const FString&)
     auto* Spec=AetherSkillBinding::Find(*C->AbilitySystem,TEXT("Water.Draw"));
     if(!TestNotNull(TEXT("Water spec"),Spec))return false;
     Spec->Level=3;
+    // 失败注入使用新 ASC，不能靠 ResetCombat 清理前一次成功施法的正式冷却。
+    // 在隔离世界开始模拟前装配，避免把测试 fixture 当作完整场景启动。
+    auto* Rejected=World->SpawnActor<AAetherCharacter>();
+    if(!TestNotNull(TEXT("Independent rejected-injection caster"),Rejected))return false;
+    Rejected->SetActorEnableCollision(false);
+    Rejected->AbilitySystem->AddAttributeSetSubobject(Rejected->Attributes.Get());
+    Rejected->AbilitySystem->InitAbilityActorInfo(Rejected,Rejected);
+    Rejected->SkillLoadoutId=TEXT("Companion.Healer");Rejected->GrantSpells();
+    auto* RejectedSpec=AetherSkillBinding::Find(*Rejected->AbilitySystem,TEXT("Water.Draw"));
+    if(!TestNotNull(TEXT("Independent water spec"),RejectedSpec))return false;
+    RejectedSpec->Level=3;
     auto* Target=World->SpawnActor<AActor>();
     auto* Box=NewObject<UBoxComponent>(Target);Target->SetRootComponent(Box);Target->AddInstanceComponent(Box);
     Box->SetBoxExtent(FVector(50));Box->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -102,13 +113,23 @@ bool FAetherSkillWaterTest::RunTest(const FString&)
     TestTrue(TEXT("Material capacity still limits retained water"),FMath::IsNearlyEqual(State->WaterKg,.05,1.e-6));
     TestTrue(TEXT("Reserve plus retained plus rejected water conserves the input"),
         FMath::IsNearlyEqual(double(C->WaterReserveKg)+State->WaterKg+ReactiveWorld->GetSimulation()->GetStats().RejectedWaterKg,3.,1.e-6));
-    C->ResetCombat();
     // 模拟可命中但无注入权限的目标：Commit 后拒绝必须退回法力且不丢水。
-    Body->bOwnerOnlyStimuli=true;
-    C->TrySkill(TEXT("Water.Draw"));
-    TestEqual(TEXT("Rejected injection refunds mana"),C->Mana(),82.f);
-    TestEqual(TEXT("Rejected injection keeps reserve"),C->WaterReserveKg,2.f);
-    TestEqual(TEXT("Rejected injection starts no cooldown"),C->CastLockUntil,0.f);
+    C->SetActorEnableCollision(false);Body->bOwnerOnlyStimuli=true;
+    Rejected->SetVitals(100,C->Mana(),100);Rejected->WaterReserveKg=C->WaterReserveKg;
+    TestEqual(TEXT("Rejected-injection fixture starts without a prior cooldown"),Rejected->SkillCooldownRemaining(TEXT("Water.Draw")),0.f);
+    FHitResult Hit;FVector Origin,Direction;
+    TestTrue(TEXT("Rejected-injection fixture hits the intended live body"),Rejected->FindSkillTarget(TEXT("Water.Draw"),3,Hit,Origin,Direction)&&Hit.GetActor()==Target);
+    int32 Debits=0,Refunds=0;
+    const auto Payment=Rejected->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetManaAttribute()).AddLambda([&](const FOnAttributeChangeData& Change)
+    {if(Change.NewValue<Change.OldValue)++Debits;else if(Change.NewValue>Change.OldValue)++Refunds;});
+    TestTrue(TEXT("GAS accepts the attempt before injection rejects it"),Rejected->TrySkill(TEXT("Water.Draw")));
+    Rejected->AbilitySystem->GetGameplayAttributeValueChangeDelegate(UAetherAttributes::GetManaAttribute()).Remove(Payment);
+    TestEqual(TEXT("Rejected injection actually reaches the GAS debit"),Debits,1);
+    TestEqual(TEXT("Rejected injection actually refunds once"),Refunds,1);
+    TestEqual(TEXT("Rejected injection refunds mana"),Rejected->Mana(),82.f);
+    TestEqual(TEXT("Rejected injection keeps reserve"),Rejected->WaterReserveKg,2.f);
+    TestEqual(TEXT("Rejected injection starts no recovery"),Rejected->CastLockUntil,0.f);
+    TestEqual(TEXT("Rejected injection commits no ASC cooldown"),Rejected->SkillCooldownRemaining(TEXT("Water.Draw")),0.f);
     return true;
 }
 #endif
