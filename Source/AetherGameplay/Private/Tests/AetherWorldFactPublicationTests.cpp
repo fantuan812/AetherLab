@@ -93,6 +93,17 @@ FWorldFactPlayer MakeWorldFactPlayer(UGameInstance& GI,int32 Index,const FString
     P.Pawn->SetPlayerState(P.State);P.Pawn->BindPersistentAbilities();
     P.Client=Local->GetSubsystem<UAetherCommandClient>();return P;
 }
+bool ReplaceWorldFactPawn(FWorldFactPlayer& P)
+{
+    if(!P.Controller||!P.State||!P.Pawn)return false;
+    auto* W=P.Controller->GetWorld();auto* Catalog=P.Pawn->Equipment->Catalog.Get();
+    P.Controller->UnPossess();FActorSpawnParameters Spawn;
+    Spawn.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    auto* Replacement=W->SpawnActor<AAetherFrontierCharacter>(FVector(800,0,0),FRotator::ZeroRotator,Spawn);
+    if(!Replacement)return false;
+    Replacement->Equipment->Catalog=Catalog;P.Pawn=Replacement;
+    P.Controller->Possess(P.Pawn);P.Pawn->SetPlayerState(P.State);P.Pawn->BindPersistentAbilities();return true;
+}
 bool PumpRuntimeUntil(UAetherCommandRuntime& Runtime,TFunctionRef<bool()> Done)
 {
     const double End=FPlatformTime::Seconds()+5;
@@ -148,7 +159,7 @@ bool FAetherWorldFactPublicationTest::RunTest(const FString&)
         auto* W=GI->GetWorld();auto* Runtime=GI->GetSubsystem<UAetherCommandRuntime>();
         ON_SCOPE_EXIT
         {
-            Store->ReleaseHeldRead();Runtime->DrainBackend();GI->Shutdown();
+            Store->ReleaseHeldRead();if(Runtime)Runtime->DrainBackend();GI->Shutdown();
             if(W){GEngine->DestroyWorldContext(W);W->DestroyWorld(false);}GI->RemoveFromRoot();Store->Close();
         };
         if(!TestNotNull(TEXT("Isolated scene"),W)||!TestNotNull(TEXT("Production runtime"),Runtime))return false;
@@ -160,6 +171,11 @@ bool FAetherWorldFactPublicationTest::RunTest(const FString&)
         {if(PC.template GetPlayerState<AAetherPlayerState>()->Profile.CharacterId==TEXT("Bob"))++BobResolves;else ++AliceResolves;Out=Context;return true;};
         const FAetherPublishConnectedState Publish=[](auto& PC,const auto& P,const auto*,const auto*)
         {FString Reason;return PC.template GetPlayerState<AAetherPlayerState>()->PublishNativeProfile(P,Reason);};
+        auto InvalidBaseline=InitialWorld;InvalidBaseline.Revision=-1;
+        TestFalse(TEXT("Negative baseline cannot install a backend"),Runtime->InstallBackend(Store,InvalidBaseline,Resolve,Publish,Why));
+        InvalidBaseline.Revision=MAX_int64;
+        TestFalse(TEXT("Exhausted baseline cannot install a backend"),Runtime->InstallBackend(Store,InvalidBaseline,Resolve,Publish,Why));
+        TestFalse(TEXT("Rejected baseline leaves no partial backend"),Runtime->HasBackend());
         if(!TestTrue(TEXT("Install from audited activation snapshot"),Runtime->InstallBackend(Store,InitialWorld,Resolve,Publish,Why)))return false;
         TestTrue(TEXT("Same realm confirmation stays idempotent"),Runtime->SetBackendDomain(InitialWorld.RealmId)&&Runtime->SetBackendDomain(InitialWorld.RealmId));
         TestFalse(TEXT("Another realm cannot reuse baseline before login"),Runtime->SetBackendDomain(FGuid::NewGuid()));
@@ -194,6 +210,7 @@ bool FAetherWorldFactPublicationTest::RunTest(const FString&)
         int32 BobReads=Store->SnapshotReads.FindRef(TEXT("Bob"));const auto BobBefore=B.Client->GetProfile().GetValue();
         O.Fault->Store(EAetherStoreFault::AfterFirstWrite);Runtime->Receive(A.Controller,Packet);
         if(!TestTrue(TEXT("Failed command reaches a terminal completion"),PumpRuntimeUntil(*Runtime,[&]{return RuntimeIdle(*Runtime);})))return false;
+        TestTrue(TEXT("Failure injection reached actual SQLite transaction"),O.Fault->Load()==EAetherStoreFault::None);
         FAetherWorldStateV10 DiskWorld;FAetherProfileStateV10 DiskBob;
         if(!TestTrue(TEXT("Read rolled back world and peer"),ReadWorld(DiskWorld)&&ReadProfile(TEXT("Bob"),DiskBob)))return false;
         TestFalse(TEXT("Failed write never publishes world fact"),DiskWorld.WorldFactSources.Contains(TEXT("SupplyRestored")));
@@ -249,14 +266,101 @@ bool FAetherWorldFactPublicationTest::RunTest(const FString&)
         TestTrue(TEXT("Personal points really advanced world revision"),AfterPoints.Revision>DiskWorld.Revision);
         TestEqual(TEXT("Unchanged world facts do not re-settle Bob"),Store->SnapshotReads.FindRef(TEXT("Bob")),BobReads);
         // New trusted fact still uses the same publication path as the interaction.
+        // In the raced scenario it arrives during Bob's real no-Pawn interval.
+        if(HoldOldSettle)B.Controller->UnPossess();
         FAetherServerFact Fire;Fire.Kind=EAetherServerFactKind::World;Fire.CharacterId=TEXT("Alice");Fire.FactId=TEXT("ForestFire1");Fire.SourceId=TEXT("ForestFire1");
-        if(!TestTrue(TEXT("New trusted world event accepted"),Runtime->ObserveServerFact(Fire,Why))||
-            !TestTrue(TEXT("New trusted world event advances idle peer"),PumpRuntimeUntil(*Runtime,[&]
-                {return RuntimeIdle(*Runtime)&&B.Client->GetProfile()->Evidence.Contains(TEXT("ForestFire1"));})))return false;
+        if(!TestTrue(TEXT("New trusted world event accepted"),Runtime->ObserveServerFact(Fire,Why)))return false;
+        if(HoldOldSettle)
+        {
+            if(!TestTrue(TEXT("World fact commits during Bob's no-Pawn gap"),PumpRuntimeUntil(*Runtime,[&]
+                {return RuntimeIdle(*Runtime)&&A.Client->GetProfile()->Evidence.Contains(TEXT("ForestFire1"));})))return false;
+            if(!TestTrue(TEXT("Read peer during avatar gap"),ReadProfile(TEXT("Bob"),DiskBob)))return false;
+            TestFalse(TEXT("No stale avatar publishes the new fact"),DiskBob.Evidence.Contains(TEXT("ForestFire1")));
+            if(!TestTrue(TEXT("Fresh actual replacement pawn"),ReplaceWorldFactPawn(B)))return false;
+            // Do not call BindVerifiedPlayer: the production NotifyPawnChanged
+            // path must retain the delta observed while this session had no Pawn.
+        }
+        if(!TestTrue(TEXT("New trusted world event advances idle peer"),PumpRuntimeUntil(*Runtime,[&]
+            {return Ready()&&B.Client->GetProfile()->Evidence.Contains(TEXT("ForestFire1"));})))return false;
         if(!TestTrue(TEXT("Server-event peer evidence is durable"),ReadProfile(TEXT("Bob"),DiskBob)))return false;
         TestTrue(TEXT("Both completion routes settle through SQLite"),DiskBob.Evidence.Contains(TEXT("ForestFire1")));
         TestEqual(TEXT("Another fact cannot award water twice"),DiskBob.Gold,RewardedBob.Gold);
+        if(HoldOldSettle)
+        {
+            bool ExitedDuringPublication=false,NestedInstallAccepted=false;
+            Runtime->SetWorldPublisher([&](const auto& World)
+            {
+                if(!World.WorldFactSources.Contains(TEXT("ForestFire2")))return;
+                ExitedDuringPublication=true;Runtime->UninstallBackend();FString Reason;
+                NestedInstallAccepted=Runtime->InstallBackend(Store,World,Resolve,Publish,Reason);
+            });
+            Fire.FactId=TEXT("ForestFire2");Fire.SourceId=TEXT("ForestFire2");
+            if(!TestTrue(TEXT("Final old-generation fact accepted"),Runtime->ObserveServerFact(Fire,Why))||
+                !TestTrue(TEXT("Exit occurs inside actual world completion callback"),PumpRuntimeUntil(*Runtime,[&]{return ExitedDuringPublication;})))return false;
+            TestFalse(TEXT("Old callback cannot install a new backend while ticking"),NestedInstallAccepted);
+            TestFalse(TEXT("Exited backend immediately rejects new inputs"),Runtime->IsInstalled());
+            if(!TestTrue(TEXT("Old generation fully drains and releases bindings"),Runtime->DrainBackend()))return false;
+            TestEqual(TEXT("Old pending peer intent cannot retain a connection"),Runtime->Inspect().Connections,0);
+            // Reopen the same durable world: historical facts form the next
+            // generation's baseline, and ordinary login recovers Bob's missed delta.
+            Open=AetherSQLite::Open(O);if(!TestTrue(TEXT("Reopen persisted world after drain"),Open.Store.IsValid()))return false;
+            Store=MakeShared<FWorldFactPublicationStore,ESPMode::ThreadSafe>(Open.Store.ToSharedRef());
+            if(!TestTrue(TEXT("Read new audited activation value"),ReadWorld(DiskWorld)))return false;
+            if(!TestTrue(TEXT("New backend generation gets fresh avatar resource lives"),ReplaceWorldFactPawn(A)&&ReplaceWorldFactPawn(B)))return false;
+            if(!TestTrue(TEXT("Install next generation with its own copied baseline"),Runtime->InstallBackend(Store,DiskWorld,Resolve,Publish,Why))||
+                !TestTrue(TEXT("Rebind both identities through normal login"),Runtime->BindVerifiedPlayer(A.Controller,TEXT("Alice"))&&Runtime->BindVerifiedPlayer(B.Controller,TEXT("Bob"))))return false;
+            if(!TestTrue(TEXT("New generation independently recovers missing persisted fact"),PumpRuntimeUntil(*Runtime,[&]
+                {return Ready()&&B.Client->GetProfile()->Evidence.Contains(TEXT("ForestFire2"));})))return false;
+            TestEqual(TEXT("New Bob gets only login read and committed refresh"),Store->SnapshotReads.FindRef(TEXT("Bob")),2);
+            TestEqual(TEXT("Already-settled Alice gets only her own login read"),Store->SnapshotReads.FindRef(TEXT("Alice")),1);
+            if(!TestTrue(TEXT("Read recovered Bob after generation change"),ReadProfile(TEXT("Bob"),DiskBob)))return false;
+            TestTrue(TEXT("Generation change cannot duplicate water reward"),DiskBob.Gold==RewardedBob.Gold&&ItemCount(DiskBob,TEXT("TideStaff"))==1);
+        }
+
     }
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAetherWorldFactBaselineLifecycleTest,"Aether.V10.Network.AuditedWorldFactBaselineAndInitialRealm",
+    EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FAetherWorldFactBaselineLifecycleTest::RunTest(const FString&)
+{
+    const auto& D=FAetherV10Definitions::Get();FString Why;
+    if(!TestTrue(TEXT("Definitions ready"),D.bValid))return false;
+    FAetherSqliteOptions O;O.DatabasePath=FPaths::ProjectSavedDir()/TEXT("Automation/WorldFactBaseline")/FGuid::NewGuid().ToString(EGuidFormats::Digits)/TEXT("state.sqlite");
+    auto Open=AetherSQLite::Open(O);if(!TestTrue(TEXT("Isolated native world store"),Open.Store.IsValid()))return false;
+    FAetherWorldStateV10 Before;FAetherStoredAggregate Row;Row.Key={EAetherAggregateKind::World,TEXT("Main")};
+    if(!TestTrue(TEXT("New-world audit may precede persisted realm identity"),AetherWorldCodec::Encode(Before,D.Items,D.Rules,{},Row.Payload,Why))||
+        !TestTrue(TEXT("Initialize empty-realm world"),Open.Store->InitializeWorld(Row).Get().Code==EAetherStoreCode::Committed))return false;
+    auto* GI=NewObject<UGameInstance>(GEngine);GI->AddToRoot();GI->InitializeStandalone(NAME_None,nullptr);
+    auto* W=GI->GetWorld();auto* Runtime=GI->GetSubsystem<UAetherCommandRuntime>();
+    ON_SCOPE_EXIT
+    {
+        if(Runtime)Runtime->DrainBackend();GI->Shutdown();
+        if(W){GEngine->DestroyWorldContext(W);W->DestroyWorld(false);}GI->RemoveFromRoot();if(Open.Store)Open.Store->Close();
+    };
+    if(!TestNotNull(TEXT("Production runtime"),Runtime))return false;
+    const FAetherResolveConnectedContext Resolve=[](auto&,const auto&,const auto&,auto&){return false;};
+    const FAetherPublishConnectedState Publish=[](auto&,const auto&,const auto*,const auto*){return true;};
+    if(!TestTrue(TEXT("Activation can install before first physical checkpoint assigns realm"),Runtime->InstallBackend(Open.Store.ToSharedRef(),Before,Resolve,Publish,Why)))return false;
+    TestFalse(TEXT("Empty identity never authorizes a connection domain"),Runtime->SetBackendDomain({}));
+    auto Checkpoint=Before;Checkpoint.RealmId=FGuid::NewGuid();++Checkpoint.Revision;
+    FAetherAggregateWrite Write;Write.ExpectedRevision=Before.Revision;Write.Value.Key=Row.Key;Write.Value.Revision=Checkpoint.Revision;
+    if(!TestTrue(TEXT("Encode confirmed initial checkpoint"),AetherWorldCodec::Encode(Checkpoint,D.Items,D.Rules,{},Write.Value.Payload,Why)))return false;
+    const auto Saved=Open.Store->CompareExchangeWorld(MoveTemp(Write)).Get();
+    if(!TestTrue(TEXT("First checkpoint really commits realm"),Saved.Code==EAetherStoreCode::Committed))return false;
+    TestTrue(TEXT("First persisted realm completes existing startup handshake"),Runtime->SetBackendDomain(Checkpoint.RealmId));
+    TestTrue(TEXT("Repeated startup tick accepts the same realm"),Runtime->SetBackendDomain(Checkpoint.RealmId));
+    TestFalse(TEXT("Different realm requires backend replacement even with no players"),Runtime->SetBackendDomain(FGuid::NewGuid()));
+    TestTrue(TEXT("Backend exit drops the copied baseline"),Runtime->DrainBackend());
+    Open=AetherSQLite::Open(O);if(!TestTrue(TEXT("Reopen exact persisted identity"),Open.Store.IsValid()))return false;
+    const auto Reloaded=Open.Store->Read({EAetherAggregateKind::World,TEXT("Main")}).Get();FAetherWorldStateV10 AuditedReload;
+    if(!TestTrue(TEXT("Read exact persisted realm after reopen"),Reloaded.Code==EAetherStoreCode::Found&&Reloaded.Value.IsSet()&&
+        AetherWorldCodec::Decode(Reloaded.Value->Payload,D.Items,D.Rules,{},AuditedReload,Why)&&AuditedReload.Revision==Reloaded.Value->Revision&&
+        AuditedReload.RealmId==Checkpoint.RealmId))return false;
+    if(!TestTrue(TEXT("Reactivation accepts already-persisted realm baseline"),Runtime->InstallBackend(Open.Store.ToSharedRef(),AuditedReload,Resolve,Publish,Why)))return false;
+    TestFalse(TEXT("Reactivation cannot replace the audited realm"),Runtime->SetBackendDomain(FGuid::NewGuid()));
+    TestTrue(TEXT("Reactivation still accepts its own realm"),Runtime->SetBackendDomain(Checkpoint.RealmId));
     return true;
 }
 #endif

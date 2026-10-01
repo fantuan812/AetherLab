@@ -74,8 +74,9 @@ struct FAetherCommandRuntimeImpl
         {PublishedWorldFacts.Add(Fact.Key,Fact.Value);Added=true;}
         if(!Added)return;
         // Even the originator may have refreshed a newer world than its own
-        // transaction. Reuse durable Settle for every current character.
-        for(auto& Pair:Bindings)if(Current(*Pair.Value))Pair.Value->bNeedsWorldFactSettle=true;
+        // transaction. Retain intent for a live session even in its no-Pawn gap;
+        // enqueue/publication still require the current fully bound avatar.
+        for(auto& Pair:Bindings)if(Coordinator->IsCurrent(Pair.Value->Session))Pair.Value->bNeedsWorldFactSettle=true;
     }
     bool HasPendingFacts(const FString& Id) const
     {return Facts->HasPendingForCharacter(Id)||DeferredFacts.ContainsByPredicate([&](const auto& E){return E.CharacterId.Equals(Id,ESearchCase::CaseSensitive);});}
@@ -642,4 +643,3 @@ void UAetherCommandRuntime::Deinitialize()
 }
 
 void FAetherCommandRuntimeImplDeleter::operator()(FAetherCommandRuntimeImpl* Value) const { delete Value; }
-

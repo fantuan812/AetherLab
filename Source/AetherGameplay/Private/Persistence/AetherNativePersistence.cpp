@@ -207,4 +207,3 @@ void UAetherNativePersistence::ReleaseScene(UWorld* Scene)
     check(IsInGameThread());if(bStoppingScene||BoundScene.Get()!=Scene)return;StopScene();State=EAetherNativePersistencePhase::Dormant;
 }
 void UAetherNativePersistence::Deinitialize(){StopScene();Super::Deinitialize();}
-

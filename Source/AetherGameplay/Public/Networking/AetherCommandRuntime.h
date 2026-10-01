@@ -35,6 +35,7 @@ public:
     bool IsInstalled() const;
     FAetherCommandRuntimeMetrics Inspect() const;
     bool HasPendingRegionMutation(const TSet<FName>& StableIds) const;
+    // 旧 DTO/新世界可在首次检查点前没有 Realm；第一次确认后只允许同值重复确认。
     bool SetBackendDomain(FGuid Realm);
     // 地图切换撤销旧连接与回调，排空已接受的写入后才允许重新安装。
     void UninstallBackend();
@@ -64,4 +65,3 @@ public:
 private:
     TUniquePtr<FAetherCommandRuntimeImpl,FAetherCommandRuntimeImplDeleter> Impl;
 };
-
