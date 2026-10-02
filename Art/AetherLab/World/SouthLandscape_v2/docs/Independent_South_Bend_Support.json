@@ -1,0 +1,411 @@
+{
+  "verdict": "No road-surface discontinuity found in the targeted bend support probes; visible notch is an unchanged roadbed/under-road terrain closure issue.",
+  "baseline_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "current_sha256": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+  "baseline_source_unchanged": true,
+  "current_source_unchanged": true,
+  "baseline_totals": {
+    "probes": 53802,
+    "inner_corridor_probes": 16226,
+    "main_route_miss_samples": 0,
+    "grade_deviation_samples": 0,
+    "inner_corridor_failures": 0
+  },
+  "current_totals": {
+    "probes": 53802,
+    "inner_corridor_probes": 16226,
+    "main_route_miss_samples": 0,
+    "grade_deviation_samples": 0,
+    "inner_corridor_failures": 0
+  },
+  "baseline_and_current_bend_checks_exactly_equal": true,
+  "baseline_and_current_notch_pixel_rays_exactly_equal": true,
+  "main_route_faces": 180,
+  "main_route_position_welded_components": 1,
+  "position_weld_tolerance_decimal_places": 5,
+  "nonmanifold_edges_over_two_faces": 0,
+  "method": "Reopened saved main-route mesh only BVH for support, independent world-space terrain BVH; no author geometry generated. Seven bends sampled over +/-12m, 0.20m longitudinal pitch and 0.10m cross offsets to +/-2.95m, plus +/-0.75m and center. Fixed camera rays target observed dark notch pixels.",
+  "bend_checks": [
+    {
+      "bend_index": 1,
+      "bend_point_m": [
+        -60.0,
+        -328.0,
+        16.0
+      ],
+      "along_each_side_m": 12,
+      "longitudinal_pitch_m": 0.2,
+      "nominal_halfwidth_m": 3,
+      "tested_halfwidth_m": 2.95,
+      "lateral_pitch_m": 0.1,
+      "samples": 7686,
+      "inner_corridor_samples": 2318,
+      "main_route_miss_samples": [],
+      "grade_deviation_samples": [],
+      "inner_corridor_failures": [],
+      "max_abs_grade_delta_m": 0.0705108642578125
+    },
+    {
+      "bend_index": 2,
+      "bend_point_m": [
+        -48.0,
+        -292.0,
+        13.0
+      ],
+      "along_each_side_m": 12,
+      "longitudinal_pitch_m": 0.2,
+      "nominal_halfwidth_m": 3,
+      "tested_halfwidth_m": 2.95,
+      "lateral_pitch_m": 0.1,
+      "samples": 7686,
+      "inner_corridor_samples": 2318,
+      "main_route_miss_samples": [],
+      "grade_deviation_samples": [],
+      "inner_corridor_failures": [],
+      "max_abs_grade_delta_m": 0.04994964599609375
+    },
+    {
+      "bend_index": 3,
+      "bend_point_m": [
+        -32.0,
+        -250.0,
+        10.0
+      ],
+      "along_each_side_m": 12,
+      "longitudinal_pitch_m": 0.2,
+      "nominal_halfwidth_m": 3,
+      "tested_halfwidth_m": 2.95,
+      "lateral_pitch_m": 0.1,
+      "samples": 7686,
+      "inner_corridor_samples": 2318,
+      "main_route_miss_samples": [],
+      "grade_deviation_samples": [],
+      "inner_corridor_failures": [],
+      "max_abs_grade_delta_m": 0.06811237335205078
+    },
+    {
+      "bend_index": 4,
+      "bend_point_m": [
+        -28.0,
+        -205.0,
+        7.0
+      ],
+      "along_each_side_m": 12,
+      "longitudinal_pitch_m": 0.2,
+      "nominal_halfwidth_m": 3,
+      "tested_halfwidth_m": 2.95,
+      "lateral_pitch_m": 0.1,
+      "samples": 7686,
+      "inner_corridor_samples": 2318,
+      "main_route_miss_samples": [],
+      "grade_deviation_samples": [],
+      "inner_corridor_failures": [],
+      "max_abs_grade_delta_m": 0.07320308685302734
+    },
+    {
+      "bend_index": 5,
+      "bend_point_m": [
+        -12.0,
+        -160.0,
+        4.0
+      ],
+      "along_each_side_m": 12,
+      "longitudinal_pitch_m": 0.2,
+      "nominal_halfwidth_m": 3,
+      "tested_halfwidth_m": 2.95,
+      "lateral_pitch_m": 0.1,
+      "samples": 7686,
+      "inner_corridor_samples": 2318,
+      "main_route_miss_samples": [],
+      "grade_deviation_samples": [],
+      "inner_corridor_failures": [],
+      "max_abs_grade_delta_m": 0.053316593170166016
+    },
+    {
+      "bend_index": 6,
+      "bend_point_m": [
+        0.0,
+        -120.0,
+        1.7000000476837158
+      ],
+      "along_each_side_m": 12,
+      "longitudinal_pitch_m": 0.2,
+      "nominal_halfwidth_m": 3,
+      "tested_halfwidth_m": 2.95,
+      "lateral_pitch_m": 0.1,
+      "samples": 7686,
+      "inner_corridor_samples": 2318,
+      "main_route_miss_samples": [],
+      "grade_deviation_samples": [],
+      "inner_corridor_failures": [],
+      "max_abs_grade_delta_m": 0.07056570053100586
+    },
+    {
+      "bend_index": 7,
+      "bend_point_m": [
+        0.0,
+        -80.0,
+        0.0
+      ],
+      "along_each_side_m": 12,
+      "longitudinal_pitch_m": 0.2,
+      "nominal_halfwidth_m": 3,
+      "tested_halfwidth_m": 2.95,
+      "lateral_pitch_m": 0.1,
+      "samples": 7686,
+      "inner_corridor_samples": 2318,
+      "main_route_miss_samples": [],
+      "grade_deviation_samples": [],
+      "inner_corridor_failures": [],
+      "max_abs_grade_delta_m": 0.06505382061004639
+    }
+  ],
+  "notch_pixel_rays": [
+    {
+      "pixel_xy": [
+        570,
+        420
+      ],
+      "first_surface": "C01_Mountain_Main_BED_3_1",
+      "hit_point_m": [
+        -32.61870193481445,
+        -223.07733154296875,
+        7.948993682861328
+      ],
+      "surface_face_index": 0,
+      "camera_distance_m": 69.92610168457031,
+      "main_road_vertical_z": 8.255340576171875,
+      "terrain_vertical_z": 7.8618316650390625,
+      "road_above_hit_m": 0.3063468933105469,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.9999994890779793,
+      "authored_centerline_grade_z": 8.22286339123888
+    },
+    {
+      "pixel_xy": [
+        590,
+        425
+      ],
+      "first_surface": "WORLD_Terrain_Continuous_800x800m",
+      "hit_point_m": [
+        -32.792579650878906,
+        -228.86236572265625,
+        8.203048706054688
+      ],
+      "surface_face_index": 8702,
+      "camera_distance_m": 64.25511169433594,
+      "main_road_vertical_z": 8.636306762695312,
+      "terrain_vertical_z": 8.203056335449219,
+      "road_above_hit_m": 0.433258056640625,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.6609886118217982,
+      "authored_centerline_grade_z": 8.6065312730863
+    },
+    {
+      "pixel_xy": [
+        605,
+        430
+      ],
+      "first_surface": "WORLD_Terrain_Continuous_800x800m",
+      "hit_point_m": [
+        -33.176944732666016,
+        -233.67831420898438,
+        8.414772033691406
+      ],
+      "surface_face_index": 8497,
+      "camera_distance_m": 59.49226760864258,
+      "main_road_vertical_z": 8.956924438476562,
+      "terrain_vertical_z": 8.414779663085938,
+      "road_above_hit_m": 0.5421524047851562,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.6174410848304963,
+      "authored_centerline_grade_z": 8.92733745958103
+    },
+    {
+      "pixel_xy": [
+        620,
+        433
+      ],
+      "first_surface": "WORLD_Terrain_Continuous_800x800m",
+      "hit_point_m": [
+        -33.360511779785156,
+        -237.2826385498047,
+        8.633140563964844
+      ],
+      "surface_face_index": 8292,
+      "camera_distance_m": 55.95656204223633,
+      "main_road_vertical_z": 9.195343017578125,
+      "terrain_vertical_z": 8.633132934570312,
+      "road_above_hit_m": 0.5622024536132812,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.4811610769476116,
+      "authored_centerline_grade_z": 9.166821335414529
+    },
+    {
+      "pixel_xy": [
+        635,
+        436
+      ],
+      "first_surface": "WORLD_Terrain_Continuous_800x800m",
+      "hit_point_m": [
+        -33.575740814208984,
+        -240.6650390625,
+        8.84749984741211
+      ],
+      "surface_face_index": 8087,
+      "camera_distance_m": 52.63569641113281,
+      "main_road_vertical_z": 9.419715881347656,
+      "terrain_vertical_z": 8.847496032714844,
+      "road_above_hit_m": 0.5722160339355469,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.396067797570048,
+      "authored_centerline_grade_z": 9.391812426853507
+    },
+    {
+      "pixel_xy": [
+        645,
+        434
+      ],
+      "first_surface": "C01_Mountain_Main_BED_3_1",
+      "hit_point_m": [
+        -34.6483154296875,
+        -245.91049194335938,
+        9.504718780517578
+      ],
+      "surface_face_index": 0,
+      "camera_distance_m": 47.25911331176758,
+      "main_road_vertical_z": 9.778701782226562,
+      "terrain_vertical_z": 9.043212890625,
+      "road_above_hit_m": 0.2739830017089844,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.9999987291348633,
+      "authored_centerline_grade_z": 9.745074080112575
+    },
+    {
+      "pixel_xy": [
+        625,
+        440
+      ],
+      "first_surface": "WORLD_Terrain_Continuous_800x800m",
+      "hit_point_m": [
+        -34.145721435546875,
+        -241.03921508789062,
+        8.72211742401123
+      ],
+      "surface_face_index": 8087,
+      "camera_distance_m": 52.138397216796875,
+      "main_road_vertical_z": 9.452674865722656,
+      "terrain_vertical_z": 8.722129821777344,
+      "road_above_hit_m": 0.7305574417114258,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.930680433392431,
+      "authored_centerline_grade_z": 9.419913127923467
+    },
+    {
+      "pixel_xy": [
+        645,
+        440
+      ],
+      "first_surface": "C01_Mountain_Main_BED_2_1",
+      "hit_point_m": [
+        -38.044960021972656,
+        -257.46942138671875,
+        10.59873104095459
+      ],
+      "surface_face_index": 0,
+      "camera_distance_m": 35.1636962890625,
+      "main_road_vertical_z": 10.592689514160156,
+      "terrain_vertical_z": 9.6456298828125,
+      "road_above_hit_m": -0.006041526794433594,
+      "segment": 2,
+      "distance_to_centerline_xy_m": 2.98986188518184,
+      "authored_centerline_grade_z": 10.60955701771349
+    },
+    {
+      "pixel_xy": [
+        590,
+        420
+      ],
+      "first_surface": "C01_Mountain_Main_BED_3_1",
+      "hit_point_m": [
+        -33.329158782958984,
+        -231.06997680664062,
+        8.692588806152344
+      ],
+      "surface_face_index": 0,
+      "camera_distance_m": 61.94684982299805,
+      "main_road_vertical_z": 8.788581848144531,
+      "terrain_vertical_z": 8.169929504394531,
+      "road_above_hit_m": 0.0959930419921875,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.999998982449236,
+      "authored_centerline_grade_z": 8.755706405826551
+    },
+    {
+      "pixel_xy": [
+        615,
+        420
+      ],
+      "first_surface": "ROUTE_C01_Mountain_Main",
+      "hit_point_m": [
+        -32.98362731933594,
+        -234.93191528320312,
+        9.036103248596191
+      ],
+      "surface_face_index": 71,
+      "camera_distance_m": 58.27317810058594,
+      "main_road_vertical_z": 9.036056518554688,
+      "terrain_vertical_z": 8.56103515625,
+      "road_above_hit_m": -4.673004150390625e-05,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.3138893222320585,
+      "authored_centerline_grade_z": 9.009119103902231
+    },
+    {
+      "pixel_xy": [
+        630,
+        427
+      ],
+      "first_surface": "C01_Mountain_Main_BED_3_1",
+      "hit_point_m": [
+        -34.35500717163086,
+        -242.61077880859375,
+        9.46232795715332
+      ],
+      "surface_face_index": 0,
+      "camera_distance_m": 50.499114990234375,
+      "main_road_vertical_z": 9.596549987792969,
+      "terrain_vertical_z": 8.809593200683594,
+      "road_above_hit_m": 0.13422203063964844,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 2.999998306944244,
+      "authored_centerline_grade_z": 9.525093201969488
+    },
+    {
+      "pixel_xy": [
+        655,
+        434
+      ],
+      "first_surface": "C01_Mountain_Main_BED_3_1",
+      "hit_point_m": [
+        -34.82337951660156,
+        -247.87991333007812,
+        9.711583137512207
+      ],
+      "surface_face_index": 0,
+      "camera_distance_m": 45.310909271240234,
+      "main_road_vertical_z": null,
+      "terrain_vertical_z": 9.231338500976562,
+      "road_above_hit_m": null,
+      "segment": 3,
+      "distance_to_centerline_xy_m": 3.0000031199173116,
+      "authored_centerline_grade_z": 9.876368865144423
+    }
+  ],
+  "limits": [
+    "Discrete vertical support, not continuous swept-volume or UE collision/nav proof",
+    "Nominal-width probes exclude the exact outer 0.05m boundary",
+    "Camera localization includes only main route, its roadbed sides and terrain; vegetation/architecture are outside this targeted ray set"
+  ],
+  "disposition": "Keep road-edge/roadbed closure for the next art-refinement batch; no geometry change required in this frozen bounded landscape batch."
+}

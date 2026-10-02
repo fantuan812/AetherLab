@@ -1,0 +1,92 @@
+{
+  "routes": 44,
+  "route_samples": 20934,
+  "route_support_failures": 0,
+  "route_obstacles": 0,
+  "service_paths": 6,
+  "service_issues": 0,
+  "hall_samples": 7920,
+  "hall_support_failures": 0,
+  "hall_obstacles": 0,
+  "gate": {
+    "net_width_m": 5.0,
+    "net_height_m": 5.993189811706543,
+    "support": [
+      0.006810188293457031,
+      "ROUTE_C02_Gate_Plaza"
+    ],
+    "clear_center": true
+  },
+  "terrain": {
+    "vertices": 43466,
+    "polygons": 43050,
+    "connected_components": 1,
+    "boundary_edges": 830,
+    "internal_boundary_edges": [],
+    "nonmanifold_edges_gt2": 0,
+    "zero_area_polygons": 0
+  },
+  "reuse": {
+    "actual_instance_count": 1613,
+    "nonunit_world_scales": [],
+    "not_shared_master_mesh": [],
+    "unexpected_fixture_collections": []
+  },
+  "materials": {
+    "empty_material_slots": [],
+    "explicit_uv_missing": [],
+    "explicit_uv_bindings_count": 2640,
+    "material_count": 70
+  },
+  "negative_controls": {
+    "remove_bridge_support": {
+      "point": [
+        270,
+        -15,
+        2
+      ],
+      "normal": [
+        2.0000102519989014,
+        "SCN09_LowerBridge_Plank8"
+      ],
+      "removed": [
+        0.6000100374221802,
+        "CHANNEL_1_Bed"
+      ],
+      "detected": true
+    },
+    "gate_pier_vs_opening": {
+      "opening_blocked": [],
+      "pier_blocked": [
+        "SCN03_Gate_Pier4"
+      ],
+      "detected": true
+    },
+    "compound_floor_not_obstacle": {
+      "point": [
+        -66.6,
+        -345,
+        16.35
+      ],
+      "support": [
+        16.35000991821289,
+        "SCN01_OriginalShelter_Retained"
+      ],
+      "obstacles": [],
+      "detected": true
+    },
+    "cover_pool_with_bvh_plane": {
+      "normal_first_hit": [
+        1.2500100135803223,
+        "SCN09_PoolWater"
+      ],
+      "covered_first_hit": [
+        2.0,
+        "NEGATIVE_CONTROL_POOL_OCCLUDER"
+      ],
+      "detected": true,
+      "no_scene_or_file_mutation": true
+    }
+  },
+  "source_unchanged": true
+}

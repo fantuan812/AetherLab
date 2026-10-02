@@ -1,0 +1,8 @@
+{
+  "expected_wrong_sha": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "actual_source_sha": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+  "exit_code": 1,
+  "expected_exception": "Unexpected source SHA",
+  "accepted_render_or_receipt_written": false,
+  "passed": true
+}

@@ -1,0 +1,24 @@
+{
+  "packages": [
+    {
+      "file": "AetherLab_Global_Blockout_Model_v1.zip",
+      "bytes": 7205813,
+      "sha256": "67d2dfed97afeb7c36ba45721ad7934f5f2f516ca96a713c60f24e7b37407782",
+      "crc_passed": true,
+      "under_14MiB": true,
+      "files": 35
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Views_v1.zip",
+      "bytes": 2311549,
+      "sha256": "4d7cc1007672ace69553399b8ec6ab1867d14bb15e89cc4de073bf6b106b611b",
+      "crc_passed": true,
+      "under_14MiB": true,
+      "files": 20
+    }
+  ],
+  "texture_package_reused_unchanged": true,
+  "format": "ordinary independent ZIPs, not split volumes",
+  "preview_actual_render_count": 12,
+  "comparison_sheets": 2
+}

@@ -1,0 +1,41 @@
+{
+  "checks": [
+    {
+      "script": "compare_saved_snapshots.py",
+      "ast_parse": "passed"
+    },
+    {
+      "script": "independent_saved_snapshot.py",
+      "ast_parse": "passed"
+    },
+    {
+      "script": "independent_south_bend_review.py",
+      "ast_parse": "passed"
+    },
+    {
+      "script": "independent_terrain_contact_review.py",
+      "ast_parse": "passed"
+    },
+    {
+      "script": "inspect_source.py",
+      "ast_parse": "passed"
+    },
+    {
+      "script": "package_landscape.py",
+      "ast_parse": "passed"
+    },
+    {
+      "script": "refine_south_landscape.py",
+      "ast_parse": "passed"
+    },
+    {
+      "script": "render_refinement.py",
+      "ast_parse": "passed"
+    },
+    {
+      "script": "verify_release_packages.py",
+      "ast_parse": "passed"
+    }
+  ],
+  "scope": "Python AST parsing only, not UE compilation or project tests"
+}

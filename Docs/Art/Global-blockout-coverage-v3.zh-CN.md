@@ -1,5 +1,7 @@
 # AetherLab 六区十二场景粗模覆盖与放行条件
 
+最新环境批次：已完成[南线环境层次v2](South-route-landscape-v2.zh-CN.md)。只精化出生点至城镇的环境层次，完整六区十二场景保留；不提升其余区域、25素材族或UE验收状态。
+
 最新状态：已完成[GlobalBlockout_v1全图灰盒空间里程碑](Global-world-blockout-v1.zh-CN.md)。本文的v1/v2/v3小样记录保留历史范围；本次只有限放行全图布局/几何，不提升为25素材族、最终风格或UE验收完成。
 
 更新日期：2026-10-01。需求与旧源核对基线：main `2b307fe08b4d233f6bec25a6b7662e16d0641dad`。本表覆盖约800×800m的一个连续世界、6个地理区、12个重点场景，并沿用25个素材族与PROP_01～PROP_22身份。尺寸、方位与空间职责以[Design v4](../Design-v4.zh-CN.md)为准；素材来源与阶段边界见[素材矩阵](Scene-asset-matrix.zh-CN.md)、[机器可读矩阵](Scene-asset-matrix.json)和[场景生产规范](Scene-production-standards.zh-CN.md)。

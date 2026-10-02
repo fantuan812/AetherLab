@@ -1,0 +1,77 @@
+{
+  "scope": "Read-only code review and Python AST parsing only, not UE compilation or project testing. Production and render execution evidence is separately recorded.",
+  "production_input_sha_guard": true,
+  "render_source_sha_guard": true,
+  "packager_ordinary_zip_and_under_14MiB_assertions": true,
+  "packager_external_texture_exclusion": true,
+  "rebuild_requires_frozen_PR35_source_and_matching_old_manifest": true,
+  "packager_requires_author_workdir_layout": true,
+  "scripts": [
+    {
+      "script": "scripts/inspect_source.py",
+      "sha256": "2d5f42166cb412b629ca32cac8a0701123b190aac1b78b4efbe583fb41401b37",
+      "syntax_parsed": true
+    },
+    {
+      "script": "scripts/package_landscape.py",
+      "sha256": "6182188d2e39268b1b10b078e4485821072e34b845777ac31ed93a127cc8034c",
+      "syntax_parsed": true
+    },
+    {
+      "script": "scripts/render_refinement.py",
+      "sha256": "c5cfb68c7c24d38d7ae08dc46664b32c8d4e01df2b2a3a1b88080efd51c2436c",
+      "syntax_parsed": true
+    },
+    {
+      "script": "scripts/refine_south_landscape.py",
+      "sha256": "c5cc97b2b809222412d3ae0dbd6afc5071b9a13a7e28982371e0e6bcd7ae3992",
+      "syntax_parsed": true
+    },
+    {
+      "script": "scripts/verify_release_packages.py",
+      "sha256": "31ff20309b84425879e874c424108ead67b5f80facc386ba59841a3497797612",
+      "syntax_parsed": true
+    },
+    {
+      "script": "review/independent_terrain_contact_review.py",
+      "sha256": "aaa21586dc55e7ca0159d4aab37a2585f0e57e5528d7b703502b5aedc67f70d9",
+      "syntax_parsed": true
+    },
+    {
+      "script": "review/independent_south_bend_review.py",
+      "sha256": "c2f048c48b7e1ee1b130fac50c2d0f89464953fa8564d94c3a392329c2e57361",
+      "syntax_parsed": true
+    },
+    {
+      "script": "review/compare_saved_snapshots.py",
+      "sha256": "53a1c2f5d63ed43fce921e8799f64eee0c61d7a12698a0fdd2613a990f9e9afc",
+      "syntax_parsed": true
+    },
+    {
+      "script": "review/independent_saved_snapshot.py",
+      "sha256": "6d154b5ea8b6b7823a721a24273c94bed65a32b8ee7adee239598bfa9cf107b2",
+      "syntax_parsed": true
+    }
+  ],
+  "limitations": [
+    "Packager creates current model and preview ZIPs; this review does not pre-certify bytes of a later regenerated final package.",
+    "Comparison sheets are actual render-pixel layouts with text labels; JPEG conversion is lossy and explicitly documented."
+  ],
+  "packager_checks_current_frozen_and_portable_source_hashes": true,
+  "packager_requires_portable_reopen_pass": true,
+  "readme_scope_review": "Passed: explicitly bounded south batch; 12 actual before/after renders plus 2 comparison layouts; JPEG conversion declared; no UE acceptance; reproduction requires frozen old source and old manifest; packaging depends on production workdir.",
+  "resolved_documentation_findings": [
+    "START_HERE now distinguishes model, existing texture, and separately viewable preview ZIPs.",
+    "Packager sets reopen_verified true only after validating successful reopen report and exact current source hashes."
+  ],
+  "producer_requires_matching_baseline_manifest_sha": true,
+  "separate_model_and_views_content_manifest_names": true,
+  "release_verifier_review": {
+    "crc_and_under14MiB": true,
+    "relative_path_and_parent_component_checks": true,
+    "duplicate_member_check": true,
+    "cross_package_same_path_different_bytes_check": true,
+    "model_and_views_complete_content_manifest_hash_check": true,
+    "scope": "Read-only ZIP verification with extraction to its provided review output directory; use a fresh output directory as documented."
+  }
+}

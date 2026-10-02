@@ -1,0 +1,65 @@
+{
+  "milestone": "SouthLandscape_v2",
+  "date": "2026-10-02",
+  "complete_world_regions": 6,
+  "complete_world_scenes": 12,
+  "scope": "Bounded south corridor landscape, not whole-world final art or UE acceptance",
+  "source_identity_preserved": true,
+  "all_ordinary_zip_under_14MiB": true,
+  "files": [
+    {
+      "file_name": "AetherLab_Global_World_Blockout_v1.blend",
+      "library_file_id": "libfile_7ea6ebe068e081918528deb1cc04fec3",
+      "file_id": "file_00000000f8ec81f592b21806901d765f",
+      "library_version": 2,
+      "bytes": 21656105,
+      "sha256": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+      "status": "saved"
+    },
+    {
+      "file_name": "AetherLab_Global_Blockout_Model_v1.zip",
+      "library_file_id": "libfile_cf47e33c31288191a9f852f93c6062e3",
+      "file_id": "file_00000000d33881f585a34324f7387647",
+      "library_version": 1,
+      "bytes": 7205813,
+      "sha256": "67d2dfed97afeb7c36ba45721ad7934f5f2f516ca96a713c60f24e7b37407782",
+      "status": "saved"
+    },
+    {
+      "file_name": "AetherLab_Global_Blockout_Views_v1.zip",
+      "library_file_id": "libfile_912f93e478188191a506443055d5ee4e",
+      "file_id": "file_00000000d13c81f5b9ca5f909a58198a",
+      "library_version": 1,
+      "bytes": 2311549,
+      "sha256": "4d7cc1007672ace69553399b8ec6ab1867d14bb15e89cc4de073bf6b106b611b",
+      "status": "saved"
+    },
+    {
+      "file_name": "South_Overview_Before_After.jpg",
+      "library_file_id": "libfile_4b597a8b1f308191909535ba0876621e",
+      "file_id": "file_0000000055f481f5a84ccced889ee82e",
+      "library_version": 0,
+      "bytes": 452106,
+      "sha256": "6515d3f56d25209cedfc5ea7d3ceaba76da0787dddf4562d590c98ec4fa68054",
+      "status": "saved"
+    },
+    {
+      "file_name": "Ridge_Reveal_Before_After.jpg",
+      "library_file_id": "libfile_66e2edb0083c8191b66114c474741601",
+      "file_id": "file_000000000f9481f5bfcade942efe6317",
+      "library_version": 0,
+      "bytes": 282553,
+      "sha256": "124f72a8b105b329916d2d735bdbfd5c4b716af9ce6d9182f37624a896c2204f",
+      "status": "saved"
+    },
+    {
+      "file_name": "AetherLab_Global_Blockout_Textures_v1.zip",
+      "library_file_id": "libfile_54215a03ed388191a83ea81d3d5e2eb9",
+      "file_id": "file_00000000bcdc81f5ab13108dab862cc9",
+      "library_version": 0,
+      "bytes": 8477683,
+      "sha256": "2734a57f776fbca092266ebf87cdba1012977ad2667e558c9c2eb49823a6c51e",
+      "status": "existing unchanged compatible texture package"
+    }
+  ]
+}
