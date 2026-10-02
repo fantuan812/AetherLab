@@ -2492,7 +2492,7 @@
     "requirements": "形成可审查清单；未代替缺口补查与验收",
     "kit": "未整体放行；v2最小核心连接限定范围作者27/27组、独立22/22组及实看通过；v3最小过渡几何/元数据/负控/5图限定范围通过，仍未整体放行",
     "world": "GlobalBlockout_v1全图灰盒空间里程碑完成；独立实际几何/来源/25图有限通过，不代表UE可玩或最终环境美术",
-    "detail": "本次止于全局灰盒，未继续局部精修",
+    "detail": "SouthLandscape_v2已完成南部出生点至城镇有界环境层次；其余区域、建筑与最终美术仍待制作",
     "base_layout": "v3最小连接已通过；可按Global-blockout-coverage-v3清单有条件开展六区基础铺设和功能粗模，未覆盖连接仅阻塞相关段"
   },
   "unverified": [
@@ -2778,6 +2778,21 @@
     "summary": "Docs/Art/Global-world-blockout-v1.zh-CN.md",
     "delivery": "Art/AetherLab/World/GlobalBlockout_v1/docs/Delivery_Manifest.json",
     "scope": "Blender geometric/visual blockout only",
+    "all_asset_families_complete": false,
+    "ue_compiled_or_tested": false
+  },
+  "south_landscape_refinement_v2": {
+    "source_sha256": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+    "original_routes_unchanged": 44,
+    "scene_centers_unchanged": 12,
+    "added_shared_instances": 1853,
+    "total_shared_instances": 3466,
+    "used_shared_master_meshes": 24,
+    "terrain_changed_vertices": 4832,
+    "rendered_before_after_pairs": 6,
+    "summary": "Docs/Art/South-route-landscape-v2.zh-CN.md",
+    "delivery": "Art/AetherLab/World/SouthLandscape_v2/docs/Delivery_Manifest.json",
+    "scope": "South corridor landscape only, complete world retained",
     "all_asset_families_complete": false,
     "ue_compiled_or_tested": false
   }

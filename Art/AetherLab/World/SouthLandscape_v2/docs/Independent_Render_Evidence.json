@@ -1,0 +1,56 @@
+{
+  "before_source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "after_source_sha256": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+  "before_source_unchanged": true,
+  "after_source_unchanged": true,
+  "checks": [
+    {
+      "file": "Global.png",
+      "same_camera_parameters": true,
+      "before_png_hash_matches": true,
+      "after_png_hash_matches": true,
+      "source_shas_correct": true,
+      "different_pixels": true
+    },
+    {
+      "file": "South_Overview.png",
+      "same_camera_parameters": true,
+      "before_png_hash_matches": true,
+      "after_png_hash_matches": true,
+      "source_shas_correct": true,
+      "different_pixels": true
+    },
+    {
+      "file": "Entry.png",
+      "same_camera_parameters": true,
+      "before_png_hash_matches": true,
+      "after_png_hash_matches": true,
+      "source_shas_correct": true,
+      "different_pixels": true
+    },
+    {
+      "file": "Ridge_Reveal.png",
+      "same_camera_parameters": true,
+      "before_png_hash_matches": true,
+      "after_png_hash_matches": true,
+      "source_shas_correct": true,
+      "different_pixels": true
+    },
+    {
+      "file": "Town_Reveal.png",
+      "same_camera_parameters": true,
+      "before_png_hash_matches": true,
+      "after_png_hash_matches": true,
+      "source_shas_correct": true,
+      "different_pixels": true
+    },
+    {
+      "file": "Gate.png",
+      "same_camera_parameters": true,
+      "before_png_hash_matches": true,
+      "after_png_hash_matches": true,
+      "source_shas_correct": true,
+      "different_pixels": true
+    }
+  ]
+}

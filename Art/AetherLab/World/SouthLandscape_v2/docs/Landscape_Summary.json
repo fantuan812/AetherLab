@@ -1,0 +1,29 @@
+{
+  "input_source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "output_source_sha256": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+  "output_bytes": 21656105,
+  "new_materials": [
+    "LAND_South_Moss_Soil_Variation",
+    "LAND_South_Worn_Route"
+  ],
+  "shared_mesh_count": 6,
+  "routes_changed_geometry": [],
+  "gameplay_anchors_moved": [],
+  "ue_compiled_or_tested": false,
+  "input_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "new_shared_instances": 1853,
+  "new_by_master": {
+    "SRC_Tree_0": 92,
+    "SRC_Tree_1": 86,
+    "SRC_Grass": 888,
+    "SRC_Shrub": 285,
+    "SRC_Fern": 440,
+    "KIT_Rock_River_A": 62
+  },
+  "terrain_changed_vertices": 4832,
+  "old_context_contacts_adjusted": 129,
+  "source_geometry_scope": "Only original continuous terrain positions/south normals, terrain shader assignment and two south road material slots changed. All old route vertex coordinates and gameplay anchors retained.",
+  "total_reused_instances": 3466,
+  "used_shared_master_count": 24,
+  "max_terrain_height_change_m": 7.858726065498274
+}

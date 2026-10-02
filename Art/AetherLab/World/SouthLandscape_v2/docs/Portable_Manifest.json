@@ -1,0 +1,69 @@
+{
+  "frozen_source_file": "AetherLab_Global_World_Blockout_v1.blend",
+  "frozen_source_sha256": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+  "portable_file": "source/AetherLab_Global_World_Blockout_v1.blend",
+  "portable_sha256": "5f3aa8dee619e0c92b6b8256661e9812bbf9ce979756ce9259719d3e7a8b5f98",
+  "portable_bytes": 6958365,
+  "geometry_objects_uv_digest": "615e9a5894e145b0a316ba985bd1848f36ad735def3abaf7a470ccc8c1223d3a",
+  "image_datablocks": [
+    {
+      "image_id": "T_AgedCedar_Albedo.png",
+      "relative_path": "source/textures/Texture_b2b76f9cc6295166.png",
+      "bytes": 2745633,
+      "sha256": "b2b76f9cc629516624462326a42d89e5c5dde59185f763d1a3c9835cd7c43525",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB"
+    },
+    {
+      "image_id": "T_AgedCedar_Albedo.png.001",
+      "relative_path": "source/textures/Texture_b2b76f9cc6295166.png",
+      "bytes": 2745633,
+      "sha256": "b2b76f9cc629516624462326a42d89e5c5dde59185f763d1a3c9835cd7c43525",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB"
+    },
+    {
+      "image_id": "T_Foliage_Atlas_RGBA.png",
+      "relative_path": "source/textures/Texture_02b592976097774c.png",
+      "bytes": 2299799,
+      "sha256": "02b592976097774cc3e5028410f5cbe454ebfb7af71222e9c0625ce7ad3e54d8",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB"
+    },
+    {
+      "image_id": "T_WeatheredSlate_Albedo.png",
+      "relative_path": "source/textures/Texture_581072ea65fe5909.png",
+      "bytes": 3484199,
+      "sha256": "581072ea65fe5909e01676a82789ab184bb6a7848d590fbc23c975b4f50824cf",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB"
+    },
+    {
+      "image_id": "T_WeatheredSlate_Albedo.png.001",
+      "relative_path": "source/textures/Texture_581072ea65fe5909.png",
+      "bytes": 3484199,
+      "sha256": "581072ea65fe5909e01676a82789ab184bb6a7848d590fbc23c975b4f50824cf",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "color_space": "sRGB"
+    }
+  ],
+  "unique_texture_files": 3,
+  "reason": "Different blend bytes are expected: only image packing/path changes, no image re-encoding, original frozen file unchanged",
+  "reopen_verified": true,
+  "reopen_validation": "Portable_Reopen_Validation.json"
+}
