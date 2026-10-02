@@ -28,8 +28,6 @@
 #include "Animation/AnimSingleNodeInstance.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "AIController.h"
-#include "NavigationSystem.h"
-#include "NavigationPath.h"
 #include "NavigationInvokerComponent.h"
 #include "ReactiveWorldSubsystem.h"
 #include "Camera/CameraComponent.h"
@@ -233,7 +231,7 @@ void AAetherCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     DOREPLIFETIME(AAetherCharacter, CharacterDefinition); DOREPLIFETIME(AAetherCharacter,bUseBasicAssets);
 }
 void AAetherCharacter::PossessedBy(AController* C)
-{ CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
+{ ResetNavigation();CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset(); Super::PossessedBy(C); AbilitySystem->InitAbilityActorInfo(AbilitySystem->GetOwner(),this); }
 void AAetherCharacter::CancelActions()
 {
     if(!HasAuthority())return;
@@ -245,13 +243,13 @@ void AAetherCharacter::CancelActions()
 }
 void AAetherCharacter::UnPossessed()
 {
-    CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset();
+    ResetNavigation();CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::UnPossessed();
 }
 void AAetherCharacter::EndPlay(const EEndPlayReason::Type Reason)
 {
-    CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset();
+    ResetNavigation();CancelActions();EnemySkillDecision.Reset();EnemyPerception.Reset();
     if(AbilitySystem&&AbilitySystem->GetAvatarActor()==this)AbilitySystem->ClearActorInfo();
     Super::EndPlay(Reason);
 }
@@ -396,12 +394,14 @@ bool AAetherCharacter::ExecuteSpell(int32 Spell)
     const auto* Spec=AbilitySystem?AetherSkillBinding::Find(*AbilitySystem,Id):nullptr;
     return Spec&&ExecuteSkill(Id,Spec->Level);
 }
+FVector AAetherCharacter::SkillAimOrigin() const
+{return GetActorLocation()+FVector(0,0,55);}
 bool AAetherCharacter::FindSkillTarget(const FString& SkillId,int32 Rank,FHitResult& Hit,FVector& Origin,FVector& Direction) const
 {
     const auto& Definitions=FAetherSkillDefinitionsV10::Get();
     const auto* D=Definitions.Skills.Find(SkillId);const auto* E=Definitions.Effect(SkillId,Rank);
     if(!D||!E||!SkillUnlocked(SkillId))return false;
-    Origin=GetActorLocation()+FVector(0,0,55);Direction=GetControlRotation().Vector();
+    Origin=SkillAimOrigin();Direction=GetControlRotation().Vector();
     if(D->Mechanic==EAetherSkillMechanic::SelfBuff)return true;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(AetherSpell),false,this);
     GetWorld()->SweepSingleByChannel(Hit,Origin,Origin+Direction*E->RangeCm,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(float(E->TargetRadiusCm)),Params);
@@ -441,6 +441,8 @@ bool AAetherCharacter::ExecuteCast(const FAetherCastExecution& Cast)
     if(!FindSkillTarget(Cast.SkillId,Cast.Rank,Hit,Origin,Direction))return false;
     // Friendly目标预检查会FlushDue并发出属性通知；正式效果前再次确认原施法生命/执行。
     if(!OwnsExecution()||QueryAction(EAetherActionKind::Spell)!=EAetherActionDenial::None||!EnemySkillDecision.ValidateCommit(*this,Cast))return false;
+    const auto* ActualTarget=Cast.Mechanic==EAetherSkillMechanic::SelfBuff?this: ::Cast<AAetherCharacter>(Hit.GetActor());
+    if(!ValidateCastCommit(Cast,ActualTarget)||!OwnsExecution())return false;
     const float CommittedAt=CombatTime();bool Accepted=false;
     if(Cast.Mechanic==EAetherSkillMechanic::Fire)
     {
@@ -793,42 +795,66 @@ void AAetherCharacter::ServerInteract_Implementation(bool Alternate)
 void AAetherCharacter::ServerSave_Implementation(bool Load)
 { if (auto* Mode = GetWorld()->GetAuthGameMode<AAetherAdventureMode>()) ClientFeedback(Load ? Mode->LoadAdventure(this) : Mode->SaveAdventure(this)); }
 
+void AAetherCharacter::ResetNavigation()
+{
+    NavigationRoute.Clear();NavigationGoal=FVector::ZeroVector;
+    SteeringDirection=FVector::ZeroVector;NextSteeringAt=NextPathAt=0;
+}
+
 FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
 {
+    const float Now=CombatTime();const auto RouteRevision=NavigationRoute.GetRevision();
     auto* FloorActor=GetCharacterMovement()->CurrentFloor.HitResult.GetActor();
     auto* EscapeIce=IsValid(FloorActor)?FloorActor->FindComponentByClass<UReactiveBodyComponent>():nullptr;
     const auto GroundAllowed=[&](const FHitResult& Floor)
     {
         auto* Actor=Floor.GetActor();if(!IsValid(Actor))return false;
-        if(auto* Bridge=Actor->FindComponentByClass<UAetherTraversalComponent>();Bridge&&Bridge->bAuthoredBridge&&!Bridge->bRouteOpen){NextPathAt=0;return false;}
-        if(auto* Ice=Actor->FindComponentByClass<UReactiveBodyComponent>();Ice&&Ice->bIceControlsPawnCollision&&Ice->IceSupport!=EReactiveIceSupport::Bearing&&!(Ice==EscapeIce&&Ice->IceSupport==EReactiveIceSupport::Thawing)){NextPathAt=0;return false;}
+        if(auto* Bridge=Actor->FindComponentByClass<UAetherTraversalComponent>();Bridge&&Bridge->bAuthoredBridge&&!Bridge->bRouteOpen)return false;
+        if(auto* Ice=Actor->FindComponentByClass<UReactiveBodyComponent>();Ice&&Ice->bIceControlsPawnCollision&&Ice->IceSupport!=EReactiveIceSupport::Bearing&&!(Ice==EscapeIce&&Ice->IceSupport==EReactiveIceSupport::Thawing))return false;
         return true;
     };
-    if(CombatTime()<NextSteeringAt)
+    FVector Waypoint;
+    const bool Escaping=IsValid(EscapeIce)&&EscapeIce->bIceControlsPawnCollision&&EscapeIce->IceSupport==EReactiveIceSupport::Thawing&&IsValid(EscapeIce->GetPrimitive());
+    if(Escaping)
     {
-        FHitResult Floor;
-        if(SteeringDirection.IsNearlyZero()||(AetherNavigationProbe::IsLocalStepClear(*this,SteeringDirection*150,Floor)&&GroundAllowed(Floor)))return SteeringDirection;
-        SteeringDirection=FVector::ZeroVector;NavigationPoints.Reset();NextPathAt=0;
-    }
-    NextSteeringAt=CombatTime()+.2f;
-    // Recast paths are bounded to the locally generated tiles. Missing paths fall back to guarded steering.
-    if(CombatTime()>=NextPathAt||FVector::DistSquared2D(Destination,NavigationGoal)>FMath::Square(200.))
-    {
-        NextPathAt=CombatTime()+.75f;NavigationGoal=Destination;NavigationPoints.Reset();NavigationIndex=0;
-        if(auto* Nav=FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
-        {FNavLocation End;const FVector LocalGoal=GetActorLocation()+(Destination-GetActorLocation()).GetClampedToMaxSize2D(2100);
-         if(Nav->ProjectPointToNavigation(LocalGoal,End,FVector(220,220,350)))
-          if(auto* Path=UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(),GetActorLocation(),End.Location,this);Path&&Path->IsValid())NavigationPoints=Path->PathPoints;}
-    }
-    while(NavigationPoints.IsValidIndex(NavigationIndex)&&FVector::DistSquared2D(GetActorLocation(),NavigationPoints[NavigationIndex])<FMath::Square(90.))++NavigationIndex;
-    FVector Waypoint=NavigationPoints.IsValidIndex(NavigationIndex)?NavigationPoints[NavigationIndex]:Destination;
-    if(IsValid(EscapeIce)&&EscapeIce->bIceControlsPawnCollision&&EscapeIce->IceSupport==EReactiveIceSupport::Thawing&&IsValid(EscapeIce->GetPrimitive()))
-    {
+        // 原有融冰撤离优先于路径失败等待；不能因Nav已撤掉冰面而把角色困在冰上。
         const FBox Box=EscapeIce->GetPrimitive()->Bounds.GetBox();const FVector Here=GetActorLocation();
         TArray<FVector> Exits={FVector(Box.Min.X-100,Here.Y,Here.Z),FVector(Box.Max.X+100,Here.Y,Here.Z),FVector(Here.X,Box.Min.Y-100,Here.Z),FVector(Here.X,Box.Max.Y+100,Here.Z)};
         Exits.Sort([&](const FVector& A,const FVector& B){return FVector::DistSquared2D(A,Here)<FVector::DistSquared2D(B,Here);});
-        Waypoint=Exits[0];NextPathAt=0;NavigationPoints.Reset();
+        Waypoint=Exits[0];NavigationRoute.Clear(EAetherNavigationRouteStatus::EscapingIce);
     }
+    else
+    {
+        if(FVector::DistSquared2D(Destination,NavigationGoal)>FMath::Square(200.))
+        {
+            if(NavigationRoute.AllowsDirectSteering())
+            {NavigationGoal=Destination;SteeringDirection=FVector::ZeroVector;NextSteeringAt=0;}
+            else NavigationRoute.Clear(EAetherNavigationRouteStatus::GoalChanged);
+        }
+        NavigationRoute.RefreshValidity();
+        // 所有重查共用原有0.75秒节流；失效/受阻只撤销路线，不能把deadline反复置零。
+        if(Now>=NextPathAt)
+        {
+            NextPathAt=Now+.75f;NavigationGoal=Destination;
+            const FVector LocalGoal=GetActorLocation()+(Destination-GetActorLocation()).GetClampedToMaxSize2D(2100);
+            NavigationRoute.Query(*this,LocalGoal,FVector(220,220,350));
+        }
+        if(NavigationRoute.AllowsDirectSteering())Waypoint=Destination; // 仅保留旧missing-Nav行为，尚未显式策略化。
+        else if(!NavigationRoute.TakeWaypoint(GetActorLocation(),90.,Waypoint))
+        {SteeringDirection=FVector::ZeroVector;return SteeringDirection;}
+    }
+    // 原生路径失效、查询换代和端点消费先于缓存方向；不能让0.2秒缓存绕过结果状态。
+    if(RouteRevision!=NavigationRoute.GetRevision())
+    {SteeringDirection=FVector::ZeroVector;NextSteeringAt=0;}
+    if(Now<NextSteeringAt)
+    {
+        FHitResult Floor;
+        if(SteeringDirection.IsNearlyZero()||(AetherNavigationProbe::IsLocalStepClear(*this,SteeringDirection*150,Floor)&&GroundAllowed(Floor)))return SteeringDirection;
+        SteeringDirection=FVector::ZeroVector;
+        if(!Escaping&&!NavigationRoute.AllowsDirectSteering())
+        {NavigationRoute.Clear(EAetherNavigationRouteStatus::LocalBlocked);return SteeringDirection;}
+    }
+    NextSteeringAt=Now+.2f;
     FVector Desired=(Waypoint-GetActorLocation()).GetSafeNormal2D();double Best=-1.e30;SteeringDirection=FVector::ZeroVector;
     auto* World=GetWorld()->GetSubsystem<UReactiveWorldSubsystem>();const auto* Sim=World?World->GetSimulation():nullptr;
     for(float Angle:{0.f,45.f,-45.f,90.f,-90.f,135.f,-135.f})
@@ -839,7 +865,7 @@ FVector AAetherCharacter::SafeMoveDirection(FVector Destination)
         {const auto* State=Sim->Find(Id);if(State&&(State->bBurning||State->TemperatureC>100))Score-=5;}
         if(Score>Best){Best=Score;SteeringDirection=Dir;}
     }
-    if(SteeringDirection.IsNearlyZero())NextPathAt=0;
+    if(SteeringDirection.IsNearlyZero()&&!Escaping&&!NavigationRoute.AllowsDirectSteering())NavigationRoute.Clear(EAetherNavigationRouteStatus::LocalBlocked);
     return SteeringDirection;
 }
 
@@ -849,3 +875,5 @@ bool AAetherCharacter::AllowsGeneratedMotion() const
     return Alive()&&T>=StunUntil&&T>=CastLockUntil&&T>=ActionUntil&&!Equipment->IsBusy()&&!bBlocking&&!AbilitySystem->HasMatchingGameplayTag(AetherDodge::ActiveTag())&&!AbilitySystem->HasMatchingGameplayTag(AetherVault::ActiveTag())&&
            !GetCharacterMovement()->IsFalling()&&!ResourceGate->IsBlocked();
 }
+
+

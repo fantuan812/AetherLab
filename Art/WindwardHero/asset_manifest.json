@@ -1,0 +1,77 @@
+{
+  "blender": "5.2.2 LTS",
+  "height_m": 1.884,
+  "authoring": "Explicit original geometry and skin weights, no external meshes",
+  "bones": 65,
+  "deform_bones": 61,
+  "actions": [
+    "Idle_Breathe",
+    "Walk_InPlace",
+    "Wave_Hello",
+    "Sword_Slash"
+  ],
+  "fps": 30,
+  "meshes": [
+    {
+      "mesh": "Windward_Body",
+      "vertices": 4144,
+      "triangles": 8028,
+      "uv_layers": 1
+    },
+    {
+      "mesh": "Windward_Head",
+      "vertices": 2034,
+      "triangles": 3980,
+      "uv_layers": 1
+    },
+    {
+      "mesh": "Windward_Hair",
+      "vertices": 385,
+      "triangles": 684,
+      "uv_layers": 1
+    },
+    {
+      "mesh": "Windward_Sword",
+      "vertices": 438,
+      "triangles": 840,
+      "uv_layers": 1
+    },
+    {
+      "mesh": "Windward_Shield",
+      "vertices": 690,
+      "triangles": 1336,
+      "uv_layers": 1
+    }
+  ],
+  "status": "Art experiment. UE not compiled or tested. Not imported into runtime.",
+  "limitations": [
+    "No facial rig",
+    "No cloth simulation",
+    "Original skeleton requires UE retarget setup",
+    "Demo walk is in-place; foot lock is not production polished",
+    "Automatic UV seams need production polish",
+    "High-poly detail is procedurally authored, not hand sculpted",
+    "UE material, import, retarget and runtime are not verified"
+  ],
+  "workflow_report": "workflow_report.json",
+  "high_poly_vertices": 114449,
+  "textures": [
+    "Windward_Body_AO.png",
+    "Windward_Body_BaseColor.png",
+    "Windward_Body_Normal.png",
+    "Windward_Hair_AO.png",
+    "Windward_Hair_BaseColor.png",
+    "Windward_Hair_Normal.png",
+    "Windward_Head_AO.png",
+    "Windward_Head_BaseColor.png",
+    "Windward_Head_Normal.png",
+    "Windward_Shield_AO.png",
+    "Windward_Shield_BaseColor.png",
+    "Windward_Shield_Normal.png",
+    "Windward_Sword_AO.png",
+    "Windward_Sword_BaseColor.png",
+    "Windward_Sword_Normal.png"
+  ],
+  "skin_shader": "Blender Principled subsurface; not transferred to UE",
+  "hair": "Stylized polygon locks; anisotropic material, no groom"
+}

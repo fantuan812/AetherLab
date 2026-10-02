@@ -81,6 +81,8 @@ void UAetherSpellAbility::ActivateAbility(FGameplayAbilitySpecHandle H,const FGa
     Cast.Effect.RecoverySeconds=(Cast.Effect.RecoverySeconds<0?Cast.Effect.Cooldown:Cast.Effect.RecoverySeconds)/Speed;
     PreparedCast=Cast;*Request=Cast;PreparedAvatar=Avatar;PreparedSystem=ASC;
     C->CastExecutionId=Cast.ExecutionId;
+    C->OnCastStarted(Cast); // 正式GA已发布真实执行；观察者只能认领其正在发出的请求。
+    if(!ValidRequest()||C->CastExecutionId!=Cast.ExecutionId){Reject();return;}
     UE_LOG(LogTemp,Verbose,TEXT("AETHER_SPELL_ACCEPT input=%u execution=%s skill=%s life=%s time=%.3f"),C->LastServerCastInputSequence,*Cast.ExecutionId.ToString(),*Id,*Cast.LifeId.ToString(),C->CombatTime());
     if(Cast.Effect.WindupSeconds>0)
     {
@@ -139,3 +141,4 @@ void UAetherSpellAbility::EndAbility(FGameplayAbilitySpecHandle H,const FGamepla
     }
     Super::EndAbility(H,Info,A,Replicate,Cancelled);
 }
+

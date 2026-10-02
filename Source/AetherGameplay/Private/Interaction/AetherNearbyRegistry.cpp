@@ -1,6 +1,8 @@
 #include "Interaction/AetherNearbyRegistry.h"
 #include "GameFramework/Actor.h"
 
+bool UAetherNearbyRegistry::IsSupportedRadius(double Radius)
+{return FMath::IsFinite(Radius)&&Radius>=0&&Radius<=1000;}
 bool UAetherNearbyRegistry::CellFor(FVector P,FIntVector& Out)
 {
     // 有界坐标避免损坏的变换进入整数转换或构造无界查询循环。
@@ -40,7 +42,7 @@ bool UAetherNearbyRegistry::Contains(const AActor* A) const
 TArray<TWeakObjectPtr<AActor>> UAetherNearbyRegistry::Nearby(FVector P,double Radius) const
 {
     check(IsInGameThread());TArray<TWeakObjectPtr<AActor>> Out;FIntVector Min,Max;
-    if(!FMath::IsFinite(Radius)||Radius<0||Radius>1000||!CellFor(P-FVector(Radius),Min)||!CellFor(P+FVector(Radius),Max))return Out;
+    if(!IsSupportedRadius(Radius)||!CellFor(P-FVector(Radius),Min)||!CellFor(P+FVector(Radius),Max))return Out;
     for(int32 X=Min.X;X<=Max.X;++X)for(int32 Y=Min.Y;Y<=Max.Y;++Y)for(int32 Z=Min.Z;Z<=Max.Z;++Z)
         if(const auto* Bucket=Cells.Find(FIntVector(X,Y,Z)))for(const auto& Weak:*Bucket)
             if(const auto* A=Weak.Get();IsValid(A)&&FVector::DistSquared(P,A->GetActorLocation())<=FMath::Square(Radius))Out.Add(Weak);
@@ -51,3 +53,4 @@ void UAetherNearbyRegistry::Deinitialize()
     for(const auto& Pair:Entries)if(auto* Root=Pair.Value.Root.Get())Root->TransformUpdated.RemoveAll(this);
     Entries.Reset();Cells.Reset();Super::Deinitialize();
 }
+

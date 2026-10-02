@@ -1,0 +1,40 @@
+{
+  "status": "pass_no_blocking_visual_defect_observed",
+  "source_sha256": "46fc07828d7b3a19d7362f41e0cf03da79df321ea92172fa421f8b6b841767b3",
+  "images": [
+    {
+      "path": "deliverables/previews/CoreKit_Overview.png",
+      "sha256": "10eaf5851ecefc5b2805ffc5762f080383104b0d1a1747fba787c5490c7ea971",
+      "observed": true,
+      "observations_zh": "已实看：低路—台阶—高路—近桥岸—桥面—远桥岸—高路—回落坡—低路为一条连续样段。两块岩与土裙位于起段边缘。未见旧v2展示混入；是有硬切边的接口样段，不是世界场景。"
+    },
+    {
+      "path": "deliverables/previews/Transition_Stair.png",
+      "sha256": "f107ff1dce9df7f6d273d28e56b87ae860947df4f6672279c08055c7ffc5a1b8",
+      "observed": true,
+      "observations_zh": "已实看：八级阶面、两端路面、斜栏与立柱关系可辨；土坡包住阶梯侧面，未见悬空台阶或通路裂口。"
+    },
+    {
+      "path": "deliverables/previews/Transition_Bridge.png",
+      "sha256": "0d66f0fc238f5afc554da80e11a448689e33ad1b7d1038c3e7e316abff1df91e",
+      "observed": true,
+      "observations_zh": "已实看：近远桥岸、木桥面、两侧护栏的连续关系清楚，桥下为空区；未见端部断开。板块贴合使板间纹理接缝不明显，16块linked实例由实际网格检查证明。"
+    },
+    {
+      "path": "deliverables/previews/Transition_Rock.png",
+      "sha256": "44788fb997848454c2d4de6b684723e83355fbb7f94809068c6c47ab37a934a1",
+      "observed": true,
+      "observations_zh": "已实看：修正后的两块小岩部分埋入路边土裙，比例与角色参考协调；1.65m目标标尺与1.8028m旧体型同时显示。"
+    },
+    {
+      "path": "deliverables/previews/Transition_Side.png",
+      "sha256": "c2b44021c1b4e24e02c5f3e6061ed4586b04905634563d81910ac8e424a70ef7",
+      "observed": true,
+      "observations_zh": "已实看：阶梯上口、高路地基、桥岸—梁/桥板—桥岸及回落坡的剖面层级可辨，未见桥板悬离梁或地基断层。视图仅覆盖中心连接关系。"
+    }
+  ],
+  "visual_limits": [
+    "五张固定视图的人工目视复核，不等于所有角度或遮挡面的完整审美/几何保证。",
+    "轻微采样噪点与总览留白是展示层问题，不构成本批次连接几何返修项。"
+  ]
+}

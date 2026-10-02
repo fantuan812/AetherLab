@@ -1,0 +1,517 @@
+{
+  "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "scope": "Manual pixel inspection supplements saved geometry checks. No UE / collision / navigation / runtime / final-lighting approval. Every listed image was opened and inspected.",
+  "status": "bounded visual evidence complete; baseline lighting not approved",
+  "reviewed_image_count": 25,
+  "baseline_image_count": 21,
+  "technical_supplement_count": 4,
+  "render_receipts": [
+    {
+      "file": "Render_Receipt_all.json",
+      "sha256": "ba30e442b1de2a01cfa533de98c0232a71e66aef89597e2205567c4221eca39e",
+      "source_sha256_at_start": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "source_sha256_at_end": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "image_count": 21,
+      "image_hash_mismatches": [],
+      "pass": true,
+      "all_geometry_visibility_unchanged": null,
+      "temporary_lights": [],
+      "temporary_camera_changes": []
+    },
+    {
+      "file": "Render_Receipt_TechFill.json",
+      "sha256": "e190648f997206059b05fb089e04ae7116a3c20df25cefc338f38d32a4122ecd",
+      "source_sha256_at_start": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "source_sha256_at_end": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "image_count": 3,
+      "image_hash_mismatches": [],
+      "pass": true,
+      "all_geometry_visibility_unchanged": true,
+      "temporary_lights": [
+        {
+          "name": "TECH_FILL_Training",
+          "type": "AREA_DISK",
+          "position_m": [
+            -36,
+            4,
+            5.4
+          ],
+          "energy_W": 2000,
+          "size_m": 8,
+          "color_rgb": [
+            1,
+            0.94,
+            0.84
+          ],
+          "rotation_euler": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "TECH_FILL_Academy",
+          "type": "AREA_DISK",
+          "position_m": [
+            34,
+            6,
+            4.1
+          ],
+          "energy_W": 1600,
+          "size_m": 7,
+          "color_rgb": [
+            1,
+            0.94,
+            0.84
+          ],
+          "rotation_euler": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "TECH_FILL_Shop",
+          "type": "AREA_DISK",
+          "position_m": [
+            -35,
+            -31,
+            3.7
+          ],
+          "energy_W": 1400,
+          "size_m": 6,
+          "color_rgb": [
+            1,
+            0.94,
+            0.84
+          ],
+          "rotation_euler": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "temporary_camera_changes": []
+    },
+    {
+      "file": "Render_Receipt_TechWide.json",
+      "sha256": "380223328e73b8268bac82747bae886c6e74009412527755664f2a10e9da088e",
+      "source_sha256_at_start": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "source_sha256_at_end": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+      "image_count": 1,
+      "image_hash_mismatches": [],
+      "pass": true,
+      "all_geometry_visibility_unchanged": true,
+      "temporary_lights": [
+        {
+          "name": "TECH_FILL_Training",
+          "type": "AREA_DISK",
+          "position_m": [
+            -36,
+            4,
+            5.4
+          ],
+          "energy_W": 2000,
+          "size_m": 8,
+          "color_rgb": [
+            1,
+            0.94,
+            0.84
+          ],
+          "rotation_euler": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "TECH_FILL_Academy",
+          "type": "AREA_DISK",
+          "position_m": [
+            34,
+            6,
+            4.1
+          ],
+          "energy_W": 1600,
+          "size_m": 7,
+          "color_rgb": [
+            1,
+            0.94,
+            0.84
+          ],
+          "rotation_euler": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "TECH_FILL_Shop",
+          "type": "AREA_DISK",
+          "position_m": [
+            -35,
+            -31,
+            3.7
+          ],
+          "energy_W": 1400,
+          "size_m": 6,
+          "color_rgb": [
+            1,
+            0.94,
+            0.84
+          ],
+          "rotation_euler": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "temporary_camera_changes": [
+        {
+          "file": "Ground_Academy_TechWide.png",
+          "camera": "CAM_Ground_Academy",
+          "source_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+          "sha256": "2acbb24b748dc5e8077b3ba89e022e5976a204521b97b8b2725a1c748caa4e4e",
+          "samples": 32,
+          "camera_position_m": [
+            26.5,
+            -0.5,
+            1.5499999523162842
+          ],
+          "lens_mm": 24.0,
+          "camera_rotation_euler": [
+            1.5885388851165771,
+            -3.36884653506786e-09,
+            -1.091277003288269
+          ],
+          "interpretation": "TECHNICAL FILL LIGHTING ONLY; not the authored world-lighting state"
+        }
+      ]
+    }
+  ],
+  "reviewed_images": [
+    {
+      "file": "Global_Overview.png",
+      "sha256": "50c58b4963f41bdba57f02e48cb5935036dfcd6df83ce39dd1a33741ea1f5240",
+      "resolution": [
+        1800,
+        1400
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "六区地形/体块与连续道路在同一世界幅面中可辨；不是把原驿棚放大成全图",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Global_Annotated_Top.png",
+      "sha256": "a2636bb0db3c90b82b295d98052f15e32be28b3dbbee66b584cc0641c464033f",
+      "resolution": [
+        2000,
+        2000
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "带北向与100m尺的全图可辨六区相对关系及东北回环；标注层不是场景物件",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Town_Scenes02_07.png",
+      "sha256": "51616d7a53cecf2898c01de1580fc013804c57b4494c0bed5f0c7f3268a8fd2d",
+      "resolution": [
+        1500,
+        1300
+      ],
+      "manually_inspected": true,
+      "status": "readable_with_limit",
+      "finding_zh_CN": "广场、四服务空间、门洞及小院可辨；仍有保留的旧铺装支段，后续需统一道路收口，不能把它们当完整通路",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Waterworks_Routes.png",
+      "sha256": "f37110a5d064d6fc1f2ea081e1197d24f65f671e5e2971f4ca6c46a8875243a6",
+      "resolution": [
+        1450,
+        1250
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "三渠、两固定桥、起吊桥占位、东侧门、侧向维护/回程、低塔和蓝色收集池四岸均可辨",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Abbey_And_Hall.png",
+      "sha256": "7691a3da09fa40541da63b9361a6a18b6287a6fd068990c94a24e4bab6f53a82",
+      "resolution": [
+        1450,
+        1250
+      ],
+      "manually_inspected": true,
+      "status": "readable_with_limit",
+      "finding_zh_CN": "前庭水道、石拱、侧廊、大厅/三柱/断钟和后回路可辨；两翼仍是体块，未证明二层楼梯通行",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Forest_Routes.png",
+      "sha256": "36f3776b5c761b94cab8214f515e385e9bb5ab3bf34d6d36a8349cff95346d4e",
+      "resolution": [
+        1450,
+        1250
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "三处分离火点、湿岸固定桥、主路/回环/倒木捷径与货棚可辨",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Relay_Routes.png",
+      "sha256": "bf18efdcbe1c673d8ff2b0f6b631117f410e781fab392663cc0dbc0fa3855c0b",
+      "resolution": [
+        1450,
+        1250
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "中央塔、2杆、4掩体、外环、两入侵支路及安全台可辨",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_SCN01.png",
+      "sha256": "81e5886b0a2219634f29f5a880743b605be838fa12d245010293bf1f57264ec7",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable_with_limit",
+      "finding_zh_CN": "双标尺/保留原角色与新救援坡、桶及移开的货车可辨；标尺占据前景，此图是尺度证据，非最终演出镜头",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_SCN01_Shelter.png",
+      "sha256": "10177ffa5f86da04590c842b7a5019150254326921191a5522c6d55755409f52",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "原驿棚木构/石基/灯和新接近坡可辨，未用房壳替换原棚",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Gate.png",
+      "sha256": "c96b8a22ab0f47e0baeaf525b5901522084f8310daec8d477809ee58fce952fa",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "门洞为空、门内炉灯目标可见，登记台在通道之外",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Plaza.png",
+      "sha256": "28640457be88e1a22cb91490508bcf2ae7b79137610749c3e8ca8095124b0aaa",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "低炉灯/井与往北地标方向可辨，仍是粗模光照",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Training.png",
+      "sha256": "18df94fcf6dd8bf5969f6271538c382f3cda7dc14b53c44bf27ef03a41416020",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "needs_technical_fill",
+      "finding_zh_CN": "基准照明下几乎全黑，不能据此确认两训练位及示范区的像素可读性",
+      "evidence_type": "authored_baseline",
+      "readability_resolved_by": [
+        "Ground_Training_TechFill.png"
+      ]
+    },
+    {
+      "file": "Ground_Academy.png",
+      "sha256": "b745e6e347065bbb3e68ac1fdf6cfbf124ca4e33c4df08d92c874ac2ebd3cf2c",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "partial_crop",
+      "finding_zh_CN": "温室内与材料台可辨，最右试验位被画框裁切；三材料完整覆盖不能仅靠这一张",
+      "evidence_type": "authored_baseline",
+      "readability_resolved_by": [
+        "Ground_Academy_TechWide.png"
+      ]
+    },
+    {
+      "file": "Ground_Shop.png",
+      "sha256": "ca82184bdc76e96aec06f19874d03e5087d8854575f3d59a827fbd95649a0eb0",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "needs_technical_fill",
+      "finding_zh_CN": "基准照明下近全黑，工作台和冷却槽不可辨",
+      "evidence_type": "authored_baseline",
+      "readability_resolved_by": [
+        "Ground_Shop_TechFill.png"
+      ]
+    },
+    {
+      "file": "Ground_Inn.png",
+      "sha256": "8f8f50f5fca804b3322e012fd61c2a6441487559e60c9f22f7185785de59a8a7",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "集结人物占位、低休整灯与院内地坪可辨；没有把标尺当实际AI运行证据",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Forest.png",
+      "sha256": "098267e8f3bf786d1ce1e2e346b273196fa3e89582b690c1ef2b890794391c9d",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "倒木下净空、可烧支撑、货棚与火点接近路可辨；不代表火/倒木状态逻辑已实现",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Waterworks.png",
+      "sha256": "f78ccc795c89fe190bd1a16fd6430b8401f5b317b73f96da676d5b4e536800ac",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "入口前固定桥、升起的可落桥占位、北侧目标及东侧门可辨",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Maintenance.png",
+      "sha256": "751e5d8f910856d7885f80c09c8cc22b5cedcdcf7311e18c8bad3494b62faa37",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "西侧维护路线跨过渠段外缘，独立水面/岸高差可辨",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Abbey.png",
+      "sha256": "68aa461c19c8dba26ef235fb455818fd150dfa40036d3579c1bd0141dad425f4",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "固定水桥、完整石拱开口、侧廊及大厅入口可辨",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Hall.png",
+      "sha256": "07726fb50655fcf8718078714b0566d7f08eff5f5d24454548c3b92925296eb3",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "低炉台、三主柱中的可见柱位与断钟支架/钟体可辨；完整环路宽度依赖独立几何实测",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Relay.png",
+      "sha256": "32395f1469e6727895dc1df23e7de532a83916b57228b0397d49717f2a7a7013",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "readable",
+      "finding_zh_CN": "中央塔、两接地杆、低掩体和接近地坪可辨；不证明实际电危险边界逻辑",
+      "evidence_type": "authored_baseline"
+    },
+    {
+      "file": "Ground_Training_TechFill.png",
+      "sha256": "316942e42d673ef07952da1e88f27fe9664b8d7d0ce865a7eb02559ae8c0636e",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "technical_readable",
+      "finding_zh_CN": "完整墙顶保留；两训练位与示范区可辨，技术补光解决基准图近全黑证据缺口",
+      "evidence_type": "technical_fill_or_wide"
+    },
+    {
+      "file": "Ground_Academy_TechFill.png",
+      "sha256": "77c596547767544876dbb67ec3d0277518999c88c13f5f3bfe59d9174cc854fc",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "technical_partial_crop",
+      "finding_zh_CN": "光照可读，但最右试验位仍被裁切；完整三台由TechWide补充",
+      "evidence_type": "technical_fill_or_wide",
+      "readability_resolved_by": [
+        "Ground_Academy_TechWide.png"
+      ]
+    },
+    {
+      "file": "Ground_Shop_TechFill.png",
+      "sha256": "822edb560931ec0be8f6650de5d585abab18d4761cf2ddfde69f4b3d988dc692",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "technical_readable",
+      "finding_zh_CN": "完整墙顶保留；柜台、工作台与后方冷却槽可辨，技术补光解决基准图近全黑证据缺口",
+      "evidence_type": "technical_fill_or_wide"
+    },
+    {
+      "file": "Ground_Academy_TechWide.png",
+      "sha256": "2acbb24b748dc5e8077b3ba89e022e5976a204521b97b8b2725a1c748caa4e4e",
+      "resolution": [
+        1400,
+        900
+      ],
+      "manually_inspected": true,
+      "status": "technical_readable",
+      "finding_zh_CN": "24mm技术宽构图完整展示木/金属/水三台与通道；不冒充35mm自然视图",
+      "evidence_type": "technical_fill_or_wide"
+    }
+  ],
+  "unresolved_evidence": [],
+  "limitations": [
+    "Training/Shop baseline images remain too dark; their required evidence is supplied separately with disclosed temporary lights",
+    "Technical supplements preserve wall/roof visibility; temporary lights are disclosed and source was not saved",
+    "Academy 24mm TechWide is explicitly a technical composition, not a 35mm natural-perspective claim",
+    "Visible actors are scale/NPC placeholders; geometry and image evidence do not prove AI or runtime interaction",
+    "Road surface overlaps use millimetre-scale blockout offsets, not finished art interfaces",
+    "Closed wing second storeys are massing placeholders; no unimplemented staircase traversal claim"
+  ]
+}

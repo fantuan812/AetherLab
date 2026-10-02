@@ -15,6 +15,7 @@
 #include "AI/AetherNpcSkillDecision.h"
 #include "AI/AetherNpcPerception.h"
 #include "AI/AetherNpcMeleeDecision.h"
+#include "Movement/AetherNavigationRoute.h"
 #include "AetherCombat.generated.h"
 class UAetherMotionComponent;
 
@@ -111,6 +112,9 @@ public:
     bool FindSkillTarget(const FString& SkillId,int32 Rank,FHitResult& Hit,FVector& Origin,FVector& Direction) const;
     bool ExecuteSkill(const FString& SkillId,int32 Rank);
     bool ExecuteCast(const FAetherCastExecution& Execution);
+    FVector SkillAimOrigin() const;
+    virtual void OnCastStarted(const FAetherCastExecution& Execution){}
+    virtual bool ValidateCastCommit(const FAetherCastExecution& Execution,const AAetherCharacter* ActualTarget){return true;}
     bool TrySkill(const FString& SkillId);
     float SkillCooldownRemaining(const FString& SkillId) const;
     UPROPERTY(Replicated) FGuid CastExecutionId;
@@ -140,9 +144,9 @@ public:
     FVector SafeMoveDirection(FVector Destination);
     float NextSteeringAt=0;
     FVector SteeringDirection=FVector::ZeroVector;
-    TArray<FVector> NavigationPoints;
+    FAetherNavigationRoute NavigationRoute;
+    void ResetNavigation();
     FVector NavigationGoal=FVector::ZeroVector;
-    int32 NavigationIndex=0;
     float NextPathAt=0;
     virtual void ReceiveEquipmentHit_Implementation(const FAetherEquipmentHit& Hit) override;
     UFUNCTION() void ApplyCharacterDefinition();
@@ -198,3 +202,5 @@ private:
     bool bNetProbeFinished = false;
     void NetworkProbe(float Dt);
 };
+
+

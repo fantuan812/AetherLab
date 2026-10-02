@@ -1,0 +1,10 @@
+{
+  "source_v1_sha256": "451da979d79475cbed1ae9974dfe7193458d6d6899f9269434a125480fc18b25",
+  "source_v1_unchanged": true,
+  "rebuilt_from_v1_in_new_output_directory": true,
+  "reopened_checks": 27,
+  "reopened_checks_passed": 27,
+  "geometry_camera_fingerprint_after_reopen": "1e620efc234bc3a3c0a2744d7ec31ed7edc89c3829b4d1690fd13079d0f494a0",
+  "same_as_final_delivery": true,
+  "notes": "Fingerprint queries update the Blender view layer first; construction-time stale object matrices are not accepted as geometry evidence."
+}

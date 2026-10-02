@@ -1,0 +1,260 @@
+{
+  "version": 3,
+  "input_v2_sha256": "9da7bdfc2731c144cb31d0866b9574a24d9f9057e6ed38895226d6371e3ac62b",
+  "source_scene_sha256": "3d93582fca3187622fddd7594a2cc115d54ce34d70a09569dc2703431627094b",
+  "source_objects": [
+    {
+      "object": "H01_Door_stone_step",
+      "vertices": 8,
+      "source_materials": [
+        "H01_Damp_stone_1"
+      ]
+    },
+    {
+      "object": "SHR_Workbench_top_plank",
+      "vertices": 8,
+      "source_materials": [
+        "SHR_Cut_Cedar"
+      ]
+    },
+    {
+      "object": "SHR_Tie_beam",
+      "vertices": 8,
+      "source_materials": [
+        "SHR_Weathered_Cedar"
+      ]
+    },
+    {
+      "object": "River rock",
+      "vertices": 42,
+      "source_materials": [
+        "Mountain cliff"
+      ]
+    }
+  ],
+  "new_master_count": 6,
+  "retained_v2_masters": 22,
+  "new_fixture_instances": 77,
+  "new_masters": [
+    {
+      "asset_id": "KIT_Stair_Solid_4m_Rise1m",
+      "role": "stair",
+      "source": "H01_Door_stone_step construction; new closed profile",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          -0.035
+        ],
+        "OUT": [
+          0,
+          4,
+          0.965
+        ]
+      },
+      "bounds_m": [
+        [
+          -2.0,
+          0.0,
+          -0.550000011920929
+        ],
+        [
+          2.0,
+          4.0,
+          0.9649999737739563
+        ]
+      ],
+      "materials": [
+        "KIT_Wet basalt 1"
+      ],
+      "vertices": 36,
+      "faces": 20
+    },
+    {
+      "asset_id": "KIT_Bridge_DeckPlank_4x0p25",
+      "role": "bridge_deck",
+      "source": "SHR_Workbench_top_plank topology; authored dimensions; existing shared material",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          -0.035
+        ],
+        "OUT": [
+          0,
+          0.25,
+          -0.035
+        ]
+      },
+      "bounds_m": [
+        [
+          -2.0,
+          0.0,
+          -0.16500000655651093
+        ],
+        [
+          2.0,
+          0.25,
+          -0.03500000014901161
+        ]
+      ],
+      "materials": [
+        "KIT_Aged cedar"
+      ],
+      "vertices": 8,
+      "faces": 6
+    },
+    {
+      "asset_id": "KIT_Bridge_Bearer_4p5m",
+      "role": "bridge_bearer",
+      "source": "SHR_Tie_beam topology; authored dimensions; existing shared material",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          -0.55
+        ],
+        "OUT": [
+          0,
+          4,
+          -0.55
+        ]
+      },
+      "bounds_m": [
+        [
+          -0.1599999964237213,
+          -0.25,
+          -0.550000011920929
+        ],
+        [
+          0.1599999964237213,
+          4.25,
+          -0.16500000655651093
+        ]
+      ],
+      "materials": [
+        "KIT_Aged cedar"
+      ],
+      "vertices": 8,
+      "faces": 6
+    },
+    {
+      "asset_id": "KIT_Bridge_Abutment_6x1m",
+      "role": "bridge_abutment",
+      "source": "H01_Door_stone_step topology; authored dimensions; existing shared material",
+      "local_sockets_m": {
+        "IN": [
+          0,
+          0,
+          -0.035
+        ],
+        "OUT": [
+          0,
+          1,
+          -0.035
+        ]
+      },
+      "bounds_m": [
+        [
+          -3.0,
+          0.0,
+          -1.649999976158142
+        ],
+        [
+          3.0,
+          1.0,
+          -0.03500000014901161
+        ]
+      ],
+      "materials": [
+        "KIT_Wet basalt 1"
+      ],
+      "vertices": 8,
+      "faces": 6
+    },
+    {
+      "asset_id": "KIT_RockToe_Earth_2m",
+      "role": "rock_toe",
+      "source": "KIT_Shoulder_Straight_1m topology and shared earth",
+      "local_sockets_m": {
+        "ROAD_EDGE": [
+          0,
+          1,
+          -0.035
+        ],
+        "TERRAIN_EDGE": [
+          2,
+          1,
+          -0.35
+        ]
+      },
+      "bounds_m": [
+        [
+          0.0,
+          0.0,
+          -0.9000000357627869
+        ],
+        [
+          2.0,
+          2.0,
+          -0.03500000014901161
+        ]
+      ],
+      "materials": [
+        "KIT_Wet mountain earth"
+      ],
+      "vertices": 8,
+      "faces": 6
+    },
+    {
+      "asset_id": "KIT_Rock_River_A",
+      "role": "rock",
+      "source": "REFINED_Valley/River rock exact source topology, baked original world rotation/scale; translated to embedded datum; shared basalt",
+      "local_sockets_m": {
+        "BASE": [
+          0,
+          0,
+          -0.5
+        ]
+      },
+      "bounds_m": [
+        [
+          -0.3802495002746582,
+          0.0,
+          -0.5
+        ],
+        [
+          0.3802495002746582,
+          1.4966087341308594,
+          0.44595253467559814
+        ]
+      ],
+      "materials": [
+        "KIT_Wet basalt 1"
+      ],
+      "vertices": 42,
+      "faces": 80
+    }
+  ],
+  "scope": "One connected transition chain; not global world",
+  "candidate_pitch_m": 4,
+  "stair_candidate": {
+    "rise_m": 1,
+    "run_m": 4,
+    "risers": 8,
+    "riser_m": 0.125,
+    "tread_m": 0.5
+  },
+  "bridge_candidate": {
+    "span_m": 4,
+    "deck_width_m": 4,
+    "abutment_length_m": 1,
+    "bearer_embed_m": 0.25
+  },
+  "limitations": [
+    "No destructive bridge/rope/anchor mechanic",
+    "No curved/variable-span bridge, all stair dimensions or all rock profiles",
+    "Legacy lantern mesh defect remains unused",
+    "No UE/nav/collision/structural/load/LOD/performance claims"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "archives": [
+    {
+      "file": "AetherLab_Global_Blockout_Model_v1.zip",
+      "bytes": 6701293,
+      "sha256": "020166074efab6aeb211ca0f1d547be3d0ddef2b2faa8f88f847ab950e1fe31f",
+      "entries": 33,
+      "ordinary_independent_zip": true
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Textures_v1.zip",
+      "bytes": 8477683,
+      "sha256": "2734a57f776fbca092266ebf87cdba1012977ad2667e558c9c2eb49823a6c51e",
+      "entries": 4,
+      "ordinary_independent_zip": true
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Views_v1.zip",
+      "bytes": 4777157,
+      "sha256": "3a1f05acd7b200325a20fad7c881acc19d3dec41dd16f77e5069b18c46fd65b9",
+      "entries": 26,
+      "ordinary_independent_zip": true
+    }
+  ],
+  "all_below_14MiB": true,
+  "ordinary_independent_zips": true,
+  "crc_and_extracted_file_hashes_passed": true,
+  "extracted_root": "AetherLab_Global_Blockout_v1",
+  "checked_content_files": 62,
+  "portable_blend_sha256": "007c21056ce98b31fd4f4319bde214a486f02edc49c13007970d1b0b1c5f31f5",
+  "canonical_frozen_blend_sha256": "b78c6ed07157f1cd2f972b4391416417445382dfd6bfdaf6a18c940bbd6eef6c",
+  "blender_reopen_after_zip_extraction": "passed",
+  "reopen_report": "Package_Extraction_Validation.json",
+  "zip_timestamps": "normalized to 2026-10-01 for deterministic archives"
+}

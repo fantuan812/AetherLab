@@ -19,7 +19,7 @@ FString AAetherFrontierMode::RecruitCompanion(AAetherFrontierCharacter* C,bool H
     if(GuardTaken&&HealerTaken)return TEXT("Both named companions are already recruited.");
     Healer=GuardTaken||(!HealerTaken&&Healer);
     if(Companions.Num()+GetNumPlayers()>=4)return TEXT("Party capacity: four humans and AI combined.");
-    auto* B=SpawnFighter(C->GetActorLocation()+FVector(0,150,20),EAetherFighter::Player,NAME_None);if(!B)return TEXT("Companion capability/spawn unavailable.");B->CompanionOwner=C;B->bHealer=Healer;B->CompanionId=Healer?FName("Muhe"):FName("Lishi");
+    auto* B=SpawnFighter(C->GetActorLocation()+FVector(0,150,20),EAetherFighter::Player,NAME_None,Healer?TEXT("Companion.Healer"):TEXT("Companion.Guard"));if(!B)return TEXT("Companion capability/spawn unavailable.");B->CompanionOwner=C;B->bHealer=Healer;B->CompanionId=Healer?FName("Muhe"):FName("Lishi");
     B->SpawnDefaultController();if(!B->CompanionDecision->BeginCompanionControl()){B->Destroy();return TEXT("Companion controller unavailable.");}Companions.Add(B);auto Next=PS->Profile;Next.bCompanion=true;Next.Observe("Companion");Next.TryAutoClaim("Q_Main_06");
     if(!Commit(PS,Next)){B->Destroy();return TEXT("Storage unavailable; recruitment cancelled.");}
     return TEXT("Companion follows, fights, and revives. P shows party.");
@@ -150,3 +150,4 @@ FString AAetherFrontierMode::InteractTarget(AAetherFrontierCharacter* C,const FA
     if(!Commit(PS,Next,Service=="Rescue"?FName("Rescue"):NAME_None,Service=="Rescue"?Nearest->Spec.Id:NAME_None))return TEXT("Storage unavailable; no inventory or reward change committed. Retry.");
     return TEXT("Interaction committed. J: quests / I: inventory / K: abilities.");
 }
+

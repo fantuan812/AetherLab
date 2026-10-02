@@ -1,0 +1,28 @@
+{
+  "files": [
+    {
+      "file": "AetherLab_Global_Blockout_Model_v1.zip",
+      "library_file_id": "libfile_cf47e33c31288191a9f852f93c6062e3",
+      "sha256": "020166074efab6aeb211ca0f1d547be3d0ddef2b2faa8f88f847ab950e1fe31f",
+      "bytes": 6701293,
+      "crc_passed": true
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Textures_v1.zip",
+      "library_file_id": "libfile_54215a03ed388191a83ea81d3d5e2eb9",
+      "sha256": "2734a57f776fbca092266ebf87cdba1012977ad2667e558c9c2eb49823a6c51e",
+      "bytes": 8477683,
+      "crc_passed": true
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Views_v1.zip",
+      "library_file_id": "libfile_912f93e478188191a506443055d5ee4e",
+      "sha256": "3a1f05acd7b200325a20fad7c881acc19d3dec41dd16f77e5069b18c46fd65b9",
+      "bytes": 4777157,
+      "crc_passed": true
+    }
+  ],
+  "all_downloaded_and_hash_crc_verified": true,
+  "portable_blender_reopen": "passed",
+  "blender_report": "Library_Download_Blender_Reopen.json"
+}

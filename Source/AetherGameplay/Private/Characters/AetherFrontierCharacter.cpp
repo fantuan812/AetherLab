@@ -370,30 +370,10 @@ void AAetherFrontierCharacter::Tick(float Dt)
     }
 }
 
-void AAetherFrontierCharacter::ExecuteCompanionHeal(TWeakObjectPtr<AAetherFrontierCharacter> Target,uint64 Request)
-{
-    if(!Request)
-    {
-        if(bCompanionHealPending||CompanionHealRequest==MAX_uint64)return;
-        Request=++CompanionHealRequest;bCompanionHealPending=true;
-        CompanionHealOwner=CompanionOwner;CompanionHealDamageSerial=CombatRuntime->DamageReceivedCount;
-    }
-    if(!bCompanionHealPending||Request!=CompanionHealRequest)return;
-    auto* Recipient=Target.Get();
-    const bool SameRecruitment=Recipient&&AetherRelations::CanAssist(*this,*Recipient);
-    if(!HasAuthority()||!SameRecruitment||!bHealer||!Alive()||!Recipient->Alive()||CombatTime()<StunUntil||bTravelPending||bCompanionHold||Recipient->Health()>=Recipient->MaxHealth||
-        CompanionHealOwner.Get()!=CompanionOwner||CompanionHealDamageSerial!=CombatRuntime->DamageReceivedCount||
-        Mana()<15||FVector::DistSquared(GetActorLocation(),Recipient->GetActorLocation())>FMath::Square(600.)){CancelCompanionHeal();return;}
-    FCollisionQueryParams Sight(SCENE_QUERY_STAT(CompanionHealCommit),false,this);Sight.AddIgnoredActor(Recipient);
-    if(Recipient!=this&&GetWorld()->LineTraceTestByChannel(GetActorLocation(),Recipient->GetActorLocation(),ECC_Visibility,Sight)){CancelCompanionHeal();return;}
-    const TWeakObjectPtr<AAetherFrontierCharacter> Self=this;
-    if(Recipient->ResourceGate->Defer([Self,Target,Request]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target,Request);}))return;
-    if(ResourceGate->Defer([Self,Target,Request]{if(Self.IsValid())Self->ExecuteCompanionHeal(Target,Request);}))return;
-    // 整个治疗及施法者扣费一起延后，以执行时的当前生命加增量，不排队旧绝对目标。
-    Recipient->SetVitals(Recipient->Health()+20,Recipient->Mana(),Recipient->Stamina());
-    AbilitySystem->ApplyModToAttribute(UAetherAttributes::GetManaAttribute(),EGameplayModOp::Additive,-15);
-    NextCompanionAction=CombatTime()+5;CancelCompanionHeal();
-}
+void AAetherFrontierCharacter::OnCastStarted(const FAetherCastExecution& Execution)
+{if(CompanionDecision)CompanionDecision->OnCastStarted(Execution);}
+bool AAetherFrontierCharacter::ValidateCastCommit(const FAetherCastExecution& Execution,const AAetherCharacter* ActualTarget)
+{return !CompanionDecision||CompanionDecision->ValidateSkillCommit(Execution,ActualTarget);}
 float AAetherFrontierCharacter::TakeDamage(float Amount,const FDamageEvent& Event,AController* EventInstigator,AActor* Causer)
 {
     if(DeferDamage(Amount,Event,EventInstigator,Causer))return 0;
@@ -438,3 +418,4 @@ bool AAetherFrontierCharacter::AllowsGeneratedMotion() const
     // 场景交互占用由玩法所有者明确提供，动作插件不反查任务或持久化。
     return Super::AllowsGeneratedMotion()&&!Carried&&!ReviveTarget&&!bTravelPending;
 }
+

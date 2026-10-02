@@ -1,0 +1,234 @@
+{
+  "workflow": [
+    "轮廓拓扑",
+    "法线",
+    "UV",
+    "高模烘焙",
+    "材质",
+    "皮肤 Shader",
+    "毛发",
+    "骨骼权重",
+    "动画"
+  ],
+  "stages": [
+    {
+      "stage": "轮廓拓扑",
+      "meshes": 5,
+      "vertices": 7691,
+      "basis": "Authored quad-ring joints and separate head/hair/equipment. Previous rig removed before finishing.",
+      "limitations": "Prototype seams overlap between clothing sections; not a single watertight skin surface."
+    },
+    {
+      "stage": "法线",
+      "outward_faces": "Recalculated with BMesh",
+      "sharp_angle_degrees": 60,
+      "hard_surface": "Weighted corner normals applied on sword and shield"
+    },
+    {
+      "stage": "UV",
+      "layout": "One individually packed UV atlas per exported mesh",
+      "padding_fraction": 0.014,
+      "outputs": [
+        "UV/Windward_Body_UV.svg",
+        "UV/Windward_Head_UV.svg",
+        "UV/Windward_Hair_UV.svg",
+        "UV/Windward_Sword_UV.svg",
+        "UV/Windward_Shield_UV.svg"
+      ],
+      "limitations": "Automatic islands; manual seam polish remains a production follow-up."
+    },
+    {
+      "stage": "高模烘焙",
+      "method": "Cycles selected-to-active high-to-low; tangent +Y normals and local geometric AO",
+      "cage_extrusion_m": 0.016,
+      "max_ray_distance_m": 0.045,
+      "bakes": [
+        {
+          "low": "Windward_Body",
+          "high_vertices": 61762,
+          "normal": {
+            "file": "Textures/Windward_Body_Normal.png",
+            "size": [
+              2048,
+              2048
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.24444448947906494
+          },
+          "AO": {
+            "file": "Textures/Windward_Body_AO.png",
+            "size": [
+              1024,
+              1024
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.4248568117618561
+          }
+        },
+        {
+          "low": "Windward_Head",
+          "high_vertices": 33116,
+          "normal": {
+            "file": "Textures/Windward_Head_Normal.png",
+            "size": [
+              1024,
+              1024
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.24848870933055878
+          },
+          "AO": {
+            "file": "Textures/Windward_Head_AO.png",
+            "size": [
+              1024,
+              1024
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.3887397348880768
+          }
+        },
+        {
+          "low": "Windward_Hair",
+          "high_vertices": 1435,
+          "normal": {
+            "file": "Textures/Windward_Hair_Normal.png",
+            "size": [
+              1024,
+              1024
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.25318384170532227
+          },
+          "AO": {
+            "file": "Textures/Windward_Hair_AO.png",
+            "size": [
+              1024,
+              1024
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.4615282714366913
+          }
+        },
+        {
+          "low": "Windward_Sword",
+          "high_vertices": 6786,
+          "normal": {
+            "file": "Textures/Windward_Sword_Normal.png",
+            "size": [
+              512,
+              512
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.2537439465522766
+          },
+          "AO": {
+            "file": "Textures/Windward_Sword_AO.png",
+            "size": [
+              512,
+              512
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.4628453552722931
+          }
+        },
+        {
+          "low": "Windward_Shield",
+          "high_vertices": 11350,
+          "normal": {
+            "file": "Textures/Windward_Shield_Normal.png",
+            "size": [
+              1024,
+              1024
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.2468574494123459
+          },
+          "AO": {
+            "file": "Textures/Windward_Shield_AO.png",
+            "size": [
+              1024,
+              1024
+            ],
+            "rgb_min": 0.0,
+            "rgb_max": 1.0,
+            "rgb_std": 0.4697144031524658
+          }
+        }
+      ],
+      "source": "Subdivision and explicit geometric cloth folds/leather grain; high meshes preserved in .blend",
+      "limitations": "Procedural high-poly detail prototype; no manual sculpt session or production cage review claimed."
+    },
+    {
+      "stage": "材质",
+      "maps": "Five BaseColor atlases plus the earlier Normal and AO atlases",
+      "surfaces": "Cloth sheen, leather, wood, brass and steel use separate PBR parameters",
+      "texture_count": 15
+    },
+    {
+      "stage": "皮肤 Shader",
+      "skin_materials": 4,
+      "shader": "Principled BSDF subsurface",
+      "subsurface_weight": 0.1,
+      "subsurface_scale_m": 0.012,
+      "radius_rgb": [
+        1,
+        0.43,
+        0.2
+      ],
+      "limitations": "Blender shader only; UE skin material and subsurface profile are not authored."
+    },
+    {
+      "stage": "毛发",
+      "representation": "Stylized solid polygon locks and hair cap; independent mesh",
+      "shading": "Baked hair atlas, anisotropic highlight and sheen",
+      "limitations": "No strand groom or hair simulation; head-bone attachment is created in the next stage."
+    },
+    {
+      "stage": "骨骼权重",
+      "bones": 65,
+      "deform_bones": 61,
+      "vertices_with_normalized_weights": 7691,
+      "max_influences": 2,
+      "skinning": "Explicit authored weights; shoulder, elbow, knee and ankle blends, full articulated fingers"
+    },
+    {
+      "stage": "动画",
+      "fps": 30,
+      "actions": [
+        {
+          "action": "Idle_Breathe",
+          "frames": 61
+        },
+        {
+          "action": "Walk_InPlace",
+          "frames": 31
+        },
+        {
+          "action": "Wave_Hello",
+          "frames": 81
+        },
+        {
+          "action": "Sword_Slash",
+          "frames": 41
+        }
+      ],
+      "limitations": "Editable prototype motions; production foot lock, root motion and gameplay integration remain unfinished."
+    }
+  ],
+  "scope": "Blender art experiment. UE 未编译、未测试。",
+  "delivery": {
+    "blend": "WindwardHero.blend",
+    "texture_files": 15,
+    "high_vertices": 114449,
+    "ue": "未编译、未测试"
+  }
+}

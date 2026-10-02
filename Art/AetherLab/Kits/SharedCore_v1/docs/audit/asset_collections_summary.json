@@ -1,0 +1,882 @@
+[
+  {
+    "collection": "COLLISION",
+    "mesh_objects": 7,
+    "unique_mesh_data": 7,
+    "base_triangles": 84,
+    "materials": [],
+    "mesh_with_uv": 7,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -7.299999713897705,
+        10.5
+      ],
+      [
+        -8.050000190734863,
+        5.099999904632568
+      ],
+      [
+        -1.0499999523162842,
+        3.0
+      ]
+    ]
+  },
+  {
+    "collection": "ENV_Foliage",
+    "mesh_objects": 313,
+    "unique_mesh_data": 313,
+    "base_triangles": 3756,
+    "materials": [
+      "Aged cedar",
+      "Rain moss"
+    ],
+    "mesh_with_uv": 313,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -7.3146138191223145,
+        11.22773551940918
+      ],
+      [
+        -8.136940002441406,
+        18.198562622070312
+      ],
+      [
+        -1.3518099784851074,
+        4.7225823402404785
+      ]
+    ]
+  },
+  {
+    "collection": "ENV_PathExtensions",
+    "mesh_objects": 237,
+    "unique_mesh_data": 237,
+    "base_triangles": 4796,
+    "materials": [
+      "Aged cedar",
+      "Amber lantern glass",
+      "Forged iron",
+      "Lantern aged brass",
+      "Wet basalt 0",
+      "Wet basalt 1",
+      "Wet basalt 2",
+      "Wet basalt 3"
+    ],
+    "mesh_with_uv": 237,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -3.7167232036590576,
+        10.484999656677246
+      ],
+      [
+        -8.420000076293945,
+        18.20366859436035
+      ],
+      [
+        -1.059999942779541,
+        2.8000001907348633
+      ]
+    ]
+  },
+  {
+    "collection": "FX_ShelteredFire",
+    "mesh_objects": 14,
+    "unique_mesh_data": 14,
+    "base_triangles": 700,
+    "materials": [
+      "Fire gold",
+      "Flame heart"
+    ],
+    "mesh_with_uv": 7,
+    "nonunit_scale": 14,
+    "bounds": [
+      [
+        -2.044837236404419,
+        -1.4597302675247192
+      ],
+      [
+        1.9859975576400757,
+        2.5245513916015625
+      ],
+      [
+        0.5639022588729858,
+        1.357812523841858
+      ]
+    ]
+  },
+  {
+    "collection": "REFINE_Clustered_Town",
+    "mesh_objects": 96,
+    "unique_mesh_data": 96,
+    "base_triangles": 1152,
+    "materials": [
+      "Aged cedar"
+    ],
+    "mesh_with_uv": 96,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -12.600000381469727,
+        25.496000289916992
+      ],
+      [
+        -0.07000000029802322,
+        79.22000122070312
+      ],
+      [
+        -2.3400001525878906,
+        9.319311141967773
+      ]
+    ]
+  },
+  {
+    "collection": "REFINE_Connected_Valley_Greenbelts",
+    "mesh_objects": 145,
+    "unique_mesh_data": 5,
+    "base_triangles": 150800,
+    "materials": [
+      "REFINE_Leaf_Atlas_Subtle_Tints"
+    ],
+    "mesh_with_uv": 145,
+    "nonunit_scale": 145,
+    "bounds": [
+      [
+        -20.776798248291016,
+        36.15749740600586
+      ],
+      [
+        31.63300323486328,
+        65.75049591064453
+      ],
+      [
+        -5.006301403045654,
+        6.7007598876953125
+      ]
+    ]
+  },
+  {
+    "collection": "REFINE_Staggered_Roofscape",
+    "mesh_objects": 64,
+    "unique_mesh_data": 64,
+    "base_triangles": 738,
+    "materials": [
+      "Aged cedar",
+      "Distant warm gray plaster",
+      "REFINE_Distant_Quiet_Windows",
+      "Roofscape muted slate",
+      "Wet basalt 1"
+    ],
+    "mesh_with_uv": 64,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -14.85200023651123,
+        31.851999282836914
+      ],
+      [
+        -0.019999999552965164,
+        105.28600311279297
+      ],
+      [
+        -0.375,
+        17.46773910522461
+      ]
+    ]
+  },
+  {
+    "collection": "REFINED_Valley",
+    "mesh_objects": 1416,
+    "unique_mesh_data": 1416,
+    "base_triangles": 268694,
+    "materials": [
+      "Aged cedar",
+      "Baseline terrain with restrained distance grading",
+      "Blue valley haze",
+      "M_Authored_Foliage_Atlas",
+      "Mountain cliff",
+      "Natural foliage 0",
+      "Natural foliage 1",
+      "Natural foliage 2",
+      "Natural foliage 3",
+      "Natural foliage 4",
+      "Rain streaks",
+      "Rainwater",
+      "Stream white foam",
+      "Wet basalt 0",
+      "Wet basalt 1",
+      "Wet basalt 2",
+      "Wet basalt 3",
+      "Wet mountain earth"
+    ],
+    "mesh_with_uv": 1151,
+    "nonunit_scale": 197,
+    "bounds": [
+      [
+        -200.00001525878906,
+        200.00001525878906
+      ],
+      [
+        -25.0,
+        400.0
+      ],
+      [
+        -30.0,
+        170.0
+      ]
+    ]
+  },
+  {
+    "collection": "SCN01_Gate_Refinement",
+    "mesh_objects": 76,
+    "unique_mesh_data": 76,
+    "base_triangles": 83324,
+    "materials": [
+      "Forged iron",
+      "GATE_Interior_Warm",
+      "GATE_Recess_Shadow",
+      "GATE_Recessed_Mortar",
+      "GATE_Weathered_Slate_0",
+      "GATE_Weathered_Slate_1",
+      "GATE_Weathered_Slate_2",
+      "GATE_Weathered_Slate_3",
+      "GATE_Weathered_Wood",
+      "GATE_Wet_Ashlar_0",
+      "GATE_Wet_Ashlar_1",
+      "GATE_Wet_Ashlar_2",
+      "GATE_Wet_Ashlar_3",
+      "Gate indigo banners",
+      "Lantern aged brass"
+    ],
+    "mesh_with_uv": 16,
+    "nonunit_scale": 16,
+    "bounds": [
+      [
+        -9.529999732971191,
+        25.530000686645508
+      ],
+      [
+        52.369998931884766,
+        58.689998626708984
+      ],
+      [
+        2.0,
+        15.59000015258789
+      ]
+    ]
+  },
+  {
+    "collection": "SCN01_House01_Refinement",
+    "mesh_objects": 1171,
+    "unique_mesh_data": 1171,
+    "base_triangles": 14162,
+    "materials": [
+      "H01_Base_mortar",
+      "H01_Damp_stone_0",
+      "H01_Damp_stone_1",
+      "H01_Damp_stone_2",
+      "H01_Damp_stone_3",
+      "H01_Dark_interior_plaster",
+      "H01_Lime_plaster",
+      "H01_Linen_window_curtain",
+      "H01_Oxidized_iron",
+      "H01_Thick_muted_glass",
+      "H01_Weathered_slate_0",
+      "H01_Weathered_slate_1",
+      "H01_Weathered_slate_2",
+      "H01_Weathered_slate_3",
+      "H01_Weathered_slate_4",
+      "H01_Weathered_slate_5",
+      "H01_Weathered_slate_6",
+      "H01_Weathered_warm_timber"
+    ],
+    "mesh_with_uv": 0,
+    "nonunit_scale": 37,
+    "bounds": [
+      [
+        -9.111848831176758,
+        -2.894646406173706
+      ],
+      [
+        61.45500183105469,
+        68.2699966430664
+      ],
+      [
+        2.6500000953674316,
+        11.098000526428223
+      ]
+    ]
+  },
+  {
+    "collection": "SCN01_Shelter_Collision_Candidate",
+    "mesh_objects": 57,
+    "unique_mesh_data": 57,
+    "base_triangles": 684,
+    "materials": [],
+    "mesh_with_uv": 0,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -7.675309658050537,
+        -1.724690318107605
+      ],
+      [
+        -3.3125,
+        3.25600004196167
+      ],
+      [
+        -0.10000000149011612,
+        5.557399749755859
+      ]
+    ]
+  },
+  {
+    "collection": "SCN01_Shelter_Refinement",
+    "mesh_objects": 834,
+    "unique_mesh_data": 834,
+    "base_triangles": 11456,
+    "materials": [
+      "Amber lantern glass",
+      "Forged iron",
+      "Lantern aged brass",
+      "SHR_Cut_Cedar",
+      "SHR_Matte_stoneware",
+      "SHR_Oxidised_Iron",
+      "SHR_RainSlate_0",
+      "SHR_RainSlate_1",
+      "SHR_RainSlate_2",
+      "SHR_RainSlate_3",
+      "SHR_RainSlate_4",
+      "SHR_RainSlate_5",
+      "SHR_RainSlate_6",
+      "SHR_Weathered_Cedar",
+      "SHR_Weathered_linen",
+      "Wet basalt 1",
+      "Wet basalt 2"
+    ],
+    "mesh_with_uv": 30,
+    "nonunit_scale": 6,
+    "bounds": [
+      [
+        -7.67664098739624,
+        -1.7233591079711914
+      ],
+      [
+        -3.3125,
+        3.25600004196167
+      ],
+      [
+        -0.034999996423721313,
+        5.327519416809082
+      ]
+    ]
+  },
+  {
+    "collection": "SCN01_Two_Visible_Roof_Variants",
+    "mesh_objects": 51,
+    "unique_mesh_data": 51,
+    "base_triangles": 4464,
+    "materials": [
+      "H01_Damp_stone_1",
+      "H01_Dark_interior_plaster",
+      "H01_Linen_window_curtain",
+      "H01_Oxidized_iron",
+      "H01_Weathered_slate_0",
+      "H01_Weathered_slate_1",
+      "H01_Weathered_slate_2",
+      "H01_Weathered_slate_3",
+      "H01_Weathered_slate_4",
+      "H01_Weathered_slate_5",
+      "H01_Weathered_slate_6",
+      "H01_Weathered_warm_timber"
+    ],
+    "mesh_with_uv": 0,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -6.801692485809326,
+        19.72900390625
+      ],
+      [
+        78.58366394042969,
+        105.29402160644531
+      ],
+      [
+        9.304316520690918,
+        19.458240509033203
+      ]
+    ]
+  },
+  {
+    "collection": "SET_DistantTownSilhouettes",
+    "mesh_objects": 60,
+    "unique_mesh_data": 60,
+    "base_triangles": 684,
+    "materials": [
+      "Aged cedar",
+      "Distant warm gray plaster",
+      "Glazed slate 1",
+      "REFINE_Distant_Quiet_Windows",
+      "Wet basalt 1"
+    ],
+    "mesh_with_uv": 60,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -13.100000381469727,
+        25.97599983215332
+      ],
+      [
+        -2.5999999046325684,
+        85.41000366210938
+      ],
+      [
+        -2.5,
+        11.165263175964355
+      ]
+    ]
+  },
+  {
+    "collection": "SHR_Approved_EntryStep_Option",
+    "mesh_objects": 1,
+    "unique_mesh_data": 1,
+    "base_triangles": 12,
+    "materials": [
+      "Wet basalt 1.001"
+    ],
+    "mesh_with_uv": 1,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -4.099999904632568,
+        -2.9000000953674316
+      ],
+      [
+        -3.1500000953674316,
+        -2.6500000953674316
+      ],
+      [
+        -0.10000000149011612,
+        0.11749999970197678
+      ]
+    ]
+  },
+  {
+    "collection": "SHR_Candidate_LOD0",
+    "mesh_objects": 8,
+    "unique_mesh_data": 8,
+    "base_triangles": 18028,
+    "materials": [
+      "SHR_TA_Details",
+      "SHR_TA_Slate",
+      "SHR_TA_Stone",
+      "SHR_TA_Wood"
+    ],
+    "mesh_with_uv": 8,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -7.693676471710205,
+        -1.7246898412704468
+      ],
+      [
+        -3.3454999923706055,
+        3.283830404281616
+      ],
+      [
+        -0.09999999403953552,
+        6.164495944976807
+      ]
+    ]
+  },
+  {
+    "collection": "SHR_Candidate_LOD1",
+    "mesh_objects": 8,
+    "unique_mesh_data": 8,
+    "base_triangles": 9840,
+    "materials": [
+      "SHR_TA_Details",
+      "SHR_TA_Slate",
+      "SHR_TA_Stone",
+      "SHR_TA_Wood"
+    ],
+    "mesh_with_uv": 8,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -7.693676471710205,
+        -1.7233591079711914
+      ],
+      [
+        -3.319441795349121,
+        3.283830404281616
+      ],
+      [
+        -0.09999999403953552,
+        5.404670715332031
+      ]
+    ]
+  },
+  {
+    "collection": "SHR_Candidate_LOD2",
+    "mesh_objects": 8,
+    "unique_mesh_data": 8,
+    "base_triangles": 4664,
+    "materials": [
+      "SHR_TA_Details",
+      "SHR_TA_Slate",
+      "SHR_TA_Stone",
+      "SHR_TA_Wood"
+    ],
+    "mesh_with_uv": 8,
+    "nonunit_scale": 1,
+    "bounds": [
+      [
+        -7.693676471710205,
+        -1.7233591079711914
+      ],
+      [
+        -3.319429874420166,
+        3.283830404281616
+      ],
+      [
+        -0.09999999403953552,
+        5.403376579284668
+      ]
+    ]
+  },
+  {
+    "collection": "SHR_TA_Atlas_Working",
+    "mesh_objects": 4,
+    "unique_mesh_data": 4,
+    "base_triangles": 18172,
+    "materials": [
+      "SHR_TA_Details",
+      "SHR_TA_Slate",
+      "SHR_TA_Stone",
+      "SHR_TA_Wood"
+    ],
+    "mesh_with_uv": 4,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -7.711704254150391,
+        -1.7246898412704468
+      ],
+      [
+        -3.347810983657837,
+        3.300311326980591
+      ],
+      [
+        -0.09999999403953552,
+        6.164495944976807
+      ]
+    ]
+  },
+  {
+    "collection": "SHR_TA_Frozen_High",
+    "mesh_objects": 835,
+    "unique_mesh_data": 835,
+    "base_triangles": 50244,
+    "materials": [
+      "TA_FROZEN_Amber lantern glass",
+      "TA_FROZEN_EntryStep",
+      "TA_FROZEN_Forged iron",
+      "TA_FROZEN_Lantern aged brass",
+      "TA_FROZEN_SHR_Cut_Cedar",
+      "TA_FROZEN_SHR_Matte_stoneware",
+      "TA_FROZEN_SHR_Oxidised_Iron",
+      "TA_FROZEN_SHR_RainSlate_0",
+      "TA_FROZEN_SHR_RainSlate_1",
+      "TA_FROZEN_SHR_RainSlate_2",
+      "TA_FROZEN_SHR_RainSlate_3",
+      "TA_FROZEN_SHR_RainSlate_4",
+      "TA_FROZEN_SHR_RainSlate_5",
+      "TA_FROZEN_SHR_RainSlate_6",
+      "TA_FROZEN_SHR_Weathered_Cedar",
+      "TA_FROZEN_SHR_Weathered_linen",
+      "TA_FROZEN_Wet basalt 1",
+      "TA_FROZEN_Wet basalt 2"
+    ],
+    "mesh_with_uv": 31,
+    "nonunit_scale": 6,
+    "bounds": [
+      [
+        -7.67664098739624,
+        -1.7233591079711914
+      ],
+      [
+        -3.3125,
+        3.25600004196167
+      ],
+      [
+        -0.10000000149011612,
+        5.327519416809082
+      ]
+    ]
+  },
+  {
+    "collection": "SM_BrokenCart",
+    "mesh_objects": 283,
+    "unique_mesh_data": 283,
+    "base_triangles": 11188,
+    "materials": [
+      "Aged cedar",
+      "Dry hemp rope",
+      "Forged iron",
+      "Scorched straw",
+      "Sheltered dry straw",
+      "Split cedar edges",
+      "Weathered flax canvas"
+    ],
+    "mesh_with_uv": 283,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -2.8499999046325684,
+        0.39499998092651367
+      ],
+      [
+        -0.10655289143323898,
+        4.060636043548584
+      ],
+      [
+        -0.09499996900558472,
+        2.23771071434021
+      ]
+    ]
+  },
+  {
+    "collection": "SM_Fence_4m",
+    "mesh_objects": 5,
+    "unique_mesh_data": 5,
+    "base_triangles": 60,
+    "materials": [
+      "Aged cedar"
+    ],
+    "mesh_with_uv": 5,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        10.3149995803833,
+        10.484999656677246
+      ],
+      [
+        -8.085000038146973,
+        -3.9149999618530273
+      ],
+      [
+        -1.0299999713897705,
+        0.26999998092651367
+      ]
+    ]
+  },
+  {
+    "collection": "SM_LanternPost",
+    "mesh_objects": 10,
+    "unique_mesh_data": 10,
+    "base_triangles": 120,
+    "materials": [
+      "Aged cedar",
+      "Amber lantern glass",
+      "Forged iron",
+      "Lantern aged brass"
+    ],
+    "mesh_with_uv": 10,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        1.75,
+        2.629999876022339
+      ],
+      [
+        4.800000190734863,
+        5.199999809265137
+      ],
+      [
+        0.15000009536743164,
+        2.8000001907348633
+      ]
+    ]
+  },
+  {
+    "collection": "SM_Path_4m",
+    "mesh_objects": 16,
+    "unique_mesh_data": 16,
+    "base_triangles": 448,
+    "materials": [
+      "Wet basalt 0",
+      "Wet basalt 1",
+      "Wet basalt 2",
+      "Wet basalt 3"
+    ],
+    "mesh_with_uv": 16,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -2.2635364532470703,
+        1.976794719696045
+      ],
+      [
+        -7.555171012878418,
+        -3.083056688308716
+      ],
+      [
+        0.023704692721366882,
+        0.11710210889577866
+      ]
+    ]
+  },
+  {
+    "collection": "SM_RescuePlatform",
+    "mesh_objects": 17,
+    "unique_mesh_data": 17,
+    "base_triangles": 204,
+    "materials": [
+      "Aged cedar"
+    ],
+    "mesh_with_uv": 17,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -2.3949999809265137,
+        -1.2049999237060547
+      ],
+      [
+        -1.6500000953674316,
+        1.2699999809265137
+      ],
+      [
+        0.06000000238418579,
+        0.949999988079071
+      ]
+    ]
+  },
+  {
+    "collection": "SM_RestStop",
+    "mesh_objects": 414,
+    "unique_mesh_data": 414,
+    "base_triangles": 5640,
+    "materials": [
+      "Aged cedar",
+      "Amber lantern glass",
+      "Forged iron",
+      "Glazed slate 0",
+      "Glazed slate 1",
+      "Glazed slate 2",
+      "Glazed slate 3",
+      "Lantern aged brass",
+      "Split cedar edges",
+      "Wet basalt 1",
+      "Wet basalt 2"
+    ],
+    "mesh_with_uv": 414,
+    "nonunit_scale": 8,
+    "bounds": [
+      [
+        -2.5999999046325684,
+        2.5999999046325684
+      ],
+      [
+        -2.75,
+        2.75
+      ],
+      [
+        -3.0999999046325684,
+        3.0999999046325684
+      ]
+    ]
+  },
+  {
+    "collection": "SM_SouthGate",
+    "mesh_objects": 130,
+    "unique_mesh_data": 130,
+    "base_triangles": 11544,
+    "materials": [
+      "Aged cedar",
+      "Amber lantern glass",
+      "Distant Gate Wet basalt 0",
+      "Distant Gate Wet basalt 1",
+      "Distant Gate Wet basalt 2",
+      "Distant Gate Wet basalt 3",
+      "Forged iron",
+      "Gate indigo banners",
+      "Glazed slate 0",
+      "Glazed slate 1",
+      "Glazed slate 2",
+      "Glazed slate 3",
+      "Lantern aged brass"
+    ],
+    "mesh_with_uv": 130,
+    "nonunit_scale": 129,
+    "bounds": [
+      [
+        -2.75,
+        10.5
+      ],
+      [
+        -2.4038000106811523,
+        55.5
+      ],
+      [
+        -3.0,
+        5.502355575561523
+      ]
+    ]
+  },
+  {
+    "collection": "SM_Wall_4m",
+    "mesh_objects": 10,
+    "unique_mesh_data": 10,
+    "base_triangles": 120,
+    "materials": [
+      "Wet basalt 1",
+      "Wet basalt 2",
+      "Wet basalt 3"
+    ],
+    "mesh_with_uv": 10,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        2.6885933876037598,
+        3.711406707763672
+      ],
+      [
+        -6.761406421661377,
+        -2.659363269805908
+      ],
+      [
+        -0.18000000715255737,
+        1.1500000953674316
+      ]
+    ]
+  },
+  {
+    "collection": "SM_WaterBarrel",
+    "mesh_objects": 27,
+    "unique_mesh_data": 27,
+    "base_triangles": 1028,
+    "materials": [
+      "Aged cedar",
+      "PROP01 dark oxidized copper",
+      "Rainwater"
+    ],
+    "mesh_with_uv": 27,
+    "nonunit_scale": 0,
+    "bounds": [
+      [
+        -2.052999973297119,
+        -1.4550832509994507
+      ],
+      [
+        0.6669999957084656,
+        1.0929999351501465
+      ],
+      [
+        0.9500000476837158,
+        1.600000023841858
+      ]
+    ]
+  }
+]
