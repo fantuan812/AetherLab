@@ -1,0 +1,957 @@
+{
+  "schema": "aetherlab.chr01.fixed-grip.v1",
+  "provenance": {
+    "source_artifact_relative_path": "reports/CHR01_Greatsword_Contract.json",
+    "sha256": "e92f0468f12d2431b0ad21e3fc07a272be23da4123b9c9ce7e4ac96017a4e777",
+    "bytes": 457085
+  },
+  "representation": "Exact selected original values; dense animation samples and key-pose matrices remain in the original report in the Library source package.",
+  "artifact_identity": "CHR01_165cm_SevenWeapons_GripCalibration_v1",
+  "status": "BLENDER_GRIP_CALIBRATED_WITH_KNOWN_CLOTHING_LIMITATIONS",
+  "mode": "Greatsword",
+  "scope": "Blender-only; no UE import or acceptance",
+  "coordinate_system": "Blender RH meters, +Z up, character faces -Y; row-major serialized matrices acting on column vectors; quaternion XYZW",
+  "frozen_character": {
+    "filename": "CHR01_Wanderer_Editable.blend",
+    "sha256": "b227a2d002aed8724acdfd3f0d1a21aef5652f486b63245ed1278fe96a3eba69",
+    "height_m": 1.650740146636963,
+    "rig_object": "CHR01_Wanderer_Rig65",
+    "bone_count": 65,
+    "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+    "hands_rest_sha256": "6e5caae72524ddfb5168066cac87866d3115a1fa415683097627ccfd331b80b2"
+  },
+  "new_contact_calibration_sha256": "b56c37e47ce222a31174e9e08c78769d18f15c3903883153f81d39c4f5934e3f",
+  "frame_range": [
+    1,
+    97
+  ],
+  "fps": 24,
+  "weapon_geometry": {
+    "greatsword": {
+      "components": {
+        "Greatsword_270mm_ClearNavyGrip": {
+          "mesh_sha256": "97e376e36c9e88840eaefe98bf2424cba20c77cdbefe8d22795dcdc60f2a089f",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.05999999865889549
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_CentralBezel": {
+          "mesh_sha256": "2d8795b774275424c83453e15387391c90103b24eb46130a9e733d738f9a491a",
+          "vertices": 36,
+          "triangles": 68,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_CentralBezel.001": {
+          "mesh_sha256": "8ad20ff44be003f64c6396c6b09847e2b9400413c0d9ac0a356c9b68c9ecfe15",
+          "vertices": 36,
+          "triangles": 68,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_FacetedPommel": {
+          "mesh_sha256": "26fca675a39994eb5471c34e8e07dd7ba37c4126c7ad67e43e32cbff9a711ee8",
+          "vertices": 48,
+          "triangles": 92,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.21250000596046448
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_FullerForgedBlade": {
+          "mesh_sha256": "f6a44be3237101d85906bbca88d5cfbc6957d334d9ccfc5eae5bdd07697681e5",
+          "vertices": 126,
+          "triangles": 248,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GripFlushCollar": {
+          "mesh_sha256": "08526bb45ecd0159800e206f3bcf923c66e9ea47b396982fea9e3d08092d0838",
+          "vertices": 128,
+          "triangles": 252,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.07699999958276749
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GripFlushCollar.001": {
+          "mesh_sha256": "08526bb45ecd0159800e206f3bcf923c66e9ea47b396982fea9e3d08092d0838",
+          "vertices": 128,
+          "triangles": 252,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.19699999690055847
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardBrightRidge": {
+          "mesh_sha256": "e5698a41f496dcdca1311fabb47a257e71e9ee3485c357ef417349ec119f1a37",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardBrightRidge.001": {
+          "mesh_sha256": "3b45413902d24954c91ab71ef8ebb103af621bdc8b2cdf84af1331bb1cdefe50",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardBrightRidge.002": {
+          "mesh_sha256": "273e967b5a72109041cdd4ed42eed17667b8c8255793f8b9a6341ad5205e2bea",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardBrightRidge.003": {
+          "mesh_sha256": "bd027b70ee8919a07ace1367f363adfaa91c306468d12d748c131a28f598f55f",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardCyan": {
+          "mesh_sha256": "772fc5c778e7ac6159c315e139ed401a5bdb4df05019e7158434ba7ddf37d71e",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardCyan.001": {
+          "mesh_sha256": "7832a7d6183c57429c9ca1ccb36856e20fea971ed547280e0ec8da350852dda9",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardDarkInset": {
+          "mesh_sha256": "80b1b13ce258cf1bb62cd3d8686f1a6e03a93f371fd149dfdf60e808bee9c5a8",
+          "vertices": 126,
+          "triangles": 248,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardDarkInset.001": {
+          "mesh_sha256": "e63902ebc35f4ad109cf7c848fa98c389da4312961a38d63603dbde30da0c40e",
+          "vertices": 126,
+          "triangles": 248,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardRivet": {
+          "mesh_sha256": "c6585a47e581d3b45ea95b12c3cdf6d448e86c402aa4d32831e01eb36eddd9eb",
+          "vertices": 62,
+          "triangles": 120,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.06000000238418579
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -0.017000000923871994
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.1080000028014183
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardRivet.001": {
+          "mesh_sha256": "081b520b5eb15099448bca3d5b2260e6875502d57f07fcc31255a41c73e012e0",
+          "vertices": 62,
+          "triangles": 120,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.06000000238418579
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -0.017000000923871994
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.1080000028014183
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardRivet.002": {
+          "mesh_sha256": "c6585a47e581d3b45ea95b12c3cdf6d448e86c402aa4d32831e01eb36eddd9eb",
+          "vertices": 62,
+          "triangles": 120,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.06000000238418579
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.017000000923871994
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.1080000028014183
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_GuardRivet.003": {
+          "mesh_sha256": "081b520b5eb15099448bca3d5b2260e6875502d57f07fcc31255a41c73e012e0",
+          "vertices": 62,
+          "triangles": 120,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.06000000238418579
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.017000000923871994
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.1080000028014183
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_PommelSmallCyan": {
+          "mesh_sha256": "c1d2a94850318fc598c481c104ed2dc7b20fdf89f9f4faa49f08dd3a0ba5aceb",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_PommelSmallCyan.001": {
+          "mesh_sha256": "5273154d8d5e2338ff2609260a11916f2879775f9ef4476174f02a6c98df2244",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_SweptBronzeGuard": {
+          "mesh_sha256": "ccced190dcdb46adae7973c9e5da0b90b6285768a30142a1c68af551ffe5203b",
+          "vertices": 134,
+          "triangles": 264,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_TaperedLanget": {
+          "mesh_sha256": "48ba217a8bd36bba169365988b15e391fdfb4c15dde0ec54fcced85e199bc527",
+          "vertices": 32,
+          "triangles": 60,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Greatsword_TaperedLanget.001": {
+          "mesh_sha256": "3b8eaaf89b12721ca695879c0a5db583cee69cc9a9fbad0e97dac25b2bcf6e1d",
+          "vertices": 32,
+          "triangles": 60,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      },
+      "root_local_bounds_min": [
+        -0.12999999523162842,
+        -0.0263814739882946,
+        -0.22500000894069672
+      ],
+      "root_local_bounds_max": [
+        0.12999999523162842,
+        0.0263814739882946,
+        1.125
+      ]
+    }
+  },
+  "source_bindings": [
+    {
+      "weapon": "greatsword",
+      "root_object": "WPN_02_Wayfarer_Greatsword",
+      "main_bone": "hand_r",
+      "weapon_local_to_hand_local": {
+        "matrix4x4": [
+          [
+            -5.774199962615967e-08,
+            -0.9999848008155823,
+            -0.005518224090337753,
+            -0.02604810893535614
+          ],
+          [
+            0.9988812208175659,
+            0.0002608541399240494,
+            -0.04729389399290085,
+            0.04953713342547417
+          ],
+          [
+            0.04729451984167099,
+            -0.0055119991302490234,
+            0.9988658428192139,
+            -0.0011409593280404806
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          -0.02604810893535614,
+          0.04953713342547417,
+          -0.0011409593280404806
+        ],
+        "rotation_xyzw": [
+          0.014775356277823448,
+          -0.01867619901895523,
+          0.7068601250648499,
+          0.7069523930549622
+        ],
+        "scale": [
+          1.000000238418579,
+          1.0,
+          1.0
+        ]
+      },
+      "support_bone": "hand_l",
+      "support_hand_local_to_weapon_local": {
+        "matrix4x4": [
+          [
+            -0.9949764609336853,
+            0.09958504140377045,
+            0.010211681947112083,
+            0.020986080169677734
+          ],
+          [
+            -0.09995497763156891,
+            -0.9939045310020447,
+            -0.04650677740573883,
+            0.051779456436634064
+          ],
+          [
+            0.005518384277820587,
+            -0.047293975949287415,
+            0.9988658428192139,
+            -0.1316613107919693
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          0.020986080169677734,
+          0.051779456436634064,
+          -0.1316613107919693
+        ],
+        "rotation_xyzw": [
+          -0.0039385543204844,
+          0.023486187681555748,
+          -0.998467206954956,
+          0.04996159300208092
+        ],
+        "scale": [
+          0.9999997615814209,
+          1.0,
+          1.0
+        ]
+      },
+      "support_contact_in_weapon_m": [
+        0,
+        0,
+        -0.135
+      ],
+      "UE_target_mesh": null,
+      "UE_weapon_mesh": null,
+      "UE_equipment_asset": null,
+      "UE_import_axis_mapping": null
+    }
+  ],
+  "max_wrist_deviation_deg": {
+    "r": 0.0,
+    "l": 20.766565209114713
+  },
+  "measurement_limit": "Contact frame closure alone is not surface collision proof. Separate measured hand/forearm surface samples and rendered multi-view review required.",
+  "UE_validated": false,
+  "cloth_clearance_issue": "Frozen source cape/sleeve intersection is visible in grip back views; correcting only demonstration copies, original Basis/rest/weights stay frozen",
+  "derived_editable_file": "source/CHR01_Greatsword_Grip.blend",
+  "derived_editable_sha256": "d1ff8ef94a25ced38ab2d791dea2c4433011bb486496ebee5309eebb309e0aff",
+  "constraint_implementation": "Fixed weapon-local support relation solved analytically and densely baked. No live IK.",
+  "cloth_corrective": {
+    "new_keys": [
+      {
+        "object": "CHR01 • ivory split shoulder cape",
+        "key": "CapeClearance_Greatsword",
+        "max_rest_delta_m": 0.00980002650841194,
+        "changed_vertices": 140
+      },
+      {
+        "object": "CHR01 • ivory split shoulder cape_low",
+        "key": "CapeClearance_Greatsword",
+        "max_rest_delta_m": 0.00980002650841194,
+        "changed_vertices": 280
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l",
+        "key": "CapeClearance_Greatsword",
+        "max_rest_delta_m": 0.005617671886482737,
+        "changed_vertices": 24
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l_low",
+        "key": "CapeClearance_Greatsword",
+        "max_rest_delta_m": 0.005617671886482737,
+        "changed_vertices": 24
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r",
+        "key": "CapeClearance_Greatsword",
+        "max_rest_delta_m": 0.0012791375187682602,
+        "changed_vertices": 9
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r_low",
+        "key": "CapeClearance_Greatsword",
+        "max_rest_delta_m": 0.0012791375187682602,
+        "changed_vertices": 9
+      }
+    ],
+    "activation": "Driver reads numeric property from the currently selected armature action; all other actions fallback to 0. Clip frames 1 through 97 inclusive activate at constant value 1, frame 0 and 98 off; no ramps or extrapolation.",
+    "dependency_patch_report": "Greatsword_DriverDependencyPatch.json",
+    "full_garment_zero_intersection": false,
+    "visible_back_interior_test_passed": true,
+    "hidden_shell_test_passed": true,
+    "remaining_issue": "Retained armhole/edge triangle intersections; scoped back-interior clearance is not global clothing clearance"
+  },
+  "UE_acceptance_status": "CANCELED_BY_USER",
+  "quaternion_orders": {
+    "binding_transform_rotation_xyzw": "XYZW",
+    "raw_finger_pose_quaternion_wxyz": "WXYZ",
+    "Blender_rotation_quaternion_property": "WXYZ"
+  },
+  "evidence_summary": "../evidence/FixedGripReview.json"
+}

@@ -1,0 +1,1455 @@
+{
+  "schema": "aetherlab.chr01.fixed-grip.v1",
+  "provenance": {
+    "source_artifact_relative_path": "reports/CHR01_Staff_Contract.json",
+    "sha256": "61953aaf99fb2700523b5946355a18ebd021e6ffda186be4500e978d2073c11a",
+    "bytes": 467655
+  },
+  "representation": "Exact selected original values; dense animation samples and key-pose matrices remain in the original report in the Library source package.",
+  "artifact_identity": "CHR01_165cm_SevenWeapons_GripCalibration_v1",
+  "status": "BLENDER_GRIP_CALIBRATION_WITH_SCOPED_CLOTH_CORRECTIVES",
+  "mode": "Staff",
+  "scope": "Blender-only; no UE import or acceptance",
+  "coordinate_system": "Blender RH meters, +Z up, character faces -Y; row-major serialized matrices acting on column vectors; quaternion XYZW",
+  "frozen_character": {
+    "filename": "CHR01_Wanderer_Editable.blend",
+    "sha256": "b227a2d002aed8724acdfd3f0d1a21aef5652f486b63245ed1278fe96a3eba69",
+    "height_m": 1.650740146636963,
+    "rig_object": "CHR01_Wanderer_Rig65",
+    "bone_count": 65,
+    "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+    "hands_rest_sha256": "6e5caae72524ddfb5168066cac87866d3115a1fa415683097627ccfd331b80b2"
+  },
+  "new_contact_calibration_sha256": "98332740f5a8e2a6c4364f79df5fe440f4f52ec591df9ed455536af74571dc88",
+  "frame_range": [
+    1,
+    97
+  ],
+  "fps": 24,
+  "weapon_geometry": {
+    "staff": {
+      "components": {
+        "Staff_BronzeCrownArc": {
+          "mesh_sha256": "583821d8abf0ee837b0119407edadcdb8b4829dd673742bbc71dec4946285f10",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_BronzeCrownArc.001": {
+          "mesh_sha256": "86bfbfb6c4f067ee5d99b660bdbb94241a43dda7f924c43b00ef4babb6c93e39",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_BronzeCrownArc.002": {
+          "mesh_sha256": "cc288ba0f6710ab9e054d13a8b3dd16a4975cfc906e158ef52437d848e314051",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_BronzeCrownArc.003": {
+          "mesh_sha256": "fc3fdee813f11cdaf61aa3b3009ab9e6382d458de4ab65b69f8f17eff088261e",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_BronzeFerrule": {
+          "mesh_sha256": "02d807b806318852dab3c721e00734af6ab251eacc517285cb27f122e5a9b611",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.08699999749660492
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_BronzeFerrule.001": {
+          "mesh_sha256": "02d807b806318852dab3c721e00734af6ab251eacc517285cb27f122e5a9b611",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.08699999749660492
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_BronzeFerrule.002": {
+          "mesh_sha256": "02d807b806318852dab3c721e00734af6ab251eacc517285cb27f122e5a9b611",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.31299999356269836
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_BronzeFerrule.003": {
+          "mesh_sha256": "02d807b806318852dab3c721e00734af6ab251eacc517285cb27f122e5a9b611",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4869999885559082
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_BronzeFerrule.004": {
+          "mesh_sha256": "02d807b806318852dab3c721e00734af6ab251eacc517285cb27f122e5a9b611",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.9100000262260437
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_ButtCyanMark": {
+          "mesh_sha256": "74be96bae37532eff25cf9066d679d045d16aabeaedb851c9c729dd0f15c891e",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_ButtCyanMark.001": {
+          "mesh_sha256": "52086865ef75f6740f6a9918a7189539209feca392a530e7209ece0202e2af11",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_ButtFerrule": {
+          "mesh_sha256": "bb04ed298999da931b482b955ffb38ceefbe7d20e37c8d400c0d5657ca88e1c9",
+          "vertices": 14,
+          "triangles": 24,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_CrownNeckFork": {
+          "mesh_sha256": "dde7a2f095ca5d8df346389010f2106938e163567bbca703515fc65f1030069b",
+          "vertices": 34,
+          "triangles": 64,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_CrownNeckFork.001": {
+          "mesh_sha256": "019c08b25b82cf16339189fbe3990512c71f74843e26e3e07fa0eb6a5fefedf1",
+          "vertices": 34,
+          "triangles": 64,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_CrownSculptedLeaf": {
+          "mesh_sha256": "e666e15fc3d53c629e052e83ec8bab217fdc31b8fd60aed5443b8a439894520c",
+          "vertices": 40,
+          "triangles": 76,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_CrownSculptedLeaf.001": {
+          "mesh_sha256": "f3e19b94eee1b9ee371f2acbfd6f28de8d84f457355383e9624551e71ea20d33",
+          "vertices": 38,
+          "triangles": 72,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_CrownSculptedLeaf.002": {
+          "mesh_sha256": "f9b8df1e9b0f66527d55ff022f784741684efcead24c5686ebd6aba01b0a33ba",
+          "vertices": 40,
+          "triangles": 76,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_CrownSculptedLeaf.003": {
+          "mesh_sha256": "4eede6ec30c2a5b82491e3633e601d4ea237f56af598ba3d3bcfb7a2a789e714",
+          "vertices": 40,
+          "triangles": 76,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_DarkAshCore": {
+          "mesh_sha256": "2435e33cba14b3e4b94fb8a45e91cba806bfc8df6dcd2accf35499a223e38d35",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3050000071525574
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_DarkSteelArcInset": {
+          "mesh_sha256": "420fcbea18ad74c46311341733449d6c248e6d24f9f313719c75c73e59c1e742",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_DarkSteelArcInset.001": {
+          "mesh_sha256": "705f34c18376cf7c371e6be23c49759c7db5e9e333db54f80051d679d169b186",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_DarkSteelArcInset.002": {
+          "mesh_sha256": "c09b41b900fa7fa66129e41d27a34118e769f2a4fe11b8f0c024f5658500bfb5",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_DarkSteelArcInset.003": {
+          "mesh_sha256": "fa0afccd2b6eeebb9baac0b316c0c45f0c43210b371ef314b5b988a34e70d903",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_FacetedTideCrystal": {
+          "mesh_sha256": "0296c3d5daed1b541e7ff3311f9ddbe1c89a4287d24a1a8751d07671b6f09f72",
+          "vertices": 40,
+          "triangles": 76,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_FerruleSteelInset": {
+          "mesh_sha256": "17c67be05557fab8256a268ebb56c184c7d4eb3df938d1f2a158004e4f7743ae",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.08699999749660492
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_FerruleSteelInset.001": {
+          "mesh_sha256": "17c67be05557fab8256a268ebb56c184c7d4eb3df938d1f2a158004e4f7743ae",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.08699999749660492
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_FerruleSteelInset.002": {
+          "mesh_sha256": "17c67be05557fab8256a268ebb56c184c7d4eb3df938d1f2a158004e4f7743ae",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.31299999356269836
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_FerruleSteelInset.003": {
+          "mesh_sha256": "17c67be05557fab8256a268ebb56c184c7d4eb3df938d1f2a158004e4f7743ae",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4869999885559082
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_FerruleSteelInset.004": {
+          "mesh_sha256": "17c67be05557fab8256a268ebb56c184c7d4eb3df938d1f2a158004e4f7743ae",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.9100000262260437
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_InnerSilverLip": {
+          "mesh_sha256": "c098875f1479cf03fce9545884b7bc6684422f6d19cc1ca98bdde8c8c02fbf46",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_InnerSilverLip.001": {
+          "mesh_sha256": "b8acd99537a3991619fd13325ec9aa281844a3bd1dcb174bda299eff58f4ab40",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_InnerSilverLip.002": {
+          "mesh_sha256": "af72cdd92e1c2338964fbedc6a9017e618e3cfeadbcd63883ff91e5a5ff916b0",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_InnerSilverLip.003": {
+          "mesh_sha256": "7f53b3ab50a6bd52c0164327f814a1bcdf2e342c13f276c95c671109312a1586",
+          "vertices": 104,
+          "triangles": 204,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_LeafRaisedArris": {
+          "mesh_sha256": "0ab2af80cee9e099aabdb963309745985b15996b1bc5a548dd5ef88f7e224c29",
+          "vertices": 12,
+          "triangles": 20,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_LeafRaisedArris.001": {
+          "mesh_sha256": "4cd891b717076469f576421ff3f125bd7fc70898c52f9e06f669f16b31695f9d",
+          "vertices": 12,
+          "triangles": 20,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_LeafRaisedArris.002": {
+          "mesh_sha256": "92ba72a362c27ea8b97e39e5591f94c8e26125443f0f495d33e0dba249e67b7f",
+          "vertices": 12,
+          "triangles": 20,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_LeafRaisedArris.003": {
+          "mesh_sha256": "fc25ad64f3dc2b2403b6cb9ca043e0161d77049c3980a02820a257ac54d7edf6",
+          "vertices": 12,
+          "triangles": 20,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_MainGrip_Finished28mm": {
+          "mesh_sha256": "09a328660dbfe1420752982aa125ce533810d0ebaa930a41d6ea51b3bca4879a",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_NeckFacetedAccent": {
+          "mesh_sha256": "8a06a21c0807c21e6a6e74a493106e9b588ac303b24070a059cfa401315d8db1",
+          "vertices": 40,
+          "triangles": 76,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Staff_SupportGrip_Finished28mm": {
+          "mesh_sha256": "09a328660dbfe1420752982aa125ce533810d0ebaa930a41d6ea51b3bca4879a",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4000000059604645
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      },
+      "root_local_bounds_min": [
+        -0.09461171180009842,
+        -0.03200000151991844,
+        -0.375
+      ],
+      "root_local_bounds_max": [
+        0.09461171180009842,
+        0.01600000075995922,
+        1.1749999523162842
+      ]
+    }
+  },
+  "source_bindings": [
+    {
+      "weapon": "staff",
+      "root_object": "WPN_07_Tidecall_Staff",
+      "main_bone": "hand_r",
+      "weapon_local_to_hand_local": {
+        "matrix4x4": [
+          [
+            -2.1606683731079102e-07,
+            -0.9999849796295166,
+            -0.005518255289644003,
+            -0.024012740701436996
+          ],
+          [
+            0.9988813400268555,
+            0.00026094913482666016,
+            -0.04729369655251503,
+            0.047616589814424515
+          ],
+          [
+            0.0472944937646389,
+            -0.0055119432508945465,
+            0.9988656044006348,
+            -0.0012203464284539223
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          -0.024012740701436996,
+          0.047616589814424515,
+          -0.0012203464284539223
+        ],
+        "rotation_xyzw": [
+          0.014775311574339867,
+          -0.01867620088160038,
+          0.7068601846694946,
+          0.7069523334503174
+        ],
+        "scale": [
+          1.0000003576278687,
+          1.0000001192092896,
+          0.9999998211860657
+        ]
+      },
+      "support_bone": "hand_l",
+      "support_hand_local_to_weapon_local": {
+        "matrix4x4": [
+          [
+            -0.6992385983467102,
+            0.713895320892334,
+            0.037664033472537994,
+            -0.017157092690467834
+          ],
+          [
+            -0.7148668766021729,
+            -0.6986538171768188,
+            -0.029129985719919205,
+            0.050407521426677704
+          ],
+          [
+            0.00551827484741807,
+            -0.047293826937675476,
+            0.9988659024238586,
+            0.403338760137558
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          -0.017157092690467834,
+          0.050407521426677704,
+          0.403338760137558
+        ],
+        "rotation_xyzw": [
+          -0.01171503309160471,
+          0.020733200013637543,
+          -0.9215148091316223,
+          0.3876124322414398
+        ],
+        "scale": [
+          0.9999998211860657,
+          1.0000001192092896,
+          1.0000001192092896
+        ]
+      },
+      "support_contact_in_weapon_m": [
+        0,
+        0,
+        0.4
+      ],
+      "UE_target_mesh": null,
+      "UE_weapon_mesh": null,
+      "UE_equipment_asset": null,
+      "UE_import_axis_mapping": null
+    }
+  ],
+  "max_wrist_deviation_deg": {
+    "r": 0.0,
+    "l": 15.571666760375585
+  },
+  "measurement_limit": "Contact frame closure alone is not surface collision proof. Separate measured hand/forearm surface samples and rendered multi-view review required.",
+  "UE_validated": false,
+  "UE_acceptance_status": "CANCELED_BY_USER",
+  "constraint_implementation": "Fixed weapon-local support relation solved analytically, then densely baked; no live IK constraint in this deliverable",
+  "cloth_clearance_issue": "Frozen V2 has visible cape/sleeve penetration; this separate demo adds bounded corrective shape keys. Frozen character remains unchanged.",
+  "cloth_corrective": {
+    "new_keys": [
+      {
+        "object": "CHR01 • ivory split shoulder cape",
+        "key": "CapeClearance_Staff",
+        "max_rest_delta_m": 0.009800024437692777,
+        "changed_vertices": 152
+      },
+      {
+        "object": "CHR01 • ivory split shoulder cape_low",
+        "key": "CapeClearance_Staff",
+        "max_rest_delta_m": 0.009800024437692777,
+        "changed_vertices": 304
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l",
+        "key": "CapeClearance_Staff",
+        "max_rest_delta_m": 0.005980169378524138,
+        "changed_vertices": 23
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l_low",
+        "key": "CapeClearance_Staff",
+        "max_rest_delta_m": 0.005980169378524138,
+        "changed_vertices": 23
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r",
+        "key": "CapeClearance_Staff",
+        "max_rest_delta_m": 0.0016051772309153892,
+        "changed_vertices": 21
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r_low",
+        "key": "CapeClearance_Staff",
+        "max_rest_delta_m": 0.0016051772309153892,
+        "changed_vertices": 21
+      }
+    ],
+    "activation": "Driver reads numeric property from the currently selected armature action; all other actions fallback to 0. Clip frames 1 through 97 inclusive activate at constant value 1, frame 0 and 98 off; no ramps or extrapolation.",
+    "original_basis_weights_rest_old_shapes_preserved": true,
+    "preservation_report": "Staff_Preservation.json",
+    "scope": "Only this grip demo copy; not a claim of all-original-character clothing clearance",
+    "driver_caveat": "Updated explicit pose dependencies remove previously observed same-frame action-switch staleness; independently tested Idle/Grip/None with view_layer.update only, no frame_set. Blender 4.3.2 may still log the nested action ID-property registration warning; NLA/other applications not validated.",
+    "dependency_patch_report": "Staff_DriverDependencyPatch.json",
+    "render_reuse_equivalence_report": "Staff_DriverEquivalence193.json"
+  },
+  "derived_editable_file": "source/CHR01_Staff_Grip.blend",
+  "derived_editable_sha256": "505fe9d9bf87498ee0e938071cba729154ebd7ef1b56f900a9ac0837b9c1cf5b",
+  "revision": "DependencyRefresh_1",
+  "quaternion_orders": {
+    "binding_transform_rotation_xyzw": "XYZW",
+    "raw_finger_pose_quaternion_wxyz": "WXYZ",
+    "Blender_rotation_quaternion_property": "WXYZ"
+  },
+  "evidence_summary": "../evidence/FixedGripReview.json"
+}

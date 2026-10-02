@@ -1,0 +1,1360 @@
+{
+  "schema": "aetherlab.chr01.fixed-grip.v1",
+  "provenance": {
+    "source_artifact_relative_path": "reports/CHR01_Hammer_Contract.json",
+    "sha256": "ca8f3bffda160403545d1f4ef8d9b86eead90271839618c151cdeb5f12d84f34",
+    "bytes": 466188
+  },
+  "representation": "Exact selected original values; dense animation samples and key-pose matrices remain in the original report in the Library source package.",
+  "artifact_identity": "CHR01_165cm_SevenWeapons_GripCalibration_v1",
+  "status": "BLENDER_GRIP_CALIBRATED_WITH_KNOWN_CLOTHING_LIMITATIONS",
+  "mode": "Hammer",
+  "scope": "Blender-only; no UE import or acceptance",
+  "coordinate_system": "Blender RH meters, +Z up, character faces -Y; row-major serialized matrices acting on column vectors; quaternion XYZW",
+  "frozen_character": {
+    "filename": "CHR01_Wanderer_Editable.blend",
+    "sha256": "b227a2d002aed8724acdfd3f0d1a21aef5652f486b63245ed1278fe96a3eba69",
+    "height_m": 1.650740146636963,
+    "rig_object": "CHR01_Wanderer_Rig65",
+    "bone_count": 65,
+    "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+    "hands_rest_sha256": "6e5caae72524ddfb5168066cac87866d3115a1fa415683097627ccfd331b80b2"
+  },
+  "new_contact_calibration_sha256": "b56c37e47ce222a31174e9e08c78769d18f15c3903883153f81d39c4f5934e3f",
+  "frame_range": [
+    1,
+    97
+  ],
+  "fps": 24,
+  "weapon_geometry": {
+    "hammer": {
+      "components": {
+        "Hammer_380mm_UninterruptedGrip": {
+          "mesh_sha256": "7f0322c397c1bb5ec2ce7caad448e89779899b3952b4f0e7cf881120eb4349ac",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.09000000357627869
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_BronzeHeadBand": {
+          "mesh_sha256": "cbabe9b1e67e389d66bac7d07f86b9ab7b58896b83ef12f7236e042d42352a18",
+          "vertices": 56,
+          "triangles": 108,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.06000000238418579
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4399999976158142
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_BronzeHeadBand.001": {
+          "mesh_sha256": "cbabe9b1e67e389d66bac7d07f86b9ab7b58896b83ef12f7236e042d42352a18",
+          "vertices": 56,
+          "triangles": 108,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.06000000238418579
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4399999976158142
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_ButtSocket": {
+          "mesh_sha256": "278a6c0fd91b30b19b5f561e6c52bbdc1d7f23eb93e67ee75dee8f2f1fbd2c47",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.3019999861717224
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_CenterArmorPlate": {
+          "mesh_sha256": "7dc066783d94b847c316f25f558dd887ef1a1d64ce3d56807d9ac86800eed600",
+          "vertices": 56,
+          "triangles": 108,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -0.04699999839067459
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4399999976158142
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_CenterArmorPlate.001": {
+          "mesh_sha256": "7dc066783d94b847c316f25f558dd887ef1a1d64ce3d56807d9ac86800eed600",
+          "vertices": 56,
+          "triangles": 108,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.04699999839067459
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4399999976158142
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_CentralForgedBody": {
+          "mesh_sha256": "a95ae17ef4333bcd5098fae03e50819df0b51af85e59b64bfa46be6b9a6f333f",
+          "vertices": 56,
+          "triangles": 108,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4399999976158142
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_ContinuousAshHaft": {
+          "mesh_sha256": "af53183a333795cfa7778319d7396b17d2b675b9864496ab105c9c6751b4cba7",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.06499999761581421
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_CrossCenterBoss": {
+          "mesh_sha256": "404423cea466a7b94e4ffb8e7bfd3bcf754a7cb7fb8c903d58de7d815d98f0b9",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_CrossCenterBoss.001": {
+          "mesh_sha256": "a0be9d3697ba9d883a60f233d5eb396dcf45133f22d8622c1074f3760e187b3c",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_CrossStrap_A": {
+          "mesh_sha256": "59fc45d9b08405ae4845c9c0574dfd1a9ad9093855804c43e0172c8e3d543892",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_CrossStrap_A.001": {
+          "mesh_sha256": "894024d30ff9bd22b9b95fbf18c4f01bfb7532ba0ea874907d8ad43a0e937a1c",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_CrossStrap_B": {
+          "mesh_sha256": "820a5df83db35a7b6dd2400901b7e0ff94527f6903848e365624e3cab7438948",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_CrossStrap_B.001": {
+          "mesh_sha256": "55b58faf1702ccc58dc606358c6d6f940b6b12d0d10e172bd57595292882c926",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_FacetedButt": {
+          "mesh_sha256": "1b738e52cc9a8a442353e19db825024d4bbe00c5a9a1ae5091e73e0bf8b3ebf6",
+          "vertices": 38,
+          "triangles": 72,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_GripFerrule": {
+          "mesh_sha256": "a654830cc04e44626a8126d7c70d0e2c2cef76ef37aaa3fab8b76dfff314e2d5",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.29100000858306885
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_GripFerrule.001": {
+          "mesh_sha256": "a654830cc04e44626a8126d7c70d0e2c2cef76ef37aaa3fab8b76dfff314e2d5",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.11100000143051147
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_GripFerruleSteelEdge": {
+          "mesh_sha256": "f5f4db63677185cd8569083e1f5d8102bd257f4fefb8b83918db3305f7e319ad",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.29100000858306885
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_GripFerruleSteelEdge.001": {
+          "mesh_sha256": "f5f4db63677185cd8569083e1f5d8102bd257f4fefb8b83918db3305f7e319ad",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.11100000143051147
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_HeadHaftSocket": {
+          "mesh_sha256": "7469e2bc8315e37615daf385e7d7d4c5c19035c7d928feb0d69069fe4cc9fa7f",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.34599998593330383
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_HeadHaftSocket.001": {
+          "mesh_sha256": "070cfdd7b7fe185e2388454fa9fb50d3e05197422be001c3440abe5ffa4fe7ed",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.36899998784065247
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_HeadHaftSocket.002": {
+          "mesh_sha256": "854dc830829cef6c0c767bb0a6c676cc78068e515e73660f55792227ea7ef2a0",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.5289999842643738
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_HeadHaftSocket.003": {
+          "mesh_sha256": "f2bbaf74cc86ed2314dfecbb1ed37006e7ada96e115900298a8a548a43a7a986",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.5450000166893005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_NeckReinforcement": {
+          "mesh_sha256": "0a3c401dc370cc29a5506b09f8ee51f7f8e18a6c658840764ab46e8571a681aa",
+          "vertices": 8,
+          "triangles": 12,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_NeckReinforcement.001": {
+          "mesh_sha256": "72ca2f79d3e4a13d7c43578d63e979eb1c4d41d7e9e737a3d82a4fa2e9047058",
+          "vertices": 8,
+          "triangles": 12,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_NeckReinforcement.002": {
+          "mesh_sha256": "3df2e3c9be22bb5c59e52bae0366ea2d45d1be5365f9d41e4d31b7679a7d3e06",
+          "vertices": 8,
+          "triangles": 12,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_NeckReinforcement.003": {
+          "mesh_sha256": "2bcafc708c1c9c965ffe6aa9471573db770fc266b16351f6c245a86af336a71a",
+          "vertices": 8,
+          "triangles": 12,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_SilverStrikingFace": {
+          "mesh_sha256": "2eee3aa34d8401a88044ffd3d6920be757eeaf0ed3b6d8623f0d5a15bfae9b45",
+          "vertices": 56,
+          "triangles": 108,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.09299999475479126
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4399999976158142
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_SilverStrikingFace.001": {
+          "mesh_sha256": "2eee3aa34d8401a88044ffd3d6920be757eeaf0ed3b6d8623f0d5a15bfae9b45",
+          "vertices": 56,
+          "triangles": 108,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.09299999475479126
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4399999976158142
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_StrapRivet": {
+          "mesh_sha256": "8cfad64f2b1662c27d8a4899e26b1543e63d4b1e51e4764f4598aeae54954a3f",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.046000003814697266
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -0.0560000017285347
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3970000147819519
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_StrapRivet.001": {
+          "mesh_sha256": "ee771f24b646eed37e93fd9659e8e08d00c9085b046fb4dc602377bb4e4b51ff",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.046000003814697266
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -0.0560000017285347
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4830000102519989
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_StrapRivet.002": {
+          "mesh_sha256": "15bbba8c8611d5cd1dc610ada2209c3d52ec3f8e7c2825897e446540d894a422",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.046000003814697266
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -0.0560000017285347
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3970000147819519
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_StrapRivet.003": {
+          "mesh_sha256": "7a44c325f51331e867cd897e61a74df2a5d6c7b3101668415bdc7e6da1e45f4f",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.046000003814697266
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -0.0560000017285347
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4830000102519989
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_StrapRivet.004": {
+          "mesh_sha256": "8cfad64f2b1662c27d8a4899e26b1543e63d4b1e51e4764f4598aeae54954a3f",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.046000003814697266
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0560000017285347
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3970000147819519
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_StrapRivet.005": {
+          "mesh_sha256": "6107ff179d0e601e41b44b616b38aefa4843d0b8a4974fc3028d318300a7dd5a",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.046000003814697266
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0560000017285347
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4830000102519989
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_StrapRivet.006": {
+          "mesh_sha256": "7a44c325f51331e867cd897e61a74df2a5d6c7b3101668415bdc7e6da1e45f4f",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.046000003814697266
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0560000017285347
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3970000147819519
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Hammer_StrapRivet.007": {
+          "mesh_sha256": "7e87750ccdd82729a9600ddedb57eadcdd8b339ec88dfec777bb0f9dccd3120b",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.046000003814697266
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0560000017285347
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.4830000102519989
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      },
+      "root_local_bounds_min": [
+        -0.125,
+        -0.05999999865889549,
+        -0.3499999940395355
+      ],
+      "root_local_bounds_max": [
+        0.125,
+        0.05999999865889549,
+        0.550000011920929
+      ]
+    }
+  },
+  "source_bindings": [
+    {
+      "weapon": "hammer",
+      "root_object": "WPN_04_Training_Warhammer",
+      "main_bone": "hand_r",
+      "weapon_local_to_hand_local": {
+        "matrix4x4": [
+          [
+            4.5495107769966125e-07,
+            -0.9999848008155823,
+            -0.005518138408660889,
+            -0.02604806236922741
+          ],
+          [
+            0.9988810420036316,
+            0.00026124482974410057,
+            -0.047293879091739655,
+            0.04953707382082939
+          ],
+          [
+            0.047294728457927704,
+            -0.005512114614248276,
+            0.9988657236099243,
+            -0.0011408630525693297
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          -0.02604806236922741,
+          0.04953707382082939,
+          -0.0011408630525693297
+        ],
+        "rotation_xyzw": [
+          0.014775310643017292,
+          -0.018676241859793663,
+          0.7068600058555603,
+          0.7069525122642517
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          0.9999999403953552
+        ]
+      },
+      "support_bone": "hand_l",
+      "support_hand_local_to_weapon_local": {
+        "matrix4x4": [
+          [
+            -0.9977574348449707,
+            -0.06689080595970154,
+            0.0023447610437870026,
+            0.02929537370800972
+          ],
+          [
+            0.06670396775007248,
+            -0.9966394305229187,
+            -0.04755687713623047,
+            0.047573961317539215
+          ],
+          [
+            0.005518320947885513,
+            -0.04729384556412697,
+            0.9988659024238586,
+            -0.19666162133216858
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          0.02929537370800972,
+          0.047573961317539215,
+          -0.19666162133216858
+        ],
+        "rotation_xyzw": [
+          0.0019674282521009445,
+          -0.02373266965150833,
+          0.9991574287414551,
+          0.03342685103416443
+        ],
+        "scale": [
+          0.9999998807907104,
+          1.0000005960464478,
+          1.0000001192092896
+        ]
+      },
+      "support_contact_in_weapon_m": [
+        0,
+        0,
+        -0.2
+      ],
+      "UE_target_mesh": null,
+      "UE_weapon_mesh": null,
+      "UE_equipment_asset": null,
+      "UE_import_axis_mapping": null
+    }
+  ],
+  "max_wrist_deviation_deg": {
+    "r": 0.0,
+    "l": 15.64129029368011
+  },
+  "measurement_limit": "Contact frame closure alone is not surface collision proof. Separate measured hand/forearm surface samples and rendered multi-view review required.",
+  "UE_validated": false,
+  "cloth_clearance_issue": "Frozen source cape/sleeve intersection is visible in grip back views; correcting only demonstration copies, original Basis/rest/weights stay frozen",
+  "derived_editable_file": "source/CHR01_Hammer_Grip.blend",
+  "derived_editable_sha256": "8dddf39035b4bc971dc6278b118fbc5a249aa2265e9a59d748675b1e3a5c478c",
+  "constraint_implementation": "Fixed weapon-local support relation solved analytically and densely baked. No live IK.",
+  "cloth_corrective": {
+    "new_keys": [
+      {
+        "object": "CHR01 • ivory split shoulder cape",
+        "key": "CapeClearance_Hammer",
+        "max_rest_delta_m": 0.009800028271713064,
+        "changed_vertices": 162
+      },
+      {
+        "object": "CHR01 • ivory split shoulder cape_low",
+        "key": "CapeClearance_Hammer",
+        "max_rest_delta_m": 0.009800028271713064,
+        "changed_vertices": 324
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l",
+        "key": "CapeClearance_Hammer",
+        "max_rest_delta_m": 0.005972865669752609,
+        "changed_vertices": 24
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l_low",
+        "key": "CapeClearance_Hammer",
+        "max_rest_delta_m": 0.005972865669752609,
+        "changed_vertices": 24
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r",
+        "key": "CapeClearance_Hammer",
+        "max_rest_delta_m": 0.0007787693294175502,
+        "changed_vertices": 11
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r_low",
+        "key": "CapeClearance_Hammer",
+        "max_rest_delta_m": 0.0007787693294175502,
+        "changed_vertices": 11
+      }
+    ],
+    "activation": "Driver reads numeric property from the currently selected armature action; all other actions fallback to 0. Clip frames 1 through 97 inclusive activate at constant value 1, frame 0 and 98 off; no ramps or extrapolation.",
+    "dependency_patch_report": "Hammer_DriverDependencyPatch.json",
+    "full_garment_zero_intersection": false,
+    "visible_back_interior_test_passed": true,
+    "hidden_shell_test_passed": false,
+    "remaining_issue": "Confirmed hidden right-shoulder shell penetration, including representative 0.555mm nearest-surface point at frame73"
+  },
+  "UE_acceptance_status": "CANCELED_BY_USER",
+  "quaternion_orders": {
+    "binding_transform_rotation_xyzw": "XYZW",
+    "raw_finger_pose_quaternion_wxyz": "WXYZ",
+    "Blender_rotation_quaternion_property": "WXYZ"
+  },
+  "evidence_summary": "../evidence/FixedGripReview.json"
+}

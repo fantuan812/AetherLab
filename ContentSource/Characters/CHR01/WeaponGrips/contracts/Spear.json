@@ -1,0 +1,957 @@
+{
+  "schema": "aetherlab.chr01.fixed-grip.v1",
+  "provenance": {
+    "source_artifact_relative_path": "reports/CHR01_Spear_Contract.json",
+    "sha256": "fd44ff6c6d637c11f2b76771ac6241f28abfc7a9cf2c1796f38a6786ab396f78",
+    "bytes": 456567
+  },
+  "representation": "Exact selected original values; dense animation samples and key-pose matrices remain in the original report in the Library source package.",
+  "artifact_identity": "CHR01_165cm_SevenWeapons_GripCalibration_v1",
+  "status": "BLENDER_GRIP_CALIBRATED_WITH_KNOWN_CLOTHING_LIMITATIONS",
+  "mode": "Spear",
+  "scope": "Blender-only; no UE import or acceptance",
+  "coordinate_system": "Blender RH meters, +Z up, character faces -Y; row-major serialized matrices acting on column vectors; quaternion XYZW",
+  "frozen_character": {
+    "filename": "CHR01_Wanderer_Editable.blend",
+    "sha256": "b227a2d002aed8724acdfd3f0d1a21aef5652f486b63245ed1278fe96a3eba69",
+    "height_m": 1.650740146636963,
+    "rig_object": "CHR01_Wanderer_Rig65",
+    "bone_count": 65,
+    "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+    "hands_rest_sha256": "6e5caae72524ddfb5168066cac87866d3115a1fa415683097627ccfd331b80b2"
+  },
+  "new_contact_calibration_sha256": "b56c37e47ce222a31174e9e08c78769d18f15c3903883153f81d39c4f5934e3f",
+  "frame_range": [
+    1,
+    97
+  ],
+  "fps": 24,
+  "weapon_geometry": {
+    "spear": {
+      "components": {
+        "Spear_BronzeSocket": {
+          "mesh_sha256": "7476457db936d6928c0679003613fbf84dec26117087cdad22ffcc3de5820ce1",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              1.1119999885559082
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_FerruleInset": {
+          "mesh_sha256": "ea2729c1afae5fcb76df4d56fa8b8fbcf4f024fc532d82df31db3f1d75803373",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.11999999731779099
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_FerruleInset.001": {
+          "mesh_sha256": "ea2729c1afae5fcb76df4d56fa8b8fbcf4f024fc532d82df31db3f1d75803373",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.11999999731779099
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_FerruleInset.002": {
+          "mesh_sha256": "ea2729c1afae5fcb76df4d56fa8b8fbcf4f024fc532d82df31db3f1d75803373",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3799999952316284
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_FerruleInset.003": {
+          "mesh_sha256": "ea2729c1afae5fcb76df4d56fa8b8fbcf4f024fc532d82df31db3f1d75803373",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.6200000047683716
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_ForwardGrip": {
+          "mesh_sha256": "67e29e171000d8c0304344a842db0c899994181b9f9e01a06762a3c404f0b96c",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.5
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_GripBoundaryFerrule": {
+          "mesh_sha256": "7fad336d61e17417c42a607859e363bf623f5c1d2bac10ef5796e70626e8a379",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.11999999731779099
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_GripBoundaryFerrule.001": {
+          "mesh_sha256": "7fad336d61e17417c42a607859e363bf623f5c1d2bac10ef5796e70626e8a379",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.11999999731779099
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_GripBoundaryFerrule.002": {
+          "mesh_sha256": "7fad336d61e17417c42a607859e363bf623f5c1d2bac10ef5796e70626e8a379",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3799999952316284
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_GripBoundaryFerrule.003": {
+          "mesh_sha256": "7fad336d61e17417c42a607859e363bf623f5c1d2bac10ef5796e70626e8a379",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.6200000047683716
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_LongAshShaft": {
+          "mesh_sha256": "f135d01816254dc9eb131922c3a20a9db2503fd1af10a7be55d81e5ca5c9f37d",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.26249998807907104
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_RearGrip": {
+          "mesh_sha256": "67e29e171000d8c0304344a842db0c899994181b9f9e01a06762a3c404f0b96c",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_SculptedSocketFork": {
+          "mesh_sha256": "3701a0ab170b6855a304548d0c9ecac5bbd4639d9d9dc4cfca295d98ec8228ec",
+          "vertices": 32,
+          "triangles": 60,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_SculptedSocketFork.001": {
+          "mesh_sha256": "2957ed745844ce1af967106a2eba2cc60074176844542f2e292b157e05637de2",
+          "vertices": 32,
+          "triangles": 60,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_SculptedSocketFork.002": {
+          "mesh_sha256": "e8f978b99ce787b7b86cedee00e9861eb70b9ad8165ae408be03c4913f52457f",
+          "vertices": 32,
+          "triangles": 60,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_SculptedSocketFork.003": {
+          "mesh_sha256": "2d66534762bd0bcf8e03d2707152f218db7af8ffd7ef251fb2c561dd89bd892f",
+          "vertices": 32,
+          "triangles": 60,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_SocketCollar": {
+          "mesh_sha256": "083041a0a576e74e4113e9d52b2ab0fc90774a110f11ef65b0e0239da476ab9e",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              1.069000005722046
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_SocketCollar.001": {
+          "mesh_sha256": "083041a0a576e74e4113e9d52b2ab0fc90774a110f11ef65b0e0239da476ab9e",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              1.1009999513626099
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_TailIron": {
+          "mesh_sha256": "a6d57db5a6884ad4dd21dce407a084e1f4d9a73b60bd963aa6f027add53b6588",
+          "vertices": 14,
+          "triangles": 24,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_TailSocket": {
+          "mesh_sha256": "0c4a3029c7fbbf82765bce83b488cd45685b8efd38c17ef65d5d9533abc8b82a",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.6079999804496765
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_TalismanBezel": {
+          "mesh_sha256": "d1280eea76fc6b9dadbf94917037a56e601236926cdff27d97bd1e3f5ccf8f30",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_TalismanCyan": {
+          "mesh_sha256": "1ca7fc6447403a783ba080b44d43bf2057baba0b4ad68ecc34b80bd816c119b9",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_TalismanEyelet": {
+          "mesh_sha256": "bde3e84cc915e274880f98752966fbfb4bb883246529da8c8d1d0dee1fceb7fd",
+          "vertices": 68,
+          "triangles": 132,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Spear_WillowLeaf_RidgedHead": {
+          "mesh_sha256": "73eb5283da9192b8abc09e36aebbc131529555bf8ae664114491a4c348ae456b",
+          "vertices": 48,
+          "triangles": 92,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      },
+      "root_local_bounds_min": [
+        -0.03750000149011612,
+        -0.026000000536441803,
+        -0.6499999761581421
+      ],
+      "root_local_bounds_max": [
+        0.03750000149011612,
+        0.026000000536441803,
+        1.4500000476837158
+      ]
+    }
+  },
+  "source_bindings": [
+    {
+      "weapon": "spear",
+      "root_object": "WPN_03_Reedwatch_Spear",
+      "main_bone": "hand_r",
+      "weapon_local_to_hand_local": {
+        "matrix4x4": [
+          [
+            -5.774199962615967e-08,
+            -0.999984860420227,
+            -0.005518169142305851,
+            -0.026048466563224792
+          ],
+          [
+            0.9988815188407898,
+            0.0002609740477055311,
+            -0.04729382321238518,
+            0.04953717440366745
+          ],
+          [
+            0.047294653952121735,
+            -0.005511872470378876,
+            0.9988657832145691,
+            -0.0011405730620026588
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          -0.026048466563224792,
+          0.04953717440366745,
+          -0.0011405730620026588
+        ],
+        "rotation_xyzw": [
+          0.01477537676692009,
+          -0.01867622137069702,
+          0.7068601250648499,
+          0.7069523930549622
+        ],
+        "scale": [
+          1.0000004768371582,
+          1.0,
+          1.0
+        ]
+      },
+      "support_bone": "hand_l",
+      "support_hand_local_to_weapon_local": {
+        "matrix4x4": [
+          [
+            -0.39496126770973206,
+            0.9175640344619751,
+            0.0456266887485981,
+            -0.035112444311380386
+          ],
+          [
+            -0.9186810851097107,
+            -0.3947652578353882,
+            -0.013615915551781654,
+            0.04345791041851044
+          ],
+          [
+            0.005518220830708742,
+            -0.047294002026319504,
+            0.9988659620285034,
+            0.5033384561538696
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          -0.035112444311380386,
+          0.04345791041851044,
+          0.5033384561538696
+        ],
+        "rotation_xyzw": [
+          -0.015313687734305859,
+          0.018237506970763206,
+          -0.8349539637565613,
+          0.5498043298721313
+        ],
+        "scale": [
+          0.9999998807907104,
+          1.0,
+          1.000000238418579
+        ]
+      },
+      "support_contact_in_weapon_m": [
+        0,
+        0,
+        0.5
+      ],
+      "UE_target_mesh": null,
+      "UE_weapon_mesh": null,
+      "UE_equipment_asset": null,
+      "UE_import_axis_mapping": null
+    }
+  ],
+  "max_wrist_deviation_deg": {
+    "r": 0.0,
+    "l": 17.17551812089964
+  },
+  "measurement_limit": "Contact frame closure alone is not surface collision proof. Separate measured hand/forearm surface samples and rendered multi-view review required.",
+  "UE_validated": false,
+  "cloth_clearance_issue": "Frozen source cape/sleeve intersection is visible in grip back views; correcting only demonstration copies, original Basis/rest/weights stay frozen",
+  "derived_editable_file": "source/CHR01_Spear_Grip.blend",
+  "derived_editable_sha256": "0922973e05693e446e8a3e472013616f7f970fcc7b92fdcc3722f1b129e3849e",
+  "constraint_implementation": "Fixed weapon-local support relation solved analytically and densely baked. No live IK.",
+  "cloth_corrective": {
+    "new_keys": [
+      {
+        "object": "CHR01 • ivory split shoulder cape",
+        "key": "CapeClearance_Spear",
+        "max_rest_delta_m": 0.009800028271713064,
+        "changed_vertices": 156
+      },
+      {
+        "object": "CHR01 • ivory split shoulder cape_low",
+        "key": "CapeClearance_Spear",
+        "max_rest_delta_m": 0.009800028271713064,
+        "changed_vertices": 312
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l",
+        "key": "CapeClearance_Spear",
+        "max_rest_delta_m": 0.005602091486061772,
+        "changed_vertices": 24
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l_low",
+        "key": "CapeClearance_Spear",
+        "max_rest_delta_m": 0.005602091486061772,
+        "changed_vertices": 24
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r",
+        "key": "CapeClearance_Spear",
+        "max_rest_delta_m": 0.0012705129922595275,
+        "changed_vertices": 11
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r_low",
+        "key": "CapeClearance_Spear",
+        "max_rest_delta_m": 0.0012705129922595275,
+        "changed_vertices": 11
+      }
+    ],
+    "activation": "Driver reads numeric property from the currently selected armature action; all other actions fallback to 0. Clip frames 1 through 97 inclusive activate at constant value 1, frame 0 and 98 off; no ramps or extrapolation.",
+    "dependency_patch_report": "Spear_DriverDependencyPatch.json",
+    "full_garment_zero_intersection": false,
+    "visible_back_interior_test_passed": true,
+    "hidden_shell_test_passed": true,
+    "remaining_issue": "Retained armhole/edge triangle intersections; scoped back-interior clearance is not global clothing clearance"
+  },
+  "UE_acceptance_status": "CANCELED_BY_USER",
+  "quaternion_orders": {
+    "binding_transform_rotation_xyzw": "XYZW",
+    "raw_finger_pose_quaternion_wxyz": "WXYZ",
+    "Blender_rotation_quaternion_property": "WXYZ"
+  },
+  "evidence_summary": "../evidence/FixedGripReview.json"
+}

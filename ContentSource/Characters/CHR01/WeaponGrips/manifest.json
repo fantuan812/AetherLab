@@ -1,0 +1,1150 @@
+{
+  "schema": "aetherlab.chr01.weapon-grip-delivery.v1",
+  "scope": "Blender-only source contracts and bounded evidence for seven weapons in six clips",
+  "publication_state": "AWAITING_PARENT_REVIEW",
+  "frozen_character_contract": "contracts/FrozenCharacter.json",
+  "scenes": [
+    {
+      "mode": "SwordShield",
+      "contract": "contracts/SwordShield.json",
+      "derived_scene": "source/CHR01_SwordShield_Grip.blend",
+      "sha256": "ace882f3f876f371cba1dad505568beb78615ed19e44890f49d8b1ef6c5a0998",
+      "weapons": [
+        "sword",
+        "shield"
+      ]
+    },
+    {
+      "mode": "Staff",
+      "contract": "contracts/Staff.json",
+      "derived_scene": "source/CHR01_Staff_Grip.blend",
+      "sha256": "505fe9d9bf87498ee0e938071cba729154ebd7ef1b56f900a9ac0837b9c1cf5b",
+      "weapons": [
+        "staff"
+      ]
+    },
+    {
+      "mode": "Hammer",
+      "contract": "contracts/Hammer.json",
+      "derived_scene": "source/CHR01_Hammer_Grip.blend",
+      "sha256": "8dddf39035b4bc971dc6278b118fbc5a249aa2265e9a59d748675b1e3a5c478c",
+      "weapons": [
+        "hammer"
+      ]
+    },
+    {
+      "mode": "Spear",
+      "contract": "contracts/Spear.json",
+      "derived_scene": "source/CHR01_Spear_Grip.blend",
+      "sha256": "0922973e05693e446e8a3e472013616f7f970fcc7b92fdcc3722f1b129e3849e",
+      "weapons": [
+        "spear"
+      ]
+    },
+    {
+      "mode": "Greatsword",
+      "contract": "contracts/Greatsword.json",
+      "derived_scene": "source/CHR01_Greatsword_Grip.blend",
+      "sha256": "d1ff8ef94a25ced38ab2d791dea2c4433011bb486496ebee5309eebb309e0aff",
+      "weapons": [
+        "greatsword"
+      ]
+    },
+    {
+      "mode": "DynamicBow",
+      "contract": "contracts/DynamicBowV3.json",
+      "derived_scene": "source/CHR01_Bow_Grip_DrawRelease.blend",
+      "sha256": "16638c8b3a7291d08e374ea559a571f95553eadd92def24988c3564062a83ad5",
+      "weapons": [
+        "bow"
+      ]
+    }
+  ],
+  "library_deliverables": [
+    {
+      "file_name": "CHR01_Grips_Stage1_Source.zip",
+      "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+      "current_version_number": 2,
+      "receipt": {
+        "source_artifact_relative_path": "Final_SourceAndBow_UploadReceipt.json",
+        "sha256": "d72dc5639a3d0bb395f72d75c4d6fa9a0691540a9af67a635cd115544078279e",
+        "bytes": 3011
+      },
+      "sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+      "bytes": 8032901
+    },
+    {
+      "file_name": "CHR01_Grips_Textures_A.zip",
+      "library_file_id": "libfile_3783bdddf7dc8191a8318bdb3ee32c89",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage1_UploadReceipt.json",
+        "sha256": "07fd15aab9a0f85a86b43d206dcc349299f62de11f547b44540a54eed3f3686e",
+        "bytes": 2498
+      },
+      "sha256": "752d9f8af65c646204c35b34cd5f0488ed8664389ef6e4df66e5354cad9f4a2d",
+      "bytes": 8717256
+    },
+    {
+      "file_name": "CHR01_Grips_Textures_B.zip",
+      "library_file_id": "libfile_ecffeab9ff788191ab13e69f2e119c55",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage1_UploadReceipt.json",
+        "sha256": "07fd15aab9a0f85a86b43d206dcc349299f62de11f547b44540a54eed3f3686e",
+        "bytes": 2498
+      },
+      "sha256": "202f869dc997766139e40fc392c56f36b9b7b418c678966e6d0ebc4689ebf55f",
+      "bytes": 8554724
+    },
+    {
+      "file_name": "CHR01_Grips_Stage1_Previews.zip",
+      "library_file_id": "libfile_5c2f9a941f308191bd11476f7623cc24",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage1_UploadReceipt.json",
+        "sha256": "07fd15aab9a0f85a86b43d206dcc349299f62de11f547b44540a54eed3f3686e",
+        "bytes": 2498
+      },
+      "sha256": "091ca8503f2a43bc5b94f01470b7a95b7efc3ad3d17ec623772f04971ad6fa9d",
+      "bytes": 9661089
+    },
+    {
+      "file_name": "CHR01_Grips_Stage1_Overview.jpg",
+      "library_file_id": "libfile_572f1ad62ff08191a588e502b8e7d475",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage1_UploadReceipt.json",
+        "sha256": "07fd15aab9a0f85a86b43d206dcc349299f62de11f547b44540a54eed3f3686e",
+        "bytes": 2498
+      },
+      "sha256": "6afb83ed11d220c0416cca03b33bb25df67921febb3a70d06bde38edeedb7b98",
+      "bytes": 294774
+    },
+    {
+      "file_name": "CHR01_Grips_Stage1_Motion.mp4",
+      "library_file_id": "libfile_17df8973ce248191be5ce298b12887bc",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage1_UploadReceipt.json",
+        "sha256": "07fd15aab9a0f85a86b43d206dcc349299f62de11f547b44540a54eed3f3686e",
+        "bytes": 2498
+      },
+      "sha256": "f880447430fe85d4f384c96d8b000b6b015832e302d292a91cf127306cfffeae",
+      "bytes": 485577
+    },
+    {
+      "file_name": "CHR01_Grips_Stage2_Source.zip",
+      "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+      "current_version_number": 1,
+      "receipt": {
+        "source_artifact_relative_path": "Final_SourceAndBow_UploadReceipt.json",
+        "sha256": "d72dc5639a3d0bb395f72d75c4d6fa9a0691540a9af67a635cd115544078279e",
+        "bytes": 3011
+      },
+      "sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+      "bytes": 11728574
+    },
+    {
+      "file_name": "CHR01_Grips_Textures_C.zip",
+      "library_file_id": "libfile_2406c9f6b96081919fc73045c8d50d33",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage2_UploadReceipt.json",
+        "sha256": "118d2a89bd4a69d2b87168c4a77a8869b6327262f3c80651589ca35a378a10fa",
+        "bytes": 2525
+      },
+      "sha256": "f05b9f4e679261aea628afc0b37073436f93c773c8c7374f90036d3721f3bee8",
+      "bytes": 2442337
+    },
+    {
+      "file_name": "CHR01_Grips_Stage2_Previews_A.zip",
+      "library_file_id": "libfile_f02d8d43fb64819188922551e9d9c264",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage2_UploadReceipt.json",
+        "sha256": "118d2a89bd4a69d2b87168c4a77a8869b6327262f3c80651589ca35a378a10fa",
+        "bytes": 2525
+      },
+      "sha256": "5e7d572f4ead69d401d38d9139e176aca83fc010c1fdaad9462a92d859f56b98",
+      "bytes": 11917812
+    },
+    {
+      "file_name": "CHR01_Grips_Stage2_Previews_B.zip",
+      "library_file_id": "libfile_ca2fb01847188191bd3e913f81e01fa5",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage2_UploadReceipt.json",
+        "sha256": "118d2a89bd4a69d2b87168c4a77a8869b6327262f3c80651589ca35a378a10fa",
+        "bytes": 2525
+      },
+      "sha256": "a141c449e2dfcc94371736f295ecec0596e62c9eb682a83bbb761122fc3cf29f",
+      "bytes": 5456261
+    },
+    {
+      "file_name": "CHR01_Grips_Stage2_Overview.jpg",
+      "library_file_id": "libfile_758447c8ecdc8191926a59fa590f2e00",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage2_UploadReceipt.json",
+        "sha256": "118d2a89bd4a69d2b87168c4a77a8869b6327262f3c80651589ca35a378a10fa",
+        "bytes": 2525
+      },
+      "sha256": "5be6ad830c2c630594f8f093464667330b8c2d58e9ae9f6496b27929eb663c1b",
+      "bytes": 268263
+    },
+    {
+      "file_name": "CHR01_Grips_Stage2_Motion.mp4",
+      "library_file_id": "libfile_722b93ce9f38819189fe2c17ec67e6ff",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Stage2_UploadReceipt.json",
+        "sha256": "118d2a89bd4a69d2b87168c4a77a8869b6327262f3c80651589ca35a378a10fa",
+        "bytes": 2525
+      },
+      "sha256": "35b314823154dc31e0329d236f862923c67b9632037293b0139d4e5b045d546d",
+      "bytes": 718588
+    }
+  ],
+  "dynamic_bow_library_deliverables": [
+    {
+      "file_name": "CHR01_Grips_Stage3_Bow_Source.zip",
+      "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Final_SourceAndBow_UploadReceipt.json",
+        "sha256": "d72dc5639a3d0bb395f72d75c4d6fa9a0691540a9af67a635cd115544078279e",
+        "bytes": 3011
+      },
+      "sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+      "bytes": 4609825
+    },
+    {
+      "file_name": "CHR01_Grips_Stage3_Bow_Previews_1.zip",
+      "library_file_id": "libfile_239fd6fde2dc8191ba8a1b5d63c0bbec",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Final_SourceAndBow_UploadReceipt.json",
+        "sha256": "d72dc5639a3d0bb395f72d75c4d6fa9a0691540a9af67a635cd115544078279e",
+        "bytes": 3011
+      },
+      "sha256": "a2e0ccec769089b00157907c633d444ec9aa66e15398944c3447ed12eccb412f",
+      "bytes": 12650427
+    },
+    {
+      "file_name": "CHR01_Grips_Stage3_Bow_Previews_2.zip",
+      "library_file_id": "libfile_095ca77864108191a2285bb4175f2cbb",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Final_SourceAndBow_UploadReceipt.json",
+        "sha256": "d72dc5639a3d0bb395f72d75c4d6fa9a0691540a9af67a635cd115544078279e",
+        "bytes": 3011
+      },
+      "sha256": "f21c04a29560dd02f1f8505baf679b2644e93c160cb0251b2a64dd83aec201ef",
+      "bytes": 7996323
+    },
+    {
+      "file_name": "CHR01_Grips_Stage3_Bow_Overview.jpg",
+      "library_file_id": "libfile_9106a48968e48191a088e9b7c4e00d5e",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Final_SourceAndBow_UploadReceipt.json",
+        "sha256": "d72dc5639a3d0bb395f72d75c4d6fa9a0691540a9af67a635cd115544078279e",
+        "bytes": 3011
+      },
+      "sha256": "09acb539eddc2174ade32f53cd2f9561dff41589f3a27b695cd450757ca7c7a3",
+      "bytes": 299050
+    },
+    {
+      "file_name": "CHR01_Grips_Stage3_Bow_Motion.mp4",
+      "library_file_id": "libfile_e6f377112e4c81919e67eb71be4da31c",
+      "current_version_number": 0,
+      "receipt": {
+        "source_artifact_relative_path": "Final_SourceAndBow_UploadReceipt.json",
+        "sha256": "d72dc5639a3d0bb395f72d75c4d6fa9a0691540a9af67a635cd115544078279e",
+        "bytes": 3011
+      },
+      "sha256": "3ccf1a4f75664922b611bca24cdf6c95db487e3077854c158fd83a3f89e4800c",
+      "bytes": 344466
+    }
+  ],
+  "dynamic_bow_library_status": "receipt_confirmed",
+  "UE_target_mesh": null,
+  "UE_weapon_meshes": null,
+  "UE_import_axis_mapping": null,
+  "UE_equipment_assets": null,
+  "UE_animation_assets": null,
+  "UE_validated": false,
+  "UE_acceptance_status": "CANCELED_BY_USER",
+  "UE_acceptance_is_todo": false,
+  "PR13": {
+    "url": "https://github.com/fantuan812/AetherLab/pull/13",
+    "relationship": "Independent text-only PR; do not merge, copy runtime code from, or resolve dependencies of incomplete PR13."
+  },
+  "assets_in_git": false,
+  "access_note": "Library IDs identify private user deliverables; a public GitHub reader does not automatically gain access. No signed or guessed download URLs are stored.",
+  "provenance_archive_map": [
+    {
+      "source_artifact_relative_path": "Final_SourceAndBow_UploadReceipt.json",
+      "sha256": "d72dc5639a3d0bb395f72d75c4d6fa9a0691540a9af67a635cd115544078279e",
+      "bytes": 3011,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "Stage1_UploadReceipt.json",
+      "sha256": "07fd15aab9a0f85a86b43d206dcc349299f62de11f547b44540a54eed3f3686e",
+      "bytes": 2498,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "Stage2_UploadReceipt.json",
+      "sha256": "118d2a89bd4a69d2b87168c4a77a8869b6327262f3c80651589ca35a378a10fa",
+      "bytes": 2525,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "bow_dynamic/reports/CHR01_DynamicBow_Contract.json",
+      "sha256": "3ac1662de8e3a9feb9acae7310f83f704adce7301c5fa6f7614c03270e8b1479",
+      "bytes": 943992,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "cape_clearance/reports/Greatsword_ClearanceQA.json",
+      "sha256": "580f190f1a6b6303e5f7ea0aa68508902bfc96d26f096e5a82d987e87f9416d6",
+      "bytes": 57872,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/Greatsword_ClearanceQA.json"
+        },
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/reported_clothing_limits/Greatsword_ClearanceQA.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "cape_clearance/reports/Greatsword_DriverEquivalence193.json",
+      "sha256": "aec2af6e813d90048b98e490098e716bae120b70d1903e6c046a8e2741abdbeb",
+      "bytes": 77542,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "cape_clearance/reports/Hammer_ClearanceQA.json",
+      "sha256": "f019460dd8344892b2438ec17746ecde73be5ecb713407163226af00ec8d3eda",
+      "bytes": 73554,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/Hammer_ClearanceQA.json"
+        },
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/reported_clothing_limits/Hammer_ClearanceQA.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "cape_clearance/reports/Hammer_DriverEquivalence193.json",
+      "sha256": "873ef5d2ff03ef8aa3f735090c9992ebe38f8c94d8d5cb78bd449a989c23aed0",
+      "bytes": 77538,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "cape_clearance/reports/Spear_ClearanceQA.json",
+      "sha256": "50ffb7512885219b2b53cd40a1b6e42a0001480bd3210f1c927957540b69d531",
+      "bytes": 57703,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/Spear_ClearanceQA.json"
+        },
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/reported_clothing_limits/Spear_ClearanceQA.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "cape_clearance/reports/Spear_DriverEquivalence193.json",
+      "sha256": "490e5fd1bbd286c4c5be24a13022b4d5b3e38c774ba30fa74b0299998cde6ddb",
+      "bytes": 77537,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "cape_clearance/reports/Staff_DriverEquivalence193.json",
+      "sha256": "4790392b7ec9018c562a5741ccb93fd96f6ac7109d873f922c99e749fda790df",
+      "bytes": 77537,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Staff_DriverEquivalence193.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "cape_clearance/reports/SwordShield_DriverEquivalence193.json",
+      "sha256": "1d0af38b5f852af9f23c9097cd75cf7dd63b3e3cbcec8c20ac8bc08ee2bcacf2",
+      "bytes": 77543,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/SwordShield_DriverEquivalence193.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "contact_calibration/CHR01_Grip28_SourceCalibration.json",
+      "sha256": "98332740f5a8e2a6c4364f79df5fe440f4f52ec591df9ed455536af74571dc88",
+      "bytes": 20740,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/CHR01_Grip28_SourceCalibration.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "contact_calibration/CHR01_Grip32_SourceCalibration.json",
+      "sha256": "b56c37e47ce222a31174e9e08c78769d18f15c3903883153f81d39c4f5934e3f",
+      "bytes": 20745,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/CHR01_Grip32_SourceCalibration.json"
+        },
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/CHR01_Grip32_SourceCalibration.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "contact_calibration/Immutable_Source_Fingerprints.json",
+      "sha256": "2eb641ecf4b1efc2a228a9407e100e1adf5af18dd8cb794c315975b5c67b5576",
+      "bytes": 1477,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Immutable_Source_Fingerprints.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Bow_v3_author_evidence_review.json",
+      "sha256": "e3873f791712472734ae30600977e0d5377b6d7c15d3a6988be2df7790da9149",
+      "bytes": 3189,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Bow_v3_author_evidence_review.json"
+        },
+        {
+          "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+          "current_version_number": 0,
+          "source_package": "CHR01_Grips_Stage3_Bow_Source.zip",
+          "source_package_sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+          "member_path": "stage3_reports/Bow_v3_author_evidence_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Bow_v3_delivery_preservation_review.json",
+      "sha256": "7c8f3cf2715684d3126731f4d25b08c00809def275797f02eb0b329215aacc6e",
+      "bytes": 21476,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Bow_v3_delivery_preservation_review.json"
+        },
+        {
+          "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+          "current_version_number": 0,
+          "source_package": "CHR01_Grips_Stage3_Bow_Source.zip",
+          "source_package_sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+          "member_path": "stage3_reports/Bow_v3_delivery_preservation_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Bow_v3_external_package_review.json",
+      "sha256": "f2f07276e6bf38f10708d2bd5e827a3e18633a5b91777aead4e763ade0525b7a",
+      "bytes": 7439,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Bow_v3_external_package_review.json"
+        },
+        {
+          "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+          "current_version_number": 0,
+          "source_package": "CHR01_Grips_Stage3_Bow_Source.zip",
+          "source_package_sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+          "member_path": "stage3_reports/Bow_v3_external_package_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Bow_v3_final_media_review.json",
+      "sha256": "032b583fedae1beb9d922ad0152e4798fe1482428f91d9e95e4ca23927bbd7e1",
+      "bytes": 8623,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Bow_v3_final_media_review.json"
+        },
+        {
+          "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+          "current_version_number": 0,
+          "source_package": "CHR01_Grips_Stage3_Bow_Source.zip",
+          "source_package_sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+          "member_path": "stage3_reports/Bow_v3_final_media_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Bow_v3_front_visible_patch_review.json",
+      "sha256": "6e6f72ed2a8b8a9583da107c56e9ca7d114efdfa7fb4141adb0cde21d7a30d6e",
+      "bytes": 5441,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Bow_v3_front_visible_patch_review.json"
+        },
+        {
+          "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+          "current_version_number": 0,
+          "source_package": "CHR01_Grips_Stage3_Bow_Source.zip",
+          "source_package_sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+          "member_path": "stage3_reports/Bow_v3_front_visible_patch_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Bow_v3_geometry_string_review.json",
+      "sha256": "5b7c808dc1b214027443836b7c3989c641e967a456b2373c238a538affed3a7d",
+      "bytes": 279314,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Bow_v3_geometry_string_review.json"
+        },
+        {
+          "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+          "current_version_number": 0,
+          "source_package": "CHR01_Grips_Stage3_Bow_Source.zip",
+          "source_package_sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+          "member_path": "stage3_reports/Bow_v3_geometry_string_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Bow_v3_packed_preservation_review.json",
+      "sha256": "0daf9f9f9ce19e29e4325148be949c9d15de55d5d946c3ce8dbfadf27f4778f6",
+      "bytes": 24956,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Bow_v3_packed_preservation_review.json"
+        },
+        {
+          "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+          "current_version_number": 0,
+          "source_package": "CHR01_Grips_Stage3_Bow_Source.zip",
+          "source_package_sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+          "member_path": "stage3_reports/Bow_v3_packed_preservation_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Bow_v3_shell_point_review.json",
+      "sha256": "c70a8cf17762af3d83a13ada593446f949e221a64fd3f8cb24d8efcdbbd968c5",
+      "bytes": 4776,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Bow_v3_shell_point_review.json"
+        },
+        {
+          "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+          "current_version_number": 0,
+          "source_package": "CHR01_Grips_Stage3_Bow_Source.zip",
+          "source_package_sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+          "member_path": "stage3_reports/Bow_v3_shell_point_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Bow_v3_visual_manifest.json",
+      "sha256": "ed2aa04599baa643c7da3107a020898c2c0dcbefb77574af7e62dcc7d359de4f",
+      "bytes": 1143,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Greatsword_apparel_bidirectional_review.json",
+      "sha256": "60591c25f73d391aae43410369fc4a6e364e342c5852b51902c2650fd814eb59",
+      "bytes": 1171,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Greatsword_apparel_bidirectional_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Greatsword_final_delivery_review.json",
+      "sha256": "95e64140e722f49f3a653e058284ef79c997db9ee16fe0d02a159368af99b2d9",
+      "bytes": 717,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Greatsword_final_delivery_review.json"
+        },
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/Greatsword_final_delivery_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Hammer_apparel_bidirectional_review.json",
+      "sha256": "ccf5e5412c505f69dae46a8f1f6531c5febf3050233fca850143c9a83542dcf4",
+      "bytes": 1167,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Hammer_apparel_bidirectional_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Hammer_final_delivery_review.json",
+      "sha256": "80cf9a27ab5ecdc39d258ec510e16390319c17859fea3f7aa05896fe39a9a174",
+      "bytes": 709,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Hammer_final_delivery_review.json"
+        },
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/Hammer_final_delivery_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Hammer_shell_point_review.json",
+      "sha256": "65f1512ce8b0e947cb5afbf59ef0fa7e69e5d47b7826149db296671a9ab26658",
+      "bytes": 4049,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Hammer_shell_point_review.json"
+        },
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/Hammer_shell_point_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Spear_apparel_bidirectional_review.json",
+      "sha256": "8e32590a501d7a030d14efc7ed7ba06ec01d3be09c7bcdac2e125b51b65d7b04",
+      "bytes": 1166,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Spear_apparel_bidirectional_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Spear_final_delivery_review.json",
+      "sha256": "3473e59e90390f6d8aa305a67a1f25db180d578ee6a5c3360a8b2e5626dd9adc",
+      "bytes": 707,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Spear_final_delivery_review.json"
+        },
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/Spear_final_delivery_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Staff_apparel_bidirectional_review.json",
+      "sha256": "5696820f552f2432b565dd70de96f31b42f77183b67301c24eb948dbd4bff6b1",
+      "bytes": 1166,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Staff_apparel_bidirectional_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/Staff_dependency_v2_delivery_review.json",
+      "sha256": "51399262d98f79f78ec926b7de083b2dfb2358e1e1a6f239ccaa225028a0bd8e",
+      "bytes": 708,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/Staff_dependency_v2_delivery_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/SwordShield_apparel_bidirectional_review.json",
+      "sha256": "8761d9b296f1a06f4bc9970f79b6ef9c3f2ad0232af85caa0d4fecf69ad35203",
+      "bytes": 1172,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/SwordShield_apparel_bidirectional_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/SwordShield_dependency_v2_delivery_review.json",
+      "sha256": "69b913eea083a6a9789a9ddff92c895510e41b45f39829ad5f5501c9bc5d3f84",
+      "bytes": 720,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/SwordShield_dependency_v2_delivery_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "independent_review/corrected_cape_sleeve_mesh_review.json",
+      "sha256": "5fc8e75cff420bbfd70c5c57b45c7468848043c8483bce1f17430d334f8c079b",
+      "bytes": 44350,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/corrected_cape_sleeve_mesh_review.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Bow_DynamicContract.json",
+      "sha256": "d616d423487b3448b9c9913a762c95993779619df8efd8cc135d50ad514dff1e",
+      "bytes": 954423,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_effbe3ef59e08191b3bffa30b5b8b38e",
+          "current_version_number": 0,
+          "source_package": "CHR01_Grips_Stage3_Bow_Source.zip",
+          "source_package_sha256": "ae2a9c5d1d8b2ed8484768cbad3d8fad1d71440992e5d336ed5591640730ccaa",
+          "member_path": "stage3_reports/CHR01_Bow_DynamicContract.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Greatsword_BindingResiduals.json",
+      "sha256": "e0e27aa2996a339844abb69da867e36f0fe3c6ac982158e8d9d61be347dc3643",
+      "bytes": 71080,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Greatsword_Contract.json",
+      "sha256": "e92f0468f12d2431b0ad21e3fc07a272be23da4123b9c9ce7e4ac96017a4e777",
+      "bytes": 457085,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/CHR01_Greatsword_Contract.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Greatsword_SurfaceQA.json",
+      "sha256": "bdb69ebf4bdc46508f662754b5ae41ebdbc4dce1ebb87757484d467bd7b21671",
+      "bytes": 66961,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/CHR01_Greatsword_SurfaceQA.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Hammer_BindingResiduals.json",
+      "sha256": "226211275ac13d989e37cf3f45a983994381357f312481d4b5b54cc6973be63d",
+      "bytes": 62403,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Hammer_Contract.json",
+      "sha256": "ca8f3bffda160403545d1f4ef8d9b86eead90271839618c151cdeb5f12d84f34",
+      "bytes": 466188,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/CHR01_Hammer_Contract.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Hammer_SurfaceQA.json",
+      "sha256": "96df7a4c5947e2c9cc5663eac0510f4610a1277d83f35949a30952c4f6f55cf0",
+      "bytes": 63443,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/CHR01_Hammer_SurfaceQA.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Spear_BindingResiduals.json",
+      "sha256": "09cce90c6dd9b2567d99beb83eaf00feed18a3a64baaea01df19aae59173ed5a",
+      "bytes": 69174,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Spear_Contract.json",
+      "sha256": "fd44ff6c6d637c11f2b76771ac6241f28abfc7a9cf2c1796f38a6786ab396f78",
+      "bytes": 456567,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/CHR01_Spear_Contract.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Spear_SurfaceQA.json",
+      "sha256": "291df3da865e783c53f7d17c5984a8c6e57acb1f83840464dc0bc79adf3a4243",
+      "bytes": 63088,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_dc94859d6ab0819186257581d8473cc0",
+          "current_version_number": 1,
+          "source_package": "CHR01_Grips_Stage2_Source.zip",
+          "source_package_sha256": "f0c56e9d87b34c77d10c0709ad592dcfdb1d69f0e9546fa982850a4a296541e9",
+          "member_path": "stage2_reports/CHR01_Spear_SurfaceQA.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Staff_BindingResiduals.json",
+      "sha256": "74f1a4eea55616dc43ab04b1e3d29f3f41e624e25025f4e63de47a61e971f6e7",
+      "bytes": 61972,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Staff_Contract.json",
+      "sha256": "61953aaf99fb2700523b5946355a18ebd021e6ffda186be4500e978d2073c11a",
+      "bytes": 467655,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/CHR01_Staff_Contract.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_Staff_SurfaceQA.json",
+      "sha256": "5eec8c5f5ab99eee1573c86e3d4ff19d0a1b8dd5ebae5e26d7776734d6903afc",
+      "bytes": 62549,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/CHR01_Staff_SurfaceQA.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_SwordShield_BindingResiduals.json",
+      "sha256": "02873ba360ff1e7418f8f29e70d5b2a80531d59987ef31b39ec4cbfb363d76d6",
+      "bytes": 61633,
+      "status": "not_archived_authoring_workspace_only",
+      "archive_locations": [],
+      "availability_note": "仓库为带来源SHA的摘录；完整原件仅保留在作者本地工作目录，未随这三份Library源ZIP归档，不声称可从源包下载。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_SwordShield_Contract.json",
+      "sha256": "f2334dec0ee1a3950caea942df63c74c69c8cee4551f78f857b63cb491a0338e",
+      "bytes": 493453,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/CHR01_SwordShield_Contract.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    },
+    {
+      "source_artifact_relative_path": "reports/CHR01_SwordShield_SurfaceQA.json",
+      "sha256": "0d9d3fc3e346142aa3362269a9a7c5bc1d4cd08cf118a54cc1eb5c15a8d64a30",
+      "bytes": 72470,
+      "status": "archived_exact_bytes",
+      "archive_locations": [
+        {
+          "library_file_id": "libfile_6578ac354848819196800654ca304fec",
+          "current_version_number": 2,
+          "source_package": "CHR01_Grips_Stage1_Source.zip",
+          "source_package_sha256": "f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9",
+          "member_path": "reports/CHR01_SwordShield_SurfaceQA.json"
+        }
+      ],
+      "availability_note": "Library源包内的完整原件，按原始字节SHA与长度匹配；使用member_path定位。"
+    }
+  ],
+  "provenance_path_semantics": {
+    "source_artifact_relative_path": "Authoring-workspace relative path, not a repository path or ZIP member path.",
+    "archive_resolution": "Use only the exact Library identity/version and member_path listed in provenance_archive_map; mappings verified by SHA256 and byte length, including all matching duplicate members.",
+    "coverage": {
+      "unique_source_references": 52,
+      "archived_exact_bytes": 39,
+      "not_archived_authoring_workspace_only": 13
+    },
+    "unarchived_sources": "The repository preserves source-SHA-linked excerpts. Complete originals of entries marked not_archived_authoring_workspace_only remain only in the authoring workspace; no complete downloadable original is promised."
+  },
+  "public_path_normalization": {
+    "scope": [
+      "contracts/DynamicBowV3.json",
+      "evidence/FixedGripReview.json",
+      "evidence/DynamicBowV3Review.json"
+    ],
+    "path_string_count": 45,
+    "operation": "Strip the author-machine absolute workspace prefix from artifact path strings; output paths are relative to the hero_weapon_grips authoring-artifact root.",
+    "not_a_repo_or_archive_path": "Use provenance_archive_map.member_path for archive lookup; normalized value strings describe original artifact relationships.",
+    "preserved": "All non-path values, numeric measurements, source SHA256 and source byte lengths remain unchanged. SHA256 provenance always identifies the unchanged original report bytes, not the normalized excerpt bytes.",
+    "originals": "No source report, source ZIP, art file, texture, image or video was modified for this public-text normalization."
+  }
+}
