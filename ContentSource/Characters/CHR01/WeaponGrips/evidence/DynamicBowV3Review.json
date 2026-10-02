@@ -1,0 +1,1429 @@
+{
+  "schema": "aetherlab.chr01.dynamic-bow-evidence.v1",
+  "independent_geometry_string": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Bow_v3_geometry_string_review.json",
+      "sha256": "5b7c808dc1b214027443836b7c3989c641e967a456b2373c238a538affed3a7d",
+      "bytes": 279314
+    },
+    "values": {
+      "path": "cape_clearance/source/CHR01_DynamicBow_ClothCandidate_v3.blend",
+      "sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+      "packed_sha256": "90fcb8bb2f1e3596efbd3a16bdef79fd95caa1ef975d9b1121c286e5e7a8bbcb",
+      "reopened_successfully": true,
+      "bone_count": 65,
+      "rest_exactly_matches_source": true,
+      "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+      "rig_world_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "root_scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "frame_range": [
+        1,
+        97
+      ],
+      "fps": 24,
+      "unit_scale_length": 1.0,
+      "armature_pose_constraints": {},
+      "string_controls": {
+        "Bow_String_upper": {
+          "constraints": [
+            [
+              "Continuous taut string nock",
+              "COPY_LOCATION",
+              "Bow_StringNock_Target"
+            ],
+            [
+              "Continuous taut string endpoint",
+              "DAMPED_TRACK",
+              "Bow_StringTip_Target_upper"
+            ]
+          ],
+          "drivers": [
+            [
+              "scale",
+              2,
+              "sqrt((tx-nx)**2+(ty-ny)**2+(tz-nz)**2)",
+              [
+                "Bow_StringTip_Target_upper",
+                "Bow_StringTip_Target_upper",
+                "Bow_StringTip_Target_upper",
+                "Bow_StringNock_Target",
+                "Bow_StringNock_Target",
+                "Bow_StringNock_Target"
+              ]
+            ]
+          ]
+        },
+        "Bow_String_lower": {
+          "constraints": [
+            [
+              "Continuous taut string nock",
+              "COPY_LOCATION",
+              "Bow_StringNock_Target"
+            ],
+            [
+              "Continuous taut string endpoint",
+              "DAMPED_TRACK",
+              "Bow_StringTip_Target_lower"
+            ]
+          ],
+          "drivers": [
+            [
+              "scale",
+              2,
+              "sqrt((tx-nx)**2+(ty-ny)**2+(tz-nz)**2)",
+              [
+                "Bow_StringTip_Target_lower",
+                "Bow_StringTip_Target_lower",
+                "Bow_StringTip_Target_lower",
+                "Bow_StringNock_Target",
+                "Bow_StringNock_Target",
+                "Bow_StringNock_Target"
+              ]
+            ]
+          ]
+        }
+      },
+      "mesh_surface_intersections": [
+        {
+          "frame": 1.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 25.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 26.5,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 29.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 32.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 37.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 49.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 61.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 61.125,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 61.5,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 62.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 62.5625,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 62.625,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 62.6875,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 62.75,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 62.8125,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 63.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 63.125,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 65.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 69.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 69.125,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 73.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 81.0,
+          "glove_vs_bow_mesh_intersections": {}
+        },
+        {
+          "frame": 97.0,
+          "glove_vs_bow_mesh_intersections": {}
+        }
+      ],
+      "summary": {
+        "pose_samples": 245,
+        "mesh_intersection_samples": 24,
+        "frames_with_mesh_intersections": 0,
+        "maximum_wrists_deg": {
+          "l": 22.204302151792056,
+          "r": 24.02488811211163
+        },
+        "max_loaded_draw_contact_error_m": 7.353891081614958e-05,
+        "max_main_frame_origin_error_m": 3.106490073160831e-06,
+        "max_string_to_helper_endpoint_error_m": 4.924151790695877e-07,
+        "max_actual_limb_ring_center_offset_m": 0.00030082464365763597,
+        "max_contract_keypose_matrix_error": 0.0
+      }
+    },
+    "limitations": "Read-only finite temporal/mesh-surface audit; no swept motion or volumetric-containment proof. String endpoint-to-helper closure differs from distance to rendered limb ring center. Wrist angular deviation is source local-basis rotation, not a clinical joint-angle limit."
+  },
+  "author_193_and_241_review": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Bow_v3_author_evidence_review.json",
+      "sha256": "e3873f791712472734ae30600977e0d5377b6d7c15d3a6988be2df7790da9149",
+      "bytes": 3189
+    },
+    "values": {
+      "preserved_author_reports": {
+        "DynamicBow_v3_ClearanceQA.json": {
+          "source": "hero_weapon_grips/cape_clearance/reports/DynamicBow_v3_ClearanceQA.json",
+          "preserved": "hero_weapon_grips/independent_review/reported_clothing_limits/DynamicBow_v3_ClearanceQA.json",
+          "sha256": "2b1633e94431b6b5385286653c950ee4e8b6e1cfca6376eb0442830ce310c89d"
+        },
+        "DynamicBow_ClothCandidate_v3_StringQA.json": {
+          "source": "hero_weapon_grips/cape_clearance/reports/DynamicBow_ClothCandidate_v3_StringQA.json",
+          "preserved": "hero_weapon_grips/independent_review/reported_clothing_limits/DynamicBow_ClothCandidate_v3_StringQA.json",
+          "sha256": "68126a84fb78d7b5af149a7c3956c10ac5d2ecac93442c8dbc0a4a878ca79c8c"
+        },
+        "DynamicBow_ClothCandidate_v3_BaselineAuditComparison.json": {
+          "source": "hero_weapon_grips/cape_clearance/reports/DynamicBow_ClothCandidate_v3_BaselineAuditComparison.json",
+          "preserved": "hero_weapon_grips/independent_review/reported_clothing_limits/DynamicBow_ClothCandidate_v3_BaselineAuditComparison.json",
+          "sha256": "2c29d3362d8b0cfbcc77509168a817197030432e08f29806f9de1edac5362709"
+        }
+      },
+      "cape": {
+        "sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+        "scoped_samples": 193,
+        "times": {
+          "first": 1.0,
+          "last": 97.0
+        },
+        "minimum_scoped_ray_count": 1033,
+        "visible_exposure_frame_count": 0,
+        "visible_exposure_total": 0,
+        "hidden_shell_frame_count": 95,
+        "hidden_shell_total": 212,
+        "min_backray_air_clearance_m": -0.017811093479394913,
+        "scope": "Rear cape interior, y-facing normal >0.3, at least 25mm geodesic distance from original cape boundary, world |x| .120-.228 and z1.248-1.356; two sleeves against real evaluated low cape shell.",
+        "all_scoped_tests_pass": false
+      },
+      "string": {
+        "audited_input": {
+          "path": "cape_clearance/source/CHR01_DynamicBow_ClothCandidate_v3.blend",
+          "sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+          "read_only": true,
+          "baseline_blend_sha256": "90fcb8bb2f1e3596efbd3a16bdef79fd95caa1ef975d9b1121c286e5e7a8bbcb"
+        },
+        "records_count": 241,
+        "records_exactly_equal_to_base": true,
+        "summary_exactly_equal_to_base": true,
+        "summary": {
+          "sampled_frames": 241,
+          "frame_step": 0.5,
+          "release_extra_step": 0.125,
+          "max_left_analytic_triangle_intrusions": 0,
+          "min_left_analytic_radial_equivalent_gap_mm": 0.09691565108080336,
+          "max_left_sampled_inside_ellipse": 0,
+          "min_left_radial_equivalent_gap_mm": 0.143791841168599,
+          "min_right_string_surface_gap_mm": 0.2449973098933697,
+          "max_right_axis_intersections": 0,
+          "max_nonhand_axis_intersections": 0,
+          "max_string_endpoint_error_mm": 0.0004924151790695877,
+          "max_wrists_deg": {
+            "l": 22.204291001098426,
+            "r": 24.024874509270738
+          },
+          "string_length_range_m": {
+            "upper": [
+              0.74444567833687,
+              0.7450001075923766
+            ],
+            "lower": [
+              0.8545216158840221,
+              0.8550001977619169
+            ]
+          }
+        }
+      }
+    }
+  },
+  "packed_preservation": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Bow_v3_packed_preservation_review.json",
+      "sha256": "0daf9f9f9ce19e29e4325148be949c9d15de55d5d946c3ce8dbfadf27f4778f6",
+      "bytes": 24956
+    },
+    "values": {
+      "baseline": "bow_dynamic/source/CHR01_DynamicBow_Editable.blend",
+      "baseline_sha256": "90fcb8bb2f1e3596efbd3a16bdef79fd95caa1ef975d9b1121c286e5e7a8bbcb",
+      "candidate": "cape_clearance/source/CHR01_DynamicBow_ClothCandidate_v3.blend",
+      "candidate_sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+      "saved_default": {
+        "frame": 49,
+        "action": "CHR01_165cm_Bow_Draw_Hold_Release_FollowThrough"
+      },
+      "raw_objects_compared": 206,
+      "rest_bones": 65,
+      "old_actions_compared": 18,
+      "bone_and_object_world_sample_count": 245,
+      "evaluated_non_cape_mesh_sample_frames": [
+        1,
+        25,
+        26.5,
+        29,
+        32,
+        37,
+        49,
+        61,
+        61.125,
+        62.5625,
+        62.625,
+        62.6875,
+        62.75,
+        62.8125,
+        63,
+        65,
+        69,
+        69.125,
+        73,
+        81,
+        97
+      ],
+      "unexpected_changes": [],
+      "added_shape_keys": {
+        "CHR01 • ivory split shoulder cape": [
+          {
+            "name": "Basis",
+            "max_displacement_m": 0.0
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_001",
+            "max_displacement_m": 0.0216255725575457
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_013",
+            "max_displacement_m": 0.024104370696938146
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_025",
+            "max_displacement_m": 0.03550001596220866
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_029",
+            "max_displacement_m": 0.03514147526564588
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_037",
+            "max_displacement_m": 0.016413513533077035
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_049",
+            "max_displacement_m": 0.016212116630436414
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_055",
+            "max_displacement_m": 0.016212116630436414
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_061",
+            "max_displacement_m": 0.016212116630436414
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_067",
+            "max_displacement_m": 0.016212116630436414
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_073",
+            "max_displacement_m": 0.034915675051207594
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_079",
+            "max_displacement_m": 0.034915675051207594
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_085",
+            "max_displacement_m": 0.029971449851388166
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_091",
+            "max_displacement_m": 0.018060073751326716
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_097",
+            "max_displacement_m": 0.016212116630436414
+          }
+        ],
+        "CHR01 • ivory split shoulder cape_low": [
+          {
+            "name": "Basis",
+            "max_displacement_m": 0.0
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_001",
+            "max_displacement_m": 0.0216255725575457
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_013",
+            "max_displacement_m": 0.024104370696938146
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_025",
+            "max_displacement_m": 0.03550002048406028
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_029",
+            "max_displacement_m": 0.03514147526564588
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_037",
+            "max_displacement_m": 0.016413513533077035
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_049",
+            "max_displacement_m": 0.016212116630436414
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_055",
+            "max_displacement_m": 0.016212116630436414
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_061",
+            "max_displacement_m": 0.016212116630436414
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_067",
+            "max_displacement_m": 0.016212116630436414
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_073",
+            "max_displacement_m": 0.034915675051207594
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_079",
+            "max_displacement_m": 0.034915675051207594
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_085",
+            "max_displacement_m": 0.029971449851388166
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_091",
+            "max_displacement_m": 0.018060073751326716
+          },
+          {
+            "name": "CapeClearance_Bow_Phase_097",
+            "max_displacement_m": 0.016212116630436414
+          }
+        ]
+      },
+      "readonly_source_hashes_stable": true,
+      "pass": true
+    }
+  },
+  "external_delivery_preservation": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Bow_v3_delivery_preservation_review.json",
+      "sha256": "7c8f3cf2715684d3126731f4d25b08c00809def275797f02eb0b329215aacc6e",
+      "bytes": 21476
+    },
+    "values": {
+      "baseline": "cape_clearance/source/CHR01_DynamicBow_ClothCandidate_v3.blend",
+      "baseline_sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+      "candidate": "delivery/source/CHR01_Bow_Grip_DrawRelease.blend",
+      "candidate_sha256": "16638c8b3a7291d08e374ea559a571f95553eadd92def24988c3564062a83ad5",
+      "saved_default": {
+        "frame": 49,
+        "action": "CHR01_165cm_Bow_Draw_Hold_Release_FollowThrough"
+      },
+      "raw_objects_compared": 206,
+      "rest_bones": 65,
+      "old_actions_compared": 18,
+      "bone_and_object_world_sample_count": 245,
+      "evaluated_non_cape_mesh_sample_frames": [
+        1,
+        25,
+        26.5,
+        29,
+        32,
+        37,
+        49,
+        61,
+        61.125,
+        62.5625,
+        62.625,
+        62.6875,
+        62.75,
+        62.8125,
+        63,
+        65,
+        69,
+        69.125,
+        73,
+        81,
+        97
+      ],
+      "unexpected_changes": [],
+      "added_shape_keys": {},
+      "readonly_source_hashes_stable": true,
+      "pass": true
+    }
+  },
+  "external_textures_and_cape_193": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Bow_v3_external_package_review.json",
+      "sha256": "f2f07276e6bf38f10708d2bd5e827a3e18633a5b91777aead4e763ade0525b7a",
+      "bytes": 7439
+    },
+    "values": {
+      "packed": "cape_clearance/source/CHR01_DynamicBow_ClothCandidate_v3.blend",
+      "packed_sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+      "delivery": "delivery/source/CHR01_Bow_Grip_DrawRelease.blend",
+      "delivery_sha256": "16638c8b3a7291d08e374ea559a571f95553eadd92def24988c3564062a83ad5",
+      "readable_images": [
+        {
+          "image": "AetherTravel_BaseColor_2048.png",
+          "relative_path": "//textures/AetherTravel_BaseColor_2048_3d851536.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "3d851536bbf8f02b12a8227a4454cf735fdd195a74e8cb2928dcf8a23ad39e12",
+          "pixel_size": [
+            2048,
+            1024
+          ]
+        },
+        {
+          "image": "AetherTravel_Normal_2048.png",
+          "relative_path": "//textures/AetherTravel_Normal_2048_6bbbe831.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "6bbbe831986e61df91c6cea455bd83169ac9899f4ae4cb5a316b78f515b51105",
+          "pixel_size": [
+            2048,
+            1024
+          ]
+        },
+        {
+          "image": "AetherTravel_ORM_2048.png",
+          "relative_path": "//textures/AetherTravel_ORM_2048_022e4aee.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "022e4aee4aec38da4f2e560fc88bfd3f24ffacc8cee955ca970fdcbc6ee496cd",
+          "pixel_size": [
+            2048,
+            1024
+          ]
+        },
+        {
+          "image": "CHR01_Body_BaseColor.png",
+          "relative_path": "//textures/CHR01_Body_BaseColor_9e058009.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "9e05800905648305a83404cc6c173bc61a24380bd6b9b2d2a10f33beefba457b",
+          "pixel_size": [
+            4096,
+            4096
+          ]
+        },
+        {
+          "image": "CHR01_Body_Normal.png",
+          "relative_path": "//textures/CHR01_Body_Normal_ab84074d.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "ab84074d9b5f211f3859aadb46317e96f8e15a7213c2d15b829abbde79d7b2de",
+          "pixel_size": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "image": "CHR01_Body_ORM.png",
+          "relative_path": "//textures/CHR01_Body_ORM_44b17f0f.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "44b17f0fcff3ef4bc1a988a0d6ad268641071c910f9ae846dd6b2edf5af54519",
+          "pixel_size": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "image": "CHR01_Face_BaseColor.png.001",
+          "relative_path": "//textures/CHR01_Face_BaseColor_75bcf25e.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "75bcf25e5b6807267f59a9facbe6cf45000dd47a7a302fe55851901ea6ca4a2f",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "CHR01_Face_Normal.png.001",
+          "relative_path": "//textures/CHR01_Face_Normal_30e49aa0.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "30e49aa0e3e22fcfa83074fe13436ad485df320fc83f9bc80a5309f2d2486a8d",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "CHR01_Face_ORM.png.001",
+          "relative_path": "//textures/CHR01_Face_ORM_b82c46d4.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "b82c46d4add0812749385af500ae0c21fc84faafe9a983e023bdf0dfa271b613",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "CHR01_Hair_BaseColor.png.001",
+          "relative_path": "//textures/CHR01_Hair_BaseColor_caab19ac.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "caab19ac00fb36caae6a1c3ff90a3f635c230d0392688c3afdb92a16191d1746",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "CHR01_Hair_Normal.png.001",
+          "relative_path": "//textures/CHR01_Hair_Normal_e9b2b7b9.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "e9b2b7b92ab1c961e7db81b9a4baf60a56993df7184c9d9879ed9ceecbd82b65",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "CHR01_Hair_ORM.png.001",
+          "relative_path": "//textures/CHR01_Hair_ORM_b5630b7f.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "b5630b7f41216c72dbbecd262efb304006ea37b3542a7c65c5e5005cafa6d61b",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "DarkAshWood_BaseColor_1K.png",
+          "relative_path": "//textures/DarkAshWood_BaseColor_1K_4f03ec5c.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "4f03ec5c3208e757139d26ea822f8a9fed7f85fb1c6bb326090bcb336c3cc114",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "DarkAshWood_Normal_1K.png",
+          "relative_path": "//textures/DarkAshWood_Normal_1K_20cbc02c.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "20cbc02c1ac52f1d09d7568bce4d7cae1efa95e4e6679decb31c8a9bb4a35296",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "ForgedSteel_BaseColor_1K.png",
+          "relative_path": "//textures/ForgedSteel_BaseColor_1K_e269613a.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "e269613a378e65d55f96ee542b6eef35d54ca1a46e6ac8243d84d5219eaa4489",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "ForgedSteel_Normal_1K.png",
+          "relative_path": "//textures/ForgedSteel_Normal_1K_0bff214f.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "0bff214f778d0b6e848562ad1f7d8d9c9b804eb490d63a87fabe1563212ef3b8",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "ForgedSteel_Roughness_1K.png",
+          "relative_path": "//textures/ForgedSteel_Roughness_1K_56a381dd.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "56a381dd70ffb7604a402272f835b568f71aa19a06a87ccc831a522884f86430",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "NavyLeather_BaseColor_1K.png",
+          "relative_path": "//textures/NavyLeather_BaseColor_1K_7309a5fd.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "7309a5fd30d4613679c917bcbc4b6689e2205e6d43dc4f97ca70b7f75e2c7859",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        },
+        {
+          "image": "NavyLeather_Normal_1K.png",
+          "relative_path": "//textures/NavyLeather_Normal_1K_f29f25c2.png",
+          "exists": true,
+          "packed": false,
+          "matches_packed_original_bytes": true,
+          "sha256": "f29f25c2ae6e8a293165b41df18cba27cf050e0b2248880de03ad8078ec5baa7",
+          "pixel_size": [
+            1024,
+            1024
+          ]
+        }
+      ],
+      "all_images_pass": true,
+      "cape_evaluated_mesh_sample_count": 193,
+      "cape_evaluated_mesh_mismatched_frames": [],
+      "cape_geometry_exactly_equal": true
+    }
+  },
+  "representative_shell_point": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Bow_v3_shell_point_review.json",
+      "sha256": "c70a8cf17762af3d83a13ada593446f949e221a64fd3f8cb24d8efcdbbd968c5",
+      "bytes": 4776
+    },
+    "values": {
+      "file": "cape_clearance/source/CHR01_DynamicBow_ClothCandidate_v3.blend",
+      "sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+      "frame": 35.5,
+      "sleeve_surface_point_world_m": [
+        -0.17100000381469727,
+        0.05433613061904907,
+        1.3530000448226929
+      ],
+      "sleeve_face": 580,
+      "cape_mesh_topology": {
+        "verts": 4290,
+        "faces": 8576,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0
+      },
+      "nearest_cape_distance_m": 0.00028827509959228337,
+      "nearest_cape_face": 7983,
+      "nearest_cape_signed_normal_projection_m": -0.0002882750676747037,
+      "inside_votes": 6,
+      "cape_sleeve_overlap_pairs": 222
+    }
+  },
+  "independent_visual_review": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Bow_v3_visual_manifest.json",
+      "sha256": "ed2aa04599baa643c7da3107a020898c2c0dcbefb77574af7e62dcc7d359de4f",
+      "bytes": 1143
+    },
+    "values": {
+      "source": "cape_clearance/source/CHR01_DynamicBow_ClothCandidate_v3.blend",
+      "source_sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+      "independently_rendered_and_visually_opened": true,
+      "exposure": -1.25,
+      "frames": [
+        29,
+        49,
+        73
+      ],
+      "views": [
+        "backshoulder",
+        "side"
+      ],
+      "images": {
+        "Bow_v3_views/BowCandidateV3_LowExposure_029_backshoulder.png": "7b9e1af5fc4f1744d1993be17c00b3a1f6042e0cde6d3f5ebf72c73daee76ede",
+        "Bow_v3_views/BowCandidateV3_LowExposure_029_side.png": "91b541c65656356d3d626d163b1499758f1454fa8eecaa900a6911e7ae23011d",
+        "Bow_v3_views/BowCandidateV3_LowExposure_049_backshoulder.png": "229e46871e85d0884c6a65e21464911421aab8502d070cbe5df008965508ba1f",
+        "Bow_v3_views/BowCandidateV3_LowExposure_049_side.png": "8057fa6b7a53131b9929db494db32175255f13bde18be632ef8f483bfcbaa3e1",
+        "Bow_v3_views/BowCandidateV3_LowExposure_073_backshoulder.png": "a0a6bbf5b2e7458b5a5ed1aebae846dacf41ffb77ae6976f5a132b27f88d9a16",
+        "Bow_v3_views/BowCandidateV3_LowExposure_073_side.png": "c73fa990bb20acf531a603afbd64537b2c22a46dbbb756cb2efb9802222a47cc"
+      }
+    }
+  },
+  "whole_garment_clearance": false,
+  "metric_distinctions": [
+    "String-to-helper maximum 4.924151790695877e-7 m differs from actual limb ring-center maximum 0.00030082464365763597 m.",
+    "The negative backray clearance is an axial ray measurement, not shortest Euclidean penetration depth.",
+    "0.00028827509959228337 m is one confirmed interior sleeve point distance at frame35.5, not the maximum penetration of the clip."
+  ],
+  "inherited_front_visible_sleeve_patch": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Bow_v3_front_visible_patch_review.json",
+      "sha256": "6e6f72ed2a8b8a9583da107c56e9ca7d114efdfa7fb4141adb0cde21d7a30d6e",
+      "bytes": 5441
+    },
+    "values": {
+      "base": [
+        {
+          "pixel": [
+            603,
+            410
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 618,
+          "point": [
+            0.14169150590896606,
+            0.001245737075805664,
+            1.3590532541275024
+          ],
+          "cape_intersection": [
+            0.14796823263168335,
+            0.007852733135223389,
+            1.3564103841781616
+          ],
+          "cape_minus_visible_ray_distance_m": 0.009488663965010136
+        },
+        {
+          "pixel": [
+            624,
+            445
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 108,
+          "point": [
+            0.14024639129638672,
+            -0.010565876960754395,
+            1.349526047706604
+          ],
+          "cape_intersection": [
+            0.14660286903381348,
+            -0.0038748979568481445,
+            1.3468495607376099
+          ],
+          "cape_minus_visible_ray_distance_m": 0.009609233016795504
+        },
+        {
+          "pixel": [
+            640,
+            475
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 621,
+          "point": [
+            0.14136847853660583,
+            -0.017225027084350586,
+            1.3401598930358887
+          ],
+          "cape_intersection": [
+            0.14693084359169006,
+            -0.011369943618774414,
+            1.337817907333374
+          ],
+          "cape_minus_visible_ray_distance_m": 0.008408762082012355
+        },
+        {
+          "pixel": [
+            585,
+            389
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 105,
+          "point": [
+            0.14418816566467285,
+            0.012694060802459717,
+            1.3635270595550537
+          ],
+          "cape_intersection": [
+            0.15008080005645752,
+            0.018896758556365967,
+            1.3610459566116333
+          ],
+          "cape_minus_visible_ray_distance_m": 0.008908002773462709
+        },
+        {
+          "pixel": [
+            656,
+            490
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 110,
+          "point": [
+            0.14440900087356567,
+            -0.02186483144760132,
+            1.3352570533752441
+          ],
+          "cape_intersection": [
+            0.1476636528968811,
+            -0.018438875675201416,
+            1.3338866233825684
+          ],
+          "cape_minus_visible_ray_distance_m": 0.004920134994427006
+        },
+        {
+          "pixel": [
+            585,
+            500
+          ],
+          "visible_object": "CHR01 • ivory split shoulder cape_low",
+          "face": 774,
+          "point": [
+            0.10185623168945312,
+            -0.03186589479446411,
+            1.342345118522644
+          ],
+          "cape_intersection": [
+            0.10185623168945312,
+            -0.03186589479446411,
+            1.342345118522644
+          ],
+          "cape_minus_visible_ray_distance_m": 1.0998436605902384e-09
+        }
+      ],
+      "v3": [
+        {
+          "pixel": [
+            603,
+            410
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 618,
+          "point": [
+            0.14169150590896606,
+            0.001245737075805664,
+            1.3590532541275024
+          ],
+          "cape_intersection": [
+            0.1479550004005432,
+            0.007838845252990723,
+            1.3564159870147705
+          ],
+          "cape_minus_visible_ray_distance_m": 0.00946869640901038
+        },
+        {
+          "pixel": [
+            624,
+            445
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 108,
+          "point": [
+            0.14024639129638672,
+            -0.010565876960754395,
+            1.349526047706604
+          ],
+          "cape_intersection": [
+            0.14660286903381348,
+            -0.0038748979568481445,
+            1.3468495607376099
+          ],
+          "cape_minus_visible_ray_distance_m": 0.009609233016795504
+        },
+        {
+          "pixel": [
+            640,
+            475
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 621,
+          "point": [
+            0.14136847853660583,
+            -0.017225027084350586,
+            1.3401598930358887
+          ],
+          "cape_intersection": [
+            0.14693084359169006,
+            -0.011369943618774414,
+            1.337817907333374
+          ],
+          "cape_minus_visible_ray_distance_m": 0.008408762082012355
+        },
+        {
+          "pixel": [
+            585,
+            389
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 105,
+          "point": [
+            0.14418816566467285,
+            0.012694060802459717,
+            1.3635270595550537
+          ],
+          "cape_intersection": [
+            0.14931529760360718,
+            0.018091022968292236,
+            1.361368179321289
+          ],
+          "cape_minus_visible_ray_distance_m": 0.007750838199793275
+        },
+        {
+          "pixel": [
+            656,
+            490
+          ],
+          "visible_object": "CHR01 • retopologized sleeve l_low",
+          "face": 110,
+          "point": [
+            0.14440900087356567,
+            -0.02186483144760132,
+            1.3352570533752441
+          ],
+          "cape_intersection": [
+            0.1476636528968811,
+            -0.018438875675201416,
+            1.3338866233825684
+          ],
+          "cape_minus_visible_ray_distance_m": 0.004920134994427006
+        },
+        {
+          "pixel": [
+            585,
+            500
+          ],
+          "visible_object": "CHR01 • ivory split shoulder cape_low",
+          "face": 774,
+          "point": [
+            0.10185623168945312,
+            -0.03186589479446411,
+            1.342345118522644
+          ],
+          "cape_intersection": [
+            0.10185623168945312,
+            -0.03186589479446411,
+            1.342345118522644
+          ],
+          "cape_minus_visible_ray_distance_m": 1.0998436605902384e-09
+        }
+      ]
+    }
+  },
+  "final_media_review": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Bow_v3_final_media_review.json",
+      "sha256": "032b583fedae1beb9d922ad0152e4798fe1482428f91d9e95e4ca23927bbd7e1",
+      "bytes": 8623
+    },
+    "values": {
+      "manifest": "hero_weapon_grips/bow_final/CHR01_DynamicBow_FinalRenderManifest.json",
+      "manifest_sha256": "868305de0984d426c8033b28181f153a5c1189d88dbeeea6f0b07158846f4421",
+      "render_input_sha_matches_current": true,
+      "outputs": [
+        {
+          "file": "bow_final/previews/back_shoulder_001.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/back_shoulder_049.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/back_shoulder_073.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/full_001.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/full_049.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/full_069.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/full_073.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/full_front_049.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/full_side_049.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/l_back_049.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/l_palm_049.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/r_back_049.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/r_palm_049.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/release_061.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/release_063.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/release_069.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/release_073.png",
+          "exists": true,
+          "hash_matches": true
+        },
+        {
+          "file": "bow_final/previews/CHR01_DynamicBow_VisibleClothImproved_8fps.mp4",
+          "exists": true,
+          "hash_matches": true
+        }
+      ],
+      "frames": [
+        {
+          "file": "0000.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0001.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0002.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0003.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0004.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0005.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0006.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0007.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0008.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0009.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0010.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0011.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0012.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0013.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0014.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0015.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0016.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0017.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0018.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0019.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0020.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0021.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0022.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0023.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0024.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0025.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0026.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0027.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0028.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0029.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0030.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0031.png",
+          "hash_matches": true
+        },
+        {
+          "file": "0032.png",
+          "hash_matches": true
+        }
+      ],
+      "all_hashes_match": true,
+      "actual_probe": {
+        "streams": [
+          {
+            "index": 0,
+            "codec_name": "h264",
+            "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+            "profile": "High",
+            "codec_type": "video",
+            "codec_tag_string": "avc1",
+            "codec_tag": "0x31637661",
+            "width": 640,
+            "height": 720,
+            "coded_width": 640,
+            "coded_height": 720,
+            "closed_captions": 0,
+            "film_grain": 0,
+            "has_b_frames": 2,
+            "sample_aspect_ratio": "1:1",
+            "display_aspect_ratio": "8:9",
+            "pix_fmt": "yuv420p",
+            "level": 31,
+            "chroma_location": "left",
+            "field_order": "progressive",
+            "refs": 1,
+            "is_avc": "true",
+            "nal_length_size": "4",
+            "id": "0x1",
+            "r_frame_rate": "8/1",
+            "avg_frame_rate": "8/1",
+            "time_base": "1/16384",
+            "start_pts": 0,
+            "start_time": "0.000000",
+            "duration_ts": 67584,
+            "duration": "4.125000",
+            "bit_rate": "665592",
+            "bits_per_raw_sample": "8",
+            "nb_frames": "33",
+            "extradata_size": 46,
+            "disposition": {
+              "default": 1,
+              "dub": 0,
+              "original": 0,
+              "comment": 0,
+              "lyrics": 0,
+              "karaoke": 0,
+              "forced": 0,
+              "hearing_impaired": 0,
+              "visual_impaired": 0,
+              "clean_effects": 0,
+              "attached_pic": 0,
+              "timed_thumbnails": 0,
+              "non_diegetic": 0,
+              "captions": 0,
+              "descriptions": 0,
+              "metadata": 0,
+              "dependent": 0,
+              "still_image": 0,
+              "multilayer": 0
+            },
+            "tags": {
+              "language": "und",
+              "handler_name": "VideoHandler",
+              "vendor_id": "[0][0][0][0]",
+              "encoder": "Lavc61.19.101 libx264"
+            }
+          }
+        ],
+        "format": {
+          "filename": "bow_final/previews/CHR01_DynamicBow_VisibleClothImproved_8fps.mp4",
+          "nb_streams": 1,
+          "nb_programs": 0,
+          "nb_stream_groups": 0,
+          "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+          "format_long_name": "QuickTime / MOV",
+          "start_time": "0.000000",
+          "duration": "4.125000",
+          "size": "344466",
+          "bit_rate": "668055",
+          "probe_score": 100,
+          "tags": {
+            "major_brand": "isom",
+            "minor_version": "512",
+            "compatible_brands": "isomiso2avc1mp41",
+            "encoder": "Lavf61.7.103"
+          }
+        }
+      },
+      "full_decode_exit_code": 0,
+      "full_decode_stderr": "",
+      "visually_opened_stills": [
+        "full_front_049.png",
+        "full_side_049.png",
+        "r_palm_049.png",
+        "release_063.png",
+        "release_069.png",
+        "back_shoulder_049.png"
+      ],
+      "scope": "Media file integrity and selected image review only; does not increase geometric collision certification.",
+      "visually_opened_video_source_frames": [
+        "0000.png",
+        "0016.png",
+        "0021.png",
+        "0032.png"
+      ],
+      "visible_clothing_limit": "Inherited front-shoulder sleeve patch remains visible in r_palm_049; confirmed actual left sleeve by independent raycast in Bow_v3_front_visible_patch_review.json"
+    }
+  },
+  "front_patch_scope": "The final right-palm49 view retains an inherited front shoulder/armhole blue sleeve patch. This is visible, outside the rear-interior ROI, and not a newly introduced v3 defect. The 9.609mm camera-ray layer separation is not Euclidean penetration depth."
+}

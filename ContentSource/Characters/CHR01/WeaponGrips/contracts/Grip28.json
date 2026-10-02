@@ -1,0 +1,575 @@
+{
+  "schema": "aetherlab.chr01.contact-calibration.v1",
+  "provenance": {
+    "source_artifact_relative_path": "contact_calibration/CHR01_Grip28_SourceCalibration.json",
+    "sha256": "98332740f5a8e2a6c4364f79df5fe440f4f52ec591df9ed455536af74571dc88",
+    "bytes": 20740
+  },
+  "stage": "CHR01 source-measured 28 mm cylindrical grip calibration",
+  "source_blend": {
+    "path": "aetherlab_team/stylized_wanderer/v2/CHR01_Wanderer_Editable.blend",
+    "sha256": "b227a2d002aed8724acdfd3f0d1a21aef5652f486b63245ed1278fe96a3eba69"
+  },
+  "armature_name": "CHR01_Wanderer_Rig65",
+  "bone_count": 65,
+  "scene_unit_scale_length": 1,
+  "coordinate_system": "Blender RH meters; row-major matrices acting on column vectors; fixture +X distal, +Z thumb-side cylinder axis, +Y completes RH basis",
+  "finished_grip_diameter_m": 0.028,
+  "anatomy": {
+    "r": {
+      "distal": [
+        -0.9995828759814331,
+        -0.028880340106840163,
+        0.0
+      ],
+      "thumb_side": [
+        0.028879900604561613,
+        -0.9995676642855206,
+        -0.00551687011442389
+      ],
+      "palm": [
+        -0.00015932908522966373,
+        0.005514568895391757,
+        -0.9999847819562759
+      ],
+      "sign": -1,
+      "rest_wrist": [
+        -0.5803832411766052,
+        0.046697478741407394,
+        1.2899208068847656
+      ],
+      "measured_mcp_heads": {
+        "index": [
+          -0.6527353525161743,
+          0.013775069266557693,
+          1.286118507385254
+        ],
+        "middle": [
+          -0.6508614420890808,
+          0.03789924085140228,
+          1.2882007360458374
+        ],
+        "ring": [
+          -0.6457284092903137,
+          0.06098277494311333,
+          1.2879291772842407
+        ],
+        "pinky": [
+          -0.6369287371635437,
+          0.07990367710590363,
+          1.2864806652069092
+        ]
+      },
+      "thumb_root": [
+        -0.5782196521759033,
+        0.01955455355346203,
+        1.2808678150177002
+      ],
+      "contact_center_rest": [
+        -0.6279692772937215,
+        0.048794837972523944,
+        1.2659083384612781
+      ],
+      "contact_offset_basis": [
+        0.047505614390582616,
+        -0.0033382587916231618,
+        0.024031250872275714
+      ],
+      "contact_frame_armature_rest": [
+        [
+          -0.9995828759814331,
+          -0.00015932908522982414,
+          0.028879900604561613,
+          -0.6279692772937215
+        ],
+        [
+          -0.028880340106840163,
+          0.00551456889539185,
+          -0.9995676642855206,
+          0.048794837972523944
+        ],
+        [
+          0.0,
+          -0.9999847819562758,
+          -0.00551687011442389,
+          1.2659083384612781
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "contact_frame_hand_local": [
+        [
+          -5.995016032606001e-08,
+          -0.99998501338449,
+          -0.005518137582553302,
+          -0.024012472601829593
+        ],
+        [
+          0.998881304261903,
+          0.0002609024028136023,
+          -0.04729395852975868,
+          0.04761661934617589
+        ],
+        [
+          0.047294585500752356,
+          -0.0055118701153279975,
+          0.9988659205630399,
+          -0.0012201717329279951
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "coordinate_description": "Blender RH meters; row-major matrices acting on column vectors; fixture +X distal, +Z thumb-side cylinder axis, +Y completes RH basis",
+      "source_initialization": "Measured current hero glove mesh and original hero SwordGrip frame37; cylinder axis recalculated from this hero MCP/forearm geometry, no old-character transform copied",
+      "index_curl_degrees": [
+        90.22367121254234,
+        34.87994563272181,
+        49.17067315893016
+      ],
+      "middle_curl_degrees": [
+        91.82440061942603,
+        38.10536286987341,
+        63.9389486727669
+      ],
+      "ring_curl_degrees": [
+        80.34309546258615,
+        49.87449970979453,
+        55.80882606074713
+      ],
+      "pinky_curl_degrees": [
+        45.95326618688855,
+        73.34075742008105,
+        33.37699637954125
+      ]
+    },
+    "l": {
+      "distal": [
+        0.9995828759073784,
+        -0.0288803426699675,
+        9.094946377240393e-13
+      ],
+      "thumb_side": [
+        -0.028879903167648137,
+        -0.9995676642115747,
+        -0.005516870094876397
+      ],
+      "palm": [
+        0.00015932909971504426,
+        0.0055145688754178,
+        -0.9999847819563836
+      ],
+      "sign": 1,
+      "rest_wrist": [
+        0.5803832411766052,
+        0.046697504818439484,
+        1.2899208068847656
+      ],
+      "measured_mcp_heads": {
+        "index": [
+          0.6527354717254639,
+          0.013775095343589783,
+          1.286118507385254
+        ],
+        "middle": [
+          0.6508614420890808,
+          0.03789926692843437,
+          1.2882007360458374
+        ],
+        "ring": [
+          0.6457284092903137,
+          0.06098279729485512,
+          1.2879291772842407
+        ],
+        "pinky": [
+          0.6369287371635437,
+          0.07990370690822601,
+          1.2864806652069092
+        ]
+      },
+      "thumb_root": [
+        0.5782196521759033,
+        0.019554579630494118,
+        1.2808678150177002
+      ],
+      "contact_center_rest": [
+        0.6279769548270255,
+        0.04879468239035877,
+        1.265901226135101
+      ],
+      "contact_offset_basis": [
+        0.04751329395886073,
+        -0.003338259821883878,
+        0.024038363312349438
+      ],
+      "contact_frame_armature_rest": [
+        [
+          0.9995828759073784,
+          -0.00015932909971482789,
+          -0.028879903167648137,
+          0.6279769548270255
+        ],
+        [
+          -0.0288803426699675,
+          -0.005514568875417694,
+          -0.9995676642115747,
+          0.04879468239035877
+        ],
+        [
+          9.094946377240393e-13,
+          0.9999847819563837,
+          -0.005516870094876397,
+          1.265901226135101
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "contact_frame_hand_local": [
+        [
+          5.994925399053354e-08,
+          -0.999984953780878,
+          0.005518137234780184,
+          0.024019583498431585
+        ],
+        [
+          0.9988808837854166,
+          -0.00026093637542353874,
+          -0.04729401557827108,
+          0.04762427325659746
+        ],
+        [
+          0.04729458775846244,
+          0.00551183383907032,
+          0.9988659192818566,
+          -0.0012198477792976434
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "coordinate_description": "Blender RH meters; row-major matrices acting on column vectors; fixture +X distal, +Z thumb-side cylinder axis, +Y completes RH basis",
+      "source_initialization": "Measured current hero glove mesh and original hero SwordGrip frame37; cylinder axis recalculated from this hero MCP/forearm geometry, no old-character transform copied",
+      "index_curl_degrees": [
+        90.22380044278468,
+        34.817819667401054,
+        49.40512332500334
+      ],
+      "middle_curl_degrees": [
+        91.80556606651517,
+        38.10590040279867,
+        63.937407535318975
+      ],
+      "ring_curl_degrees": [
+        80.32358510816242,
+        49.86908393915787,
+        55.81156099771469
+      ],
+      "pinky_curl_degrees": [
+        45.94084570529737,
+        73.28941033837914,
+        33.12272138355242
+      ]
+    }
+  },
+  "revision": "Final_R2_PalmAndTriangleRadialFit",
+  "validation_limits": [
+    "Finite surface sampling and analytic radial projection against an infinite circular cylinder for selected hand triangles only; not an all-scene collision-free statement",
+    "Lowerarm-dominant cuff vertices excluded from hand-contact set",
+    "Palm is close support, not forced all-over contact: see hand region clearance; faceted source topology intentionally preserved",
+    "Single neutral-wrist grip pose measured here; animation owner must validate upper limbs, finite caps, guards, mesh self-intersection and complete animation",
+    "No Unreal or MotionBricks runtime validation performed",
+    "Cylinder fixtures are contact geometry only and are not final weapon art"
+  ],
+  "blender_evaluated_checks": {
+    "r": {
+      "sample_count": 15416,
+      "min_clearance_mm": 0.13670158554073691,
+      "max_sampled_penetration_mm": 0.0,
+      "samples_inside_fixture": 0,
+      "numpy_LBS_vs_Blender_max_mm": 0.0003763899767657036,
+      "numpy_LBS_vs_Blender_rms_mm": 0.00013366728691989251,
+      "analytic_selected_triangles": 1467,
+      "analytic_minimum_radial_clearance_mm": 0.09809855545348141,
+      "analytic_triangles_radially_inside_fixture": 0
+    },
+    "l": {
+      "sample_count": 15416,
+      "min_clearance_mm": 0.13817898571611387,
+      "max_sampled_penetration_mm": 0.0,
+      "samples_inside_fixture": 0,
+      "numpy_LBS_vs_Blender_max_mm": 0.0004270136051961149,
+      "numpy_LBS_vs_Blender_rms_mm": 0.00013160335305868528,
+      "analytic_selected_triangles": 1467,
+      "analytic_minimum_radial_clearance_mm": 0.09860723027018542,
+      "analytic_triangles_radially_inside_fixture": 0
+    }
+  },
+  "source_geometry_preserved": true,
+  "source_bone_rest_preserved": true,
+  "rest_matrix_array_sha256": "fa402e6b6ce50da42e2f86defbb9f4e980ddd84c4877ff76d16cf7b785e58bce",
+  "glove_vertex_array_sha256": "14c8204e2562d6fd6a782389918c84068baf3854874a53dedd1015b530f78a9e",
+  "finger_pose_quaternion_xyzw": {
+    "index_01_r": [
+      0.7072762206863774,
+      -0.041194685959588404,
+      0.0039038561673083796,
+      0.7057252336478487
+    ],
+    "index_02_r": [
+      0.299104556593969,
+      -0.01891281432733008,
+      0.0016513991816257151,
+      0.9540314683277947
+    ],
+    "index_03_r": [
+      0.41520439159800127,
+      -0.026383039152734503,
+      0.0022924481087478687,
+      0.909342615917932
+    ],
+    "index_04_leaf_r": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "middle_01_r": [
+      0.7163236461512758,
+      -0.05275395489394556,
+      0.0039576280030811485,
+      0.6957598661809825
+    ],
+    "middle_02_r": [
+      0.32575291406949747,
+      -0.021051648760871643,
+      0.0017986106424176483,
+      0.9452188276052463
+    ],
+    "middle_03_r": [
+      0.5280872968699548,
+      -0.03809191567813116,
+      0.002917270693434839,
+      0.8483303026393997
+    ],
+    "middle_04_leaf_r": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "pinky_01_r": [
+      0.38905048826327066,
+      -0.031822223530143426,
+      0.0021508265086533215,
+      0.9206641285599423
+    ],
+    "pinky_02_r": [
+      0.5950164301930054,
+      -0.051039893255814275,
+      0.0032905279799721786,
+      0.8020845027317387
+    ],
+    "pinky_03_r": [
+      0.28627180330393254,
+      -0.022617408883121894,
+      0.0015822467327044013,
+      0.9578801615775353
+    ],
+    "pinky_04_leaf_r": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "ring_01_r": [
+      0.6445821151183143,
+      -0.02504595700359882,
+      0.003554314934624361,
+      0.7641164595483594
+    ],
+    "ring_02_r": [
+      0.4213881997525972,
+      -0.013949406977301895,
+      0.002323075119678033,
+      0.9067700935056444
+    ],
+    "ring_03_r": [
+      0.4675937910266549,
+      -0.019272136768281815,
+      0.002578579345231318,
+      0.88372958661927
+    ],
+    "ring_04_leaf_r": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "thumb_01_r": [
+      0.46549085956144814,
+      -0.08407523527234917,
+      -0.06728673832521907,
+      0.8784771535584729
+    ],
+    "thumb_02_r": [
+      0.478599008802172,
+      -0.026650058837303717,
+      -0.10718297089631204,
+      0.8710594548521857
+    ],
+    "thumb_03_r": [
+      -0.0023623693810534527,
+      -0.027413596241197682,
+      0.25107891990946873,
+      0.9675754698880737
+    ],
+    "thumb_04_leaf_r": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "index_01_l": [
+      0.7072770142739833,
+      0.041194750550356055,
+      -0.003903836251187671,
+      0.7057244346551264
+    ],
+    "index_02_l": [
+      0.2985883214190459,
+      0.01888018091033037,
+      -0.0016485496946553589,
+      0.9541938143610311
+    ],
+    "index_03_l": [
+      0.4170602296346632,
+      0.026500975762323707,
+      -0.002302695670402173,
+      0.9084894940137592
+    ],
+    "index_04_leaf_l": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "middle_01_l": [
+      0.7162095895274068,
+      0.0527455668637512,
+      -0.003956973051684771,
+      0.6958779141555458
+    ],
+    "middle_02_l": [
+      0.3257573376618092,
+      0.021051950049360835,
+      -0.0017986357896892743,
+      0.9452172963228642
+    ],
+    "middle_03_l": [
+      0.5280759151401128,
+      0.038091126076510474,
+      -0.0029172090969713984,
+      0.8483374233488938
+    ],
+    "middle_04_leaf_l": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "pinky_01_l": [
+      0.38895102828503025,
+      0.03181410578407022,
+      -0.0021502630897346376,
+      0.9207064334725931
+    ],
+    "pinky_02_l": [
+      0.5946582838631459,
+      0.05100920402783771,
+      -0.003288548839191932,
+      0.8023520249765168
+    ],
+    "pinky_03_l": [
+      0.28415222872039,
+      0.02244996363131422,
+      -0.0015705323332609361,
+      0.9585150199524147
+    ],
+    "pinky_04_leaf_l": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "ring_01_l": [
+      0.6444521069070762,
+      0.02504092150651257,
+      -0.0035535759569802,
+      0.7642262794821002
+    ],
+    "ring_02_l": [
+      0.4213453677636343,
+      0.01394799813504318,
+      -0.0023228396150919038,
+      0.9067900191490174
+    ],
+    "ring_03_l": [
+      0.46761486395104,
+      0.019273018615025627,
+      -0.0025786963748389304,
+      0.8837184167428682
+    ],
+    "ring_04_leaf_l": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "thumb_01_l": [
+      0.46526753090747475,
+      0.08454491189655922,
+      0.06734722186162312,
+      0.8785457496699796
+    ],
+    "thumb_02_l": [
+      0.47896191919595754,
+      0.02609561190325106,
+      0.10690746456655169,
+      0.8709106113829773
+    ],
+    "thumb_03_l": [
+      -0.002526320855203622,
+      0.027416714087499336,
+      -0.2511474251377345,
+      0.9675571881487248
+    ],
+    "thumb_04_leaf_l": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  },
+  "quaternion_conversion": {
+    "input_field": "finger_pose_quaternion_wxyz",
+    "input_order": "WXYZ",
+    "output_order": "XYZW",
+    "operation": "[w,x,y,z] -> [x,y,z,w]; components unchanged",
+    "blender_assignment": "rotation_quaternion expects (w,x,y,z), so invert this permutation when assigning."
+  },
+  "contact_matrix_equation": "T_world_contact = T_world_armature @ T_armature_posed_hand @ T_hand_contact"
+}

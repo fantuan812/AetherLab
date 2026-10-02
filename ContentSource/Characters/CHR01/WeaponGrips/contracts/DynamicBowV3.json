@@ -1,0 +1,1180 @@
+{
+  "schema": "aetherlab.chr01.dynamic-bow-v3.v1",
+  "mode": "DynamicBow",
+  "status": "BLENDER_DYNAMIC_GRIP_CALIBRATED_VISIBLE_REAR_SHOULDER_IMPROVED_HIDDEN_GARMENT_OVERLAP_RETAINED",
+  "provenance": {
+    "source_artifact_relative_path": "reports/CHR01_Bow_DynamicContract.json",
+    "sha256": "d616d423487b3448b9c9913a762c95993779619df8efd8cc135d50ad514dff1e",
+    "bytes": 954423
+  },
+  "baseline_contract_values": {
+    "artifact_identity": "CHR01_165cm_Rainvalley_DynamicBow_v1",
+    "source_character": {
+      "path": "aetherlab_team/stylized_wanderer/v2/CHR01_Wanderer_Editable.blend",
+      "sha256": "b227a2d002aed8724acdfd3f0d1a21aef5652f486b63245ed1278fe96a3eba69",
+      "rig": "CHR01_Wanderer_Rig65",
+      "bone_count": 65,
+      "height_m": 1.650740146636963,
+      "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0"
+    },
+    "bow_master_sha256": "e4c6e18788f466811d07a09987e80bcf4b43230405c75be509be36679bcc7e37",
+    "weapon_geometry": {
+      "components": {
+        "Bow_CabochonBronzeSetting": {
+          "mesh_sha256": "396c57a54e69ab431e046e602b26ce0282ae69e22223336c8995cb84b89e5c6d",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              -4.371138828673793e-08,
+              0.0,
+              1.0,
+              0.024000000208616257
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              -1.0,
+              0.0,
+              -4.371138828673793e-08,
+              -0.09099999815225601
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_Clear120_Elliptical32x28_Grip": {
+          "mesh_sha256": "0b4cdb44a98cdaf120329e351e288590ce1fe47a276eb55cd000ceb0d7d3ffc1",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_RiserBronze_-1": {
+          "mesh_sha256": "dc581f159bac1df8147f9a6bacda51a3d20eab689ecafb41f882b30ded59c79a",
+          "vertices": 40,
+          "triangles": 76,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_RiserBronze_1": {
+          "mesh_sha256": "89e78979b11ddee598819dc82cbddc1e5b4ca763db8e7fa9d670250bcf50c227",
+          "vertices": 40,
+          "triangles": 76,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_RiserSteelInset_-1": {
+          "mesh_sha256": "3e8500e8a792866d12627a91b565481dffeb11e78a2374ae8895a78d55e4dfb8",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_RiserSteelInset_-1.001": {
+          "mesh_sha256": "88d1b68e4b3638649fd1b47720c61635db401379bde1b2e90387c1594ee2d573",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_RiserSteelInset_1": {
+          "mesh_sha256": "fd06645a61c9f3673c193367f5ddde3920a4f8c81043d6e802bc0b6a1c1a4dd5",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_RiserSteelInset_1.001": {
+          "mesh_sha256": "77f2577969446f5bd04758ceef816ad8722320f92969a60fdc62202e4614e768",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_RoundedArrowRest": {
+          "mesh_sha256": "65bfec68ddc8c555443bf05f1f87694795a3999d07c683ad3aa6efea8e84b63a",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.0020000000949949026
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -0.019999999552965164
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.07999999821186066
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_SmallCyanCabochon": {
+          "mesh_sha256": "36c1ad709dc7ee458cb09b029c1a3d683b8fa2e6105d309aca01dc33b5c2536b",
+          "vertices": 62,
+          "triangles": 120,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.027000000700354576
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.09099999815225601
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_String_lower": {
+          "mesh_sha256": "20b6c65a91b10df0f483e00161ffbf5444b01e7f250a0d9f652199d45b285ec4",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              -1.3435885648505064e-07,
+              1.0000001192092896,
+              -5.2853746268510804e-08,
+              -0.17000000178813934
+            ],
+            [
+              1.0000001192092896,
+              -1.3435885648505064e-07,
+              5.2853746268510804e-08,
+              0.0
+            ],
+            [
+              6.181724643283815e-08,
+              -6.181724643283815e-08,
+              -0.8550001978874207,
+              0.054999999701976776
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_String_upper": {
+          "mesh_sha256": "20b6c65a91b10df0f483e00161ffbf5444b01e7f250a0d9f652199d45b285ec4",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.17000000178813934
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.7450000047683716,
+              0.054999999701976776
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_lower_CarvedNock": {
+          "mesh_sha256": "a991889d31227357758df5432dce314dce9671030da9323519ffb9c87f5e187a",
+          "vertices": 42,
+          "triangles": 80,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_lower_LaminatedWood": {
+          "mesh_sha256": "093664328bd2c3f856ff646d6e188bde5ed839f843561aef2a2350fa10fe9661",
+          "vertices": 392,
+          "triangles": 780,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_lower_NavyBacking": {
+          "mesh_sha256": "097ff1a047307a8cf395869fcf59c6ea0d98f8980a26f6dfda2326fa97f5b5d9",
+          "vertices": 196,
+          "triangles": 388,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_upper_CarvedNock": {
+          "mesh_sha256": "d8e69f4fb88cb99d814b5f46a4d9dccca794bf2d26572cae30639de5fe422920",
+          "vertices": 42,
+          "triangles": 80,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_upper_LaminatedWood": {
+          "mesh_sha256": "97bb7a704b1c6a04fb7d854a37db98f2cbd98d65be3e3b5c2278658a4b9e8b86",
+          "vertices": 392,
+          "triangles": 780,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Bow_upper_NavyBacking": {
+          "mesh_sha256": "a9f990a30a31440dc1e07c3cc18ac48465506b4bbd433f05ec6f3bf84a61a21b",
+          "vertices": 196,
+          "triangles": 388,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      },
+      "root_local_bounds_min": [
+        -0.18366718292236328,
+        -0.026999998837709427,
+        -0.8000001907348633
+      ],
+      "root_local_bounds_max": [
+        0.08228329569101334,
+        0.017999999225139618,
+        0.800000011920929
+      ]
+    },
+    "coordinate_system": "Blender RH, +Z up, meters; character faces -Y; bow +X flight and +Z up; row-major matrices acting on column vectors, quaternion XYZW",
+    "anatomy": {
+      "l": {
+        "distal": [
+          0.9995828759073784,
+          -0.0288803426699675,
+          9.094946377240393e-13
+        ],
+        "thumb_side": [
+          -0.02887990316764814,
+          -0.999567664211575,
+          -0.005516870094876398
+        ],
+        "palm": [
+          0.00015932909971506866,
+          0.00551456887541897,
+          -0.9999847819563839
+        ],
+        "sign": 1,
+        "rest_wrist": [
+          0.5803832411766052,
+          0.046697504818439484,
+          1.2899208068847656
+        ],
+        "contact_center_rest": [
+          0.631176430090875,
+          0.048708788616215255,
+          1.2647150650503236
+        ],
+        "contact_offset_basis": [
+          0.05071391528612328,
+          -0.0033382598218838384,
+          0.0252245424484556
+        ],
+        "contact_frame_armature_rest": [
+          [
+            0.9267374181114816,
+            -0.3745980633493617,
+            -0.02887990316764814,
+            0.631176430090875
+          ],
+          [
+            -0.028843181298527774,
+            0.005705747558096943,
+            -0.999567664211575,
+            0.048708788616215255
+          ],
+          [
+            0.3746008926372778,
+            0.9271697446421078,
+            -0.005516870094876398,
+            1.2647150650503236
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "contact_frame_hand_local": [
+          [
+            -0.37460090141904256,
+            -0.9271699264127312,
+            0.005518137234780185,
+            0.0252057449789016
+          ],
+          [
+            0.926048479594546,
+            -0.37442930109749234,
+            -0.047294015578271086,
+            0.05082162223392017
+          ],
+          [
+            0.045915547475967086,
+            -0.012606381062566662,
+            0.9988659192818569,
+            -0.0010750137353554082
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "measured_mcp_heads": {
+          "index": [
+            0.6527354717254639,
+            0.013775095343589783,
+            1.286118507385254
+          ],
+          "middle": [
+            0.6508614420890808,
+            0.03789926692843437,
+            1.2882007360458374
+          ],
+          "ring": [
+            0.6457284092903137,
+            0.06098279729485512,
+            1.2879291772842407
+          ],
+          "pinky": [
+            0.6369287371635437,
+            0.07990370690822601,
+            1.2864806652069092
+          ]
+        }
+      },
+      "r": {
+        "distal": [
+          -0.9995828759814331,
+          -0.028880340106840163,
+          0.0
+        ],
+        "thumb_side": [
+          0.028879900604561613,
+          -0.9995676642855206,
+          -0.00551687011442389
+        ],
+        "palm": [
+          -0.00015932908522966373,
+          0.005514568895391757,
+          -0.9999847819562759
+        ],
+        "sign": -1,
+        "rest_wrist": [
+          -0.5803832411766052,
+          0.046697478741407394,
+          1.2899208068847656
+        ],
+        "contact_center_rest": [
+          -0.6583426204359671,
+          0.02891260870148028,
+          1.2652656447497286
+        ],
+        "contact_offset_basis": [
+          0.07844049362530933,
+          0.015661741208376843,
+          0.02456913223715336
+        ],
+        "contact_frame_armature_rest": [
+          [
+            -0.9995828759814331,
+            -0.00015932908522982414,
+            0.028879900604561613,
+            -0.6583426204359671
+          ],
+          [
+            -0.028880340106840163,
+            0.00551456889539185,
+            -0.9995676642855206,
+            0.02891260870148028
+          ],
+          [
+            0.0,
+            -0.9999847819562758,
+            -0.00551687011442389,
+            1.2652656447497286
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "contact_frame_hand_local": [
+          [
+            -5.995016032606001e-08,
+            -0.9999850133844901,
+            -0.005518137582553302,
+            -0.024655192374305468
+          ],
+          [
+            0.998881304261903,
+            0.0002609024028136022,
+            -0.04729395852975868,
+            0.07761844698581943
+          ],
+          [
+            0.047294585500752356,
+            -0.0055118701153279975,
+            0.9988659205630399,
+            0.01921836831647133
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "measured_mcp_heads": {
+          "index": [
+            -0.6527353525161743,
+            0.013775069266557693,
+            1.286118507385254
+          ],
+          "middle": [
+            -0.6508614420890808,
+            0.03789924085140228,
+            1.2882007360458374
+          ],
+          "ring": [
+            -0.6457284092903137,
+            0.06098277494311333,
+            1.2879291772842407
+          ],
+          "pinky": [
+            -0.6369287371635437,
+            0.07990367710590363,
+            1.2864806652069092
+          ]
+        }
+      }
+    },
+    "frame_range": [
+      1,
+      97
+    ],
+    "fps": 24,
+    "loaded_draw_range": [
+      1,
+      61
+    ],
+    "release_open_range": [
+      61,
+      63
+    ],
+    "limb_return_range": [
+      63,
+      69
+    ],
+    "main_hand": "hand_l",
+    "draw_hand": "hand_r",
+    "support_hand_fixed_transform": null,
+    "release_contract": "hand_r follows changing string nock while loaded through frame61; contact constraint removed after61. Fingers open61–63 while wrist moves25mm backward along bow -X, no sideways pass through curled fingers. String and limb release63–69; free wrist returns neutral after65. No fixed support socket.",
+    "new_contact_frames": true,
+    "max_wrist_deviation_deg": {
+      "l": 22.204291001098426,
+      "r": 24.024874509270738
+    },
+    "physics_force_simulation": false,
+    "surface_collision_proof_from_contact_error": false,
+    "UE_target_mesh": null,
+    "UE_weapon_mesh": null,
+    "UE_import_axes": null,
+    "UE_validated": false,
+    "continuous_string_endpoint_binding": "Each unit-Z authored string mesh tracks a bow-local tip target and derives length from nock-to-tip distance. Tip/nock positions are densely linear keyed; DampedTrack and distance driver keep endpoints coincident at subframes.",
+    "source_geometry_preservation": "Frozen character and authored bow base vertices/topology unchanged. Authored draw shape keys, nock caps and string transforms animate. Helper empties and string endpoint constraints added.",
+    "release_path_fit": "Actual new-hero glove LBS tested across seven opening fractions against V-string before whole-scene audit; pure 25mm backward extraction selected over penetrating lateral withdrawals.",
+    "little_finger_release_contract": "Only loaded index/middle/ring fingers release61–63. The unloaded little finger stays folded through69 to avoid sweeping through the departing V-string, then relaxes69–81.",
+    "hand_constraint_implementation": "Arm and finger poses are baked at every integer frame. Contact-active fields describe the logical target phase, not a fixed Blender support-hand constraint. Bow strings use live endpoint helper constraints/drivers."
+  },
+  "baseline_scene_sha256": "90fcb8bb2f1e3596efbd3a16bdef79fd95caa1ef975d9b1121c286e5e7a8bbcb",
+  "packed_v3_scene_sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+  "derived_editable_file": "source/CHR01_Bow_Grip_DrawRelease.blend",
+  "derived_editable_sha256": "16638c8b3a7291d08e374ea559a571f95553eadd92def24988c3564062a83ad5",
+  "UE_equipment_asset": null,
+  "UE_animation_assets": null,
+  "UE_acceptance_status": "CANCELED_BY_USER",
+  "evidence_summary": "../evidence/DynamicBowV3Review.json",
+  "baseline_clothing_note": "Original contract refers to unchanged baseline. V3 adds cape-only phase shapes; baseline report is not silently rewritten as the v3 identity.",
+  "source_constraint_scope": "No fixed support-hand transform for dynamic draw/release. Arms/fingers are baked; live constraints/drivers are limited to bow-string endpoints and cloth activation.",
+  "baseline_provenance": {
+    "source_artifact_relative_path": "bow_dynamic/reports/CHR01_DynamicBow_Contract.json",
+    "sha256": "3ac1662de8e3a9feb9acae7310f83f704adce7301c5fa6f7614c03270e8b1479",
+    "bytes": 943992
+  },
+  "final_derivative_contract_values": {
+    "artifact_identity": "CHR01_165cm_Rainvalley_DynamicBow_Grip_WithClothLimits_v1",
+    "status": "BLENDER_DYNAMIC_GRIP_CALIBRATED_VISIBLE_REAR_SHOULDER_IMPROVED_HIDDEN_GARMENT_OVERLAP_RETAINED",
+    "known_visual_issue": "Visible rear-shoulder exposure resolved only in scoped 193-frame rear interior evidence. An inherited front-shoulder/armhole visible blue-sleeve patch remains in r_palm_049; hidden garment-shell overlap also persists, 95 sampled times / 212 rays. Full garment clearance failed. Original frozen V2 and original hand/string baseline unchanged.",
+    "derived_editable_file": "source/CHR01_Bow_Grip_DrawRelease.blend",
+    "derived_editable_sha256": "16638c8b3a7291d08e374ea559a571f95553eadd92def24988c3564062a83ad5",
+    "frozen_hand_string_baseline_sha256": "90fcb8bb2f1e3596efbd3a16bdef79fd95caa1ef975d9b1121c286e5e7a8bbcb",
+    "clothing_derivative": {
+      "final_file": "cape_clearance/source/CHR01_DynamicBow_ClothCandidate_v3.blend",
+      "final_sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+      "source_bow_sha256": "90fcb8bb2f1e3596efbd3a16bdef79fd95caa1ef975d9b1121c286e5e7a8bbcb",
+      "scope": "Grip demonstration plus visible rear-shoulder garment correction; not full garment/body clearance.",
+      "phase_count": 14,
+      "shape_key_count": 28,
+      "keys": [
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_001",
+          "peak_frame": 1,
+          "max_rest_delta_m": 0.0216255725575457,
+          "changed_vertices": 313
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_013",
+          "peak_frame": 13,
+          "max_rest_delta_m": 0.024104370696938146,
+          "changed_vertices": 337
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_025",
+          "peak_frame": 25,
+          "max_rest_delta_m": 0.03550001596220866,
+          "changed_vertices": 316
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_037",
+          "peak_frame": 37,
+          "max_rest_delta_m": 0.016413513533077035,
+          "changed_vertices": 304
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_049",
+          "peak_frame": 49,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 313
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_055",
+          "peak_frame": 55,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 313
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_061",
+          "peak_frame": 61,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 313
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_067",
+          "peak_frame": 67,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 318
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_073",
+          "peak_frame": 73,
+          "max_rest_delta_m": 0.034915675051207594,
+          "changed_vertices": 333
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_079",
+          "peak_frame": 79,
+          "max_rest_delta_m": 0.034915675051207594,
+          "changed_vertices": 333
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_085",
+          "peak_frame": 85,
+          "max_rest_delta_m": 0.029971449851388166,
+          "changed_vertices": 325
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_091",
+          "peak_frame": 91,
+          "max_rest_delta_m": 0.018060073751326716,
+          "changed_vertices": 318
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_097",
+          "peak_frame": 97,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 302
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape",
+          "key": "CapeClearance_Bow_Phase_029",
+          "peak_frame": 29,
+          "max_rest_delta_m": 0.03514147526564588,
+          "changed_vertices": 628
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_001",
+          "peak_frame": 1,
+          "max_rest_delta_m": 0.0216255725575457,
+          "changed_vertices": 626
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_013",
+          "peak_frame": 13,
+          "max_rest_delta_m": 0.024104370696938146,
+          "changed_vertices": 674
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_025",
+          "peak_frame": 25,
+          "max_rest_delta_m": 0.03550002048406028,
+          "changed_vertices": 632
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_037",
+          "peak_frame": 37,
+          "max_rest_delta_m": 0.016413513533077035,
+          "changed_vertices": 608
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_049",
+          "peak_frame": 49,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 626
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_055",
+          "peak_frame": 55,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 626
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_061",
+          "peak_frame": 61,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 626
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_067",
+          "peak_frame": 67,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 636
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_073",
+          "peak_frame": 73,
+          "max_rest_delta_m": 0.034915675051207594,
+          "changed_vertices": 666
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_079",
+          "peak_frame": 79,
+          "max_rest_delta_m": 0.034915675051207594,
+          "changed_vertices": 666
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_085",
+          "peak_frame": 85,
+          "max_rest_delta_m": 0.029971449851388166,
+          "changed_vertices": 650
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_091",
+          "peak_frame": 91,
+          "max_rest_delta_m": 0.018060073751326716,
+          "changed_vertices": 636
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_097",
+          "peak_frame": 97,
+          "max_rest_delta_m": 0.016212116630436414,
+          "changed_vertices": 604
+        },
+        {
+          "object": "CHR01 • ivory split shoulder cape_low",
+          "key": "CapeClearance_Bow_Phase_029",
+          "peak_frame": 29,
+          "max_rest_delta_m": 0.03514147526564588,
+          "changed_vertices": 1256
+        }
+      ],
+      "max_rest_delta_m": 0.03550002048406028,
+      "activation_frames": [
+        1,
+        97
+      ],
+      "phase_peak_frames": [
+        1,
+        13,
+        25,
+        29,
+        37,
+        49,
+        55,
+        61,
+        67,
+        73,
+        79,
+        85,
+        91,
+        97
+      ],
+      "interpolation": "Neighboring phase keys crossfade linearly, partition-of-unity within frames1..97; all off for other actions and outside frame bounds. Explicit bone-transform dependencies support immediate same-frame Idle/None isolation.",
+      "visible_exposure": {
+        "sample_count": 193,
+        "frame_step": 0.5,
+        "minimum_nonempty_rays_per_frame": 1033,
+        "exposed_ray_count": 0
+      },
+      "remaining_hidden_shell": {
+        "failed_frames": 95,
+        "ray_count": 212,
+        "minimum_rear_y_ray_gap_m": -0.017811093479394913,
+        "warning": "Rear-axis gap is not Euclidean penetration depth; full apparel clearance remains failed."
+      },
+      "v2b_preview_49_73_equivalence": {
+        "old_sha256": "16db3c565ce3644a02d6b3c27031000fb8d7973ed269abe85373012025c899d1",
+        "before": {
+          "49": "1b115b2391d5daae9f3f91a832559bffad4b21c91dcc018a0060dfeb6711b1f8",
+          "73": "f1fc2af0a68d5ad4c56aa8a9b0a5995f1a40a112bcc64bb1f306c8716a01ca9f"
+        },
+        "after": {
+          "49": "1b115b2391d5daae9f3f91a832559bffad4b21c91dcc018a0060dfeb6711b1f8",
+          "73": "f1fc2af0a68d5ad4c56aa8a9b0a5995f1a40a112bcc64bb1f306c8716a01ca9f"
+        },
+        "pass": true
+      },
+      "independent_review": {
+        "source_sha256": "e9e31ed433181f8cc49fad36d3d3e0cc14e1f88e165ef7b8a14b780dd072500e",
+        "baseline_preservation_and_isolation_pass": true,
+        "actual_source_re_rendered_frames": [
+          29,
+          49,
+          73
+        ],
+        "views": [
+          "rear closeup",
+          "side closeup"
+        ],
+        "visual_scope_accepted": "Grip demonstration and visible rear shoulder correction",
+        "remaining_hidden_shell_confirmation": {
+          "frame": 35.5,
+          "side": "right",
+          "inside_ray_parity_directions": 6,
+          "tested_ray_parity_directions": 6,
+          "approximate_nearest_surface_euclidean_depth_m": 0.000288
+        }
+      }
+    },
+    "final_derivative_hand_string_summary": {
+      "sampled_frames": 241,
+      "frame_step": 0.5,
+      "release_extra_step": 0.125,
+      "max_left_analytic_triangle_intrusions": 0,
+      "min_left_analytic_radial_equivalent_gap_mm": 0.09691565108080336,
+      "max_left_sampled_inside_ellipse": 0,
+      "min_left_radial_equivalent_gap_mm": 0.143791841168599,
+      "min_right_string_surface_gap_mm": 0.2449973098933697,
+      "max_right_axis_intersections": 0,
+      "max_nonhand_axis_intersections": 0,
+      "max_string_endpoint_error_mm": 0.0004924151790695877,
+      "max_wrists_deg": {
+        "l": 22.204291001098426,
+        "r": 24.024874509270738
+      },
+      "string_length_range_m": {
+        "upper": [
+          0.74444567833687,
+          0.7450001075923766
+        ],
+        "lower": [
+          0.8545216158840221,
+          0.8550001977619169
+        ]
+      }
+    },
+    "additional_visible_front_issue_report": "Bow_v3_front_visible_patch_review.json",
+    "UE_acceptance_status": "CANCELED_BY_USER",
+    "UE_import_axis_mapping": null,
+    "UE_equipment_asset": null,
+    "quaternion_orders": {
+      "binding_transform_rotation_xyzw": "XYZW",
+      "raw_finger_pose_quaternion_wxyz": "WXYZ",
+      "Blender_rotation_quaternion_property": "WXYZ"
+    }
+  }
+}

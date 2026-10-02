@@ -1,0 +1,1085 @@
+{
+  "schema": "aetherlab.chr01.fixed-evidence.v1",
+  "scope": "Reported Blender-only finite measurements. Static bundle assembly did not rerun the historical measurements.",
+  "modes": {
+    "SwordShield": {
+      "binding_residuals": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_SwordShield_BindingResiduals.json",
+          "sha256": "02873ba360ff1e7418f8f29e70d5b2a80531d59987ef31b39ec4cbfb363d76d6",
+          "bytes": 61633
+        },
+        "values": {
+          "mode": "SwordShield",
+          "sample_count": 193,
+          "step_frames": 0.5,
+          "maxima": {
+            "sword_main": {
+              "translation_error_m": 4.700506242853666e-05,
+              "rotation_error_deg": 0.0
+            },
+            "shield_main": {
+              "translation_error_m": 9.681285008196357e-06,
+              "rotation_error_deg": 0.0
+            }
+          },
+          "note": "Rigid local-binding residual from dense bone/object interpolation; translation and angle reported separately. Not surface collision evidence."
+        }
+      },
+      "hand_forearm_weapon_surface": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_SwordShield_SurfaceQA.json",
+          "sha256": "0d9d3fc3e346142aa3362269a9a7c5bc1d4cd08cf118a54cc1eb5c15a8d64a30",
+          "bytes": 72470
+        },
+        "values": {
+          "mode": "SwordShield",
+          "source_file": "CHR01_SwordShield_Calibration.blend",
+          "source_file_sha256": "03c4e4929cc4a4d245b2dca6f58f37a62f3173f81b7584dc2e036d296a3ed79c",
+          "geometry_preservation": {
+            "sword": {
+              "component_count": 15,
+              "mesh_hashes_identical": true,
+              "max_component_root_local_transform_error": 1.1920928955078125e-07,
+              "root_scale": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            },
+            "shield": {
+              "component_count": 56,
+              "mesh_hashes_identical": true,
+              "max_component_root_local_transform_error": 1.7881393432617188e-07,
+              "root_scale": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            }
+          },
+          "sample_count": 193,
+          "frame_step": 0.5,
+          "maximum_relative_contact_matrix_error": {
+            "sword_relative_matrix_error": 0.00013402476906776428,
+            "shield_relative_matrix_error": 3.1948089599609375e-05
+          },
+          "maximum_wrist_deviation_deg": {
+            "r": 0,
+            "l": 0
+          },
+          "surface_worst_hits": {},
+          "inside_depth_tolerance_m": 5e-05,
+          "method": "Actual hand/forearm vertices plus face centroids against each original weapon component BVH; 3-direction ray parity confirms interior samples. Cross-weapon checks included.",
+          "limitations": [
+            "Not exhaustive triangle-triangle continuous collision or full-body certification.",
+            "Vertex/centroid samples can miss smaller intersections between samples.",
+            "Contact-frame precision alone does not imply no penetration.",
+            "Unreal validation canceled; all target identities and import axes remain null."
+          ],
+          "UE_validated": false
+        }
+      },
+      "apparel_weapon_keyframes": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/SwordShield_apparel_bidirectional_review.json",
+          "sha256": "8761d9b296f1a06f4bc9970f79b6ef9c3f2ad0232af85caa0d4fecf69ad35203",
+          "bytes": 1172
+        },
+        "values": {
+          "mode": "SwordShield",
+          "apparel": [
+            "CHR01 • fitted leather bracer l_low",
+            "CHR01 • fitted leather bracer r_low",
+            "CHR01 • retopologized sleeve l_low",
+            "CHR01 • retopologized sleeve r_low",
+            "CHR01 • right casting copper cuff_low",
+            "CHR01 • right cuff sea crystal_low"
+          ],
+          "sample_frames": [
+            1,
+            25,
+            37,
+            49,
+            61,
+            73,
+            85,
+            97
+          ],
+          "worst_hits": {},
+          "method": "Bidirectional evaluated mesh vertices and face centroids; 3-ray interior tests; BVH triangle overlap pair detection. 0.05mm minimum reported sample depth.",
+          "limitations": "Keyframe/sample review only; BVH overlap pairs require visual interpretation; not continuous collision or full-body certification."
+        }
+      },
+      "driver_geometry_equivalence": {
+        "provenance": {
+          "source_artifact_relative_path": "cape_clearance/reports/SwordShield_DriverEquivalence193.json",
+          "sha256": "1d0af38b5f852af9f23c9097cd75cf7dd63b3e3cbcec8c20ac8bc08ee2bcacf2",
+          "bytes": 77543
+        },
+        "values": {
+          "mode": "SwordShield",
+          "old_sha256": "79c5833c56218b75b1baa7d8b31399d97d85942cba54252030bee97e62c55593",
+          "new_sha256": "af7a9e3deb5921f23f4d02c6693e776954870baabb9ed3fbc06569c911b925e2",
+          "sample_count": 193,
+          "step": 0.5,
+          "pass": true,
+          "comparison": "Float32 byte-for-byte hashes for each original object world matrix, all bone world matrices, and evaluated vertex coordinates of every render-visible mesh; object transforms separately verified so local-coordinate equality also establishes world-coordinate equality."
+        }
+      },
+      "final_delivery_preservation": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/SwordShield_dependency_v2_delivery_review.json",
+          "sha256": "69b913eea083a6a9789a9ddff92c895510e41b45f39829ad5f5501c9bc5d3f84",
+          "bytes": 720
+        },
+        "values": {
+          "baseline": "cape_clearance/source/CHR01_SwordShield_CapeClearance.blend1",
+          "baseline_sha256": "79c5833c56218b75b1baa7d8b31399d97d85942cba54252030bee97e62c55593",
+          "derivative": "delivery/source/CHR01_SwordShield_Grip.blend",
+          "derivative_sha256": "ace882f3f876f371cba1dad505568beb78615ed19e44890f49d8b1ef6c5a0998",
+          "unexpected_changes": [],
+          "added_shape_summary": [],
+          "checks": "Base mesh data and all original shape coordinates identical; object action F-curves including handle/interpolation values compared directly; existing animated shape action preserved; missing hidden baseline weapons ignored."
+        }
+      },
+      "whole_cape_vs_sleeves_193": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/corrected_cape_sleeve_mesh_review.json",
+          "sha256": "5fc8e75cff420bbfd70c5c57b45c7468848043c8483bce1f17430d334f8c079b",
+          "bytes": 44350
+        },
+        "values": {
+          "path": "delivery/source/CHR01_SwordShield_Grip.blend",
+          "sha256": "1a4ec3dfdac63de026ac758a04aca61fab5d9e5a73125a1155321ce83d4da8d0",
+          "sample_count": 193,
+          "step": 0.5,
+          "frames_with_overlap_pairs": 0,
+          "max_pairs": {
+            "l": 0,
+            "r": 0
+          },
+          "scope": "Evaluated entire low cape vs entire left/right low sleeve mesh triangle-pair BVH intersection, no spatial ROI filtering. Finite half-frame sampling; not swept-time or volumetric containment proof."
+        },
+        "reuse_basis": "Historical corrected source identity, inherited through DriverEquivalence193 and final delivery preservation. No claim that historical images were rerendered from the latest SHA."
+      }
+    },
+    "Staff": {
+      "binding_residuals": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_Staff_BindingResiduals.json",
+          "sha256": "74f1a4eea55616dc43ab04b1e3d29f3f41e624e25025f4e63de47a61e971f6e7",
+          "bytes": 61972
+        },
+        "values": {
+          "mode": "Staff",
+          "sample_count": 193,
+          "step_frames": 0.5,
+          "maxima": {
+            "staff_main": {
+              "translation_error_m": 8.71739143040621e-06,
+              "rotation_error_deg": 0.0
+            },
+            "staff_support": {
+              "translation_error_m": 5.859691730671679e-06,
+              "rotation_error_deg": 0.0
+            }
+          },
+          "note": "Rigid local-binding residual from dense bone/object interpolation; translation and angle reported separately. Not surface collision evidence."
+        }
+      },
+      "hand_forearm_weapon_surface": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_Staff_SurfaceQA.json",
+          "sha256": "5eec8c5f5ab99eee1573c86e3d4ff19d0a1b8dd5ebae5e26d7776734d6903afc",
+          "bytes": 62549
+        },
+        "values": {
+          "mode": "Staff",
+          "source_file": "CHR01_Staff_Calibration.blend",
+          "source_file_sha256": "727e6b31e37bcc960638b3c54d950407296165aad926a9ed7309b76e0644b94c",
+          "geometry_preservation": {
+            "staff": {
+              "component_count": 40,
+              "mesh_hashes_identical": true,
+              "max_component_root_local_transform_error": 1.7881393432617188e-07,
+              "root_scale": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            }
+          },
+          "sample_count": 193,
+          "frame_step": 0.5,
+          "maximum_relative_contact_matrix_error": {
+            "staff_relative_matrix_error": 2.388283610343933e-05,
+            "staff_support_matrix_error": 1.5612691640853882e-05
+          },
+          "maximum_wrist_deviation_deg": {
+            "r": 0,
+            "l": 15.571666760375585
+          },
+          "surface_worst_hits": {},
+          "inside_depth_tolerance_m": 5e-05,
+          "method": "Actual hand/forearm vertices plus face centroids against each original weapon component BVH; 3-direction ray parity confirms interior samples. Cross-weapon checks included.",
+          "limitations": [
+            "Not exhaustive triangle-triangle continuous collision or full-body certification.",
+            "Vertex/centroid samples can miss smaller intersections between samples.",
+            "Contact-frame precision alone does not imply no penetration.",
+            "Unreal validation canceled; all target identities and import axes remain null."
+          ],
+          "UE_validated": false
+        }
+      },
+      "apparel_weapon_keyframes": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/Staff_apparel_bidirectional_review.json",
+          "sha256": "5696820f552f2432b565dd70de96f31b42f77183b67301c24eb948dbd4bff6b1",
+          "bytes": 1166
+        },
+        "values": {
+          "mode": "Staff",
+          "apparel": [
+            "CHR01 • fitted leather bracer l_low",
+            "CHR01 • fitted leather bracer r_low",
+            "CHR01 • retopologized sleeve l_low",
+            "CHR01 • retopologized sleeve r_low",
+            "CHR01 • right casting copper cuff_low",
+            "CHR01 • right cuff sea crystal_low"
+          ],
+          "sample_frames": [
+            1,
+            25,
+            37,
+            49,
+            61,
+            73,
+            85,
+            97
+          ],
+          "worst_hits": {},
+          "method": "Bidirectional evaluated mesh vertices and face centroids; 3-ray interior tests; BVH triangle overlap pair detection. 0.05mm minimum reported sample depth.",
+          "limitations": "Keyframe/sample review only; BVH overlap pairs require visual interpretation; not continuous collision or full-body certification."
+        }
+      },
+      "driver_geometry_equivalence": {
+        "provenance": {
+          "source_artifact_relative_path": "cape_clearance/reports/Staff_DriverEquivalence193.json",
+          "sha256": "4790392b7ec9018c562a5741ccb93fd96f6ac7109d873f922c99e749fda790df",
+          "bytes": 77537
+        },
+        "values": {
+          "mode": "Staff",
+          "old_sha256": "55f1b755739c6299cda3d7b1617af4b35e976c3f3bc6fea5d0f325a3217ad39e",
+          "new_sha256": "858917decefe648e9c3c00d349555b0334dc64fdbd801d4302331a7a754c873c",
+          "sample_count": 193,
+          "step": 0.5,
+          "pass": true,
+          "comparison": "Float32 byte-for-byte hashes for each original object world matrix, all bone world matrices, and evaluated vertex coordinates of every render-visible mesh; object transforms separately verified so local-coordinate equality also establishes world-coordinate equality."
+        }
+      },
+      "final_delivery_preservation": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/Staff_dependency_v2_delivery_review.json",
+          "sha256": "51399262d98f79f78ec926b7de083b2dfb2358e1e1a6f239ccaa225028a0bd8e",
+          "bytes": 708
+        },
+        "values": {
+          "baseline": "cape_clearance/source/CHR01_Staff_CapeClearance.blend1",
+          "baseline_sha256": "55f1b755739c6299cda3d7b1617af4b35e976c3f3bc6fea5d0f325a3217ad39e",
+          "derivative": "delivery/source/CHR01_Staff_Grip.blend",
+          "derivative_sha256": "505fe9d9bf87498ee0e938071cba729154ebd7ef1b56f900a9ac0837b9c1cf5b",
+          "unexpected_changes": [],
+          "added_shape_summary": [],
+          "checks": "Base mesh data and all original shape coordinates identical; object action F-curves including handle/interpolation values compared directly; existing animated shape action preserved; missing hidden baseline weapons ignored."
+        }
+      },
+      "whole_cape_vs_sleeves_193": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/corrected_cape_sleeve_mesh_review.json",
+          "sha256": "5fc8e75cff420bbfd70c5c57b45c7468848043c8483bce1f17430d334f8c079b",
+          "bytes": 44350
+        },
+        "values": {
+          "path": "delivery/source/CHR01_Staff_Grip.blend",
+          "sha256": "1913c08d5d9a308406577a7b6025499de843755147c1a02eecad34e32b377251",
+          "sample_count": 193,
+          "step": 0.5,
+          "frames_with_overlap_pairs": 0,
+          "max_pairs": {
+            "l": 0,
+            "r": 0
+          },
+          "scope": "Evaluated entire low cape vs entire left/right low sleeve mesh triangle-pair BVH intersection, no spatial ROI filtering. Finite half-frame sampling; not swept-time or volumetric containment proof."
+        },
+        "reuse_basis": "Historical corrected source identity, inherited through DriverEquivalence193 and final delivery preservation. No claim that historical images were rerendered from the latest SHA."
+      }
+    },
+    "Hammer": {
+      "binding_residuals": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_Hammer_BindingResiduals.json",
+          "sha256": "226211275ac13d989e37cf3f45a983994381357f312481d4b5b54cc6973be63d",
+          "bytes": 62403
+        },
+        "values": {
+          "mode": "Hammer",
+          "sample_count": 193,
+          "step_frames": 0.5,
+          "maxima": {
+            "hammer_main": {
+              "translation_error_m": 9.523866576187306e-06,
+              "rotation_error_deg": 0.0
+            },
+            "hammer_support": {
+              "translation_error_m": 2.648724842284845e-05,
+              "rotation_error_deg": 0.0
+            }
+          },
+          "note": "Rigid local-binding residual from dense bone/object interpolation; translation and angle reported separately. Not surface collision evidence."
+        }
+      },
+      "hand_forearm_weapon_surface": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_Hammer_SurfaceQA.json",
+          "sha256": "96df7a4c5947e2c9cc5663eac0510f4610a1277d83f35949a30952c4f6f55cf0",
+          "bytes": 63443
+        },
+        "values": {
+          "mode": "Hammer",
+          "source_file": "CHR01_Hammer_Calibration.blend",
+          "source_file_sha256": "2ed74c880123f24d4046bb258a4fc8e1f021b5c954eca581125335d16027c52c",
+          "geometry_preservation": {
+            "hammer": {
+              "component_count": 37,
+              "mesh_hashes_identical": true,
+              "max_component_root_local_transform_error": 1.1920928955078125e-07,
+              "root_scale": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            }
+          },
+          "sample_count": 193,
+          "frame_step": 0.5,
+          "maximum_relative_contact_matrix_error": {
+            "hammer_relative_matrix_error": 2.6088207960128784e-05,
+            "hammer_support_matrix_error": 0.00010885298252105713
+          },
+          "maximum_wrist_deviation_deg": {
+            "r": 0,
+            "l": 15.64129029368011
+          },
+          "surface_worst_hits": {},
+          "inside_depth_tolerance_m": 5e-05,
+          "method": "Actual hand/forearm vertices plus face centroids against each original weapon component BVH; 3-direction ray parity confirms interior samples. Cross-weapon checks included.",
+          "limitations": [
+            "Not exhaustive triangle-triangle continuous collision or full-body certification.",
+            "Vertex/centroid samples can miss smaller intersections between samples.",
+            "Contact-frame precision alone does not imply no penetration.",
+            "Unreal validation canceled; all target identities and import axes remain null."
+          ],
+          "UE_validated": false
+        }
+      },
+      "apparel_weapon_keyframes": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/Hammer_apparel_bidirectional_review.json",
+          "sha256": "ccf5e5412c505f69dae46a8f1f6531c5febf3050233fca850143c9a83542dcf4",
+          "bytes": 1167
+        },
+        "values": {
+          "mode": "Hammer",
+          "apparel": [
+            "CHR01 • fitted leather bracer l_low",
+            "CHR01 • fitted leather bracer r_low",
+            "CHR01 • retopologized sleeve l_low",
+            "CHR01 • retopologized sleeve r_low",
+            "CHR01 • right casting copper cuff_low",
+            "CHR01 • right cuff sea crystal_low"
+          ],
+          "sample_frames": [
+            1,
+            25,
+            37,
+            49,
+            61,
+            73,
+            85,
+            97
+          ],
+          "worst_hits": {},
+          "method": "Bidirectional evaluated mesh vertices and face centroids; 3-ray interior tests; BVH triangle overlap pair detection. 0.05mm minimum reported sample depth.",
+          "limitations": "Keyframe/sample review only; BVH overlap pairs require visual interpretation; not continuous collision or full-body certification."
+        }
+      },
+      "driver_geometry_equivalence": {
+        "provenance": {
+          "source_artifact_relative_path": "cape_clearance/reports/Hammer_DriverEquivalence193.json",
+          "sha256": "873ef5d2ff03ef8aa3f735090c9992ebe38f8c94d8d5cb78bd449a989c23aed0",
+          "bytes": 77538
+        },
+        "values": {
+          "mode": "Hammer",
+          "old_sha256": "be2b16a5f757b97a6318d7381de7e8e13f9336a02d45fb5a429ab245ba2b924a",
+          "new_sha256": "addde29a880bcc00a8d7fa14efa8174b6dc3c58ff91390fe2bf97f717d0b8620",
+          "sample_count": 193,
+          "step": 0.5,
+          "pass": true,
+          "comparison": "Float32 byte-for-byte hashes for each original object world matrix, all bone world matrices, and evaluated vertex coordinates of every render-visible mesh; object transforms separately verified so local-coordinate equality also establishes world-coordinate equality."
+        }
+      },
+      "final_delivery_preservation": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/Hammer_final_delivery_review.json",
+          "sha256": "80cf9a27ab5ecdc39d258ec510e16390319c17859fea3f7aa05896fe39a9a174",
+          "bytes": 709
+        },
+        "values": {
+          "baseline": "cape_clearance/source/CHR01_Hammer_CapeClearance.blend",
+          "baseline_sha256": "addde29a880bcc00a8d7fa14efa8174b6dc3c58ff91390fe2bf97f717d0b8620",
+          "derivative": "delivery/source/CHR01_Hammer_Grip.blend",
+          "derivative_sha256": "8dddf39035b4bc971dc6278b118fbc5a249aa2265e9a59d748675b1e3a5c478c",
+          "unexpected_changes": [],
+          "added_shape_summary": [],
+          "checks": "Base mesh data and all original shape coordinates identical; object action F-curves including handle/interpolation values compared directly; existing animated shape action preserved; missing hidden baseline weapons ignored."
+        }
+      },
+      "cloth_scope": {
+        "new_keys": [
+          {
+            "object": "CHR01 • ivory split shoulder cape",
+            "key": "CapeClearance_Hammer",
+            "max_rest_delta_m": 0.009800028271713064,
+            "changed_vertices": 162
+          },
+          {
+            "object": "CHR01 • ivory split shoulder cape_low",
+            "key": "CapeClearance_Hammer",
+            "max_rest_delta_m": 0.009800028271713064,
+            "changed_vertices": 324
+          },
+          {
+            "object": "CHR01 • retopologized sleeve l",
+            "key": "CapeClearance_Hammer",
+            "max_rest_delta_m": 0.005972865669752609,
+            "changed_vertices": 24
+          },
+          {
+            "object": "CHR01 • retopologized sleeve l_low",
+            "key": "CapeClearance_Hammer",
+            "max_rest_delta_m": 0.005972865669752609,
+            "changed_vertices": 24
+          },
+          {
+            "object": "CHR01 • retopologized sleeve r",
+            "key": "CapeClearance_Hammer",
+            "max_rest_delta_m": 0.0007787693294175502,
+            "changed_vertices": 11
+          },
+          {
+            "object": "CHR01 • retopologized sleeve r_low",
+            "key": "CapeClearance_Hammer",
+            "max_rest_delta_m": 0.0007787693294175502,
+            "changed_vertices": 11
+          }
+        ],
+        "activation": "Driver reads numeric property from the currently selected armature action; all other actions fallback to 0. Clip frames 1 through 97 inclusive activate at constant value 1, frame 0 and 98 off; no ramps or extrapolation.",
+        "dependency_patch_report": "Hammer_DriverDependencyPatch.json",
+        "full_garment_zero_intersection": false,
+        "visible_back_interior_test_passed": true,
+        "hidden_shell_test_passed": false,
+        "remaining_issue": "Confirmed hidden right-shoulder shell penetration, including representative 0.555mm nearest-surface point at frame73"
+      },
+      "author_clothing_report": {
+        "provenance": {
+          "source_artifact_relative_path": "cape_clearance/reports/Hammer_ClearanceQA.json",
+          "sha256": "f019460dd8344892b2438ec17746ecde73be5ecb713407163226af00ec8d3eda",
+          "bytes": 73554
+        },
+        "values": {
+          "mode": "Hammer",
+          "file": "cape_clearance/source/CHR01_Hammer_CapeClearance.blend",
+          "sha256": "be2b16a5f757b97a6318d7381de7e8e13f9336a02d45fb5a429ab245ba2b924a",
+          "nonempty_coverage_assertion": true,
+          "sampled_frames": 193,
+          "frame_step": 0.5,
+          "rear_ray_world_grid_step_m": 0.003,
+          "scope": "Rear cape interior, y-facing normal >0.3, at least 25mm geodesic distance from original cape boundary, world |x| .120-.228 and z1.248-1.356; two sleeves against real evaluated low cape shell.",
+          "all_scoped_exposure_and_shell_tests_pass": false,
+          "bad_frames": [
+            64.5,
+            65.0,
+            65.5,
+            66.0,
+            66.5,
+            67.0,
+            67.5,
+            68.0,
+            68.5,
+            69.0,
+            69.5,
+            70.0,
+            70.5,
+            71.0,
+            71.5,
+            72.0,
+            72.5,
+            73.0,
+            73.5,
+            74.0,
+            74.5,
+            75.0,
+            75.5,
+            76.0,
+            76.5,
+            77.0,
+            77.5,
+            78.0,
+            78.5,
+            79.0,
+            82.5,
+            84.0,
+            87.0
+          ],
+          "max_visible_penetration_m": 0,
+          "min_scoped_backray_air_clearance_m": -0.021545208990573883,
+          "full_mesh_BVH_overlap_pairs_including_original_seams": [
+            {
+              "frame": 1.0,
+              "l": 0,
+              "r": 216
+            },
+            {
+              "frame": 25.0,
+              "l": 0,
+              "r": 216
+            },
+            {
+              "frame": 49.0,
+              "l": 0,
+              "r": 210
+            },
+            {
+              "frame": 73.0,
+              "l": 0,
+              "r": 280
+            },
+            {
+              "frame": 97.0,
+              "l": 0,
+              "r": 216
+            }
+          ],
+          "diagnostic_pixels": [],
+          "limitations": [
+            "Finite rear ray grid and half-frame samples are not continuous exhaustive triangle-triangle clearance proof.",
+            "Cape edge/armhole/seam overlap outside scoped interior is intentionally not globally remodeled.",
+            "Frozen V2 already contains this apparel overlap; no claim of whole-source full-apparel clearance."
+          ]
+        }
+      }
+    },
+    "Spear": {
+      "binding_residuals": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_Spear_BindingResiduals.json",
+          "sha256": "09cce90c6dd9b2567d99beb83eaf00feed18a3a64baaea01df19aae59173ed5a",
+          "bytes": 69174
+        },
+        "values": {
+          "mode": "Spear",
+          "sample_count": 193,
+          "step_frames": 0.5,
+          "maxima": {
+            "spear_main": {
+              "translation_error_m": 1.4913296798648722e-05,
+              "rotation_error_deg": 0.0022408940640474204
+            },
+            "spear_support": {
+              "translation_error_m": 1.3406159462325714e-05,
+              "rotation_error_deg": 0.000916352912692857
+            }
+          },
+          "note": "Rigid local-binding residual from dense bone/object interpolation; translation and angle reported separately. Not surface collision evidence."
+        }
+      },
+      "hand_forearm_weapon_surface": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_Spear_SurfaceQA.json",
+          "sha256": "291df3da865e783c53f7d17c5984a8c6e57acb1f83840464dc0bc79adf3a4243",
+          "bytes": 63088
+        },
+        "values": {
+          "mode": "Spear",
+          "source_file": "CHR01_Spear_Calibration.blend",
+          "source_file_sha256": "b0a4eabac95f10eb81428ed0601e60f1e070a32f348de07cbb98aa4484efcbce",
+          "geometry_preservation": {
+            "spear": {
+              "component_count": 24,
+              "mesh_hashes_identical": true,
+              "max_component_root_local_transform_error": 1.341104507446289e-07,
+              "root_scale": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            }
+          },
+          "sample_count": 193,
+          "frame_step": 0.5,
+          "maximum_relative_contact_matrix_error": {
+            "spear_relative_matrix_error": 3.382936120033264e-05,
+            "spear_support_matrix_error": 1.5347730368375778e-05
+          },
+          "maximum_wrist_deviation_deg": {
+            "r": 0,
+            "l": 17.17551812089964
+          },
+          "surface_worst_hits": {},
+          "inside_depth_tolerance_m": 5e-05,
+          "method": "Actual hand/forearm vertices plus face centroids against each original weapon component BVH; 3-direction ray parity confirms interior samples. Cross-weapon checks included.",
+          "limitations": [
+            "Not exhaustive triangle-triangle continuous collision or full-body certification.",
+            "Vertex/centroid samples can miss smaller intersections between samples.",
+            "Contact-frame precision alone does not imply no penetration.",
+            "Unreal validation canceled; all target identities and import axes remain null."
+          ],
+          "UE_validated": false
+        }
+      },
+      "apparel_weapon_keyframes": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/Spear_apparel_bidirectional_review.json",
+          "sha256": "8e32590a501d7a030d14efc7ed7ba06ec01d3be09c7bcdac2e125b51b65d7b04",
+          "bytes": 1166
+        },
+        "values": {
+          "mode": "Spear",
+          "apparel": [
+            "CHR01 • fitted leather bracer l_low",
+            "CHR01 • fitted leather bracer r_low",
+            "CHR01 • retopologized sleeve l_low",
+            "CHR01 • retopologized sleeve r_low",
+            "CHR01 • right casting copper cuff_low",
+            "CHR01 • right cuff sea crystal_low"
+          ],
+          "sample_frames": [
+            1,
+            25,
+            37,
+            49,
+            61,
+            73,
+            85,
+            97
+          ],
+          "worst_hits": {},
+          "method": "Bidirectional evaluated mesh vertices and face centroids; 3-ray interior tests; BVH triangle overlap pair detection. 0.05mm minimum reported sample depth.",
+          "limitations": "Keyframe/sample review only; BVH overlap pairs require visual interpretation; not continuous collision or full-body certification."
+        }
+      },
+      "driver_geometry_equivalence": {
+        "provenance": {
+          "source_artifact_relative_path": "cape_clearance/reports/Spear_DriverEquivalence193.json",
+          "sha256": "490e5fd1bbd286c4c5be24a13022b4d5b3e38c774ba30fa74b0299998cde6ddb",
+          "bytes": 77537
+        },
+        "values": {
+          "mode": "Spear",
+          "old_sha256": "3999b6d741b0e24365b0a258372640ff9dd9077f50369f812a975753c43a3fd5",
+          "new_sha256": "1bfdc78702ba7466cddb4b3f631a8c741bda93b256627ed8600ebd7ef55fecc5",
+          "sample_count": 193,
+          "step": 0.5,
+          "pass": true,
+          "comparison": "Float32 byte-for-byte hashes for each original object world matrix, all bone world matrices, and evaluated vertex coordinates of every render-visible mesh; object transforms separately verified so local-coordinate equality also establishes world-coordinate equality."
+        }
+      },
+      "final_delivery_preservation": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/Spear_final_delivery_review.json",
+          "sha256": "3473e59e90390f6d8aa305a67a1f25db180d578ee6a5c3360a8b2e5626dd9adc",
+          "bytes": 707
+        },
+        "values": {
+          "baseline": "cape_clearance/source/CHR01_Spear_CapeClearance.blend",
+          "baseline_sha256": "1bfdc78702ba7466cddb4b3f631a8c741bda93b256627ed8600ebd7ef55fecc5",
+          "derivative": "delivery/source/CHR01_Spear_Grip.blend",
+          "derivative_sha256": "0922973e05693e446e8a3e472013616f7f970fcc7b92fdcc3722f1b129e3849e",
+          "unexpected_changes": [],
+          "added_shape_summary": [],
+          "checks": "Base mesh data and all original shape coordinates identical; object action F-curves including handle/interpolation values compared directly; existing animated shape action preserved; missing hidden baseline weapons ignored."
+        }
+      },
+      "cloth_scope": {
+        "new_keys": [
+          {
+            "object": "CHR01 • ivory split shoulder cape",
+            "key": "CapeClearance_Spear",
+            "max_rest_delta_m": 0.009800028271713064,
+            "changed_vertices": 156
+          },
+          {
+            "object": "CHR01 • ivory split shoulder cape_low",
+            "key": "CapeClearance_Spear",
+            "max_rest_delta_m": 0.009800028271713064,
+            "changed_vertices": 312
+          },
+          {
+            "object": "CHR01 • retopologized sleeve l",
+            "key": "CapeClearance_Spear",
+            "max_rest_delta_m": 0.005602091486061772,
+            "changed_vertices": 24
+          },
+          {
+            "object": "CHR01 • retopologized sleeve l_low",
+            "key": "CapeClearance_Spear",
+            "max_rest_delta_m": 0.005602091486061772,
+            "changed_vertices": 24
+          },
+          {
+            "object": "CHR01 • retopologized sleeve r",
+            "key": "CapeClearance_Spear",
+            "max_rest_delta_m": 0.0012705129922595275,
+            "changed_vertices": 11
+          },
+          {
+            "object": "CHR01 • retopologized sleeve r_low",
+            "key": "CapeClearance_Spear",
+            "max_rest_delta_m": 0.0012705129922595275,
+            "changed_vertices": 11
+          }
+        ],
+        "activation": "Driver reads numeric property from the currently selected armature action; all other actions fallback to 0. Clip frames 1 through 97 inclusive activate at constant value 1, frame 0 and 98 off; no ramps or extrapolation.",
+        "dependency_patch_report": "Spear_DriverDependencyPatch.json",
+        "full_garment_zero_intersection": false,
+        "visible_back_interior_test_passed": true,
+        "hidden_shell_test_passed": true,
+        "remaining_issue": "Retained armhole/edge triangle intersections; scoped back-interior clearance is not global clothing clearance"
+      },
+      "author_clothing_report": {
+        "provenance": {
+          "source_artifact_relative_path": "cape_clearance/reports/Spear_ClearanceQA.json",
+          "sha256": "50ffb7512885219b2b53cd40a1b6e42a0001480bd3210f1c927957540b69d531",
+          "bytes": 57703
+        },
+        "values": {
+          "mode": "Spear",
+          "file": "cape_clearance/source/CHR01_Spear_CapeClearance.blend",
+          "sha256": "3999b6d741b0e24365b0a258372640ff9dd9077f50369f812a975753c43a3fd5",
+          "nonempty_coverage_assertion": true,
+          "sampled_frames": 193,
+          "frame_step": 0.5,
+          "rear_ray_world_grid_step_m": 0.003,
+          "scope": "Rear cape interior, y-facing normal >0.3, at least 25mm geodesic distance from original cape boundary, world |x| .120-.228 and z1.248-1.356; two sleeves against real evaluated low cape shell.",
+          "all_scoped_exposure_and_shell_tests_pass": true,
+          "bad_frames": [],
+          "max_visible_penetration_m": 0,
+          "min_scoped_backray_air_clearance_m": 0.002704896032810211,
+          "full_mesh_BVH_overlap_pairs_including_original_seams": [
+            {
+              "frame": 1.0,
+              "l": 6,
+              "r": 0
+            },
+            {
+              "frame": 25.0,
+              "l": 6,
+              "r": 0
+            },
+            {
+              "frame": 49.0,
+              "l": 0,
+              "r": 0
+            },
+            {
+              "frame": 73.0,
+              "l": 0,
+              "r": 0
+            },
+            {
+              "frame": 97.0,
+              "l": 6,
+              "r": 0
+            }
+          ],
+          "diagnostic_pixels": [],
+          "limitations": [
+            "Finite rear ray grid and half-frame samples are not continuous exhaustive triangle-triangle clearance proof.",
+            "Cape edge/armhole/seam overlap outside scoped interior is intentionally not globally remodeled.",
+            "Frozen V2 already contains this apparel overlap; no claim of whole-source full-apparel clearance."
+          ]
+        }
+      }
+    },
+    "Greatsword": {
+      "binding_residuals": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_Greatsword_BindingResiduals.json",
+          "sha256": "e0e27aa2996a339844abb69da867e36f0fe3c6ac982158e8d9d61be347dc3643",
+          "bytes": 71080
+        },
+        "values": {
+          "mode": "Greatsword",
+          "sample_count": 193,
+          "step_frames": 0.5,
+          "maxima": {
+            "greatsword_main": {
+              "translation_error_m": 1.4087162605496541e-05,
+              "rotation_error_deg": 0.0031089169267050983
+            },
+            "greatsword_support": {
+              "translation_error_m": 3.636932835714718e-05,
+              "rotation_error_deg": 0.009437219821116291
+            }
+          },
+          "note": "Rigid local-binding residual from dense bone/object interpolation; translation and angle reported separately. Not surface collision evidence."
+        }
+      },
+      "hand_forearm_weapon_surface": {
+        "provenance": {
+          "source_artifact_relative_path": "reports/CHR01_Greatsword_SurfaceQA.json",
+          "sha256": "bdb69ebf4bdc46508f662754b5ae41ebdbc4dce1ebb87757484d467bd7b21671",
+          "bytes": 66961
+        },
+        "values": {
+          "mode": "Greatsword",
+          "source_file": "CHR01_Greatsword_Calibration.blend",
+          "source_file_sha256": "87e523c84956a9c5e6091f9a8ddfa69c5cbb45165797f958ac561f8cee93850f",
+          "geometry_preservation": {
+            "greatsword": {
+              "component_count": 24,
+              "mesh_hashes_identical": true,
+              "max_component_root_local_transform_error": 7.078051567077637e-08,
+              "root_scale": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            }
+          },
+          "sample_count": 193,
+          "frame_step": 0.5,
+          "maximum_relative_contact_matrix_error": {
+            "greatsword_relative_matrix_error": 3.714859485626221e-05,
+            "greatsword_support_matrix_error": 0.00015119463205337524
+          },
+          "maximum_wrist_deviation_deg": {
+            "r": 0,
+            "l": 20.766565209114713
+          },
+          "surface_worst_hits": {},
+          "inside_depth_tolerance_m": 5e-05,
+          "method": "Actual hand/forearm vertices plus face centroids against each original weapon component BVH; 3-direction ray parity confirms interior samples. Cross-weapon checks included.",
+          "limitations": [
+            "Not exhaustive triangle-triangle continuous collision or full-body certification.",
+            "Vertex/centroid samples can miss smaller intersections between samples.",
+            "Contact-frame precision alone does not imply no penetration.",
+            "Unreal validation canceled; all target identities and import axes remain null."
+          ],
+          "UE_validated": false
+        }
+      },
+      "apparel_weapon_keyframes": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/Greatsword_apparel_bidirectional_review.json",
+          "sha256": "60591c25f73d391aae43410369fc4a6e364e342c5852b51902c2650fd814eb59",
+          "bytes": 1171
+        },
+        "values": {
+          "mode": "Greatsword",
+          "apparel": [
+            "CHR01 • fitted leather bracer l_low",
+            "CHR01 • fitted leather bracer r_low",
+            "CHR01 • retopologized sleeve l_low",
+            "CHR01 • retopologized sleeve r_low",
+            "CHR01 • right casting copper cuff_low",
+            "CHR01 • right cuff sea crystal_low"
+          ],
+          "sample_frames": [
+            1,
+            25,
+            37,
+            49,
+            61,
+            73,
+            85,
+            97
+          ],
+          "worst_hits": {},
+          "method": "Bidirectional evaluated mesh vertices and face centroids; 3-ray interior tests; BVH triangle overlap pair detection. 0.05mm minimum reported sample depth.",
+          "limitations": "Keyframe/sample review only; BVH overlap pairs require visual interpretation; not continuous collision or full-body certification."
+        }
+      },
+      "driver_geometry_equivalence": {
+        "provenance": {
+          "source_artifact_relative_path": "cape_clearance/reports/Greatsword_DriverEquivalence193.json",
+          "sha256": "aec2af6e813d90048b98e490098e716bae120b70d1903e6c046a8e2741abdbeb",
+          "bytes": 77542
+        },
+        "values": {
+          "mode": "Greatsword",
+          "old_sha256": "f30584944f952cc17e79a517dc581dc62547240e15796bba5b7d46a0a614ed3e",
+          "new_sha256": "476d3c94fce802ec505d21d900e33b390a8bb1a5d92ba95152cf39acea49566c",
+          "sample_count": 193,
+          "step": 0.5,
+          "pass": true,
+          "comparison": "Float32 byte-for-byte hashes for each original object world matrix, all bone world matrices, and evaluated vertex coordinates of every render-visible mesh; object transforms separately verified so local-coordinate equality also establishes world-coordinate equality."
+        }
+      },
+      "final_delivery_preservation": {
+        "provenance": {
+          "source_artifact_relative_path": "independent_review/Greatsword_final_delivery_review.json",
+          "sha256": "95e64140e722f49f3a653e058284ef79c997db9ee16fe0d02a159368af99b2d9",
+          "bytes": 717
+        },
+        "values": {
+          "baseline": "cape_clearance/source/CHR01_Greatsword_CapeClearance.blend",
+          "baseline_sha256": "476d3c94fce802ec505d21d900e33b390a8bb1a5d92ba95152cf39acea49566c",
+          "derivative": "delivery/source/CHR01_Greatsword_Grip.blend",
+          "derivative_sha256": "d1ff8ef94a25ced38ab2d791dea2c4433011bb486496ebee5309eebb309e0aff",
+          "unexpected_changes": [],
+          "added_shape_summary": [],
+          "checks": "Base mesh data and all original shape coordinates identical; object action F-curves including handle/interpolation values compared directly; existing animated shape action preserved; missing hidden baseline weapons ignored."
+        }
+      },
+      "cloth_scope": {
+        "new_keys": [
+          {
+            "object": "CHR01 • ivory split shoulder cape",
+            "key": "CapeClearance_Greatsword",
+            "max_rest_delta_m": 0.00980002650841194,
+            "changed_vertices": 140
+          },
+          {
+            "object": "CHR01 • ivory split shoulder cape_low",
+            "key": "CapeClearance_Greatsword",
+            "max_rest_delta_m": 0.00980002650841194,
+            "changed_vertices": 280
+          },
+          {
+            "object": "CHR01 • retopologized sleeve l",
+            "key": "CapeClearance_Greatsword",
+            "max_rest_delta_m": 0.005617671886482737,
+            "changed_vertices": 24
+          },
+          {
+            "object": "CHR01 • retopologized sleeve l_low",
+            "key": "CapeClearance_Greatsword",
+            "max_rest_delta_m": 0.005617671886482737,
+            "changed_vertices": 24
+          },
+          {
+            "object": "CHR01 • retopologized sleeve r",
+            "key": "CapeClearance_Greatsword",
+            "max_rest_delta_m": 0.0012791375187682602,
+            "changed_vertices": 9
+          },
+          {
+            "object": "CHR01 • retopologized sleeve r_low",
+            "key": "CapeClearance_Greatsword",
+            "max_rest_delta_m": 0.0012791375187682602,
+            "changed_vertices": 9
+          }
+        ],
+        "activation": "Driver reads numeric property from the currently selected armature action; all other actions fallback to 0. Clip frames 1 through 97 inclusive activate at constant value 1, frame 0 and 98 off; no ramps or extrapolation.",
+        "dependency_patch_report": "Greatsword_DriverDependencyPatch.json",
+        "full_garment_zero_intersection": false,
+        "visible_back_interior_test_passed": true,
+        "hidden_shell_test_passed": true,
+        "remaining_issue": "Retained armhole/edge triangle intersections; scoped back-interior clearance is not global clothing clearance"
+      },
+      "author_clothing_report": {
+        "provenance": {
+          "source_artifact_relative_path": "cape_clearance/reports/Greatsword_ClearanceQA.json",
+          "sha256": "580f190f1a6b6303e5f7ea0aa68508902bfc96d26f096e5a82d987e87f9416d6",
+          "bytes": 57872
+        },
+        "values": {
+          "mode": "Greatsword",
+          "file": "cape_clearance/source/CHR01_Greatsword_CapeClearance.blend",
+          "sha256": "f30584944f952cc17e79a517dc581dc62547240e15796bba5b7d46a0a614ed3e",
+          "nonempty_coverage_assertion": true,
+          "sampled_frames": 193,
+          "frame_step": 0.5,
+          "rear_ray_world_grid_step_m": 0.003,
+          "scope": "Rear cape interior, y-facing normal >0.3, at least 25mm geodesic distance from original cape boundary, world |x| .120-.228 and z1.248-1.356; two sleeves against real evaluated low cape shell.",
+          "all_scoped_exposure_and_shell_tests_pass": true,
+          "bad_frames": [],
+          "max_visible_penetration_m": 0,
+          "min_scoped_backray_air_clearance_m": 0.003418959677219391,
+          "full_mesh_BVH_overlap_pairs_including_original_seams": [
+            {
+              "frame": 1.0,
+              "l": 0,
+              "r": 38
+            },
+            {
+              "frame": 25.0,
+              "l": 0,
+              "r": 38
+            },
+            {
+              "frame": 49.0,
+              "l": 0,
+              "r": 152
+            },
+            {
+              "frame": 73.0,
+              "l": 0,
+              "r": 248
+            },
+            {
+              "frame": 97.0,
+              "l": 0,
+              "r": 38
+            }
+          ],
+          "diagnostic_pixels": [],
+          "limitations": [
+            "Finite rear ray grid and half-frame samples are not continuous exhaustive triangle-triangle clearance proof.",
+            "Cape edge/armhole/seam overlap outside scoped interior is intentionally not globally remodeled.",
+            "Frozen V2 already contains this apparel overlap; no claim of whole-source full-apparel clearance."
+          ]
+        }
+      }
+    }
+  },
+  "Hammer_representative_shell_point": {
+    "provenance": {
+      "source_artifact_relative_path": "independent_review/Hammer_shell_point_review.json",
+      "sha256": "65f1512ce8b0e947cb5afbf59ef0fa7e69e5d47b7826149db296671a9ab26658",
+      "bytes": 4049
+    },
+    "values": {
+      "file": "cape_clearance/source/CHR01_Hammer_CapeClearance.blend",
+      "sha256": "addde29a880bcc00a8d7fa14efa8174b6dc3c58ff91390fe2bf97f717d0b8620",
+      "frame": 73,
+      "sleeve_surface_point_world_m": [
+        -0.16200000047683716,
+        0.04430222511291504,
+        1.343999981880188
+      ],
+      "sleeve_face": 67,
+      "cape_mesh_topology": {
+        "verts": 4290,
+        "faces": 8576,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0
+      },
+      "nearest_cape_distance_m": 0.0005554418894462287,
+      "nearest_cape_face": 5807,
+      "nearest_cape_signed_normal_projection_m": -0.0005554418959832219,
+      "inside_votes": 6,
+      "cape_sleeve_overlap_pairs": 280
+    }
+  },
+  "limitations": [
+    "Finite point/triangle and temporal samples do not prove all-surface or swept-time collision clearance.",
+    "Reported quaternion/basis wrist deviation is not a clinical joint limit.",
+    "Hammer retains hidden shell penetration. Spear/Greatsword retain armhole/edge intersections.",
+    "Zero relative contact error is not collision proof; no live arm IK in the delivered fixed clips."
+  ]
+}

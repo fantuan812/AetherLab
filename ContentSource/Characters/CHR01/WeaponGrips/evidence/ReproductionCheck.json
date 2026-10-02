@@ -1,0 +1,132 @@
+{
+  "schema": "aetherlab.chr01.readonly-reproduction.v1",
+  "script": "scripts/verify_blender_bindings.py",
+  "script_sha256": "c968d7976c53a9a1419207df51fe3c21ddb570189bbb0fecee47a5119f5adbc2",
+  "execution": "Actual read-only Blender 4.3.2 runs on all six exact external scene identities; no render/save/UE execution.",
+  "results": [
+    {
+      "sample_count": 193,
+      "frame_step": 0.5,
+      "maxima": {
+        "sword_main": {
+          "translation_error_m": 4.700506242853666e-05,
+          "rotation_error_deg": 0.00783508831259878
+        },
+        "shield_main": {
+          "translation_error_m": 9.681285008196357e-06,
+          "rotation_error_deg": 0.0019377317373115582
+        }
+      },
+      "collision_tested": false,
+      "mode": "SwordShield",
+      "scene_sha256": "ace882f3f876f371cba1dad505568beb78615ed19e44890f49d8b1ef6c5a0998",
+      "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+      "scene_file_unchanged": true,
+      "blender_version": "4.3.2",
+      "UE_run": false
+    },
+    {
+      "sample_count": 193,
+      "frame_step": 0.5,
+      "maxima": {
+        "staff_main": {
+          "translation_error_m": 8.71739143040621e-06,
+          "rotation_error_deg": 0.0014612657280033475
+        },
+        "staff_support": {
+          "translation_error_m": 5.859691730671679e-06,
+          "rotation_error_deg": 0.0009063132415671931
+        }
+      },
+      "collision_tested": false,
+      "mode": "Staff",
+      "scene_sha256": "505fe9d9bf87498ee0e938071cba729154ebd7ef1b56f900a9ac0837b9c1cf5b",
+      "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+      "scene_file_unchanged": true,
+      "blender_version": "4.3.2",
+      "UE_run": false
+    },
+    {
+      "sample_count": 193,
+      "frame_step": 0.5,
+      "maxima": {
+        "hammer_main": {
+          "translation_error_m": 9.523866576187306e-06,
+          "rotation_error_deg": 0.002048989492252127
+        },
+        "hammer_support": {
+          "translation_error_m": 2.648724842284845e-05,
+          "rotation_error_deg": 0.006727996276846492
+        }
+      },
+      "collision_tested": false,
+      "mode": "Hammer",
+      "scene_sha256": "8dddf39035b4bc971dc6278b118fbc5a249aa2265e9a59d748675b1e3a5c478c",
+      "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+      "scene_file_unchanged": true,
+      "blender_version": "4.3.2",
+      "UE_run": false
+    },
+    {
+      "sample_count": 193,
+      "frame_step": 0.5,
+      "maxima": {
+        "spear_main": {
+          "translation_error_m": 1.4913296798648722e-05,
+          "rotation_error_deg": 0.0022408940640474204
+        },
+        "spear_support": {
+          "translation_error_m": 1.3406159462325714e-05,
+          "rotation_error_deg": 0.000916352912692857
+        }
+      },
+      "collision_tested": false,
+      "mode": "Spear",
+      "scene_sha256": "0922973e05693e446e8a3e472013616f7f970fcc7b92fdcc3722f1b129e3849e",
+      "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+      "scene_file_unchanged": true,
+      "blender_version": "4.3.2",
+      "UE_run": false
+    },
+    {
+      "sample_count": 193,
+      "frame_step": 0.5,
+      "maxima": {
+        "greatsword_main": {
+          "translation_error_m": 1.4087162605496541e-05,
+          "rotation_error_deg": 0.0031089169267050983
+        },
+        "greatsword_support": {
+          "translation_error_m": 3.636932835714718e-05,
+          "rotation_error_deg": 0.009437219821116291
+        }
+      },
+      "collision_tested": false,
+      "mode": "Greatsword",
+      "scene_sha256": "d1ff8ef94a25ced38ab2d791dea2c4433011bb486496ebee5309eebb309e0aff",
+      "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+      "scene_file_unchanged": true,
+      "blender_version": "4.3.2",
+      "UE_run": false
+    },
+    {
+      "sample_count": 245,
+      "maxima": {
+        "main_contact_origin_error_m": 3.106490073160831e-06,
+        "string_to_helper_endpoint_error_m": 4.924151790695877e-07,
+        "actual_limb_ring_center_offset_m": 0.00030082464365763597
+      },
+      "collision_tested": false,
+      "draw_contact_recomputed": false,
+      "scope": "Main contact origin and two distinct endpoint metrics only; not full author/independent collision audits.",
+      "mode": "DynamicBow",
+      "scene_sha256": "16638c8b3a7291d08e374ea559a571f95553eadd92def24988c3564062a83ad5",
+      "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+      "scene_file_unchanged": true,
+      "blender_version": "4.3.2",
+      "UE_run": false
+    }
+  ],
+  "comparison_note": "Fixed translation maxima reproduce archived values exactly. SVD/atan2 returns small nonzero angular residuals for SwordShield/Staff/Hammer where archived reports show zero; archived evidence is retained, not overwritten. No absolute zero-rotation claim.",
+  "coverage_limit": "This reproduces binding/origin/endpoint metrics only. It does not rerun collision, clothing, draw-hand contact or full preservation audits."
+}

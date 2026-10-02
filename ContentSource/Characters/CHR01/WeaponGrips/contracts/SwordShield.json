@@ -1,0 +1,2439 @@
+{
+  "schema": "aetherlab.chr01.fixed-grip.v1",
+  "provenance": {
+    "source_artifact_relative_path": "reports/CHR01_SwordShield_Contract.json",
+    "sha256": "f2334dec0ee1a3950caea942df63c74c69c8cee4551f78f857b63cb491a0338e",
+    "bytes": 493453
+  },
+  "representation": "Exact selected original values; dense animation samples and key-pose matrices remain in the original report in the Library source package.",
+  "artifact_identity": "CHR01_165cm_SevenWeapons_GripCalibration_v1",
+  "status": "BLENDER_GRIP_CALIBRATION_WITH_SCOPED_CLOTH_CORRECTIVES",
+  "mode": "SwordShield",
+  "scope": "Blender-only; no UE import or acceptance",
+  "coordinate_system": "Blender RH meters, +Z up, character faces -Y; row-major serialized matrices acting on column vectors; quaternion XYZW",
+  "frozen_character": {
+    "filename": "CHR01_Wanderer_Editable.blend",
+    "sha256": "b227a2d002aed8724acdfd3f0d1a21aef5652f486b63245ed1278fe96a3eba69",
+    "height_m": 1.650740146636963,
+    "rig_object": "CHR01_Wanderer_Rig65",
+    "bone_count": 65,
+    "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+    "hands_rest_sha256": "6e5caae72524ddfb5168066cac87866d3115a1fa415683097627ccfd331b80b2"
+  },
+  "new_contact_calibration_sha256": "98332740f5a8e2a6c4364f79df5fe440f4f52ec591df9ed455536af74571dc88",
+  "frame_range": [
+    1,
+    97
+  ],
+  "fps": 24,
+  "weapon_geometry": {
+    "sword": {
+      "components": {
+        "Sword_CoinPommel": {
+          "mesh_sha256": "1836ec956562004091a08e2499b8536b63e4488cdffed6326679c1d4168dfb24",
+          "vertices": 266,
+          "triangles": 528,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.08900000154972076
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_ForgedTaperedGuardSleeve": {
+          "mesh_sha256": "3f6db99433dc0503926d0ce78b54309995f23fbac6385035702e12d0476070cb",
+          "vertices": 48,
+          "triangles": 92,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.07349999994039536
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_FulleredSteelBlade_750mm": {
+          "mesh_sha256": "a2fe2f19ae5743c8adb2145a2f65673f9cd56767736f7f7c84257d4d2aa44f2c",
+          "vertices": 84,
+          "triangles": 164,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_GripCollar": {
+          "mesh_sha256": "6d332273fcc68960e26fbaa1c7007891414d57960f9f9f328332caea63f58e6c",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.07699999958276749
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_GripCollar.001": {
+          "mesh_sha256": "6d332273fcc68960e26fbaa1c7007891414d57960f9f9f328332caea63f58e6c",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.061000000685453415
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_GuardBlueInlay": {
+          "mesh_sha256": "cbefe74e52fd2e26ea4c4da47a3a279e377c7c647d2403ff62eb74919f05dacd",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_GuardBlueInlay.001": {
+          "mesh_sha256": "3dc4fba18a68c9e10df65ebd506172f6e7c6b0783853a206322dc1f496b542a9",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_GuardRecessPanel": {
+          "mesh_sha256": "bf111bbafc55f9ba082b6312cd3fc5bd2a43295c56303b18cc0e3331fe1d9e3c",
+          "vertices": 72,
+          "triangles": 140,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_GuardRecessPanel.001": {
+          "mesh_sha256": "fe3ef288ab3d9dd7f7ea3e0485657a6e86e9f7517c9a532a889f592442b201e4",
+          "vertices": 72,
+          "triangles": 140,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_LeatherGrip_Finished28mm": {
+          "mesh_sha256": "158295e76916285858825f63fcf7ae3f59321fc1d7ce3502c020fe3fae5dc50e",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.012500000186264515
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_PommelCabochon": {
+          "mesh_sha256": "99f5801dd4027bbd5caed3e778d36b937a73d43970406598aa68d86c78bd2817",
+          "vertices": 182,
+          "triangles": 360,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -0.014000000432133675
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.08900000154972076
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_PommelCabochon.001": {
+          "mesh_sha256": "f09a85aef46270b85c887ff5e4e2092292c6b0bf674b52b5c5026307c76309f1",
+          "vertices": 182,
+          "triangles": 360,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.014000000432133675
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.08900000154972076
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_SleeveRetainingLip": {
+          "mesh_sha256": "ec6e1e2d588ba4f7a5a7e2937e8b06100afb898b7e9b969b6674b4ec33f13c0f",
+          "vertices": 80,
+          "triangles": 156,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.06400000303983688
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_SleeveRetainingLip.001": {
+          "mesh_sha256": "466d4a81408bc9ea8d0686b502585b08054f3973b651870a9538d42d956a5e65",
+          "vertices": 80,
+          "triangles": 156,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.08150000125169754
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Sword_SweptBronzeGuard": {
+          "mesh_sha256": "87344521da7cd854a4f3da09c9d329b12b0afbcf4c60cbb51da8200bd60c34a9",
+          "vertices": 78,
+          "triangles": 152,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      },
+      "root_local_bounds_min": [
+        -0.08480272442102432,
+        -0.018000001087784767,
+        -0.10500000417232513
+      ],
+      "root_local_bounds_max": [
+        0.08480272442102432,
+        0.018000001087784767,
+        0.8450000286102295
+      ]
+    },
+    "shield": {
+      "components": {
+        "Shield_BuckleTongue": {
+          "mesh_sha256": "451d2eb84da6855284f600f06fa908e603f47d858b243ed7e10979a6a88b9aec",
+          "vertices": 12,
+          "triangles": 20,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_DiamondBezel": {
+          "mesh_sha256": "0bee0c082c84dc7ede45518d8523e62f7ffc133147bad44d1cd180eae9eed8fb",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_FacetedWaystone": {
+          "mesh_sha256": "7ddf92cae33cca5a86b222a218415cbc96245b787eebe5c0583066a8a8d271b3",
+          "vertices": 5,
+          "triangles": 6,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_FoldedSilverRim": {
+          "mesh_sha256": "968e72bd5f4e30b1cf54f28c00e934bc1d6e5092a8aacbfa7b6c9d06502cb047",
+          "vertices": 392,
+          "triangles": 784,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_GripTerminal": {
+          "mesh_sha256": "e5b25bd804b09073cabcef29aedc5ba944698eb9dec48e31f8d21291642961b7",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.0860000029206276
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_GripTerminal.001": {
+          "mesh_sha256": "e5b25bd804b09073cabcef29aedc5ba944698eb9dec48e31f8d21291642961b7",
+          "vertices": 96,
+          "triangles": 188,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0860000029206276
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_HandGrip_Finished28mm": {
+          "mesh_sha256": "09a328660dbfe1420752982aa125ce533810d0ebaa930a41d6ea51b3bca4879a",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_HandleStandoff": {
+          "mesh_sha256": "8b0a34d2ad184fcb0d4450ab41a6b0825e2ec0db5538c10507f00084bd410844",
+          "vertices": 32,
+          "triangles": 60,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_HandleStandoff.001": {
+          "mesh_sha256": "4aa833640a4b53ade26d1f5aab008c41c36ae652ccc58717164a39da5c4e0066",
+          "vertices": 32,
+          "triangles": 60,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_OpeningForearmLeatherBand": {
+          "mesh_sha256": "ad887a061c76673fbabe5a0712c55944059297487f461ea882d67a638c803e63",
+          "vertices": 208,
+          "triangles": 412,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_PetalChasedEdge": {
+          "mesh_sha256": "f9883471fa4fda9d960629859bf05ba70f120b5ad9edf8816d2b5e50bee43d66",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_PetalChasedEdge.001": {
+          "mesh_sha256": "9ddff3c0b01e8f7b786d40a75fcc18c94f305c87443dfd927597ff34251e04b9",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_PetalChasedEdge.002": {
+          "mesh_sha256": "0fc473036663cef26f9ee5b062fa763ff307755515e161990462ac3dabdf49ea",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_PetalChasedEdge.003": {
+          "mesh_sha256": "2f5830b31dd199f965bce9a30307a70e4ed2b843d69dd9de9170449cf71537a3",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_PetalChasedEdge.004": {
+          "mesh_sha256": "8fe626d613c3368bce371ad76a40e20e85c4a7cd6d84d981f11e2b4732f9b4bd",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_PetalChasedEdge.005": {
+          "mesh_sha256": "06d3d8252e4aa61fc68d7a0b7bf54c1520e974e5d1d1839e67ca3844b4575da0",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_PetalChasedEdge.006": {
+          "mesh_sha256": "a52dc68d3b005a2dd46d3f07d366dfed0ab57e0fd50ef1e52fe8b14473be04a6",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_PetalChasedEdge.007": {
+          "mesh_sha256": "bba8e0de6a0660991ad598b05499628fe542f942b3f6a8dc043d85c3776f15fe",
+          "vertices": 16,
+          "triangles": 28,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RaisedTaperedPetal": {
+          "mesh_sha256": "16dbef653922bfd57c9f32364182764637c22fb2e518d9498ab0f0b528909303",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RaisedTaperedPetal.001": {
+          "mesh_sha256": "17630f71b9821a67fee1d44e3cfb7152c7dc818a7462c47dd82907a4a01211a6",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RaisedTaperedPetal.002": {
+          "mesh_sha256": "42ddb34bdd38a546ef650a38c800ddb512900c9d7cb878ed9b4a3485df603933",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RaisedTaperedPetal.003": {
+          "mesh_sha256": "b32ab63379754e8d1429314587dc99c20d8cfb5692b985ada13eaf91a0c6ea9c",
+          "vertices": 64,
+          "triangles": 124,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimEscutcheon": {
+          "mesh_sha256": "4bdae8335bb0cbfa15d53dc75b81c5b71773e99ee1a9c9b93d24cb66833160a6",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimEscutcheon.001": {
+          "mesh_sha256": "471b4573fe18c93515d878e2b1a492294dd213a32a713e160e8ee003dcea24d7",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimEscutcheon.002": {
+          "mesh_sha256": "6d7f9d89a9f123d8eda43bd07e534b1add737e1b28aa8e36bfbafde5e364b03b",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimEscutcheon.003": {
+          "mesh_sha256": "dde1ab27c09871f71f9b526e9854f063c3b329f580662877d133975e5037c3a4",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet": {
+          "mesh_sha256": "f9e1300656552bb2ff979d7747782b161f6cccff44a9ccaa9a67b8d0f6bd391f",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.2994599938392639
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.001": {
+          "mesh_sha256": "3a8e6b629058d255c9e97322da7be5c3410c31b8a3762656ae2ee0d3e2a9951a",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.08872133493423462
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.27666497230529785
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.002": {
+          "mesh_sha256": "268c10a62dc150ceb457da6dce976c06f551a30caca1f2af05a50f5258f97045",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.1639356017112732
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.21175019443035126
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.003": {
+          "mesh_sha256": "e988e760cba323e3497918ca75bd5eee8088465b61be391d8b61df0a1f770909",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.2141922116279602
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.11459837853908539
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.004": {
+          "mesh_sha256": "7a87e3d74ececbd9dea7f1a7ae28f3259316852e91167b9edf2c5939641c9f40",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.23184001445770264
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              1.8336637070971323e-17
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.005": {
+          "mesh_sha256": "268c10a62dc150ceb457da6dce976c06f551a30caca1f2af05a50f5258f97045",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.2141922116279602
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.11459837853908539
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.006": {
+          "mesh_sha256": "85bc054d524c056de72976cc5bcaf19bd8443c245a129a7ba27f25979f7043f8",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.1639356017112732
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.21175019443035126
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.007": {
+          "mesh_sha256": "f9e1300656552bb2ff979d7747782b161f6cccff44a9ccaa9a67b8d0f6bd391f",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.08872133493423462
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.27666497230529785
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.008": {
+          "mesh_sha256": "de01f206c523ccb2647ac06b0c3255bb133431c6eba722f47f6202dfbaea6f01",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.2994599938392639
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.009": {
+          "mesh_sha256": "3a8e6b629058d255c9e97322da7be5c3410c31b8a3762656ae2ee0d3e2a9951a",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.08872133493423462
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.27666497230529785
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.010": {
+          "mesh_sha256": "d39ea422d41711ef900cae08f9894925ffe48c6a76fb96df82f90372ee93ccee",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.1639356017112732
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.21175019443035126
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.011": {
+          "mesh_sha256": "3a8e6b629058d255c9e97322da7be5c3410c31b8a3762656ae2ee0d3e2a9951a",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.2141922116279602
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.11459837853908539
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.012": {
+          "mesh_sha256": "d39ea422d41711ef900cae08f9894925ffe48c6a76fb96df82f90372ee93ccee",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.23184001445770264
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -5.5009909558552744e-17
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.013": {
+          "mesh_sha256": "3a8e6b629058d255c9e97322da7be5c3410c31b8a3762656ae2ee0d3e2a9951a",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.2141922116279602
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.11459837853908539
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.014": {
+          "mesh_sha256": "268c10a62dc150ceb457da6dce976c06f551a30caca1f2af05a50f5258f97045",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.1639356017112732
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.21175019443035126
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_RimRivet.015": {
+          "mesh_sha256": "d39ea422d41711ef900cae08f9894925ffe48c6a76fb96df82f90372ee93ccee",
+          "vertices": 26,
+          "triangles": 48,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.08872133493423462
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.11699999868869781
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.27666497230529785
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_StandoffMount": {
+          "mesh_sha256": "3afa841676aeb115a3dfbeaeb5a864a90e919f90689d93f208176a6bfdf01a35",
+          "vertices": 114,
+          "triangles": 224,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.12603673338890076
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.0860000029206276
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_StandoffMount.001": {
+          "mesh_sha256": "d26da8b59e8bcb2965b0e9d033c1c4a363ea9b6b43f3fa376e6f95d4a4851b3a",
+          "vertices": 114,
+          "triangles": 224,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.12603673338890076
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0860000029206276
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_StrapAnchor": {
+          "mesh_sha256": "9d7350c7e412ced543f5e22963576fcd7d23c64f54fe24597e98c1ab42cfd5ae",
+          "vertices": 18,
+          "triangles": 32,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_StrapAnchor.001": {
+          "mesh_sha256": "25d6570f8c98a2d29fb12f8ad139d0c405a0f356d049495f0a635c72beebf342",
+          "vertices": 18,
+          "triangles": 32,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_StrapMount": {
+          "mesh_sha256": "74ebb737295ccfbc20215cab7c3a5a339e74d2bdf3fbba2a97119c9e143c408f",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.16500002145767212
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.10465523600578308
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.057999998331069946
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_StrapMount.001": {
+          "mesh_sha256": "74ebb737295ccfbc20215cab7c3a5a339e74d2bdf3fbba2a97119c9e143c408f",
+          "vertices": 24,
+          "triangles": 44,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              -0.16500002145767212
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.10419072210788727
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.06599999964237213
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_StrappedBronzeBuckle": {
+          "mesh_sha256": "3d87dbb471daf538c637e88d5f0dcc71c27d6cf9a000000b6a23dd85939357b0",
+          "vertices": 30,
+          "triangles": 56,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_TimberPlank_1": {
+          "mesh_sha256": "709b093fb8b34cb8942fc13493c1a6114672f54189ca1fdad1a90221e2e432d0",
+          "vertices": 58,
+          "triangles": 112,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_TimberPlank_2": {
+          "mesh_sha256": "6713987c84e3752c1d2cb104767bc425b42df252373b3163ef73d06713feb8d4",
+          "vertices": 70,
+          "triangles": 136,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_TimberPlank_3": {
+          "mesh_sha256": "cc591e55c363074d58511efdd78c9e113c159f599bbe4eaf3554555387f51d11",
+          "vertices": 70,
+          "triangles": 136,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_TimberPlank_4": {
+          "mesh_sha256": "d52f0ae7a7c597f2627d59b12b8953eb0abff751e48b927d59dd264b83017edb",
+          "vertices": 70,
+          "triangles": 136,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_TimberPlank_5": {
+          "mesh_sha256": "4fc7eb2e866b4931dcae9b730eaeb387fdae6fc4a20b3d30fc490ae554aff3f5",
+          "vertices": 70,
+          "triangles": 136,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_TimberPlank_6": {
+          "mesh_sha256": "45e3744df72e5258d492bef312c08d454e7e0366fb91c3c555379fc9daedcc0d",
+          "vertices": 70,
+          "triangles": 136,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        "Shield_TimberPlank_7": {
+          "mesh_sha256": "31d323f1b851e657920e514e2ee68c40806aa6d6cb1baee53436aed74d960edf",
+          "vertices": 58,
+          "triangles": 112,
+          "root_local_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      },
+      "root_local_bounds_min": [
+        -0.23999999463558197,
+        -0.03947224095463753,
+        -0.3100000023841858
+      ],
+      "root_local_bounds_max": [
+        0.23999999463558197,
+        0.17800000309944153,
+        0.3100000023841858
+      ]
+    }
+  },
+  "source_bindings": [
+    {
+      "weapon": "sword",
+      "root_object": "WPN_01_Oathroad_Sword",
+      "main_bone": "hand_r",
+      "weapon_local_to_hand_local": {
+        "matrix4x4": [
+          [
+            -1.4156103134155273e-07,
+            -0.999984860420227,
+            -0.005518188700079918,
+            -0.0240124873816967
+          ],
+          [
+            0.9988812804222107,
+            0.000260903500020504,
+            -0.047293905168771744,
+            0.047616757452487946
+          ],
+          [
+            0.047294504940509796,
+            -0.005512075498700142,
+            0.9988660216331482,
+            -0.0012206155806779861
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          -0.0240124873816967,
+          0.047616757452487946,
+          -0.0012206155806779861
+        ],
+        "rotation_xyzw": [
+          0.014775330200791359,
+          -0.01867618039250374,
+          0.7068601250648499,
+          0.7069523930549622
+        ],
+        "scale": [
+          1.000000238418579,
+          1.0,
+          1.000000238418579
+        ]
+      },
+      "support_bone": null,
+      "support_hand_local_to_weapon_local": null,
+      "support_contact_in_weapon_m": null,
+      "UE_target_mesh": null,
+      "UE_weapon_mesh": null,
+      "UE_equipment_asset": null,
+      "UE_import_axis_mapping": null
+    },
+    {
+      "weapon": "shield",
+      "root_object": "WPN_08_Roadward_Shield",
+      "main_bone": "hand_l",
+      "weapon_local_to_hand_local": {
+        "matrix4x4": [
+          [
+            3.129363790321804e-07,
+            -0.9999846816062927,
+            0.0055179414339363575,
+            0.024019813165068626
+          ],
+          [
+            0.9988811016082764,
+            -0.00026072553009726107,
+            -0.04729374870657921,
+            0.04762434586882591
+          ],
+          [
+            0.0472944974899292,
+            0.005512114614248276,
+            0.9988660216331482,
+            -0.0012204418890178204
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "translation_m": [
+          0.024019813165068626,
+          0.04762434586882591,
+          -0.0012204418890178204
+        ],
+        "rotation_xyzw": [
+          0.018676094710826874,
+          -0.014775263145565987,
+          0.7069522738456726,
+          0.7068602442741394
+        ],
+        "scale": [
+          1.0000001192092896,
+          0.9999998807907104,
+          1.000000238418579
+        ]
+      },
+      "support_bone": null,
+      "support_hand_local_to_weapon_local": null,
+      "support_contact_in_weapon_m": null,
+      "UE_target_mesh": null,
+      "UE_weapon_mesh": null,
+      "UE_equipment_asset": null,
+      "UE_import_axis_mapping": null
+    }
+  ],
+  "max_wrist_deviation_deg": {
+    "r": 0.0,
+    "l": 0.0
+  },
+  "measurement_limit": "Contact frame closure alone is not surface collision proof. Separate measured hand/forearm surface samples and rendered multi-view review required.",
+  "UE_validated": false,
+  "UE_acceptance_status": "CANCELED_BY_USER",
+  "constraint_implementation": "Fixed weapon-local support relation solved analytically, then densely baked; no live IK constraint in this deliverable",
+  "cloth_clearance_issue": "Frozen V2 has visible cape/sleeve penetration; this separate demo adds bounded corrective shape keys. Frozen character remains unchanged.",
+  "cloth_corrective": {
+    "new_keys": [
+      {
+        "object": "CHR01 • ivory split shoulder cape",
+        "key": "CapeClearance_SwordShield",
+        "max_rest_delta_m": 0.009800028271713064,
+        "changed_vertices": 139
+      },
+      {
+        "object": "CHR01 • ivory split shoulder cape_low",
+        "key": "CapeClearance_SwordShield",
+        "max_rest_delta_m": 0.009800028271713064,
+        "changed_vertices": 278
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l",
+        "key": "CapeClearance_SwordShield",
+        "max_rest_delta_m": 0.005649413038560241,
+        "changed_vertices": 24
+      },
+      {
+        "object": "CHR01 • retopologized sleeve l_low",
+        "key": "CapeClearance_SwordShield",
+        "max_rest_delta_m": 0.005649413038560241,
+        "changed_vertices": 24
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r",
+        "key": "CapeClearance_SwordShield",
+        "max_rest_delta_m": 0.001134222954490167,
+        "changed_vertices": 11
+      },
+      {
+        "object": "CHR01 • retopologized sleeve r_low",
+        "key": "CapeClearance_SwordShield",
+        "max_rest_delta_m": 0.001134222954490167,
+        "changed_vertices": 11
+      }
+    ],
+    "activation": "Driver reads numeric property from the currently selected armature action; all other actions fallback to 0. Clip frames 1 through 97 inclusive activate at constant value 1, frame 0 and 98 off; no ramps or extrapolation.",
+    "original_basis_weights_rest_old_shapes_preserved": true,
+    "preservation_report": "SwordShield_Preservation.json",
+    "scope": "Only this grip demo copy; not a claim of all-original-character clothing clearance",
+    "driver_caveat": "Updated explicit pose dependencies remove previously observed same-frame action-switch staleness; independently tested Idle/Grip/None with view_layer.update only, no frame_set. Blender 4.3.2 may still log the nested action ID-property registration warning; NLA/other applications not validated.",
+    "dependency_patch_report": "SwordShield_DriverDependencyPatch.json",
+    "render_reuse_equivalence_report": "SwordShield_DriverEquivalence193.json"
+  },
+  "derived_editable_file": "source/CHR01_SwordShield_Grip.blend",
+  "derived_editable_sha256": "ace882f3f876f371cba1dad505568beb78615ed19e44890f49d8b1ef6c5a0998",
+  "revision": "DependencyRefresh_1",
+  "quaternion_orders": {
+    "binding_transform_rotation_xyzw": "XYZW",
+    "raw_finger_pose_quaternion_wxyz": "WXYZ",
+    "Blender_rotation_quaternion_property": "WXYZ"
+  },
+  "evidence_summary": "../evidence/FixedGripReview.json"
+}

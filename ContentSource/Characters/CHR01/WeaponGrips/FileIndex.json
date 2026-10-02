@@ -1,0 +1,86 @@
+{
+  "schema": "aetherlab.chr01.text-file-index.v1",
+  "self_excluded": true,
+  "files": [
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/contracts/DynamicBowV3.json",
+      "bytes": 33901,
+      "sha256": "8b791903ce583d055c1d899ff50665cbb4bbefa3e0631f06812d49c056b000e8"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/contracts/FrozenCharacter.json",
+      "bytes": 2742,
+      "sha256": "3e6956352246b9c4e3502aaf593dd5a23d5204c0f4e2267d5c0ba7cff269e1a6"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/contracts/Greatsword.json",
+      "bytes": 23055,
+      "sha256": "b6c407ff8b961742149d978dac54db09adeab465068cfd68ba2cf62a5d882ad2"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/contracts/Grip28.json",
+      "bytes": 14799,
+      "sha256": "d0bdea6eaab67dcdceefd5c8205315c82512a2afd445e6bbf8ab456b59401851"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/contracts/Grip32.json",
+      "bytes": 14806,
+      "sha256": "c0bdb5d804531281f202fc8b64f2806459708747063c88eb4ecc674fe52c46f5"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/contracts/Hammer.json",
+      "bytes": 31970,
+      "sha256": "4b5ac1bcad0e6217f8a94daccfe7884b2bdb18a8df5e2ac5424abf2e5fef1668"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/contracts/Spear.json",
+      "bytes": 22852,
+      "sha256": "153a8246e69b6b94a06fb799bdc305fddd4eaccddb3fadb354a8f41c4c2dc547"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/contracts/Staff.json",
+      "bytes": 33812,
+      "sha256": "a3200974272f3610bf1e5e274b8ed76cd2deacecc800f18059556162a0456cd2"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/contracts/SwordShield.json",
+      "bytes": 55673,
+      "sha256": "495d402770aee8f1eea9c6c66ff6333f1977a0c2d5757ee0abd14a822368f568"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/evidence/DynamicBowV3Review.json",
+      "bytes": 44370,
+      "sha256": "33f59ad3d28a7b53efd2eee37a6ef059eb0d365aa621354fe622eae427144b97"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/evidence/FixedGripReview.json",
+      "bytes": 46890,
+      "sha256": "f865281736dbc5b630361538e8e30fbb16927bdf0815a0af274220bcda948b81"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/evidence/ReproductionCheck.json",
+      "bytes": 5116,
+      "sha256": "f92d76cf3be25cf6c2077eb02629f157b5dee1e613966a2aa5945078d38c4e85"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/manifest.json",
+      "bytes": 55473,
+      "sha256": "c529582df8da9da121f52c67846331468c3812849106b6dec18118841754b2fc"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/scripts/verify_blender_bindings.py",
+      "bytes": 7246,
+      "sha256": "c968d7976c53a9a1419207df51fe3c21ddb570189bbb0fecee47a5119f5adbc2"
+    },
+    {
+      "path": "ContentSource/Characters/CHR01/WeaponGrips/scripts/verify_text_bundle.py",
+      "bytes": 3389,
+      "sha256": "65f8d5aa19b5127cb426ac6050c94340f5b1e83796cdef1e57b79b7c92b2af62"
+    },
+    {
+      "path": "Docs/Art/CHR01-weapon-grips.zh-CN.md",
+      "bytes": 10139,
+      "sha256": "028a7fbcbdd40091444a7e460f05dacfb7b0b79e89023e396d7d156b943dfeb6"
+    }
+  ]
+}
