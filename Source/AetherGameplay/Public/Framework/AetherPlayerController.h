@@ -3,6 +3,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Networking/AetherV10Packets.h"
 #include "Contracts/AetherPlayerCommand.h"
+#include "Startup/AetherStartupState.h"
 #include "AetherPlayerController.generated.h"
 
 // 专服只发送原生 AHUD，真正的表现类由拥有该连接的客户端选择。
@@ -12,6 +13,9 @@ class AETHERGAMEPLAY_API AAetherPlayerController : public APlayerController
 {
     GENERATED_BODY()
 public:
+    UFUNCTION(Client,Reliable) void ClientV10StartupStatus(const FAetherStartupSnapshot& Snapshot);
+    void PublishStartupStatus(const FAetherStartupSnapshot& Snapshot);
+    void PublishStartupFailure(FAetherStartupSnapshot Snapshot,EAetherStartupFailure Failure);
     // 服务器只从拥有此 Controller 的连接解析身份；包内只有通道和固定协议字节。
     UFUNCTION(Server,Reliable) void ServerV10SceneInput(const FAetherV10CommandPacket& Packet,uint64 Sequence);
     bool SendV10SceneInput(FAetherPlayerCommand Command,FString& Reason);
@@ -36,6 +40,9 @@ private:
     void BindMenuPawn();
     FGuid SceneInputChannel;
     uint64 SceneInputSequence=0;
+    FGuid StartupAttempt;
+    uint32 StartupSequence=0;
+    bool bStartupTerminal=false;
     FGuid LootFeedbackChannel;
     TArray<TPair<FGuid,FGuid>> CompletedLootFeedback; // 有界提示去重，不进入普通命令 Pending。
 public:
