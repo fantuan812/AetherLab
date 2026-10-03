@@ -29,9 +29,16 @@ void UAetherAnimInstance::LoadBoundAnimations()
 {
  check(IsInGameThread());
  ActionSet=nullptr;Locomotion=nullptr;JumpClip=nullptr;FallClip=nullptr;LandClip=nullptr;HeavyClip=nullptr;LightClips.Reset();
+ MainHandBone=NAME_None;SupportHandBone=NAME_None;SupportGrip=FAetherResolvedWeaponGrip();
  const auto* Mesh=GetSkelMeshComponent()?GetSkelMeshComponent()->GetSkeletalMeshAsset():nullptr;
  FString Why;const auto* B=AetherMotionBindings::ForMesh(FSoftObjectPath(Mesh),Why);
  if(!B){UE_LOG(LogTemp,Error,TEXT("AETHER_ANIMATION_BINDING_UNAVAILABLE %s"),*Why);return;}
+ const auto* Right=B->Chains.FindByPredicate([](const auto& Chain){return Chain.Name==TEXT("RightWrist");});
+ const auto* Left=B->Chains.FindByPredicate([](const auto& Chain){return Chain.Name==TEXT("LeftWrist");});
+ if(!Right||!Left||Right->TargetEnd==Left->TargetEnd||Mesh->GetRefSkeleton().FindBoneIndex(Right->TargetEnd)==INDEX_NONE||
+    Mesh->GetRefSkeleton().FindBoneIndex(Left->TargetEnd)==INDEX_NONE)
+ {UE_LOG(LogTemp,Error,TEXT("AETHER_ANIMATION_RESOURCES_INVALID %s: wrist chains unavailable"),*B->Id);return;}
+ MainHandBone=Right->TargetEnd;SupportHandBone=Left->TargetEnd;
  auto Get=[&](const TCHAR* Key){const auto* Path=B->AnimationAssets.Find(FName(Key));return Path?Path->TryLoad():nullptr;};
  auto* Actions=Cast<UAetherActionSet>(Get(TEXT("actions")));auto* Move=Cast<UBlendSpace>(Get(TEXT("locomotion")));
  auto* Jump=Cast<UAnimSequence>(Get(TEXT("jump")));auto* Fall=Cast<UAnimSequence>(Get(TEXT("fall")));

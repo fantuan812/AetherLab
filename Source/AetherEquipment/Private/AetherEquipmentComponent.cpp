@@ -1,5 +1,8 @@
 #include "AetherEquipmentComponent.h"
 #include "AetherEquipmentVisuals.h"
+#include "AetherEquipmentGrip.h"
+#include "Engine/SkeletalMesh.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "Components/SkinnedMeshComponent.h"
@@ -19,12 +22,37 @@ bool FAetherAttackDefinition::IsValid() const
 }
 const FAetherAttackDefinition* UAetherEquipmentDefinition::FindAttack(FName Id) const
 { return Attacks.FindByPredicate([Id](const auto& A){return A.Id==Id;}); }
+bool UAetherEquipmentDefinition::HasValidSupportHandGrip() const
+{
+    if(GripSourceSha256.Len()!=64)return false;
+    for(TCHAR C:GripSourceSha256)if(!((C>='0'&&C<='9')||(C>='a'&&C<='f')))return false;
+    return bSupportHandTransformConfigured && !GripTargetMesh.IsNull() &&
+        !GripMainHandBone.IsNone() && !GripSupportHandBone.IsNone() && GripMainHandBone != GripSupportHandBone &&
+        AetherEquipmentGrip::IsUniformTransform(GripTransform) &&
+        AetherEquipmentGrip::IsUniformTransform(SupportHandTransform, true) &&
+        GripTransform.GetTranslation().Size() <= 1000. && SupportHandTransform.GetTranslation().Size() <= 1000.;
+}
+bool UAetherEquipmentDefinition::ValidateGripTarget(USkeletalMesh* Target,FName AttachmentSocket,FName MainBone,FName SupportBone)
+{
+    if(!Target||AttachmentSocket.IsNone()||MainBone.IsNone()||SupportBone.IsNone()||MainBone==SupportBone)return false;
+    const auto& Ref=Target->GetRefSkeleton();
+    for(FName Name:{MainBone,SupportBone})
+    {
+        const int32 Bone=Ref.FindBoneIndex(Name);if(Bone==INDEX_NONE)return false;
+        const int32 Parent=Ref.GetParentIndex(Bone);if(Parent==INDEX_NONE||Ref.GetParentIndex(Parent)==INDEX_NONE)return false;
+        for(int32 I=Bone;I!=INDEX_NONE;I=Ref.GetParentIndex(I))
+            if(!AetherEquipmentGrip::IsUniformTransform(Ref.GetRefBonePose()[I]))return false;
+    }
+    if(const auto* Socket=Target->FindSocket(AttachmentSocket))
+        return Socket->BoneName==MainBone&&AetherEquipmentGrip::IsUniformTransform(Socket->GetSocketLocalTransform());
+    return AttachmentSocket==MainBone;
+}
 bool UAetherEquipmentDefinition::IsValidDefinition() const
 {
     if (ItemId.IsNone() || Slot.IsNone() || (!bInvisibleAccessory&&(Socket.IsNone()||Mesh.IsNull())) || GripTransform.ContainsNaN()
         || !FMath::IsFinite(GuardStaminaMultiplier) || GuardStaminaMultiplier<0
         || !FMath::IsFinite(ParryWindowSeconds) || ParryWindowSeconds<0 || ParryWindowSeconds>1) return false;
-    if(SupportHandOffset.ContainsNaN()||SupportHandOffset.Size()>100)return false;
+    if(bOccupiesBothHands&&(!HasValidSupportHandGrip()||!SecondarySocket.IsNone()))return false;
     if(bInvisibleAccessory&&(bOccupiesBothHands||bAllowsGuard||!Attacks.IsEmpty()||!SecondarySocket.IsNone()))return false;
     if(!SecondarySocket.IsNone()&&(SecondarySocket==Socket||SecondaryGripTransform.ContainsNaN()))return false;
     TSet<FName> SlotSet;
@@ -220,12 +248,7 @@ void UAetherEquipmentComponent::TickComponent(float Dt,ELevelTick TickType,FActo
     if (auto* Visual=VisualForSlot(TEXT("MainHand")))
     {
         auto* Item=InSlot(TEXT("MainHand")); FTransform T=Item?Item->GripTransform:FTransform::Identity;
-        if (D&&IsBusy())
-        {
-            const float Alpha=FMath::Clamp((Elapsed-D->WindupSeconds)/D->ActiveSeconds,0.f,1.f);
-            const float Angle=Elapsed<D->WindupSeconds?-20.f:Elapsed<D->WindupSeconds+D->ActiveSeconds?FMath::Lerp(-20.f,70.f,Alpha):70.f*(1-FMath::Clamp((Elapsed-D->WindupSeconds-D->ActiveSeconds)/FMath::Max(.01f,D->RecoverySeconds),0.f,1.f));
-            T.ConcatenateRotation(FQuat(FVector::RightVector,FMath::DegreesToRadians(Angle)));
-        }
+        // 主手动画是唯一武器轨迹来源；额外固定轴摆动会使完整副手合同与可见武器脱节。
         Visual->SetRelativeTransform(T);
     }
 }
