@@ -7,6 +7,27 @@
 #include "Misc/DateTime.h"
 #include "Effects/AetherBuffRuntime.h"
 
+namespace
+{
+// GAS 属性通知和取消动作都可同步重入。整批资源写入只属于进入时的投影目标。
+struct FResourceProjectionTarget
+{
+    TWeakObjectPtr<AAetherCharacter> Character;
+    TWeakObjectPtr<UAbilitySystemComponent> System;
+    TWeakObjectPtr<UAetherAttributes> Attributes;
+    TWeakObjectPtr<AActor> SystemOwner;
+    explicit FResourceProjectionTarget(AAetherCharacter* C)
+        :Character(C),System(C->AbilitySystem.Get()),Attributes(C->Attributes.Get()),SystemOwner(System->GetOwnerActor()){}
+    bool IsCurrent(const UAetherResourceGate* Gate) const
+    {
+        const auto* C=Character.Get();const auto* ASC=System.Get();
+        return C&&!C->IsActorBeingDestroyed()&&C->HasAuthority()&&C->ResourceGate.Get()==Gate&&!Gate->IsFaulted()&&
+            ASC&&Attributes.IsValid()&&C->AbilitySystem.Get()==ASC&&C->Attributes.Get()==Attributes.Get()&&
+            ASC->GetOwnerActor()==SystemOwner.Get()&&ASC->GetAvatarActor()==C;
+    }
+};
+}
+
 UAetherResourceGate::UAetherResourceGate(){PrimaryComponentTick.bCanEverTick=true;SetIsReplicatedByDefault(true);}
 void UAetherResourceGate::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -38,15 +59,23 @@ FAetherResourceStateV10 UAetherResourceGate::Sample() const
 bool UAetherResourceGate::BeginFullRespawn(const FString& Identity)
 {
     check(IsInGameThread());auto* C=Cast<AAetherCharacter>(GetOwner());
-    if(Receiver||bFaulted||!C||!C->HasAuthority()||!C->AbilitySystem||C->AbilitySystem->GetAvatarActor()!=C||
+    if(Receiver||bFaulted||bPublishing||!C||!C->HasAuthority()||!C->AbilitySystem||C->AbilitySystem->GetAvatarActor()!=C||
         Identity.IsEmpty()||Identity.Len()>32)return false;
+    const FResourceProjectionTarget Target(C);if(!Target.IsCurrent(this))return false;
+    // 取消动作前就建立重入屏障；否则取消回调能在 Receiver 尚未建立时再次开始重生。
+    TGuardValue<bool> Guard(bPublishing,true);
+    const auto Current=[&]{
+        if(!Receiver&&Target.IsCurrent(this))return true;
+        Fault(TEXT("Resource projection target changed during initialization"));return false;
+    };
     // 装备上限已由已提交记录恢复。明确建立新 LifeId，不能将旧生命治疗套到新生命。
-    C->CancelActions();TGuardValue<bool> Guard(bPublishing,true);
-    C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(),C->MaxHealth);
-    if(!IsValid(C)||C->AbilitySystem->GetAvatarActor()!=C)return false;
-    C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(),C->MaximumMana());
-    C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(),C->MaximumStamina());
-    if(!IsValid(C)||C->AbilitySystem->GetAvatarActor()!=C)return false;
+    C->CancelActions();if(!Current())return false;
+    Target.System->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(),C->MaxHealth);
+    if(!Current())return false;
+    Target.System->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(),C->MaximumMana());
+    if(!Current())return false;
+    Target.System->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(),C->MaximumStamina());
+    if(!Current())return false;
     auto S=Sample();S.LifeId=FGuid::NewGuid();S.Revision=0;S.UseReadyAtUnixMs=0;
     if(!S.Validate())return false;
     Receiver=MakeUnique<FAetherConsumableReceiver>(Identity,S);bRecovering=true;return true;
@@ -78,6 +107,13 @@ bool UAetherResourceGate::Publish(const FAetherConsumableReceiver& Expected)
         !C->AbilitySystem||C->AbilitySystem->GetAvatarActor()!=C||!Expected.State().Validate())return false;
     const auto S=Expected.State();
     const auto Effects=Expected.AppliedEffects();
+    const FResourceProjectionTarget Target(C);const FGuid ReceiverId=Expected.InstanceId();
+    const auto Current=[&]{
+        if(Target.IsCurrent(this)&&Receiver&&Receiver->InstanceId()==ReceiverId&&Receiver->State().LifeId==S.LifeId)return true;
+        // 不允许下一次投递重试把同一旧 Receiver 的 After 值绑定到替换后的 ASC。
+        Fault(TEXT("Resource projection target changed during delivery"));return false;
+    };
+    if(!Current())return false;
     if(!Reserved.IsValid()&&!bRecovering)
     {
         bool Published=true;for(const auto& E:Effects)Published&=PublishedDeliveries.Contains(E.DeliveryId);
@@ -97,11 +133,12 @@ bool UAetherResourceGate::Publish(const FAetherConsumableReceiver& Expected)
     if(!bReservedResourcesPublished)
     {
     // 不调用延迟队列入口 SetVitals；属性通知引发的其他完整动作仍被 bPublishing 挡住。
-    C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(),float(S.Health));
-    if(!IsValid(C)||C->AbilitySystem->GetAvatarActor()!=C)return false;
-    C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(),float(S.Mana));
-    C->AbilitySystem->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(),float(S.Stamina));
-    if(!IsValid(C)||C->AbilitySystem->GetAvatarActor()!=C)return false;
+    Target.System->SetNumericAttributeBase(UAetherAttributes::GetHealthAttribute(),float(S.Health));
+    if(!Current())return false;
+    Target.System->SetNumericAttributeBase(UAetherAttributes::GetManaAttribute(),float(S.Mana));
+    if(!Current())return false;
+    Target.System->SetNumericAttributeBase(UAetherAttributes::GetStaminaAttribute(),float(S.Stamina));
+    if(!Current())return false;
     if(!FMath::IsNearlyEqual(double(C->Health()),S.Health,.01)||!FMath::IsNearlyEqual(double(C->Mana()),S.Mana,.01)||
         !FMath::IsNearlyEqual(double(C->Stamina()),S.Stamina,.01))return false;
         bReservedResourcesPublished=true;
@@ -109,8 +146,12 @@ bool UAetherResourceGate::Publish(const FAetherConsumableReceiver& Expected)
     {
         TGuardValue<bool> ProjectionGuard(bEffectProjection,true);
         for(const auto& Effect:Effects)if(!Effect.BuffId.IsEmpty())
-            if(!C->BuffRuntime->ApplyDelivery(Effect))return false;
+        {
+            const bool Applied=C->BuffRuntime&&C->BuffRuntime->ApplyDelivery(Effect);
+            if(!Current()||!Applied)return false;
+        }
     }
+    if(!Current())return false;
     PublishedDeliveries.Reset();for(const auto& E:Effects)PublishedDeliveries.Add(E.DeliveryId);
     Reserved.Invalidate();ReservedBefore.Reset();bReservedResourcesPublished=false;return true;
 }
