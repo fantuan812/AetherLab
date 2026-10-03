@@ -1,0 +1,42 @@
+[
+  {
+    "frame": 0,
+    "value": 0.0
+  },
+  {
+    "frame": 1,
+    "value": 1.0
+  },
+  {
+    "frame": 49,
+    "value": 1.0
+  },
+  {
+    "frame": 73,
+    "value": 1.0
+  },
+  {
+    "frame": 97,
+    "value": 1.0
+  },
+  {
+    "frame": 98,
+    "value": 0.0
+  },
+  {
+    "same_frame_action": null,
+    "value": 0.0
+  },
+  {
+    "same_frame_action": "CHR01_GRIP_Hammer_Hold_Lift_Return",
+    "value": 1.0
+  },
+  {
+    "same_frame_action": null,
+    "value": 0.0
+  },
+  {
+    "same_frame_action": "CHR01_GRIP_Hammer_Hold_Lift_Return",
+    "value": 1.0
+  }
+]
