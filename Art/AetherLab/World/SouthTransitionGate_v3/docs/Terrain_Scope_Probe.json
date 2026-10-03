@@ -1,0 +1,37 @@
+{
+  "reviewer_script_sha256": "658b644041b5519c828dd443b23be1fee1ecbbe8ef4ed2a6bb27b080135c43be",
+  "source_sha256": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+  "source_unchanged": true,
+  "original_xy_vertex_count": 43466,
+  "candidate_xy_vertex_count": 53444,
+  "retained_original_xy_count": 43466,
+  "removed_original_xy_count": 0,
+  "added_xy_count": 9978,
+  "changed_original_z_count": 644,
+  "changed_original_xy_bounds": [
+    [
+      -92.0,
+      12.0
+    ],
+    [
+      -380.0,
+      -88.0
+    ]
+  ],
+  "added_xy_bounds": [
+    [
+      -96.0,
+      16.0
+    ],
+    [
+      -380.0,
+      -88.0
+    ]
+  ],
+  "matched_original_faces_smoothing_changed": 0,
+  "smoothing_change_xy_bounds": null,
+  "all_candidate_face_materials": [
+    "LAND3_Grade_Conforming_Moss_Earth"
+  ],
+  "note": "Material slot reassignment is global; the new material is derived from original with local zero-outside-mask additional blend. Raw original material datablocks independently compared exact."
+}

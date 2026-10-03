@@ -1,0 +1,627 @@
+{
+  "reviewer_script_sha256": "83aa7012a2089df27c7fe208ea24244200d772b3a6c8b681c0aab95254f53ae4",
+  "source_hashes": {
+    "before": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+    "after": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94"
+  },
+  "source_unchanged": true,
+  "method": "Independent saved-file reopen, raw mesh topology, transformed mesh bounds and discrete BVH rays; no author code imported and no scene saved. No UE compilation or tests.",
+  "baseline": {
+    "terrain_topology": {
+      "vertices": 43466,
+      "faces": 43050,
+      "connected_components": 1,
+      "component_vertices": [
+        43466
+      ],
+      "boundary_edges": 830,
+      "internal_boundary_edges": [],
+      "nonmanifold_edges_gt2": 0,
+      "zero_area_faces": 0
+    },
+    "core_bounds": {
+      "SCN03_Gate_Pier-4": {
+        "min": [
+          -5.5,
+          -81.80000305175781,
+          0.0
+        ],
+        "max": [
+          -2.5,
+          -78.19999694824219,
+          6.0
+        ]
+      },
+      "SCN03_Gate_Pier4": {
+        "min": [
+          2.5,
+          -81.80000305175781,
+          0.0
+        ],
+        "max": [
+          5.5,
+          -78.19999694824219,
+          6.0
+        ]
+      },
+      "SCN03_Gate_Lintel": {
+        "min": [
+          -5.5,
+          -81.80000305175781,
+          6.0
+        ],
+        "max": [
+          5.5,
+          -78.19999694824219,
+          7.0
+        ]
+      },
+      "SCN03_Gate_Roof": {
+        "min": [
+          -6.199999809265137,
+          -82.69999694824219,
+          7.0
+        ],
+        "max": [
+          6.199999809265137,
+          -77.30000305175781,
+          8.5
+        ]
+      },
+      "SCN03_Registration_Canopy": {
+        "min": [
+          -13.0,
+          -75.0,
+          3.4000000953674316
+        ],
+        "max": [
+          -7.0,
+          -69.0,
+          4.5
+        ]
+      }
+    }
+  },
+  "candidate": {
+    "terrain_topology": {
+      "vertices": 53444,
+      "faces": 52836,
+      "connected_components": 1,
+      "component_vertices": [
+        53444
+      ],
+      "boundary_edges": 830,
+      "internal_boundary_edges": [],
+      "nonmanifold_edges_gt2": 0,
+      "zero_area_faces": 0
+    },
+    "core_bounds": {
+      "SCN03_Gate_Pier-4": {
+        "min": [
+          -5.5,
+          -81.80000305175781,
+          0.0
+        ],
+        "max": [
+          -2.5,
+          -78.19999694824219,
+          6.0
+        ]
+      },
+      "SCN03_Gate_Pier4": {
+        "min": [
+          2.5,
+          -81.80000305175781,
+          0.0
+        ],
+        "max": [
+          5.5,
+          -78.19999694824219,
+          6.0
+        ]
+      },
+      "SCN03_Gate_Lintel": {
+        "min": [
+          -5.5,
+          -81.80000305175781,
+          6.0
+        ],
+        "max": [
+          5.5,
+          -78.19999694824219,
+          7.0
+        ]
+      },
+      "SCN03_Gate_Roof": {
+        "min": [
+          -6.199999809265137,
+          -82.69999694824219,
+          7.0
+        ],
+        "max": [
+          6.199999809265137,
+          -77.30000305175781,
+          8.5
+        ]
+      },
+      "SCN03_Registration_Canopy": {
+        "min": [
+          -13.0,
+          -75.0,
+          3.4000000953674316
+        ],
+        "max": [
+          -7.0,
+          -69.0,
+          4.5
+        ]
+      }
+    },
+    "verge_topology": {
+      "LAND3_EarthVerge_C01_Mountain_Main": {
+        "vertices": 7375,
+        "faces": 9117,
+        "connected_components": 7,
+        "component_vertices": [
+          288,
+          440,
+          959,
+          3028,
+          2647,
+          9,
+          4
+        ],
+        "boundary_edges": 6647,
+        "internal_boundary_edges": [],
+        "nonmanifold_edges_gt2": 0,
+        "zero_area_faces": 0
+      },
+      "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass": {
+        "vertices": 3503,
+        "faces": 3062,
+        "connected_components": 26,
+        "component_vertices": [
+          188,
+          1379,
+          4,
+          9,
+          646,
+          4,
+          1180,
+          3,
+          4,
+          5,
+          4,
+          4,
+          4,
+          3,
+          4,
+          3,
+          3,
+          3,
+          6,
+          4,
+          3,
+          5,
+          3,
+          13,
+          14,
+          5
+        ],
+        "boundary_edges": 4708,
+        "internal_boundary_edges": [],
+        "nonmanifold_edges_gt2": 0,
+        "zero_area_faces": 0
+      }
+    }
+  },
+  "foliage": {
+    "changed_count": 475,
+    "all_xy_and_mesh_links_retained": true,
+    "max_abs_origin_xy_bottom_gap_m": 9.5367431640625e-07,
+    "limitation": "Origin-XY bottom-height contact only; not every leaf/branch or entire footprint contact"
+  },
+  "edge_probes": {
+    "0.01": {
+      "count": 4076,
+      "missing": 0,
+      "raw_min_m": -0.08936500549316406,
+      "raw_max_m": 0.21662425994873047,
+      "effective_min_m": -0.14110851287841797,
+      "effective_max_m": 0.21662425994873047,
+      "abs_effective_over_0p22": 0,
+      "worst_raised_sample": {
+        "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "xy": [
+          -53.488582611083984,
+          -298.8152770996094
+        ],
+        "offset_m": 0.01,
+        "raw_step_m": -0.05150127410888672,
+        "effective_step_m": -0.14110851287841797,
+        "support": "LAND3_EarthVerge_C01_Mountain_Main",
+        "target_road_at_probe": null,
+        "effective_including_target_roads_m": -0.14110851287841797,
+        "all_support": "LAND3_EarthVerge_C01_Mountain_Main"
+      },
+      "worst_lower_sample": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -53.14118576049805,
+          -297.90509033203125
+        ],
+        "offset_m": 0.01,
+        "raw_step_m": 0.21662425994873047,
+        "effective_step_m": 0.21662425994873047,
+        "support": "WORLD_Terrain_Continuous_800x800m",
+        "target_road_at_probe": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "effective_including_target_roads_m": 0.16161632537841797,
+        "all_support": "ROUTE_C01_Mountain_Rescue_Bypass"
+      },
+      "probes_on_saved_target_road": 192,
+      "including_target_roads_min_m": -0.1904163360595703,
+      "including_target_roads_max_m": 0.17241859436035156,
+      "including_target_roads_abs_over_0p22": 0,
+      "worst_lower_including_target_roads": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -53.264156341552734,
+          -298.27398681640625
+        ],
+        "offset_m": 0.01,
+        "raw_step_m": 0.17241859436035156,
+        "effective_step_m": 0.17241859436035156,
+        "support": "WORLD_Terrain_Continuous_800x800m",
+        "target_road_at_probe": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "effective_including_target_roads_m": 0.17241859436035156,
+        "all_support": "WORLD_Terrain_Continuous_800x800m"
+      },
+      "including_target_roads_mean_m": 0.01102009889422034,
+      "off_road_only": {
+        "count": 3884,
+        "min_m": -0.14110851287841797,
+        "max_m": 0.06300640106201172,
+        "mean_m": 0.012343872741371179
+      }
+    },
+    "0.05": {
+      "count": 4076,
+      "missing": 0,
+      "raw_min_m": -0.09525489807128906,
+      "raw_max_m": 0.21549510955810547,
+      "effective_min_m": -0.16822338104248047,
+      "effective_max_m": 0.21549510955810547,
+      "abs_effective_over_0p22": 0,
+      "worst_raised_sample": {
+        "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "xy": [
+          -53.46402359008789,
+          -298.8468322753906
+        ],
+        "offset_m": 0.05,
+        "raw_step_m": -0.05668163299560547,
+        "effective_step_m": -0.16822338104248047,
+        "support": "LAND3_EarthVerge_C01_Mountain_Main",
+        "target_road_at_probe": null,
+        "effective_including_target_roads_m": -0.16822338104248047,
+        "all_support": "LAND3_EarthVerge_C01_Mountain_Main"
+      },
+      "worst_lower_sample": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -53.179134368896484,
+          -297.8924560546875
+        ],
+        "offset_m": 0.05,
+        "raw_step_m": 0.21549510955810547,
+        "effective_step_m": 0.21549510955810547,
+        "support": "WORLD_Terrain_Continuous_800x800m",
+        "target_road_at_probe": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "effective_including_target_roads_m": 0.16048717498779297,
+        "all_support": "ROUTE_C01_Mountain_Rescue_Bypass"
+      },
+      "probes_on_saved_target_road": 191,
+      "including_target_roads_min_m": -0.1921710968017578,
+      "including_target_roads_max_m": 0.17331886291503906,
+      "including_target_roads_abs_over_0p22": 0,
+      "worst_lower_including_target_roads": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -53.30210494995117,
+          -298.2613525390625
+        ],
+        "offset_m": 0.05,
+        "raw_step_m": 0.17392921447753906,
+        "effective_step_m": 0.17392921447753906,
+        "support": "WORLD_Terrain_Continuous_800x800m",
+        "target_road_at_probe": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "effective_including_target_roads_m": 0.17331886291503906,
+        "all_support": "ROUTE_C01_Mountain_Rescue_Bypass"
+      },
+      "including_target_roads_mean_m": 0.011733001798128122,
+      "off_road_only": {
+        "count": 3885,
+        "min_m": -0.16822338104248047,
+        "max_m": 0.06318950653076172,
+        "mean_m": 0.01311197026202424
+      }
+    },
+    "0.25": {
+      "count": 4076,
+      "missing": 0,
+      "raw_min_m": -0.12472724914550781,
+      "raw_max_m": 0.2134876251220703,
+      "effective_min_m": -0.16258621215820312,
+      "effective_max_m": 0.2134876251220703,
+      "abs_effective_over_0p22": 0,
+      "worst_raised_sample": {
+        "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "xy": [
+          -53.63672637939453,
+          -299.23455810546875
+        ],
+        "offset_m": 0.25,
+        "raw_step_m": -0.030643463134765625,
+        "effective_step_m": -0.16258621215820312,
+        "support": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "target_road_at_probe": null,
+        "effective_including_target_roads_m": -0.16258621215820312,
+        "all_support": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass"
+      },
+      "worst_lower_sample": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -53.430355072021484,
+          -298.0136413574219
+        ],
+        "offset_m": 0.25,
+        "raw_step_m": 0.2134876251220703,
+        "effective_step_m": 0.2134876251220703,
+        "support": "WORLD_Terrain_Continuous_800x800m",
+        "target_road_at_probe": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "effective_including_target_roads_m": 0.1612720489501953,
+        "all_support": "ROUTE_C01_Mountain_Rescue_Bypass"
+      },
+      "probes_on_saved_target_road": 192,
+      "including_target_roads_min_m": -0.20525646209716797,
+      "including_target_roads_max_m": 0.193389892578125,
+      "including_target_roads_abs_over_0p22": 0,
+      "worst_lower_including_target_roads": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -53.73777770996094,
+          -298.9359130859375
+        ],
+        "offset_m": 0.25,
+        "raw_step_m": 0.19380950927734375,
+        "effective_step_m": 0.19380950927734375,
+        "support": "WORLD_Terrain_Continuous_800x800m",
+        "target_road_at_probe": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "effective_including_target_roads_m": 0.193389892578125,
+        "all_support": "ROUTE_C01_Mountain_Rescue_Bypass"
+      },
+      "including_target_roads_mean_m": 0.015498375664515398,
+      "off_road_only": {
+        "count": 3884,
+        "min_m": -0.16258621215820312,
+        "max_m": 0.15471649169921875,
+        "mean_m": 0.017119911530973
+      }
+    },
+    "1.0": {
+      "count": 4076,
+      "missing": 0,
+      "raw_min_m": -0.1938772201538086,
+      "raw_max_m": 0.2468242645263672,
+      "effective_min_m": -0.23819828033447266,
+      "effective_max_m": 0.23389434814453125,
+      "abs_effective_over_0p22": 12,
+      "worst_raised_sample": {
+        "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "xy": [
+          -54.062767028808594,
+          -300.5160827636719
+        ],
+        "offset_m": 1.0,
+        "raw_step_m": -0.1829843521118164,
+        "effective_step_m": -0.23819828033447266,
+        "support": "LAND3_EarthVerge_C01_Mountain_Main",
+        "target_road_at_probe": null,
+        "effective_including_target_roads_m": -0.23819828033447266,
+        "all_support": "LAND3_EarthVerge_C01_Mountain_Main"
+      },
+      "worst_lower_sample": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -54.51077651977539,
+          -298.8832092285156
+        ],
+        "offset_m": 1.0,
+        "raw_step_m": 0.23389434814453125,
+        "effective_step_m": 0.23389434814453125,
+        "support": "WORLD_Terrain_Continuous_800x800m",
+        "target_road_at_probe": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "effective_including_target_roads_m": 0.17889404296875,
+        "all_support": "ROUTE_C01_Mountain_Rescue_Bypass"
+      },
+      "probes_on_saved_target_road": 191,
+      "including_target_roads_min_m": -0.25098514556884766,
+      "including_target_roads_max_m": 0.22234725952148438,
+      "including_target_roads_abs_over_0p22": 22,
+      "worst_lower_including_target_roads": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -54.87968063354492,
+          -299.98992919921875
+        ],
+        "offset_m": 1.0,
+        "raw_step_m": 0.24517440795898438,
+        "effective_step_m": 0.22234725952148438,
+        "support": "LAND3_EarthVerge_C01_Mountain_Main",
+        "target_road_at_probe": null,
+        "effective_including_target_roads_m": 0.22234725952148438,
+        "all_support": "LAND3_EarthVerge_C01_Mountain_Main"
+      },
+      "including_target_roads_mean_m": 0.05039662821721048,
+      "off_road_only": {
+        "count": 3885,
+        "min_m": -0.23819828033447266,
+        "max_m": 0.22234725952148438,
+        "mean_m": 0.054192649842535974
+      }
+    },
+    "1.55": {
+      "count": 4076,
+      "missing": 0,
+      "raw_min_m": -0.22788238525390625,
+      "raw_max_m": 0.3497447967529297,
+      "effective_min_m": -0.2734508514404297,
+      "effective_max_m": 0.3022289276123047,
+      "abs_effective_over_0p22": 31,
+      "worst_raised_sample": {
+        "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "xy": [
+          -54.31611251831055,
+          -301.409912109375
+        ],
+        "offset_m": 1.55,
+        "raw_step_m": -0.2250194549560547,
+        "effective_step_m": -0.2734508514404297,
+        "support": "LAND3_EarthVerge_C01_Mountain_Main",
+        "target_road_at_probe": null,
+        "effective_including_target_roads_m": -0.2734508514404297,
+        "all_support": "LAND3_EarthVerge_C01_Mountain_Main"
+      },
+      "worst_lower_sample": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -56.07778549194336,
+          -301.8450012207031
+        ],
+        "offset_m": 1.55,
+        "raw_step_m": 0.3497447967529297,
+        "effective_step_m": 0.3022289276123047,
+        "support": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "target_road_at_probe": null,
+        "effective_including_target_roads_m": 0.3022289276123047,
+        "all_support": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass"
+      },
+      "probes_on_saved_target_road": 191,
+      "including_target_roads_min_m": -0.2837791442871094,
+      "including_target_roads_max_m": 0.3022289276123047,
+      "including_target_roads_abs_over_0p22": 49,
+      "worst_lower_including_target_roads": {
+        "road": "ROUTE_C01_Mountain_Main",
+        "xy": [
+          -56.07778549194336,
+          -301.8450012207031
+        ],
+        "offset_m": 1.55,
+        "raw_step_m": 0.3497447967529297,
+        "effective_step_m": 0.3022289276123047,
+        "support": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "target_road_at_probe": null,
+        "effective_including_target_roads_m": 0.3022289276123047,
+        "all_support": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass"
+      },
+      "including_target_roads_mean_m": 0.08642388703310688,
+      "off_road_only": {
+        "count": 3885,
+        "min_m": -0.2734508514404297,
+        "max_m": 0.3022289276123047,
+        "mean_m": 0.09245857452947354
+      }
+    }
+  },
+  "shoulder_face_centers_over_road": {
+    "count": 4,
+    "above_by_over_0p01_count": 0,
+    "maximum_protrusion_m": -0.011994361877441406,
+    "highest": [
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "face": 257,
+        "xyz": [
+          -76.4234619140625,
+          -348.4478454589844,
+          15.994399070739746
+        ],
+        "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "above_road_m": -0.011994361877441406
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "face": 1773,
+        "xyz": [
+          -77.51197052001953,
+          -348.1509704589844,
+          15.994399070739746
+        ],
+        "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "above_road_m": -0.011994361877441406
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "face": 4786,
+        "xyz": [
+          -63.622314453125,
+          -351.9390563964844,
+          15.994399070739746
+        ],
+        "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "above_road_m": -0.012001991271972656
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "face": 1812,
+        "xyz": [
+          -79.37796783447266,
+          -347.6420593261719,
+          15.994399070739746
+        ],
+        "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+        "above_road_m": -0.012009620666503906
+      }
+    ]
+  },
+  "gate": {
+    "original_bounds_retained": {
+      "SCN03_Gate_Pier-4": true,
+      "SCN03_Gate_Pier4": true,
+      "SCN03_Gate_Lintel": true,
+      "SCN03_Gate_Roof": true,
+      "SCN03_Registration_Canopy": true
+    },
+    "opening_width_from_piers_m": 5.0,
+    "opening_lintel_underside_z_m": 6.0,
+    "vertical_ray_sample_count": 3111,
+    "new_geometry_in_opening_below_5p99m": [],
+    "limit": "Sampled mesh clearance, not navigation or collision capsule sweep"
+  },
+  "registration_roof": {
+    "same_mesh_as_source": true,
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "bounds": {
+      "min": [
+        -13.729002952575684,
+        -75.41633605957031,
+        3.4000000953674316
+      ],
+      "max": [
+        -6.270998001098633,
+        -68.58366394042969,
+        4.977097988128662
+      ]
+    }
+  },
+  "limits": [
+    "Discrete samples may miss between-sample defects",
+    "Open sheet terrain/shoulders are expected to have exterior boundary edges",
+    "No UE, physics, navigation or final whole-world acceptance",
+    "Positive edge step means support is below the road; negative means raised support and may reflect intersecting road/shoulder grades"
+  ]
+}

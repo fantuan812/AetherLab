@@ -1,0 +1,104 @@
+{
+  "script_sha256": "388b2592d73db5507253c271d1eb2cedf92383cd51627065b8b1ef8ca3f05b2c",
+  "method": "Compared six receipt camera matrices, lens/ortho settings, resolutions, samples and actual image SHA256. Independent visual findings are in the final review report.",
+  "views": [
+    {
+      "name": "Ridge_Reveal",
+      "before_source": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+      "after_source": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+      "before_unchanged": true,
+      "after_unchanged": true,
+      "settings_equal": true,
+      "images_hash_match_receipts": true,
+      "resolution": [
+        1200,
+        780
+      ],
+      "samples": 16,
+      "before_image_sha256": "69c61e608f5c32c9f065863cd11245f4a3874d833c0a1a557befb571343563c4",
+      "after_image_sha256": "d8c4237f870257e353449b62711bf2702f6c47f5f126a753ee8b6cd5862b564f"
+    },
+    {
+      "name": "Gate",
+      "before_source": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+      "after_source": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+      "before_unchanged": true,
+      "after_unchanged": true,
+      "settings_equal": true,
+      "images_hash_match_receipts": true,
+      "resolution": [
+        1200,
+        780
+      ],
+      "samples": 16,
+      "before_image_sha256": "422d98f10c6e585c9d3010d11dda027430f10f13437d891a8e8a637d36a95170",
+      "after_image_sha256": "88d3ce5f7f63cd5258e3f3b88cfd3ae723c9beba86ce9548255da891baed9bea"
+    },
+    {
+      "name": "Entry",
+      "before_source": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+      "after_source": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+      "before_unchanged": true,
+      "after_unchanged": true,
+      "settings_equal": true,
+      "images_hash_match_receipts": true,
+      "resolution": [
+        1200,
+        780
+      ],
+      "samples": 16,
+      "before_image_sha256": "eb0e97f765c326e1077aeec3866ddd3b3d0904c408ec5374846744e9f6898a78",
+      "after_image_sha256": "d6939d262237d6de54a304a8331df12ac2b64ddd2fc1ecc2290aae0b7f89e839"
+    },
+    {
+      "name": "Town_Reveal",
+      "before_source": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+      "after_source": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+      "before_unchanged": true,
+      "after_unchanged": true,
+      "settings_equal": true,
+      "images_hash_match_receipts": true,
+      "resolution": [
+        1200,
+        780
+      ],
+      "samples": 16,
+      "before_image_sha256": "e5594c12733747a6c1fea628bd30868b791252242305d2e79b2680f639292573",
+      "after_image_sha256": "3b0bfd0439b05fc4c6d6937e87b85352e2f9a16bd37c981aaa3cea2d5ae7707c"
+    },
+    {
+      "name": "South_Overview",
+      "before_source": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+      "after_source": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+      "before_unchanged": true,
+      "after_unchanged": true,
+      "settings_equal": true,
+      "images_hash_match_receipts": true,
+      "resolution": [
+        1400,
+        1000
+      ],
+      "samples": 16,
+      "before_image_sha256": "893b0c8e4caae862867a25430da301a97926ccb4e2e5b246db6929d1014dc1ab",
+      "after_image_sha256": "4ccae56cfb8e86f443d183b36df8815f41d651f375d6597902168de220d3949b"
+    },
+    {
+      "name": "Global",
+      "before_source": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+      "after_source": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+      "before_unchanged": true,
+      "after_unchanged": true,
+      "settings_equal": true,
+      "images_hash_match_receipts": true,
+      "resolution": [
+        1300,
+        1050
+      ],
+      "samples": 16,
+      "before_image_sha256": "0bb1808bf5e4151331f9be11d110f26fa02602d634fc965cd591b9da09835199",
+      "after_image_sha256": "7285a0bc9f67615c5410cab4c42c5f0ac8a1b166ccdcc06542801c495ef3a3f8"
+    }
+  ],
+  "all_checks_match": true,
+  "no_final_world_or_UE_acceptance": true
+}

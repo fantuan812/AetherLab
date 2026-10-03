@@ -1,0 +1,21 @@
+{
+  "script": "scripts/refine_scene.py",
+  "script_sha256": "ed9fb6557dc19d7774b35abada146b9eef1f8881c93a85db382806f3d9232edf",
+  "ast_parse": true,
+  "review_type": "Static review; author script not executed by reviewer. Read-only independent Blender scripts execute separately.",
+  "observations_zh": [
+    "脚本先校验唯一输入源SHA，再输出新源；不就地改基线",
+    "细分/顶点Z与平滑条件受道路走廊约束；全地形面引用派生材质，局部属性控制新增混色",
+    "土肩来自原两条山路实际网格边界；投影裁切、近同层贴高以及微小退化面清理在新增土肩执行",
+    "原道路和角色不进入写操作；新屋顶/三石构复制网格属于申报白名单",
+    "475既有植被只作Z接地；接地算法以物体最低顶点高度对物体原点XY处地形，不代表每片树叶或整个植物脚印贴地",
+    "外圈+4mm已明确是顶点覆盖层设计，不是连续焊缝保证",
+    "未发现UE编译、规则测试、运行验收调用",
+    "最终新增土肩为三角化开放分片，7/26个连通片；不把位置焊点称为单条完整连续带。"
+  ],
+  "limitations_zh": [
+    "最终事实以对应保存源及独立回读为准，不以作者报告布尔值代替验证",
+    "静态读取不是UE编译或运行测试；所有源码/图像/源哈希应在最终冻结后再次核对"
+  ],
+  "source_sha256_reviewed": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94"
+}

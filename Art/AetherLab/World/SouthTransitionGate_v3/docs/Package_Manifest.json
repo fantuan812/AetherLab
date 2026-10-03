@@ -1,0 +1,280 @@
+{
+  "source_sha256": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+  "ordinary_zips_under_14MiB": true,
+  "packages": [
+    {
+      "file": "AetherLab_Global_Blockout_Model_v1.zip",
+      "sha256": "469ed2f643283af2ccc4c6feabe593da3b128124da70b83db1aeb23e4d06d125",
+      "bytes": 8454766,
+      "members": [
+        {
+          "file": "AetherLab_Global_Blockout_v1/START_HERE.zh-CN.txt",
+          "sha256": "042cb6b99d20bc375dea76748fd69655a873e3238bdd4445e66b9333db3fb332",
+          "bytes": 240
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Baseline_World_Manifest.json",
+          "sha256": "18d5ce780443efacd145f6c65a573c9d45cc3fa93b3d1415665cf30552079d1f",
+          "bytes": 423348
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Geometry_Probe.json",
+          "sha256": "1f8ea48304cb66d2005502d7444bf66cef648034eaea9a654eff27aa6a6a2a72",
+          "bytes": 18919
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Geometry_Results.json",
+          "sha256": "fcb8e4cced1da66809e8ef51b1b7edf1aeff6fd65073b503010dc23af7a51a05",
+          "bytes": 194603
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Independent_Review.json",
+          "sha256": "f3de9a5316ca082e21819ed226a063191afae60f77a44637d4cabdc9e24784d4",
+          "bytes": 17921
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Independent_Review.zh-CN.md",
+          "sha256": "099225e31b4ddb415d6446f28d7897a1798775d40f1be46109b9489b24468354",
+          "bytes": 4740
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Portable_Manifest.json",
+          "sha256": "93eec5fee888a77fcd817741e7c6404c549e28fcdbdfcd6318b9661a3b25f6ff",
+          "bytes": 2289
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Portable_Reopen_Validation.json",
+          "sha256": "7fce27f320dc4944376bd301fcc13650d4e3b70073659198846840fa9f9e141b",
+          "bytes": 1945
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/README.zh-CN.md",
+          "sha256": "cc815972537cf11aebf2f7e04b39ef526f783479d510eb2aef9b54a5a107e935",
+          "bytes": 5717
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Render_Evidence_Review.json",
+          "sha256": "7620948256a653f10846dc8a6337ee8488c6e6c4a505cee82ef8444ea02af728",
+          "bytes": 4113
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Render_Receipts.json",
+          "sha256": "19a474bd037496abf3205832a3eee5b00f87421231556719318617c67fbcf8a3",
+          "bytes": 12031
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Saved_Source_Comparison.json",
+          "sha256": "24135b041c227d2d8bdd96bbc2508245611ad4f257fcfdcffd60eefe4150084c",
+          "bytes": 47888
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Saved_Source_Review.json",
+          "sha256": "ede486c49cf735bb9535b326405aa53cc1c4285c18246720de43bbb1fd8f72c5",
+          "bytes": 46944
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Script_Review.json",
+          "sha256": "0c8fff7c34b9fdcc23384285ded96a0689a91f0ae69a9b2f43de39b6ebc366d5",
+          "bytes": 1497
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Script_Syntax_Check.json",
+          "sha256": "bada821a5cc42932c258772c97f1e4a0e915ada68ba3f7277f1d6d6eacab83b0",
+          "bytes": 2549
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Shoulder_Edge_Probes.json",
+          "sha256": "3830779ebd7007b5137d9574db6a564cc119de9ce8b876404b5bb50f38135961",
+          "bytes": 5104686
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Terrain_Scope_Probe.json",
+          "sha256": "7e5e3ab89c65128146add82a6216fccac6360d7e7020eebf8856ca2078f87f8a",
+          "bytes": 1010
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Texture_Compatibility.json",
+          "sha256": "18fa1fac818fa6e32fceef130d21b22cbf991133c527ede776013ded5b841f10",
+          "bytes": 473
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Transition_Gate_Changes.json",
+          "sha256": "f59a831ad1879de50d7c3771a295c6a4e79a479b8689304fcd4426e37a86a228",
+          "bytes": 899252
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/Verge_Boundary_Probe.json",
+          "sha256": "2e31b24662db435b3637dfb04518eba6a93a49dbe9c6431f2ca97d9865074300",
+          "bytes": 15991
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/docs/World_Manifest.json",
+          "sha256": "df04683fba505caa97ae7b43bb0bf075babcd4fa0b438032515911f8e75c294b",
+          "bytes": 491177
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/check_shoulders.py",
+          "sha256": "2fca8d926c6bf59302f5c0c0b88e3297ba8abbf39a53af948e26a0b84e869614",
+          "bytes": 3441
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/compare_scene_snapshots.py",
+          "sha256": "a16f0367f5bca81cb3cd35be9f1d8070dc31234e393c1db94b61972fc7ad8aea",
+          "bytes": 3888
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/independent_geometry_review.py",
+          "sha256": "01a95cce24230bf791dd2f60936cbaed44e659246b2e24b38325d949b73af77f",
+          "bytes": 22863
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/independent_saved_snapshot.py",
+          "sha256": "6d154b5ea8b6b7823a721a24273c94bed65a32b8ee7adee239598bfa9cf107b2",
+          "bytes": 7885
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/make_portable_copy.py",
+          "sha256": "660d77cbea404da838a0f17fa0a8b5cab8f355c265971bfd294eef717c9e5165",
+          "bytes": 3387
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/package_scene.py",
+          "sha256": "7080d13c97fd3106ec4d00667ac4cc925a6d569ecac537a3e8dff462ae6bb1d3",
+          "bytes": 5657
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/refine_scene.py",
+          "sha256": "ed9fb6557dc19d7774b35abada146b9eef1f8881c93a85db382806f3d9232edf",
+          "bytes": 18011
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/render_refinement.py",
+          "sha256": "c5cfb68c7c24d38d7ae08dc46664b32c8d4e01df2b2a3a1b88080efd51c2436c",
+          "bytes": 2469
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/reviewer_assemble_review.py",
+          "sha256": "c671094e8b3eb132f5e4d23ea96c51ee374e887bcc8bdbe266373280c030813d",
+          "bytes": 11853
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/reviewer_compare_sources.py",
+          "sha256": "3ce3b5777b7af35ea0f157b155a14ce4d1feb8d4d002e617c3e4513dac854bb3",
+          "bytes": 4157
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/reviewer_probe_geometry.py",
+          "sha256": "83aa7012a2089df27c7fe208ea24244200d772b3a6c8b681c0aab95254f53ae4",
+          "bytes": 11110
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/reviewer_probe_terrain_scope.py",
+          "sha256": "658b644041b5519c828dd443b23be1fee1ecbbe8ef4ed2a6bb27b080135c43be",
+          "bytes": 2450
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/reviewer_probe_verge_boundaries.py",
+          "sha256": "24fa8264fe7948f6bb3e8a4c7852bd913c004bd3d1f8548f527b3410a92b5e6e",
+          "bytes": 4230
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/reviewer_review_render_evidence.py",
+          "sha256": "388b2592d73db5507253c271d1eb2cedf92383cd51627065b8b1ef8ca3f05b2c",
+          "bytes": 1995
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/scripts/verify_portable_copy.py",
+          "sha256": "f392aad997984dc25861f4ef2184dee057efc39b4a23e61d21d831f10a707563",
+          "bytes": 2391
+        },
+        {
+          "file": "AetherLab_Global_Blockout_v1/source/AetherLab_Global_World_Blockout_v1.blend",
+          "sha256": "0773b7d0d07e399e5b6bccf661ee7cc2adffa49d1d91daea0eb8ff6a0caf0ee8",
+          "bytes": 7770186
+        }
+      ]
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Views_v1.zip",
+      "sha256": "3aa6d5e397a1231bfdbba6bd0d5eeff0f50e80e01e21d1c8aed79b85c350c6ea",
+      "bytes": 2514804,
+      "members": [
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/After/Entry.jpg",
+          "sha256": "f0c33b70121a8040c0792dfbf6885e721df0d6a4845519a37ead28bb6aa75191",
+          "bytes": 179629
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/After/Gate.jpg",
+          "sha256": "f1fb59a1b075e056a083ba87c00953c9fc967977d7efed43a990da7bf902ba10",
+          "bytes": 163256
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/After/Global.jpg",
+          "sha256": "81bc287c3fa7e1111dffc366e954ab06e7e00862feb673c7c38d3931314eefa7",
+          "bytes": 139328
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/After/Ridge_Reveal.jpg",
+          "sha256": "d12de989afc17d7c0f11c905ef61715d8685e375f216311838f291625103d835",
+          "bytes": 146887
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/After/South_Overview.jpg",
+          "sha256": "3ded36112011e6bc0c54e6c7cc62064875d219e50f99b6cdff3716599cab3f55",
+          "bytes": 224074
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/After/Town_Reveal.jpg",
+          "sha256": "95a72673e58d01b167b4988fb802f8cd6e7d0f81c95c62c6101ee419868d7dce",
+          "bytes": 133130
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/Before/Entry.jpg",
+          "sha256": "5d6a1561e5c3757b53f25905e10f41a4e99eb4c222af475e167781de37b24704",
+          "bytes": 178950
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/Before/Gate.jpg",
+          "sha256": "1eef40bb3f76453557ebd3cabc7294dbf81c7f38be367d5d30aff5379e13c7be",
+          "bytes": 152837
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/Before/Global.jpg",
+          "sha256": "b33b5c23a81581b397d644c130a05d3c97552fa1a92c3c9b1f8cbc00d1f42731",
+          "bytes": 139341
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/Before/Ridge_Reveal.jpg",
+          "sha256": "d17508d7ec6abe8335ddb195a77a0f6cc4ca4383ee6c0dfe58ce99db796c8259",
+          "bytes": 136015
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/Before/South_Overview.jpg",
+          "sha256": "4cd788c28203b69d94d8356e03bd7f4ecc395bf5b3ffdb76137775c65c5e11ef",
+          "bytes": 224678
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/Before/Town_Reveal.jpg",
+          "sha256": "fc1670ab344801da92853e7a1375e16d0dc19b8f85524140ead638eac5e90b8b",
+          "bytes": 130609
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/Gate_Before_After.jpg",
+          "sha256": "7f18dfba74de871cfa6e62fe403fde04cde8840af2a05e3f5271143285d71ec1",
+          "bytes": 384183
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/README.zh-CN.txt",
+          "sha256": "2778a50ad89f695d43dbe9bbccd23b580f524833019b8aadcd90b61ef8a79ee8",
+          "bytes": 207
+        },
+        {
+          "file": "AetherLab_Global_Blockout_Views_v1/Ridge_Reveal_Before_After.jpg",
+          "sha256": "465fdeb810034b8b88c329d2d39f93789415121118818aa1a89f84d13d789704",
+          "bytes": 340097
+        }
+      ]
+    }
+  ]
+}

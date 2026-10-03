@@ -1,0 +1,76 @@
+{
+  "effective_terrain_and_verge_summary": {
+    "-0.02": {
+      "count": 3678,
+      "min_m": -0.08848285675048828,
+      "max_m": 0.21997547149658203,
+      "mean_m": 0.05808189240663579,
+      "abs_over_0p22m": 0
+    },
+    "0.05": {
+      "count": 3678,
+      "min_m": -0.09879016876220703,
+      "max_m": 0.21800708770751953,
+      "mean_m": 0.014956436966216194,
+      "abs_over_0p22m": 0
+    },
+    "0.25": {
+      "count": 3678,
+      "min_m": -0.1596212387084961,
+      "max_m": 0.21239948272705078,
+      "mean_m": 0.018502354686710094,
+      "abs_over_0p22m": 0
+    },
+    "1": {
+      "count": 3678,
+      "min_m": -0.2373666763305664,
+      "max_m": 0.2347583770751953,
+      "mean_m": 0.05293438264764866,
+      "abs_over_0p22m": 11
+    }
+  },
+  "source_sha256": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+  "source_unchanged": true,
+  "method": "Actual saved road face boundary edges position-welded at 1e-5m, boundary samples <=0.25m apart, independent world-space terrain raycasts. Bounded y(-372,-96); offsets outward based on polygon center. Not continuous sweep or UE validation.",
+  "summary": {
+    "-0.02": {
+      "count": 3678,
+      "min_road_above_terrain_m": -0.08848285675048828,
+      "max_road_above_terrain_m": 0.21997547149658203,
+      "mean_road_above_terrain_m": 0.05808189240663579,
+      "abs_over_0p22m": 0
+    },
+    "0.05": {
+      "count": 3678,
+      "min_road_above_terrain_m": -0.09879016876220703,
+      "max_road_above_terrain_m": 0.21800708770751953,
+      "mean_road_above_terrain_m": 0.058905723887075864,
+      "abs_over_0p22m": 0
+    },
+    "0.25": {
+      "count": 3678,
+      "min_road_above_terrain_m": -0.12350940704345703,
+      "max_road_above_terrain_m": 0.21239948272705078,
+      "mean_road_above_terrain_m": 0.06198778354713228,
+      "abs_over_0p22m": 0
+    },
+    "1": {
+      "count": 3678,
+      "min_road_above_terrain_m": -0.1938467025756836,
+      "max_road_above_terrain_m": 0.24405574798583984,
+      "mean_road_above_terrain_m": 0.07718620123974716,
+      "abs_over_0p22m": 9
+    }
+  },
+  "missing_ground": 0,
+  "raw_probe_data": {
+    "location": "Already delivered model ZIP",
+    "package_file_name": "AetherLab_Global_Blockout_Model_v1.zip",
+    "relative_member_path": "AetherLab_Global_Blockout_v1/docs/Shoulder_Edge_Probes.json",
+    "raw_sha256": "3830779ebd7007b5137d9574db6a564cc119de9ce8b876404b5bb50f38135961",
+    "raw_bytes": 5104686,
+    "sample_count": 14712,
+    "git_contains_raw_samples": false,
+    "reproduction": "Run scripts/check_shoulders.py on the frozen source; its output includes the complete sample list."
+  }
+}
