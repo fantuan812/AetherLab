@@ -1,0 +1,537 @@
+{
+  "review_date_utc": "2026-10-03",
+  "conclusion_zh": "本轮Blender轻量独立审查未发现阻塞该局部候选交付的问题；保留列明的接缝、分片与既有交会高程限制。不构成全图最终美术或UE验收。",
+  "source_sha256": {
+    "before": "2125fbd4f5887aea272240581c062b5adbb0ce66c557b71f236dcd82b0c00ca7",
+    "after": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94"
+  },
+  "blocking_findings": [],
+  "source_preservation": {
+    "original_objects_retained": true,
+    "new_object_count": 758,
+    "route_count": 44,
+    "routes_object_and_mesh_exact": true,
+    "center_count": 12,
+    "centers_exact": true,
+    "character_object_count": 10,
+    "character_objects_and_meshes_exact": true,
+    "original_armatures_exact": true,
+    "original_materials_exact": true,
+    "original_meshes_removed": [
+      "SCN03_Gate_Lintel",
+      "SCN03_Gate_Pier-4",
+      "SCN03_Gate_Pier4",
+      "SCN03_Gate_Roof"
+    ],
+    "foliage_z_only_count": 475,
+    "image_relative_path_remaps_only": [
+      {
+        "image": "T_AgedCedar_Albedo.png",
+        "before": "//../../../../../..<redacted-local-workspace>/shelter_refinement/textures/T_AgedCedar_Albedo.png",
+        "after": "//../../../shelter_refinement/textures/T_AgedCedar_Albedo.png",
+        "packed_sha256": "b2b76f9cc629516624462326a42d89e5c5dde59185f763d1a3c9835cd7c43525"
+      },
+      {
+        "image": "T_WeatheredSlate_Albedo.png",
+        "before": "//../../../../../..<redacted-local-workspace>/shelter_refinement/textures/T_WeatheredSlate_Albedo.png",
+        "after": "//../../../shelter_refinement/textures/T_WeatheredSlate_Albedo.png",
+        "packed_sha256": "581072ea65fe5909e01676a82789ab184bb6a7848d590fbc23c975b4f50824cf"
+      }
+    ]
+  },
+  "terrain_topology": {
+    "vertices": 53444,
+    "faces": 52836,
+    "connected_components": 1,
+    "component_vertices": [
+      53444
+    ],
+    "boundary_edges": 830,
+    "internal_boundary_edges": [],
+    "nonmanifold_edges_gt2": 0,
+    "zero_area_faces": 0
+  },
+  "terrain_scope": {
+    "reviewer_script_sha256": "658b644041b5519c828dd443b23be1fee1ecbbe8ef4ed2a6bb27b080135c43be",
+    "source_sha256": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+    "source_unchanged": true,
+    "original_xy_vertex_count": 43466,
+    "candidate_xy_vertex_count": 53444,
+    "retained_original_xy_count": 43466,
+    "removed_original_xy_count": 0,
+    "added_xy_count": 9978,
+    "changed_original_z_count": 644,
+    "changed_original_xy_bounds": [
+      [
+        -92.0,
+        12.0
+      ],
+      [
+        -380.0,
+        -88.0
+      ]
+    ],
+    "added_xy_bounds": [
+      [
+        -96.0,
+        16.0
+      ],
+      [
+        -380.0,
+        -88.0
+      ]
+    ],
+    "matched_original_faces_smoothing_changed": 0,
+    "smoothing_change_xy_bounds": null,
+    "all_candidate_face_materials": [
+      "LAND3_Grade_Conforming_Moss_Earth"
+    ],
+    "note": "Material slot reassignment is global; the new material is derived from original with local zero-outside-mask additional blend. Raw original material datablocks independently compared exact."
+  },
+  "shoulder_topology": {
+    "LAND3_EarthVerge_C01_Mountain_Main": {
+      "vertices": 7375,
+      "faces": 9117,
+      "connected_components": 7,
+      "component_vertices": [
+        288,
+        440,
+        959,
+        3028,
+        2647,
+        9,
+        4
+      ],
+      "boundary_edges": 6647,
+      "internal_boundary_edges": [],
+      "nonmanifold_edges_gt2": 0,
+      "zero_area_faces": 0
+    },
+    "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass": {
+      "vertices": 3503,
+      "faces": 3062,
+      "connected_components": 26,
+      "component_vertices": [
+        188,
+        1379,
+        4,
+        9,
+        646,
+        4,
+        1180,
+        3,
+        4,
+        5,
+        4,
+        4,
+        4,
+        3,
+        4,
+        3,
+        3,
+        3,
+        6,
+        4,
+        3,
+        5,
+        3,
+        13,
+        14,
+        5
+      ],
+      "boundary_edges": 4708,
+      "internal_boundary_edges": [],
+      "nonmanifold_edges_gt2": 0,
+      "zero_area_faces": 0
+    }
+  },
+  "foliage_contact": {
+    "changed_count": 475,
+    "all_xy_and_mesh_links_retained": true,
+    "max_abs_origin_xy_bottom_gap_m": 9.5367431640625e-07,
+    "limitation": "Origin-XY bottom-height contact only; not every leaf/branch or entire footprint contact"
+  },
+  "gate": {
+    "original_bounds_retained": {
+      "SCN03_Gate_Pier-4": true,
+      "SCN03_Gate_Pier4": true,
+      "SCN03_Gate_Lintel": true,
+      "SCN03_Gate_Roof": true,
+      "SCN03_Registration_Canopy": true
+    },
+    "opening_width_from_piers_m": 5.0,
+    "opening_lintel_underside_z_m": 6.0,
+    "vertical_ray_sample_count": 3111,
+    "new_geometry_in_opening_below_5p99m": [],
+    "limit": "Sampled mesh clearance, not navigation or collision capsule sweep"
+  },
+  "registration_roof": {
+    "same_mesh_as_source": true,
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "bounds": {
+      "min": [
+        -13.729002952575684,
+        -75.41633605957031,
+        3.4000000953674316
+      ],
+      "max": [
+        -6.270998001098633,
+        -68.58366394042969,
+        4.977097988128662
+      ]
+    }
+  },
+  "edge_probes_005m": {
+    "count": 4076,
+    "missing": 0,
+    "raw_min_m": -0.09525489807128906,
+    "raw_max_m": 0.21549510955810547,
+    "effective_min_m": -0.16822338104248047,
+    "effective_max_m": 0.21549510955810547,
+    "abs_effective_over_0p22": 0,
+    "worst_raised_sample": {
+      "road": "ROUTE_C01_Mountain_Rescue_Bypass",
+      "xy": [
+        -53.46402359008789,
+        -298.8468322753906
+      ],
+      "offset_m": 0.05,
+      "raw_step_m": -0.05668163299560547,
+      "effective_step_m": -0.16822338104248047,
+      "support": "LAND3_EarthVerge_C01_Mountain_Main",
+      "target_road_at_probe": null,
+      "effective_including_target_roads_m": -0.16822338104248047,
+      "all_support": "LAND3_EarthVerge_C01_Mountain_Main"
+    },
+    "worst_lower_sample": {
+      "road": "ROUTE_C01_Mountain_Main",
+      "xy": [
+        -53.179134368896484,
+        -297.8924560546875
+      ],
+      "offset_m": 0.05,
+      "raw_step_m": 0.21549510955810547,
+      "effective_step_m": 0.21549510955810547,
+      "support": "WORLD_Terrain_Continuous_800x800m",
+      "target_road_at_probe": "ROUTE_C01_Mountain_Rescue_Bypass",
+      "effective_including_target_roads_m": 0.16048717498779297,
+      "all_support": "ROUTE_C01_Mountain_Rescue_Bypass"
+    },
+    "probes_on_saved_target_road": 191,
+    "including_target_roads_min_m": -0.1921710968017578,
+    "including_target_roads_max_m": 0.17331886291503906,
+    "including_target_roads_abs_over_0p22": 0,
+    "worst_lower_including_target_roads": {
+      "road": "ROUTE_C01_Mountain_Main",
+      "xy": [
+        -53.30210494995117,
+        -298.2613525390625
+      ],
+      "offset_m": 0.05,
+      "raw_step_m": 0.17392921447753906,
+      "effective_step_m": 0.17392921447753906,
+      "support": "WORLD_Terrain_Continuous_800x800m",
+      "target_road_at_probe": "ROUTE_C01_Mountain_Rescue_Bypass",
+      "effective_including_target_roads_m": 0.17331886291503906,
+      "all_support": "ROUTE_C01_Mountain_Rescue_Bypass"
+    },
+    "including_target_roads_mean_m": 0.011733001798128122,
+    "off_road_only": {
+      "count": 3885,
+      "min_m": -0.16822338104248047,
+      "max_m": 0.06318950653076172,
+      "mean_m": 0.01311197026202424
+    }
+  },
+  "outer_edge_probe": {
+    "samples": 6549,
+    "known": 6549,
+    "min_m": -0.024309158325195312,
+    "max_m": 0.04313468933105469,
+    "abs_over_0p02m_count": 5,
+    "highest": [
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -57.32154083251953,
+          -305.734375,
+          14.109952926635742
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 14.066818237304688,
+        "above_road_m": null,
+        "above_terrain_m": 0.04313468933105469
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -56.74034118652344,
+          -303.2320556640625,
+          13.789876937866211
+        ],
+        "nearest_road_xy_distance_m": 1.4999936819076538,
+        "road_z": null,
+        "terrain_z": 13.748908996582031,
+        "above_road_m": null,
+        "above_terrain_m": 0.04096794128417969
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -58.04053497314453,
+          -304.2433166503906,
+          13.761598587036133
+        ],
+        "nearest_road_xy_distance_m": 1.4999982118606567,
+        "road_z": null,
+        "terrain_z": 13.732093811035156,
+        "above_road_m": null,
+        "above_terrain_m": 0.029504776000976562
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -52.30765914916992,
+          -290.6927185058594,
+          12.951318740844727
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 12.929367065429688,
+        "above_road_m": null,
+        "above_terrain_m": 0.021951675415039062
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -85.23750305175781,
+          -351.4727783203125,
+          15.917492866516113
+        ],
+        "nearest_road_xy_distance_m": 1.5571764707565308,
+        "road_z": null,
+        "terrain_z": 15.898674011230469,
+        "above_road_m": null,
+        "above_terrain_m": 0.01881885528564453
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -85.23750305175781,
+          -351.4727783203125,
+          15.917492866516113
+        ],
+        "nearest_road_xy_distance_m": 1.5571764707565308,
+        "road_z": null,
+        "terrain_z": 15.898674011230469,
+        "above_road_m": null,
+        "above_terrain_m": 0.01881885528564453
+      }
+    ],
+    "lowest": [
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -57.390438079833984,
+          -303.7376708984375,
+          13.878705978393555
+        ],
+        "nearest_road_xy_distance_m": 1.4999959468841553,
+        "road_z": null,
+        "terrain_z": 13.90301513671875,
+        "above_road_m": null,
+        "above_terrain_m": -0.024309158325195312
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -57.26041793823242,
+          -303.63653564453125,
+          13.89310073852539
+        ],
+        "nearest_road_xy_distance_m": 1.4999936819076538,
+        "road_z": null,
+        "terrain_z": 13.903778076171875,
+        "above_road_m": null,
+        "above_terrain_m": -0.010677337646484375
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -56.78047180175781,
+          -304.11114501953125,
+          14.021383285522461
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 14.030364990234375,
+        "above_road_m": null,
+        "above_terrain_m": -0.008981704711914062
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -57.4026985168457,
+          -305.97784423828125,
+          14.167098999023438
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 14.175613403320312,
+        "above_road_m": null,
+        "above_terrain_m": -0.008514404296875
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -57.45680236816406,
+          -306.14013671875,
+          14.189580917358398
+        ],
+        "nearest_road_xy_distance_m": 1.5000070333480835,
+        "road_z": null,
+        "terrain_z": 14.197021484375,
+        "above_road_m": null,
+        "above_terrain_m": -0.0074405670166015625
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -56.72636413574219,
+          -303.9488220214844,
+          13.997661590576172
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 14.002548217773438,
+        "above_road_m": null,
+        "above_terrain_m": -0.004886627197265625
+      }
+    ]
+  },
+  "fixed_during_review": [
+    {
+      "id": "wide_smoothing_scope",
+      "before": "初候选10,261个保留原面在整个南部横带改变平滑标志",
+      "after": "最终保留原面平滑标志变化0；新地形几何局限在申报道路走廊"
+    },
+    {
+      "id": "shoulder_above_existing_road",
+      "before": "初候选37个土肩面心高于原道路超过1cm，最高16.29cm",
+      "after": "最终同类面心0；仅4个边缘投影命中面心，均低道路约1.2cm"
+    },
+    {
+      "id": "clipping_degeneracy",
+      "before": "中间候选主/绕土肩9/3零面积面，主路肩16条>2面边",
+      "after": "最终两土肩均0零面积面、0条>2面边；无单顶点连通片"
+    },
+    {
+      "id": "overbroad_route_clipping",
+      "before": "中间候选裁切/贴高涉及其他路线，救援坡道附近出现高程副作用",
+      "after": "最终裁切/贴高限制为两条山路；外圈最大离地恢复为4.31cm"
+    },
+    {
+      "id": "comment_honesty",
+      "before": "外圈注释将+4mm误称压入地形",
+      "after": "已说明为非焊接覆盖层；最终报告明确分片和连续接缝限制"
+    }
+  ],
+  "remaining_findings": [
+    {
+      "severity": "nonblocking_for_this_art_batch",
+      "id": "retained_crossing_grades",
+      "detail_zh": "原两条道路网格精确保留，其交会高程差仍在。5cm外含两条实际道路的支撑采样最大下差17.33cm、反向高19.22cm；不能将道路投影外的6.32cm下差当全部绝对高差上限。"
+    },
+    {
+      "severity": "nonblocking_for_this_art_batch",
+      "id": "open_shoulder_patches",
+      "detail_zh": "主线/绕行土肩分别为7/26个连通片的开放面网格，不是连续焊接的实体；地形无内部边只适用于底部连续地形。"
+    },
+    {
+      "severity": "nonblocking_for_this_art_batch",
+      "id": "outer_edge_conformance",
+      "detail_zh": "外圈近1.5m边界离散采样仍高于地形4.31cm或埋入2.43cm；+4mm仅是顶点覆盖层设计值。"
+    },
+    {
+      "severity": "nonblocking_for_this_art_batch",
+      "id": "bounded_visual_finish",
+      "detail_zh": "道路轮廓仍规则，其他区域大量灰盒；16采样渲染保留噪点。该批是局部美术改善，未达到全图最终风格或引擎资产生产验收。"
+    }
+  ],
+  "visual_review": {
+    "all_six_final_views_actually_viewed": true,
+    "all_six_before_views_actually_viewed": true,
+    "camera_and_render_receipts_match": true,
+    "findings": [
+      {
+        "view": "Ridge_Reveal",
+        "finding_zh": "原弯道中央黑色悬空裂口已明显消失；可见道路与地形接近，原灌木接地后不再被大面积埋住。"
+      },
+      {
+        "view": "Gate",
+        "finding_zh": "石砌分层、横脊檐瓦、木檐口和两盏灯柱清楚可见；门洞未被饰件缩窄；登记棚屋顶与既有木构风格相符。"
+      },
+      {
+        "view": "Town_Reveal",
+        "finding_zh": "南门与登记棚形成更可读的入口；植被和路肩关系改善。"
+      },
+      {
+        "view": "Entry",
+        "finding_zh": "角色、量尺、救援车与原铺路的空间关系保持；未见本轮明显可见回归。"
+      },
+      {
+        "view": "South_Overview",
+        "finding_zh": "本批主线/绕行局部过渡改善，可见路网、树群及镇区排布保持。"
+      },
+      {
+        "view": "Global",
+        "finding_zh": "全图布局与主要灰盒关系保持；初候选的南部全宽平滑偏移已收窄。全图图像仅作布局与明显回归检查。"
+      }
+    ]
+  },
+  "documentation_review": {
+    "readme_sha256": "7e9777070fbf2d7ca743b725f5b1232ddb8327ce6e122988e518335459c733a3",
+    "final_source_sha_present": true,
+    "script_sha256": "ed9fb6557dc19d7774b35abada146b9eef1f8881c93a85db382806f3d9232edf",
+    "ast_parse": true,
+    "note_zh": "本报告与最终JSON包含分层采样，不沿用初候选数值；全地形派生材质换槽属于显式申报，原材质数据未改。"
+  },
+  "evidence": [
+    {
+      "file": "Saved_Source_Review.json",
+      "sha256": "ede486c49cf735bb9535b326405aa53cc1c4285c18246720de43bbb1fd8f72c5"
+    },
+    {
+      "file": "Geometry_Probe.json",
+      "sha256": "1f8ea48304cb66d2005502d7444bf66cef648034eaea9a654eff27aa6a6a2a72"
+    },
+    {
+      "file": "Terrain_Scope_Probe.json",
+      "sha256": "7e5e3ab89c65128146add82a6216fccac6360d7e7020eebf8856ca2078f87f8a"
+    },
+    {
+      "file": "Verge_Boundary_Probe.json",
+      "sha256": "2e31b24662db435b3637dfb04518eba6a93a49dbe9c6431f2ca97d9865074300"
+    },
+    {
+      "file": "Render_Evidence_Review.json",
+      "sha256": "7620948256a653f10846dc8a6337ee8488c6e6c4a505cee82ef8444ea02af728"
+    },
+    {
+      "file": "Script_Review.json",
+      "sha256": "0c8fff7c34b9fdcc23384285ded96a0689a91f0ae69a9b2f43de39b6ebc366d5"
+    }
+  ],
+  "scope_limits_zh": [
+    "仅Blender已保存源回读、静态脚本/数据比较、离散几何查询及六机位图像审看；审查不写作者源",
+    "未执行UE编译、规则测试、运行测试、导航、碰撞、物理、性能、LOD或光照UV验收",
+    "离散点与边界采样不能证明整个连续网格处处无缝；视觉检查仅覆盖所列机位",
+    "475植被接地以最低顶点高度对原点XY的地形高度，不代表整个植物脚印或全部叶片贴地",
+    "本独立报告对应内置源0a55daa，不代替便携外置贴图转出及ZIP打包完整性的单独核验"
+  ]
+}

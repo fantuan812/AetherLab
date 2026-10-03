@@ -1,0 +1,81 @@
+{
+  "scripts": [
+    {
+      "file": "check_shoulders.py",
+      "sha256": "2fca8d926c6bf59302f5c0c0b88e3297ba8abbf39a53af948e26a0b84e869614",
+      "ast_parse": true
+    },
+    {
+      "file": "compare_scene_snapshots.py",
+      "sha256": "a16f0367f5bca81cb3cd35be9f1d8070dc31234e393c1db94b61972fc7ad8aea",
+      "ast_parse": true
+    },
+    {
+      "file": "independent_geometry_review.py",
+      "sha256": "01a95cce24230bf791dd2f60936cbaed44e659246b2e24b38325d949b73af77f",
+      "ast_parse": true
+    },
+    {
+      "file": "independent_saved_snapshot.py",
+      "sha256": "6d154b5ea8b6b7823a721a24273c94bed65a32b8ee7adee239598bfa9cf107b2",
+      "ast_parse": true
+    },
+    {
+      "file": "make_portable_copy.py",
+      "sha256": "660d77cbea404da838a0f17fa0a8b5cab8f355c265971bfd294eef717c9e5165",
+      "ast_parse": true
+    },
+    {
+      "file": "package_scene.py",
+      "sha256": "7080d13c97fd3106ec4d00667ac4cc925a6d569ecac537a3e8dff462ae6bb1d3",
+      "ast_parse": true
+    },
+    {
+      "file": "refine_scene.py",
+      "sha256": "ed9fb6557dc19d7774b35abada146b9eef1f8881c93a85db382806f3d9232edf",
+      "ast_parse": true
+    },
+    {
+      "file": "render_refinement.py",
+      "sha256": "c5cfb68c7c24d38d7ae08dc46664b32c8d4e01df2b2a3a1b88080efd51c2436c",
+      "ast_parse": true
+    },
+    {
+      "file": "reviewer_assemble_review.py",
+      "sha256": "e794af735f97e456e48e24172317804a65b1f009021902bca6485c96d97d145e",
+      "ast_parse": true
+    },
+    {
+      "file": "reviewer_compare_sources.py",
+      "sha256": "4c723476d283cad4ee65afd040f815b04a9d2c5da979f314240810863e7f3591",
+      "ast_parse": true
+    },
+    {
+      "file": "reviewer_probe_geometry.py",
+      "sha256": "edabb75c429c79ab5008adc793561cd4091493a9ea4223a7840995682ef36f3b",
+      "ast_parse": true
+    },
+    {
+      "file": "reviewer_probe_terrain_scope.py",
+      "sha256": "0e96bc5711dd51e8d9ee245285b86f6ef322025b866ac8666568b97719391172",
+      "ast_parse": true
+    },
+    {
+      "file": "reviewer_probe_verge_boundaries.py",
+      "sha256": "77052b700f6e7a521d1f6ee82c388173222a00e79ca6ca0dd4be5dc2c8c0f007",
+      "ast_parse": true
+    },
+    {
+      "file": "reviewer_review_render_evidence.py",
+      "sha256": "ea997f287446c149ddfc496b36eb05f40aa040a1b7e33926f25ab205469bbdc4",
+      "ast_parse": true
+    },
+    {
+      "file": "verify_portable_copy.py",
+      "sha256": "f392aad997984dc25861f4ef2184dee057efc39b4a23e61d21d831f10a707563",
+      "ast_parse": true
+    }
+  ],
+  "limits": "Python AST of public Git package only; not UE compile or project testing",
+  "public_packaging_note": "Reviewer default root paths are relative; the previously delivered user ZIP is unchanged."
+}

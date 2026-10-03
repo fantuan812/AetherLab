@@ -1,0 +1,52 @@
+{
+  "batch": "SouthTransitionGate_v3",
+  "date": "2026-10-03",
+  "all_ordinary_zip_under_14MiB": true,
+  "source_identity_preserved": true,
+  "source_sha256": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+  "files": [
+    {
+      "file_name": "AetherLab_Global_World_Blockout_v1.blend",
+      "library_version": 3,
+      "sha256": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+      "bytes": 22484021,
+      "status": "delivered and verified"
+    },
+    {
+      "file_name": "AetherLab_Global_Blockout_Model_v1.zip",
+      "library_version": 2,
+      "sha256": "469ed2f643283af2ccc4c6feabe593da3b128124da70b83db1aeb23e4d06d125",
+      "bytes": 8454766,
+      "status": "delivered and verified"
+    },
+    {
+      "file_name": "AetherLab_Global_Blockout_Views_v1.zip",
+      "library_version": 2,
+      "sha256": "3aa6d5e397a1231bfdbba6bd0d5eeff0f50e80e01e21d1c8aed79b85c350c6ea",
+      "bytes": 2514804,
+      "status": "delivered and verified"
+    },
+    {
+      "file_name": "Ridge_Reveal_Before_After.jpg",
+      "library_version": 1,
+      "sha256": "465fdeb810034b8b88c329d2d39f93789415121118818aa1a89f84d13d789704",
+      "bytes": 340097,
+      "status": "delivered and verified"
+    },
+    {
+      "file_name": "Gate_Before_After.jpg",
+      "library_version": 0,
+      "sha256": "7f18dfba74de871cfa6e62fe403fde04cde8840af2a05e3f5271143285d71ec1",
+      "bytes": 384183,
+      "status": "delivered and verified"
+    },
+    {
+      "file_name": "AetherLab_Global_Blockout_Textures_v1.zip",
+      "library_version": 0,
+      "sha256": "2734a57f776fbca092266ebf87cdba1012977ad2667e558c9c2eb49823a6c51e",
+      "bytes": 8477683,
+      "status": "delivered and verified"
+    }
+  ],
+  "privacy_note": "Repository copy omits private Library identities and download URLs. Use the files already delivered in the user conversation."
+}

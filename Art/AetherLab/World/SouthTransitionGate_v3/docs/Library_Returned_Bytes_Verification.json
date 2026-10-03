@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "file": "AetherLab_Global_Blockout_Model_v1.zip",
+      "sha256": "469ed2f643283af2ccc4c6feabe593da3b128124da70b83db1aeb23e4d06d125",
+      "bytes": 8454766,
+      "library_download_matches_uploaded": true
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Views_v1.zip",
+      "sha256": "3aa6d5e397a1231bfdbba6bd0d5eeff0f50e80e01e21d1c8aed79b85c350c6ea",
+      "bytes": 2514804,
+      "library_download_matches_uploaded": true
+    }
+  ]
+}

@@ -1,0 +1,304 @@
+{
+  "review_date_utc": "2026-10-03",
+  "review_scope": "Public Git evidence packaging only; read-only static and archive-byte checks. No model changes, Blender runs, UE builds or rule tests.",
+  "public_directory": "Art/AetherLab/World/SouthTransitionGate_v3",
+  "public_file_count": 40,
+  "conclusion_zh": "公开Git包装复审未发现阻塞项；脱敏未改动已交付模型/图像归档字节，原始探针可通过ZIP成员路径和SHA追溯。",
+  "passed": true,
+  "blocking_findings": [],
+  "privacy_review": {
+    "private_identity_path_download_or_credential_findings": [],
+    "email_scan_note": "Python matrix-multiplication expressions were excluded as code operators; no address found in actual strings, comments or documents.",
+    "no_external_download_links": true
+  },
+  "syntax": {
+    "python_ast_parse_count": 15,
+    "json_parse_count": 22,
+    "current_public_script_sha_manifest_matches": true,
+    "scripts_changed_from_user_archive": [
+      "scripts/reviewer_assemble_review.py",
+      "scripts/reviewer_compare_sources.py",
+      "scripts/reviewer_probe_geometry.py",
+      "scripts/reviewer_probe_terrain_scope.py",
+      "scripts/reviewer_probe_verge_boundaries.py",
+      "scripts/reviewer_review_render_evidence.py"
+    ],
+    "change_scope": "Six reviewer default-root statements changed from production-specific location to script-relative location; no other script line changes detected."
+  },
+  "links": {
+    "checked_relative_count": 6,
+    "all_resolve": true,
+    "details": [
+      {
+        "document": "README.zh-CN.md",
+        "target": "docs/README.zh-CN.md",
+        "exists": true
+      },
+      {
+        "document": "README.zh-CN.md",
+        "target": "docs/Independent_Review.zh-CN.md",
+        "exists": true
+      },
+      {
+        "document": "README.zh-CN.md",
+        "target": "docs/Saved_Source_Comparison.json",
+        "exists": true
+      },
+      {
+        "document": "README.zh-CN.md",
+        "target": "docs/Geometry_Results.json",
+        "exists": true
+      },
+      {
+        "document": "README.zh-CN.md",
+        "target": "docs/Render_Receipts.json",
+        "exists": true
+      },
+      {
+        "document": "README.zh-CN.md",
+        "target": "docs/Delivery_Manifest.json",
+        "exists": true
+      }
+    ]
+  },
+  "probe_traceability": {
+    "package_file": "AetherLab_Global_Blockout_Model_v1.zip",
+    "relative_member_path": "AetherLab_Global_Blockout_v1/docs/Shoulder_Edge_Probes.json",
+    "raw_sha256": "3830779ebd7007b5137d9574db6a564cc119de9ce8b876404b5bb50f38135961",
+    "raw_bytes": 5104686,
+    "sample_count": 14712,
+    "public_summary_matches_original_non_sample_fields": true,
+    "raw_sha_size_and_count_match": true,
+    "public_file_is_explicitly_summary": true,
+    "reproduction_script": "scripts/check_shoulders.py"
+  },
+  "delivered_archive_verification": [
+    {
+      "file": "AetherLab_Global_Blockout_Model_v1.zip",
+      "sha256": "469ed2f643283af2ccc4c6feabe593da3b128124da70b83db1aeb23e4d06d125",
+      "bytes": 8454766,
+      "checked_members": 37,
+      "archive_and_members_match": true
+    },
+    {
+      "file": "AetherLab_Global_Blockout_Views_v1.zip",
+      "sha256": "3aa6d5e397a1231bfdbba6bd0d5eeff0f50e80e01e21d1c8aed79b85c350c6ea",
+      "bytes": 2514804,
+      "checked_members": 15,
+      "archive_and_members_match": true
+    }
+  ],
+  "documentation": {
+    "explicit_original_delivery_vs_public_sanitization_distinction": true,
+    "original_evidence_hashes_refer_to_original_delivery": "Documented in the public README; current public script hashes are separately refreshed.",
+    "public_docs_readme_sha256": "d5d8b6f1c96e599aca93f83dde6105db4fcfa2533b7b4448d3338d7125fa19e2",
+    "public_root_readme_sha256": "f04f6b1d65793070a248bd1a6963f0f68021cd4d51ce6ad4051848df585ebca4"
+  },
+  "limitations_zh": [
+    "仅核对当前公开目录与本地已交付归档字节；不代表已完成Git远端发布",
+    "脚本保持生产目录约定，异地复现需按说明提供源文件并配置目录；未执行Blender",
+    "保留既有局部审查范围，不新增全图美术或UE验收结论"
+  ],
+  "public_files": [
+    {
+      "relative_path": "README.zh-CN.md",
+      "sha256": "f04f6b1d65793070a248bd1a6963f0f68021cd4d51ce6ad4051848df585ebca4",
+      "bytes": 1521
+    },
+    {
+      "relative_path": "docs/Baseline_World_Manifest.json",
+      "sha256": "18d5ce780443efacd145f6c65a573c9d45cc3fa93b3d1415665cf30552079d1f",
+      "bytes": 423348
+    },
+    {
+      "relative_path": "docs/Delivery_Manifest.json",
+      "sha256": "de67cf1b2218a1d2fdd0625962aaf304073ab417cbcaf04918be5b82b0b4a037",
+      "bytes": 1875
+    },
+    {
+      "relative_path": "docs/Extracted_Package_Reopen.json",
+      "sha256": "7fce27f320dc4944376bd301fcc13650d4e3b70073659198846840fa9f9e141b",
+      "bytes": 1945
+    },
+    {
+      "relative_path": "docs/Geometry_Probe.json",
+      "sha256": "1f8ea48304cb66d2005502d7444bf66cef648034eaea9a654eff27aa6a6a2a72",
+      "bytes": 18919
+    },
+    {
+      "relative_path": "docs/Geometry_Results.json",
+      "sha256": "fcb8e4cced1da66809e8ef51b1b7edf1aeff6fd65073b503010dc23af7a51a05",
+      "bytes": 194603
+    },
+    {
+      "relative_path": "docs/Independent_Review.json",
+      "sha256": "467ed6f34270546563b5d7fd513b538fc3ab7bbfb91e8d83c8c871fc0614627e",
+      "bytes": 17911
+    },
+    {
+      "relative_path": "docs/Independent_Review.zh-CN.md",
+      "sha256": "099225e31b4ddb415d6446f28d7897a1798775d40f1be46109b9489b24468354",
+      "bytes": 4740
+    },
+    {
+      "relative_path": "docs/Library_Returned_Bytes_Verification.json",
+      "sha256": "6813185bc3f041f4fcec33425a3b83efc9dcb7b37b4af0cc8041fcc0ce054c2e",
+      "bytes": 469
+    },
+    {
+      "relative_path": "docs/Package_Manifest.json",
+      "sha256": "4ef5b5c2f73148f1b038d5ec09951bf4f04eb0db23aaca55b71ea690b9dad2ab",
+      "bytes": 11693
+    },
+    {
+      "relative_path": "docs/Portable_Manifest.json",
+      "sha256": "93eec5fee888a77fcd817741e7c6404c549e28fcdbdfcd6318b9661a3b25f6ff",
+      "bytes": 2289
+    },
+    {
+      "relative_path": "docs/Portable_Reopen_Validation.json",
+      "sha256": "7fce27f320dc4944376bd301fcc13650d4e3b70073659198846840fa9f9e141b",
+      "bytes": 1945
+    },
+    {
+      "relative_path": "docs/README.zh-CN.md",
+      "sha256": "d5d8b6f1c96e599aca93f83dde6105db4fcfa2533b7b4448d3338d7125fa19e2",
+      "bytes": 6209
+    },
+    {
+      "relative_path": "docs/Render_Evidence_Review.json",
+      "sha256": "7620948256a653f10846dc8a6337ee8488c6e6c4a505cee82ef8444ea02af728",
+      "bytes": 4113
+    },
+    {
+      "relative_path": "docs/Render_Receipts.json",
+      "sha256": "19a474bd037496abf3205832a3eee5b00f87421231556719318617c67fbcf8a3",
+      "bytes": 12031
+    },
+    {
+      "relative_path": "docs/Saved_Source_Comparison.json",
+      "sha256": "722e0a6770ec2ace6d5153ba5686423e61554243f9e5a9fb07996738304276ad",
+      "bytes": 47878
+    },
+    {
+      "relative_path": "docs/Saved_Source_Review.json",
+      "sha256": "ef58a76bb660899357a44b04b3fcd138cfe9ceb4033cce165019735b210d0806",
+      "bytes": 46934
+    },
+    {
+      "relative_path": "docs/Script_Review.json",
+      "sha256": "0c8fff7c34b9fdcc23384285ded96a0689a91f0ae69a9b2f43de39b6ebc366d5",
+      "bytes": 1497
+    },
+    {
+      "relative_path": "docs/Script_Syntax_Check.json",
+      "sha256": "65cbca1bb8e5f745ee2a4ce9321e1089fa8c64c5a8fc676bfc4b6945b568f903",
+      "bytes": 2691
+    },
+    {
+      "relative_path": "docs/Shoulder_Edge_Probes.json",
+      "sha256": "5daa04c8b7b813643237b10346a9c2332af1e7f415df774d6fff287adadd95af",
+      "bytes": 2639
+    },
+    {
+      "relative_path": "docs/Terrain_Scope_Probe.json",
+      "sha256": "7e5e3ab89c65128146add82a6216fccac6360d7e7020eebf8856ca2078f87f8a",
+      "bytes": 1010
+    },
+    {
+      "relative_path": "docs/Texture_Compatibility.json",
+      "sha256": "18fa1fac818fa6e32fceef130d21b22cbf991133c527ede776013ded5b841f10",
+      "bytes": 473
+    },
+    {
+      "relative_path": "docs/Transition_Gate_Changes.json",
+      "sha256": "f59a831ad1879de50d7c3771a295c6a4e79a479b8689304fcd4426e37a86a228",
+      "bytes": 899252
+    },
+    {
+      "relative_path": "docs/Verge_Boundary_Probe.json",
+      "sha256": "2e31b24662db435b3637dfb04518eba6a93a49dbe9c6431f2ca97d9865074300",
+      "bytes": 15991
+    },
+    {
+      "relative_path": "docs/World_Manifest.json",
+      "sha256": "df04683fba505caa97ae7b43bb0bf075babcd4fa0b438032515911f8e75c294b",
+      "bytes": 491177
+    },
+    {
+      "relative_path": "scripts/check_shoulders.py",
+      "sha256": "2fca8d926c6bf59302f5c0c0b88e3297ba8abbf39a53af948e26a0b84e869614",
+      "bytes": 3441
+    },
+    {
+      "relative_path": "scripts/compare_scene_snapshots.py",
+      "sha256": "a16f0367f5bca81cb3cd35be9f1d8070dc31234e393c1db94b61972fc7ad8aea",
+      "bytes": 3888
+    },
+    {
+      "relative_path": "scripts/independent_geometry_review.py",
+      "sha256": "01a95cce24230bf791dd2f60936cbaed44e659246b2e24b38325d949b73af77f",
+      "bytes": 22863
+    },
+    {
+      "relative_path": "scripts/independent_saved_snapshot.py",
+      "sha256": "6d154b5ea8b6b7823a721a24273c94bed65a32b8ee7adee239598bfa9cf107b2",
+      "bytes": 7885
+    },
+    {
+      "relative_path": "scripts/make_portable_copy.py",
+      "sha256": "660d77cbea404da838a0f17fa0a8b5cab8f355c265971bfd294eef717c9e5165",
+      "bytes": 3387
+    },
+    {
+      "relative_path": "scripts/package_scene.py",
+      "sha256": "7080d13c97fd3106ec4d00667ac4cc925a6d569ecac537a3e8dff462ae6bb1d3",
+      "bytes": 5657
+    },
+    {
+      "relative_path": "scripts/refine_scene.py",
+      "sha256": "ed9fb6557dc19d7774b35abada146b9eef1f8881c93a85db382806f3d9232edf",
+      "bytes": 18011
+    },
+    {
+      "relative_path": "scripts/render_refinement.py",
+      "sha256": "c5cfb68c7c24d38d7ae08dc46664b32c8d4e01df2b2a3a1b88080efd51c2436c",
+      "bytes": 2469
+    },
+    {
+      "relative_path": "scripts/reviewer_assemble_review.py",
+      "sha256": "e794af735f97e456e48e24172317804a65b1f009021902bca6485c96d97d145e",
+      "bytes": 11847
+    },
+    {
+      "relative_path": "scripts/reviewer_compare_sources.py",
+      "sha256": "4c723476d283cad4ee65afd040f815b04a9d2c5da979f314240810863e7f3591",
+      "bytes": 4151
+    },
+    {
+      "relative_path": "scripts/reviewer_probe_geometry.py",
+      "sha256": "edabb75c429c79ab5008adc793561cd4091493a9ea4223a7840995682ef36f3b",
+      "bytes": 11104
+    },
+    {
+      "relative_path": "scripts/reviewer_probe_terrain_scope.py",
+      "sha256": "0e96bc5711dd51e8d9ee245285b86f6ef322025b866ac8666568b97719391172",
+      "bytes": 2444
+    },
+    {
+      "relative_path": "scripts/reviewer_probe_verge_boundaries.py",
+      "sha256": "77052b700f6e7a521d1f6ee82c388173222a00e79ca6ca0dd4be5dc2c8c0f007",
+      "bytes": 4224
+    },
+    {
+      "relative_path": "scripts/reviewer_review_render_evidence.py",
+      "sha256": "ea997f287446c149ddfc496b36eb05f40aa040a1b7e33926f25ab205469bbdc4",
+      "bytes": 1989
+    },
+    {
+      "relative_path": "scripts/verify_portable_copy.py",
+      "sha256": "f392aad997984dc25861f4ef2184dee057efc39b4a23e61d21d831f10a707563",
+      "bytes": 2391
+    }
+  ]
+}

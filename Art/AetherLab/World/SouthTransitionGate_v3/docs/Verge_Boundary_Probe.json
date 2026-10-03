@@ -1,0 +1,513 @@
+{
+  "reviewer_script_sha256": "24fa8264fe7948f6bb3e8a4c7852bd913c004bd3d1f8548f527b3410a92b5e6e",
+  "source_sha256": "0a55daaac0dec43bf31d93ae2fc90efb42332758f18228b47aceb0c5a6d48c94",
+  "source_unchanged": true,
+  "method": "For each actual shoulder topological boundary edge, probe 10%,50%,90% positions against world-space terrain and the two target mountain-route BVHs; road-adjacent if distance<1cm, exterior-like if road distance>10cm. Endpoint/cut-end boundary faces may be included. No scene save or UE.",
+  "samples": 34065,
+  "road_adjacent_boundary": {
+    "samples": 7049,
+    "known": 7021,
+    "min_m": -0.05830574035644531,
+    "max_m": 0.15977859497070312,
+    "abs_over_0p02m_count": 8,
+    "highest": [
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -53.421363830566406,
+          -298.7503662109375,
+          13.612506866455078
+        ],
+        "nearest_road_xy_distance_m": 3.4119690099032596e-05,
+        "road_z": 13.452728271484375,
+        "terrain_z": 13.518203735351562,
+        "above_road_m": 0.15977859497070312,
+        "above_terrain_m": 0.09430313110351562
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -53.44589614868164,
+          -298.7694396972656,
+          13.614152908325195
+        ],
+        "nearest_road_xy_distance_m": 3.259278673795052e-05,
+        "road_z": 13.454376220703125,
+        "terrain_z": 13.514739990234375,
+        "above_road_m": 0.1597766876220703,
+        "above_terrain_m": 0.09941291809082031
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -53.59238815307617,
+          -298.8833923339844,
+          13.547636032104492
+        ],
+        "nearest_road_xy_distance_m": 3.598778130253777e-05,
+        "road_z": 13.464202880859375,
+        "terrain_z": 13.494064331054688,
+        "above_road_m": 0.08343315124511719,
+        "above_terrain_m": 0.05357170104980469
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -53.46976089477539,
+          -298.78802490234375,
+          13.539403915405273
+        ],
+        "nearest_road_xy_distance_m": 3.814697265625e-05,
+        "road_z": 13.455970764160156,
+        "terrain_z": 13.511375427246094,
+        "above_road_m": 0.08343315124511719,
+        "above_terrain_m": 0.028028488159179688
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -53.518157958984375,
+          -298.8256530761719,
+          13.466300964355469
+        ],
+        "nearest_road_xy_distance_m": 3.4119690099032596e-05,
+        "road_z": 13.459220886230469,
+        "terrain_z": 13.504539489746094,
+        "above_road_m": 0.007080078125,
+        "above_terrain_m": -0.038238525390625
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -53.7388801574707,
+          -298.9973449707031,
+          13.481117248535156
+        ],
+        "nearest_road_xy_distance_m": 4.055078898090869e-05,
+        "road_z": 13.474044799804688,
+        "terrain_z": 13.473381042480469,
+        "above_road_m": 0.00707244873046875,
+        "above_terrain_m": 0.0077362060546875
+      }
+    ],
+    "lowest": [
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -51.13152313232422,
+          -291.9018859863281,
+          13.074155807495117
+        ],
+        "nearest_road_xy_distance_m": 7.62939453125e-06,
+        "road_z": 13.132461547851562,
+        "terrain_z": 13.024795532226562,
+        "above_road_m": -0.05830574035644531,
+        "above_terrain_m": 0.04936027526855469
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -51.135047912597656,
+          -291.90460205078125,
+          13.07438850402832
+        ],
+        "nearest_road_xy_distance_m": 3.598778130253777e-05,
+        "road_z": 13.132682800292969,
+        "terrain_z": 13.025466918945312,
+        "above_road_m": -0.05829429626464844,
+        "above_terrain_m": 0.04892158508300781
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -51.14206314086914,
+          -291.91009521484375,
+          13.095430374145508
+        ],
+        "nearest_road_xy_distance_m": 0.0,
+        "road_z": 13.133163452148438,
+        "terrain_z": 13.026832580566406,
+        "above_road_m": -0.03773307800292969,
+        "above_terrain_m": 0.06859779357910156
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -51.159637451171875,
+          -291.92376708984375,
+          13.096593856811523
+        ],
+        "nearest_road_xy_distance_m": 0.0,
+        "road_z": 13.134315490722656,
+        "terrain_z": 13.030235290527344,
+        "above_road_m": -0.03772163391113281,
+        "above_terrain_m": 0.06635856628417969
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -51.18423080444336,
+          -291.94293212890625,
+          13.118799209594727
+        ],
+        "nearest_road_xy_distance_m": 0.0,
+        "road_z": 13.135948181152344,
+        "terrain_z": 13.035003662109375,
+        "above_road_m": -0.017148971557617188,
+        "above_terrain_m": 0.08379554748535156
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -51.15260314941406,
+          -291.9183044433594,
+          13.116704940795898
+        ],
+        "nearest_road_xy_distance_m": 0.0,
+        "road_z": 13.13385009765625,
+        "terrain_z": 13.028877258300781,
+        "above_road_m": -0.017145156860351562,
+        "above_terrain_m": 0.08782768249511719
+      }
+    ]
+  },
+  "exterior_like_boundary": {
+    "samples": 25539,
+    "known": 25539,
+    "min_m": -0.04441261291503906,
+    "max_m": 0.14663124084472656,
+    "abs_over_0p02m_count": 17577,
+    "highest": [
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -53.72313690185547,
+          -299.3651428222656,
+          13.666528701782227
+        ],
+        "nearest_road_xy_distance_m": 0.10037973523139954,
+        "road_z": null,
+        "terrain_z": 13.5198974609375,
+        "above_road_m": null,
+        "above_terrain_m": 0.14663124084472656
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -53.72313690185547,
+          -299.3651428222656,
+          13.666528701782227
+        ],
+        "nearest_road_xy_distance_m": 0.10037973523139954,
+        "road_z": null,
+        "terrain_z": 13.5198974609375,
+        "above_road_m": null,
+        "above_terrain_m": 0.14663124084472656
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -53.73078155517578,
+          -299.3880615234375,
+          13.668411254882812
+        ],
+        "nearest_road_xy_distance_m": 0.10038334876298904,
+        "road_z": null,
+        "terrain_z": 13.526046752929688,
+        "above_road_m": null,
+        "above_terrain_m": 0.142364501953125
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -53.73078155517578,
+          -299.3880615234375,
+          13.668411254882812
+        ],
+        "nearest_road_xy_distance_m": 0.10038334876298904,
+        "road_z": null,
+        "terrain_z": 13.526046752929688,
+        "above_road_m": null,
+        "above_terrain_m": 0.142364501953125
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -53.75742721557617,
+          -299.3537902832031,
+          13.646676063537598
+        ],
+        "nearest_road_xy_distance_m": 0.13649795949459076,
+        "road_z": null,
+        "terrain_z": 13.517593383789062,
+        "above_road_m": null,
+        "above_terrain_m": 0.12908267974853516
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -53.75742721557617,
+          -299.3537902832031,
+          13.646676063537598
+        ],
+        "nearest_road_xy_distance_m": 0.13649795949459076,
+        "road_z": null,
+        "terrain_z": 13.517593383789062,
+        "above_road_m": null,
+        "above_terrain_m": 0.12908267974853516
+      }
+    ],
+    "lowest": [
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -55.45633316040039,
+          -300.52313232421875,
+          13.619550704956055
+        ],
+        "nearest_road_xy_distance_m": 0.15000393986701965,
+        "road_z": null,
+        "terrain_z": 13.663963317871094,
+        "above_road_m": null,
+        "above_terrain_m": -0.04441261291503906
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -55.45633316040039,
+          -300.52313232421875,
+          13.619550704956055
+        ],
+        "nearest_road_xy_distance_m": 0.15000393986701965,
+        "road_z": null,
+        "terrain_z": 13.663963317871094,
+        "above_road_m": null,
+        "above_terrain_m": -0.04441261291503906
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -54.4811897277832,
+          -299.76470947265625,
+          13.55059814453125
+        ],
+        "nearest_road_xy_distance_m": 0.15001097321510315,
+        "road_z": null,
+        "terrain_z": 13.593292236328125,
+        "above_road_m": null,
+        "above_terrain_m": -0.042694091796875
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -54.4811897277832,
+          -299.76470947265625,
+          13.55059814453125
+        ],
+        "nearest_road_xy_distance_m": 0.15001097321510315,
+        "road_z": null,
+        "terrain_z": 13.593292236328125,
+        "above_road_m": null,
+        "above_terrain_m": -0.042694091796875
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -54.15613555908203,
+          -299.5118713378906,
+          13.53024673461914
+        ],
+        "nearest_road_xy_distance_m": 0.15000863373279572,
+        "road_z": null,
+        "terrain_z": 13.57000732421875,
+        "above_road_m": null,
+        "above_terrain_m": -0.039760589599609375
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -54.15613555908203,
+          -299.5118713378906,
+          13.53024673461914
+        ],
+        "nearest_road_xy_distance_m": 0.15000863373279572,
+        "road_z": null,
+        "terrain_z": 13.57000732421875,
+        "above_road_m": null,
+        "above_terrain_m": -0.039760589599609375
+      }
+    ]
+  },
+  "outer_ring_approx_1p5m": {
+    "samples": 6549,
+    "known": 6549,
+    "min_m": -0.024309158325195312,
+    "max_m": 0.04313468933105469,
+    "abs_over_0p02m_count": 5,
+    "highest": [
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -57.32154083251953,
+          -305.734375,
+          14.109952926635742
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 14.066818237304688,
+        "above_road_m": null,
+        "above_terrain_m": 0.04313468933105469
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -56.74034118652344,
+          -303.2320556640625,
+          13.789876937866211
+        ],
+        "nearest_road_xy_distance_m": 1.4999936819076538,
+        "road_z": null,
+        "terrain_z": 13.748908996582031,
+        "above_road_m": null,
+        "above_terrain_m": 0.04096794128417969
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -58.04053497314453,
+          -304.2433166503906,
+          13.761598587036133
+        ],
+        "nearest_road_xy_distance_m": 1.4999982118606567,
+        "road_z": null,
+        "terrain_z": 13.732093811035156,
+        "above_road_m": null,
+        "above_terrain_m": 0.029504776000976562
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -52.30765914916992,
+          -290.6927185058594,
+          12.951318740844727
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 12.929367065429688,
+        "above_road_m": null,
+        "above_terrain_m": 0.021951675415039062
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -85.23750305175781,
+          -351.4727783203125,
+          15.917492866516113
+        ],
+        "nearest_road_xy_distance_m": 1.5571764707565308,
+        "road_z": null,
+        "terrain_z": 15.898674011230469,
+        "above_road_m": null,
+        "above_terrain_m": 0.01881885528564453
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -85.23750305175781,
+          -351.4727783203125,
+          15.917492866516113
+        ],
+        "nearest_road_xy_distance_m": 1.5571764707565308,
+        "road_z": null,
+        "terrain_z": 15.898674011230469,
+        "above_road_m": null,
+        "above_terrain_m": 0.01881885528564453
+      }
+    ],
+    "lowest": [
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -57.390438079833984,
+          -303.7376708984375,
+          13.878705978393555
+        ],
+        "nearest_road_xy_distance_m": 1.4999959468841553,
+        "road_z": null,
+        "terrain_z": 13.90301513671875,
+        "above_road_m": null,
+        "above_terrain_m": -0.024309158325195312
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Rescue_Bypass",
+        "xyz": [
+          -57.26041793823242,
+          -303.63653564453125,
+          13.89310073852539
+        ],
+        "nearest_road_xy_distance_m": 1.4999936819076538,
+        "road_z": null,
+        "terrain_z": 13.903778076171875,
+        "above_road_m": null,
+        "above_terrain_m": -0.010677337646484375
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -56.78047180175781,
+          -304.11114501953125,
+          14.021383285522461
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 14.030364990234375,
+        "above_road_m": null,
+        "above_terrain_m": -0.008981704711914062
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -57.4026985168457,
+          -305.97784423828125,
+          14.167098999023438
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 14.175613403320312,
+        "above_road_m": null,
+        "above_terrain_m": -0.008514404296875
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -57.45680236816406,
+          -306.14013671875,
+          14.189580917358398
+        ],
+        "nearest_road_xy_distance_m": 1.5000070333480835,
+        "road_z": null,
+        "terrain_z": 14.197021484375,
+        "above_road_m": null,
+        "above_terrain_m": -0.0074405670166015625
+      },
+      {
+        "verge": "LAND3_EarthVerge_C01_Mountain_Main",
+        "xyz": [
+          -56.72636413574219,
+          -303.9488220214844,
+          13.997661590576172
+        ],
+        "nearest_road_xy_distance_m": 1.4999998807907104,
+        "road_z": null,
+        "terrain_z": 14.002548217773438,
+        "above_road_m": null,
+        "above_terrain_m": -0.004886627197265625
+      }
+    ]
+  },
+  "limits": [
+    "Discrete samples, not a continuous crack/overlap certificate",
+    "Exterior-like includes strip ends and may include transition boundary; distances are horizontal",
+    "No evaluation of collision/navmesh/runtime traversability"
+  ]
+}
