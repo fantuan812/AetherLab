@@ -5,6 +5,26 @@
 #include "Engine/LocalPlayer.h"
 #include "Framework/AetherFrontierMode.h"
 #include "Characters/AetherFrontierCharacter.h"
+#include "Startup/AetherStartupClient.h"
+
+void AAetherPlayerController::PublishStartupStatus(const FAetherStartupSnapshot& Snapshot)
+{
+    if(!HasAuthority()||!Snapshot.AttemptId.IsValid()||Snapshot.Sequence==0||
+        (StartupAttempt==Snapshot.AttemptId&&(bStartupTerminal||StartupSequence>=Snapshot.Sequence)))return;
+    StartupAttempt=Snapshot.AttemptId;StartupSequence=Snapshot.Sequence;
+    bStartupTerminal=Snapshot.Stage==EAetherStartupStage::Failed||Snapshot.Stage==EAetherStartupStage::Cancelled;
+    ClientV10StartupStatus(Snapshot);
+}
+void AAetherPlayerController::PublishStartupFailure(FAetherStartupSnapshot Snapshot,EAetherStartupFailure Failure)
+{
+    if(!HasAuthority()||!Snapshot.AttemptId.IsValid()||Failure==EAetherStartupFailure::None)return;
+    if(StartupAttempt==Snapshot.AttemptId)Snapshot.Sequence=FMath::Max(Snapshot.Sequence,StartupSequence);
+    if(Snapshot.Sequence==MAX_uint32)return;
+    ++Snapshot.Sequence;Snapshot.Stage=EAetherStartupStage::Failed;Snapshot.FailureCode=Failure;
+    PublishStartupStatus(Snapshot);
+}
+void AAetherPlayerController::ClientV10StartupStatus_Implementation(const FAetherStartupSnapshot& Snapshot)
+{if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherStartupClient>()->ReceiveStartup(this,Snapshot);}
 
 void AAetherPlayerController::ServerV10Command_Implementation(const FAetherV10CommandPacket& P)
 {if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->Receive(this,P);}
@@ -13,7 +33,15 @@ void AAetherPlayerController::ServerV10RequestSnapshot_Implementation(FGuid Chan
 void AAetherPlayerController::ServerV10SnapshotAck_Implementation(FGuid Channel,FGuid Transfer,uint32 NextOffset)
 {if(auto* GI=GetGameInstance())GI->GetSubsystem<UAetherCommandRuntime>()->AcknowledgeSnapshot(this,Channel,Transfer,NextOffset);}
 void AAetherPlayerController::ClientV10Channel_Implementation(FGuid Channel,const FString& CanonicalOwner,FGuid Realm)
-{if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveChannel(this,Channel,CanonicalOwner,Realm);}
+{
+    if(auto* LP=GetLocalPlayer())
+    {
+        auto* Commands=LP->GetSubsystem<UAetherCommandClient>();Commands->ReceiveChannel(this,Channel,CanonicalOwner,Realm);
+        if(auto* GI=GetGameInstance())
+            if(!Channel.IsValid()||(Realm.IsValid()&&Commands->GetChannel()==Channel&&Commands->GetOwnerIdentity().Equals(CanonicalOwner,ESearchCase::CaseSensitive)))
+                GI->GetSubsystem<UAetherStartupClient>()->ObserveCommandChannel(this,Channel);
+    }
+}
 void AAetherPlayerController::ClientV10Reply_Implementation(const FAetherV10ReplyPacket& P)
 {if(auto* LP=GetLocalPlayer())LP->GetSubsystem<UAetherCommandClient>()->ReceiveReply(this,P);}
 void AAetherPlayerController::ClientV10LootClaimResult_Implementation(FGuid Channel,FGuid OriginCommandId,FGuid LootInstanceId,EAetherLootClaimOutcome Outcome)

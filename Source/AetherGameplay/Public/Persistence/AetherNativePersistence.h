@@ -4,9 +4,10 @@
 #include "Persistence/AetherWorldBootstrap.h"
 #include "Persistence/AetherWorldCheckpoint.h"
 #include "Networking/AetherCommandRuntime.h"
+#include "Startup/AetherStartupState.h"
 #include "AetherNativePersistence.generated.h"
 
-enum class EAetherNativePersistencePhase:uint8 {Dormant,Inspecting,Auditing,Prepared,Active,Failed,Stopped};
+enum class EAetherNativePersistencePhase:uint8 {Dormant,Inspecting,Auditing,Prepared,Active,Failed,Stopped,WaitingForBackend,Cancelled};
 using FAetherRestoreNativeWorld=TFunction<bool(const FAetherWorldStateV10&,const TMap<FString,int64>&,const TArray<FAetherContainerRestoreDescriptor>&,FString&)>;
 
 // 服务器生产存储生命周期：Prepare -> DTO 审计 -> 场景恢复 -> 安装命令协调者。
@@ -30,6 +31,10 @@ public:
     void ConfigureCheckpoints(FAetherCaptureWorldCheckpoint Capture,TFunction<void(const FAetherWorldStateV10&)> Published)
     {DomainCapture=MoveTemp(Capture);CheckpointPublished=MoveTemp(Published);}
     EAetherNativePersistencePhase Phase() const{return State;}
+    const FAetherStartupSnapshot& StartupStatus() const{return Startup;}
+    bool CancelPreparation(UWorld* Scene,FGuid Attempt);
+    void MarkWorldReady(UWorld* Scene);
+    void ReportSceneFailure(UWorld* Scene,const FString& Reason);
     void ReleaseScene(UWorld* Scene);
     bool OwnsWriteAuthority() const{return State!=EAetherNativePersistencePhase::Dormant&&State!=EAetherNativePersistencePhase::Stopped;}
     const FString& Failure() const{return Detail;}
@@ -41,7 +46,12 @@ public:
 private:
     friend class FAetherNativeCheckpointLifecycleTest;
     friend class FAetherNativeActivationLifecycleTest;
-    void Fail(FString Reason);
+    friend class FAetherStartupLifecycleTest;
+    void Fail(FString Reason,EAetherStartupFailure Code=EAetherStartupFailure::WorldRestoreFailed);
+    bool OpenPreparedStore(FString& Reason);
+    void PublishStartup(EAetherStartupStage Stage,EAetherStartupFailure Code=EAetherStartupFailure::None);
+    FAetherStartupSnapshot Startup;
+    double BackendDrainDeadline=0;
     EAetherNativePersistencePhase State=EAetherNativePersistencePhase::Dormant;
     FString Prefix,Detail;
     TWeakObjectPtr<UWorld> BoundScene;

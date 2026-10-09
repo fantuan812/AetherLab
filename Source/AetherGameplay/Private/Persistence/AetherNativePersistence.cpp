@@ -8,27 +8,56 @@
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "Misc/Paths.h"
+#include "HAL/PlatformTime.h"
+#include "Startup/AetherStartupSettings.h"
 
 bool UAetherNativePersistence::Prepare(const FString& InPrefix,bool NewWorld,FString& Reason)
 {
     check(IsInGameThread());
     if(bStoppingScene){Reason=TEXT("Previous scene is still stopping");return false;}
     if(BoundScene.IsValid()&&BoundScene.Get()!=GetWorld()){StopScene();State=EAetherNativePersistencePhase::Dormant;}
-    if(State!=EAetherNativePersistencePhase::Dormant||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!AetherSaveStartup::ValidPrefix(InPrefix))
+    if((State!=EAetherNativePersistencePhase::Dormant&&State!=EAetherNativePersistencePhase::Cancelled)||!GetWorld()||GetWorld()->GetNetMode()==NM_Client||!AetherSaveStartup::ValidPrefix(InPrefix))
     {Reason=TEXT("Invalid native startup state, server world or save prefix");return false;}
-    if(auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();Runtime&&Runtime->HasBackend())
-    {Reason=TEXT("Previous native backend is still draining accepted transactions");return false;}
+    double Deadline=0;
+    if(!GetDefault<UAetherStartupSettings>()->DrainDeadline(FPlatformTime::Seconds(),Deadline,Reason))return false;
+    auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();
+    if(Runtime&&Runtime->IsInstalled())
+    {Reason=TEXT("An active native backend still owns the current scene");return false;}
     // 自此锁住旧总写入口；打开失败也保持失败状态，绝不能回退旧档继续写出分叉进度。
-    BoundScene=GetWorld();SceneGeneration=FGuid::NewGuid();Prefix=InPrefix;AllowFresh=NewWorld;State=EAetherNativePersistencePhase::Inspecting;
+    BoundScene=GetWorld();SceneGeneration=FGuid::NewGuid();Prefix=InPrefix;AllowFresh=NewWorld;
+    Startup={};Startup.AttemptId=SceneGeneration;BackendDrainDeadline=Deadline;
+    if(Runtime&&Runtime->HasBackend())
+    {
+        // 只接受一次等待请求。旧 Runtime 仍持有已接受事务与 Store，新场景尚未打开数据库。
+        State=EAetherNativePersistencePhase::WaitingForBackend;PublishStartup(EAetherStartupStage::WaitingForBackend);
+        Reason.Reset();return true;
+    }
+    return OpenPreparedStore(Reason);
+}
+bool UAetherNativePersistence::OpenPreparedStore(FString& Reason)
+{
+    check(IsInGameThread());
+    if(!BoundScene.IsValid()||BoundScene.Get()!=GetWorld()||Store||
+        (GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()&&GetGameInstance()->GetSubsystem<UAetherCommandRuntime>()->HasBackend()))
+    {Reason=TEXT("Native store cannot open before the previous backend has released ownership");return false;}
+    State=EAetherNativePersistencePhase::Inspecting;PublishStartup(EAetherStartupStage::ReadingStorage);
     FAetherSqliteOptions O;O.DatabasePath=FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()/TEXT("V10State")/Prefix/TEXT("state.sqlite"));
     auto Open=AetherSQLite::Open(MoveTemp(O));
-    if(!Open.Store){Fail(Open.Detail);Reason=Detail;return false;}
+    if(!Open.Store){Fail(Open.Detail,EAetherStartupFailure::StorageOpenFailed);Reason=Detail;return false;}
     Store=MoveTemp(Open.Store);
     FAetherStoreSnapshotQuery Q;Q.Keys={{EAetherAggregateKind::World,TEXT("Main")}};Q.bIncludeProfileRevisions=true;Q.bIncludeContainerCount=true;
     Probe=Store->ReadSnapshot(MoveTemp(Q));Reason.Reset();return true;
 }
 void UAetherNativePersistence::Tick(float DeltaSeconds)
 {
+    if(State==EAetherNativePersistencePhase::WaitingForBackend)
+    {
+        if(!BoundScene.IsValid()||BoundScene.Get()!=GetWorld()){StopScene();State=EAetherNativePersistencePhase::Dormant;return;}
+        if(FPlatformTime::Seconds()>=BackendDrainDeadline)
+        {Fail(TEXT("Previous native backend did not drain before the configured startup deadline"),EAetherStartupFailure::BackendDrainTimedOut);return;}
+        if(auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();Runtime&&Runtime->HasBackend())return;
+        FString Reason;if(!OpenPreparedStore(Reason)){if(State!=EAetherNativePersistencePhase::Failed)Fail(Reason,EAetherStartupFailure::StorageOpenFailed);return;}
+    }
     PollCheckpoint();
     PollLogins();
     if(State==EAetherNativePersistencePhase::Active)
@@ -39,7 +68,7 @@ void UAetherNativePersistence::Tick(float DeltaSeconds)
     if(State==EAetherNativePersistencePhase::Inspecting)
     {
         if(!Probe.IsValid()||!Probe.IsReady())return;
-        const auto R=Probe.Get();Probe={};if(R.Code!=EAetherStoreCode::Found){Fail(R.Detail);return;}
+        const auto R=Probe.Get();Probe={};if(R.Code!=EAetherStoreCode::Found){Fail(R.Detail,EAetherStartupFailure::StorageAuditFailed);return;}
         const bool Existing=R.Values.Contains({EAetherAggregateKind::World,TEXT("Main")});
         bool Historical=false;
         if(!Existing)for(int32 Slot=0;Slot<2;++Slot)
@@ -49,17 +78,17 @@ void UAetherNativePersistence::Tick(float DeltaSeconds)
         }
         FString PolicyReason;
         if(!AetherSaveStartup::CanOpen(Existing,!R.ProfileRevisions.IsEmpty()||R.ContainerCount!=0,Historical,AllowFresh,PolicyReason))
-        {Fail(PolicyReason);return;}
+        {Fail(PolicyReason,EAetherStartupFailure::StorageAuditFailed);return;}
         // 已有原生世界优先，不因遗留旧档现在损坏而覆盖或拒绝合法的新数据库。
         Bootstrap=MakeUnique<FAetherWorldBootstrap>(Store.ToSharedRef());FString Reason;
-        if(!Bootstrap->Start(!Existing&&AllowFresh,Reason)){Fail(Reason);return;}
-        State=EAetherNativePersistencePhase::Auditing;
+        if(!Bootstrap->Start(!Existing&&AllowFresh,Reason)){Fail(Reason,EAetherStartupFailure::StorageAuditFailed);return;}
+        State=EAetherNativePersistencePhase::Auditing;PublishStartup(EAetherStartupStage::Auditing);
     }
     if(State==EAetherNativePersistencePhase::Auditing)
     {
         Bootstrap->Poll();
-        if(Bootstrap->Phase()==EAetherBootstrapPhase::Failed){Fail(Bootstrap->Failure());return;}
-        if(Bootstrap->Phase()==EAetherBootstrapPhase::Ready)State=EAetherNativePersistencePhase::Prepared;
+        if(Bootstrap->Phase()==EAetherBootstrapPhase::Failed){Fail(Bootstrap->Failure(),EAetherStartupFailure::StorageAuditFailed);return;}
+        if(Bootstrap->Phase()==EAetherBootstrapPhase::Ready){State=EAetherNativePersistencePhase::Prepared;PublishStartup(EAetherStartupStage::Restoring);}
     }
 }
 bool UAetherNativePersistence::Activate(FAetherResolveConnectedContext Resolve,FAetherPublishConnectedState Publish,FAetherRestoreNativeWorld Restore,FString& Reason)
@@ -172,30 +201,40 @@ void UAetherNativePersistence::PollCheckpoint()
     if(Result.World.IsSet()&&(Result.Code==EAetherStoreCode::Committed||Result.Code==EAetherStoreCode::Replayed)&&Published)Published(Result.World.GetValue());
     if(Promise)Promise->SetValue(MoveTemp(Result));
 }
-void UAetherNativePersistence::Fail(FString Reason)
+void UAetherNativePersistence::PublishStartup(EAetherStartupStage Stage,EAetherStartupFailure Code)
+{
+    if(Startup.Stage==Stage&&Startup.FailureCode==Code)return;
+    Startup.Stage=Stage;Startup.FailureCode=Code;
+    if(Startup.Sequence<MAX_uint32)++Startup.Sequence;
+}
+void UAetherNativePersistence::Fail(FString Reason,EAetherStartupFailure Code)
 {
     Detail=Reason.IsEmpty()?TEXT("Native persistence preparation failed"):MoveTemp(Reason);
     State=EAetherNativePersistencePhase::Failed;
+    PublishStartup(EAetherStartupStage::Failed,Code);
     // 失败只冻结入口并保留磁盘，不清库、不覆盖来源、不转回 v9。
 }
 bool UAetherNativePersistence::IsTickable() const
-{return !IsTemplate()&&(State==EAetherNativePersistencePhase::Inspecting||State==EAetherNativePersistencePhase::Auditing||State==EAetherNativePersistencePhase::Active||!Logins.IsEmpty()||Checkpoint.IsValid());}
+{return !IsTemplate()&&(State==EAetherNativePersistencePhase::WaitingForBackend||State==EAetherNativePersistencePhase::Inspecting||State==EAetherNativePersistencePhase::Auditing||State==EAetherNativePersistencePhase::Active||!Logins.IsEmpty()||Checkpoint.IsValid());}
 TStatId UAetherNativePersistence::GetStatId() const{RETURN_QUICK_DECLARE_CYCLE_STAT(UAetherNativePersistence,STATGROUP_Tickables);}
 UWorld* UAetherNativePersistence::GetTickableGameObjectWorld() const{return GetWorld();}
 void UAetherNativePersistence::StopScene()
 {
     if(bStoppingScene)return;TGuardValue<bool> Guard(bStoppingScene,true);
+    const bool EndingUnopenedRequest=!Store&&(State==EAetherNativePersistencePhase::WaitingForBackend||
+        State==EAetherNativePersistencePhase::Failed||State==EAetherNativePersistencePhase::Cancelled);
     State=EAetherNativePersistencePhase::Stopped;SceneGeneration.Invalidate();DomainCapture={};CheckpointPublished={};
     auto* Runtime=GetGameInstance()->GetSubsystem<UAetherCommandRuntime>();
     const bool RuntimeOwnsStore=Runtime&&Runtime->HasBackend();
-    if(RuntimeOwnsStore)Runtime->UninstallBackend();
+    const bool LeavePriorDrain=EndingUnopenedRequest&&RuntimeOwnsStore&&!Runtime->IsInstalled();
+    if(RuntimeOwnsStore&&!LeavePriorDrain)Runtime->UninstallBackend();
     auto Pending=MoveTemp(Logins);for(auto& Job:Pending){FAetherStoreReadResult R;R.Code=EAetherStoreCode::Unavailable;Job->Result.SetValue(MoveTemp(R));}
     if(Checkpoint)Checkpoint->Stop();Checkpoint.Reset();
     auto PendingCheckpoint=MoveTemp(CheckpointPromise);
     Probe={};if(Bootstrap)Bootstrap->Stop();Bootstrap.Reset();
     // 先停生产者，再收尾命令。重入/超时情况下 Runtime 继续持有并最终关闭 Store；
     // 这里绝不能 Close，否则后续 CAS 重读/提交会得到 Unavailable，丢失已接受事实。
-    if(RuntimeOwnsStore)Runtime->DrainBackend();
+    if(RuntimeOwnsStore&&!LeavePriorDrain)Runtime->DrainBackend();
     else if(Store)Store->Close();
     Store.Reset();
     if(PendingCheckpoint){FAetherWorldCheckpointResult R;R.Code=EAetherStoreCode::Unavailable;R.Detail=TEXT("Shutdown drained writes; reload persisted world before retry");PendingCheckpoint->SetValue(MoveTemp(R));}
@@ -206,4 +245,15 @@ void UAetherNativePersistence::ReleaseScene(UWorld* Scene)
 {
     check(IsInGameThread());if(bStoppingScene||BoundScene.Get()!=Scene)return;StopScene();State=EAetherNativePersistencePhase::Dormant;
 }
+bool UAetherNativePersistence::CancelPreparation(UWorld* Scene,FGuid Attempt)
+{
+    check(IsInGameThread());
+    if(bStoppingScene||!Scene||BoundScene.Get()!=Scene||!Attempt.IsValid()||Attempt!=SceneGeneration||
+        State==EAetherNativePersistencePhase::Active||State==EAetherNativePersistencePhase::Dormant||State==EAetherNativePersistencePhase::Stopped)return false;
+    StopScene();State=EAetherNativePersistencePhase::Cancelled;PublishStartup(EAetherStartupStage::Cancelled);return true;
+}
+void UAetherNativePersistence::MarkWorldReady(UWorld* Scene)
+{if(BoundScene.Get()==Scene&&State==EAetherNativePersistencePhase::Active)PublishStartup(EAetherStartupStage::WorldReady);}
+void UAetherNativePersistence::ReportSceneFailure(UWorld* Scene,const FString& Reason)
+{if(BoundScene.Get()==Scene&&State!=EAetherNativePersistencePhase::Failed)Fail(Reason);}
 void UAetherNativePersistence::Deinitialize(){StopScene();Super::Deinitialize();}
