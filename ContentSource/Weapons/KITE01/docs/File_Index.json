@@ -1,0 +1,225 @@
+{
+  "stage": "weapon_only_v1",
+  "files": [
+    {
+      "path": "KITE01_Modular.blend",
+      "bytes": 7698572,
+      "sha256": "2b33999527b2f0f44d6d44e7b828fe2732764843de3d4463fa358fadd3856513"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "bytes": 6323,
+      "sha256": "b501e8914a14ad743f908b2a8609145e4d2e862ecfdd8f9812280e2512087224"
+    },
+    {
+      "path": "docs/Blender_Validation.json",
+      "bytes": 12231,
+      "sha256": "7548f399c3556418ee53f1961c5421271b189177fa16ca2b1063e477960739c3"
+    },
+    {
+      "path": "docs/Build_Manifest.json",
+      "bytes": 4057,
+      "sha256": "3fd830ed5a2f71954cd3beb8ddf2e428bd7e658aa3573183868342b774338325"
+    },
+    {
+      "path": "docs/Grip32.json",
+      "bytes": 14807,
+      "sha256": "a9f55d5ff5b67a793ee70cda3400b0aeada8a5a9ebce5aaaa5c348dc33724ca4"
+    },
+    {
+      "path": "docs/Sources_and_Licensing.md",
+      "bytes": 1802,
+      "sha256": "7ed6ad1a532a741d88e938c97bfa1bfe6ac379574c3cbf89cfcd2a0aec71125d"
+    },
+    {
+      "path": "exports/KITE01_LOD0.glb",
+      "bytes": 5005552,
+      "sha256": "e1564cdee18d9605e26dbe18fccfc0dfd78e6af30090e2d7f160a5e24d6cc496"
+    },
+    {
+      "path": "exports/KITE01_LOD1.glb",
+      "bytes": 4340656,
+      "sha256": "8f3b3ae36f1860233557b7f9bc14dfa885ff981ac8f4a9608b16d9d6129fcda1"
+    },
+    {
+      "path": "exports/KITE01_LOD2.glb",
+      "bytes": 3605372,
+      "sha256": "ed0d94f6af5b934a35372bc6ec01a6babf7d999e5b14886bb607e0cbbb1ecdd8"
+    },
+    {
+      "path": "exports/SM_KITE01_ChargingHandle.fbx",
+      "bytes": 569548,
+      "sha256": "e9e0fe06b5aed9b58641881b7a0b1fd1fc3d34d787ef7e78884cd4e39ce71865"
+    },
+    {
+      "path": "exports/SM_KITE01_Grip_Angled.fbx",
+      "bytes": 1499948,
+      "sha256": "d671958a851a8786c542bc503c9e75cb7a62350c6dbb5bd647f3bbdf5df88443"
+    },
+    {
+      "path": "exports/SM_KITE01_Handguard_Sand.fbx",
+      "bytes": 2103468,
+      "sha256": "a17dc5ab431c16761862d51c7733fcc5833a8fc6efd582a01a6b8287e8beabfa"
+    },
+    {
+      "path": "exports/SM_KITE01_Magazine_Box.fbx",
+      "bytes": 1471308,
+      "sha256": "609a89c79c61b0ea2d43398050fdde867d7cef9330e8fe2dfc5f826d655cf0ab"
+    },
+    {
+      "path": "exports/SM_KITE01_Muzzle_Cover.fbx",
+      "bytes": 996572,
+      "sha256": "ce08d823a3c0262dac8aa03302eafe43b76e69289ce3efc02944173f87d9106b"
+    },
+    {
+      "path": "exports/SM_KITE01_Muzzle_Short.fbx",
+      "bytes": 1471388,
+      "sha256": "2f318862fd8d16f4dd7e326f1cac8bc5638a0c30fa34494f423e5530ca3e9014"
+    },
+    {
+      "path": "exports/SM_KITE01_Optic_Reflex.fbx",
+      "bytes": 2013420,
+      "sha256": "c5c22af420540133083467988d9de401167a26a47bfa27368a5b2194d7ba7b8a"
+    },
+    {
+      "path": "exports/SM_KITE01_Receiver.fbx",
+      "bytes": 2138668,
+      "sha256": "2df4ab100143a1b92dbb787057783ea92192eb21dee32b2c5a54b5aa160558fd"
+    },
+    {
+      "path": "exports/SM_KITE01_Stock_Compact.fbx",
+      "bytes": 994028,
+      "sha256": "78d353c83330bbdc1c23cdd850736a1448c794d1e1468d38ba17b93d2db2ec7d"
+    },
+    {
+      "path": "exports/SM_KITE01_Stock_Skeleton.fbx",
+      "bytes": 2072108,
+      "sha256": "0cdfb5c9cb42f1a09322e8a2b7aecdb26356e98b1383fa5fece54a7c9c2ebb1c"
+    },
+    {
+      "path": "exports/SM_KITE01_Trigger.fbx",
+      "bytes": 572524,
+      "sha256": "4754d178ad87da87126425fbb2e06c1757a2576bc889091d9914533ba928931e"
+    },
+    {
+      "path": "reference/Generation_Record.json",
+      "bytes": 1459,
+      "sha256": "20f884f7278ee8c2aa6fdbd0541a4922c971eb6f467dc2ff8b78d4aa5635236d"
+    },
+    {
+      "path": "reference/KITE01_Concept.png",
+      "bytes": 1974791,
+      "sha256": "a9e82e7acd087189e549730f6caeee41aa9836a844b5290b47f66628700b49b5"
+    },
+    {
+      "path": "renders/KITE01_Beauty.png",
+      "bytes": 2549353,
+      "sha256": "1dd81f31d773b43acc6c4ca0c8fffaf78e9f95d41732df5e2776ebc84f09b18a"
+    },
+    {
+      "path": "renders/KITE01_Modules.png",
+      "bytes": 1447332,
+      "sha256": "6dc6c5c663446e9f1f2de66275d2cdf52842ef98a7aca9e942a45180ac050612"
+    },
+    {
+      "path": "renders/KITE01_Side.png",
+      "bytes": 2104677,
+      "sha256": "96549bd31d3567f79ddc2ea57820aee30d68802fa882de0bd99200dd22c76e51"
+    },
+    {
+      "path": "source/build_kite01.py",
+      "bytes": 15630,
+      "sha256": "6114bfcbb8e2449cd846c0bda8b388d892f2523d08fd00398cda03244da84b27"
+    },
+    {
+      "path": "source/package_weapon.py",
+      "bytes": 1051,
+      "sha256": "d3d4b9f044e36c42ac2877b120e9a604f115143fcef544ccf5db27e93af396ff"
+    },
+    {
+      "path": "source/render_kite01.py",
+      "bytes": 565,
+      "sha256": "e5ff7f04c0ae4a9e2bb134b9e39335d86f9cd538496f7b56a38158185e4a9c91"
+    },
+    {
+      "path": "source/render_modules.py",
+      "bytes": 1984,
+      "sha256": "c9dd903c7852ab944565152e8bc7669bc5795c46586b658001e05f0dc4107195"
+    },
+    {
+      "path": "source/validate_kite01.py",
+      "bytes": 3344,
+      "sha256": "a317238603a248cb3c26740c8208850b7d2bffe27bb377d0d5d374bceda2ce6d"
+    },
+    {
+      "path": "textures/M_CeramicSand_BaseColor.png",
+      "bytes": 329355,
+      "sha256": "4b6a1ecb6b1d94812e8905caadef7d211b95a70b393ba026f00338dfbc5e5000"
+    },
+    {
+      "path": "textures/M_CeramicSand_Roughness.png",
+      "bytes": 251214,
+      "sha256": "75083aceade5e08e562648f7e7ce906ece917854a3170729d33a51f4c36938e3"
+    },
+    {
+      "path": "textures/M_EdgeMetal_BaseColor.png",
+      "bytes": 294547,
+      "sha256": "abbc7c2ad1f9c8806b2e0b6746fca917486e09d6fda82761eb6a392942635afa"
+    },
+    {
+      "path": "textures/M_EdgeMetal_Roughness.png",
+      "bytes": 251255,
+      "sha256": "35e27cefd25a678c64c0625884b1c8bf3908ef60ad54d23a379f1da870bcbc8b"
+    },
+    {
+      "path": "textures/M_Graphite_BaseColor.png",
+      "bytes": 219805,
+      "sha256": "3d6417e8be05a155133f0494b1632dc90a8d2a9b0564b6a8deda50465f1db73e"
+    },
+    {
+      "path": "textures/M_Graphite_Roughness.png",
+      "bytes": 251251,
+      "sha256": "2c341d5b449109a76b3d7571ccb1cea420f62fc906748f603e8e9b7dc359a785"
+    },
+    {
+      "path": "textures/M_InventoryTeal_BaseColor.png",
+      "bytes": 298243,
+      "sha256": "7d78580a19897673580f55c9bf2e259036cbba5f8fdb9eb43727733ae568ddf9"
+    },
+    {
+      "path": "textures/M_InventoryTeal_Roughness.png",
+      "bytes": 251478,
+      "sha256": "cbeb24b074cdf481128297d331b07cc15abf3ad55bbe86ec917263689f6aaa1b"
+    },
+    {
+      "path": "textures/M_OpticLens_BaseColor.png",
+      "bytes": 307592,
+      "sha256": "bdc53a1903d3719d370e497cabefcc25cfa3f09dbbba022a29aec52ae9e5b2f5"
+    },
+    {
+      "path": "textures/M_OpticLens_Roughness.png",
+      "bytes": 251109,
+      "sha256": "1c956436de47eeff4eca0fd9c36156c9cb46964f65ecf363d8ab49c88b3f921a"
+    },
+    {
+      "path": "textures/M_Polymer_BaseColor.png",
+      "bytes": 130949,
+      "sha256": "7b428d5ed52959421831e294ead8ba7e359d7ce2f98ae556c6cb47f014f092ef"
+    },
+    {
+      "path": "textures/M_Polymer_Roughness.png",
+      "bytes": 251275,
+      "sha256": "bd691b8647f0bc0e29d6d963a45a9b3c38e95f5cb7af1aeec51cd1708c959e86"
+    },
+    {
+      "path": "textures/M_Studio_BaseColor.png",
+      "bytes": 274719,
+      "sha256": "6c494d0bd87b3dda352768352863f243e1eee3bc9435bc58827a684f6a1d75fe"
+    },
+    {
+      "path": "textures/M_Studio_Roughness.png",
+      "bytes": 251346,
+      "sha256": "a344a0a25878643336682e8719d8c748d841caf4121321299b60c0804bfda89f"
+    }
+  ]
+}

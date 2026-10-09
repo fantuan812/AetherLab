@@ -1,0 +1,214 @@
+{
+  "asset": "KITE-01",
+  "blender": "4.3.2",
+  "units": "meters",
+  "forward": "+X",
+  "up": "+Z",
+  "character_source": "FrozenCharacter.json",
+  "character_pose_validation": "SEPARATE_STATIC_FIT_STUDY_NOT_ANIMATION_OR_COLLISION_ACCEPTANCE",
+  "engine_validation": "NOT_RUN_CANCELLED",
+  "parts": [
+    {
+      "name": "SM_KITE01_Receiver",
+      "triangles": 8676,
+      "vertices": 4432,
+      "uv_layers": [
+        "UV0_Surface"
+      ],
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "role": "cosmetic_interchangeable"
+    },
+    {
+      "name": "SM_KITE01_Handguard_Sand",
+      "triangles": 4980,
+      "vertices": 2544,
+      "uv_layers": [
+        "UV0_Surface"
+      ],
+      "pivot": [
+        0.15000000596046448,
+        0.0,
+        0.07900000363588333
+      ],
+      "role": "cosmetic_interchangeable"
+    },
+    {
+      "name": "SM_KITE01_Muzzle_Short",
+      "triangles": 2356,
+      "vertices": 1200,
+      "uv_layers": [
+        "UV0_Surface"
+      ],
+      "pivot": [
+        0.4449999928474426,
+        0.0,
+        0.07900000363588333
+      ],
+      "role": "cosmetic_interchangeable"
+    },
+    {
+      "name": "SM_KITE01_Stock_Skeleton",
+      "triangles": 3104,
+      "vertices": 1584,
+      "uv_layers": [
+        "UV0_Surface"
+      ],
+      "pivot": [
+        -0.12999999523162842,
+        0.0,
+        0.07599999755620956
+      ],
+      "role": "cosmetic_interchangeable"
+    },
+    {
+      "name": "SM_KITE01_Grip_Angled",
+      "triangles": 3588,
+      "vertices": 1832,
+      "uv_layers": [
+        "UV0_Surface"
+      ],
+      "pivot": [
+        -0.10499999672174454,
+        0.0,
+        -0.004999999888241291
+      ],
+      "role": "cosmetic_interchangeable"
+    },
+    {
+      "name": "SM_KITE01_Magazine_Box",
+      "triangles": 2256,
+      "vertices": 1152,
+      "uv_layers": [
+        "UV0_Surface"
+      ],
+      "pivot": [
+        0.06400000303983688,
+        0.0,
+        -0.026000000536441803
+      ],
+      "role": "animated"
+    },
+    {
+      "name": "SM_KITE01_Optic_Reflex",
+      "triangles": 1180,
+      "vertices": 600,
+      "uv_layers": [
+        "UV0_Surface"
+      ],
+      "pivot": [
+        -0.02800000086426735,
+        0.0,
+        0.14499999582767487
+      ],
+      "role": "cosmetic_interchangeable"
+    },
+    {
+      "name": "SM_KITE01_ChargingHandle",
+      "triangles": 188,
+      "vertices": 96,
+      "uv_layers": [
+        "UV0_Surface"
+      ],
+      "pivot": [
+        -0.07000000029802322,
+        -0.027000000700354576,
+        0.0860000029206276
+      ],
+      "role": "animated"
+    },
+    {
+      "name": "SM_KITE01_Trigger",
+      "triangles": 284,
+      "vertices": 144,
+      "uv_layers": [
+        "UV0_Surface"
+      ],
+      "pivot": [
+        -0.029999999329447746,
+        0.0,
+        -0.017999999225139618
+      ],
+      "role": "animated"
+    },
+    {
+      "name": "SM_KITE01_Stock_Compact",
+      "triangles": 376,
+      "vertices": 192,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "pivot": [
+        -0.12999999523162842,
+        0.0,
+        0.07599999755620956
+      ],
+      "role": "cosmetic_variant"
+    },
+    {
+      "name": "SM_KITE01_Muzzle_Cover",
+      "triangles": 568,
+      "vertices": 288,
+      "uv_layers": [
+        "UVMap"
+      ],
+      "pivot": [
+        0.4449999928474426,
+        0.0,
+        0.07900000363588333
+      ],
+      "role": "cosmetic_variant"
+    }
+  ],
+  "sockets": {
+    "Grip_R": [
+      -0.128,
+      0,
+      -0.082
+    ],
+    "Support_L": [
+      0.3,
+      0,
+      0.012
+    ],
+    "Magazine": [
+      0.064,
+      0,
+      -0.026
+    ],
+    "Optic": [
+      -0.028,
+      0,
+      0.145
+    ],
+    "Stock": [
+      -0.13,
+      0,
+      0.076
+    ],
+    "Muzzle": [
+      0.445,
+      0,
+      0.079
+    ],
+    "Aim": [
+      0.54,
+      0,
+      0.199
+    ],
+    "Reload_Clearance": [
+      0.064,
+      0,
+      -0.32
+    ]
+  },
+  "lod_triangles": {
+    "0": 26612,
+    "1": 12768,
+    "2": 5314
+  },
+  "hand_socket_status": "CANDIDATE_POSITION_AND_IDENTITY_ORIENTATION_NOT_CALIBRATED"
+}

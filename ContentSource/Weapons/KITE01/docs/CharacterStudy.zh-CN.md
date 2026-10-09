@@ -1,0 +1,20 @@
+# CHR01 静态尺度/持枪空间研究，非动画验收
+
+持久图像：libfile_1e3516142ac88191806d14e54cb61fdd v0
+持久可编辑场景：libfile_caa4ebb3cabc8191972835e334625bc2 v0
+
+场景内28张图像全部packed，已重新打开验证，直接打开不依赖本机材质路径。枪体仍用独立原生资产，不把人体骨架烘进武器导出。
+
+本轮已实测65骨rest、原网格/拓扑/权重保全；来源是Stage1 v2精确匹配main的派生场景，而非未取得的冻结原文件。源文件SHA前后不变。
+
+仅为低位横持示意，当前主手局部basis旋转约66.56°、副手9.30°，这些不是医学关节角。枪托/右前臂邻近或图像遮挡，副手手指较直；完整4×4目标框闭合约0.0003mm不意味着手掌、手指与枪体表面贴合，也不意味着无碰撞或腕部限位通过。蓝色框仅标出拟定弹匣运动区域；未验证连续扫掠、手部换弹或上膛角色动作。没有抵肩瞄准验收。
+
+## 重建输入
+
+使用仓库 source/build_character_fit_study.py 与 verify_character_fit_study.py；把 KITE01 枪体包解成项目目录 KITE01/，并在其同级准备 character_inputs/stage1/。以下三份已有Library交付按源ZIP相对路径合并解压到 character_inputs/stage1/，保持source/textures结构：
+
+- CHR01_Grips_Stage1_Source.zip：libfile_6578ac354848819196800654ca304fec v2，SHA f07e8927289783429274ebcc90f4d98afcdbc9c232af5c63cce0ba31e2111fe9
+- CHR01_Grips_Textures_A.zip：libfile_3783bdddf7dc8191a8318bdb3ee32c89 v0，SHA 752d9f8af65c646204c35b34cd5f0488ed8664389ef6e4df66e5354cad9f4a2d
+- CHR01_Grips_Textures_B.zip：libfile_ecffeab9ff788191ab13e69f2e119c55 v0，SHA 202f869dc997766139e40fc392c56f36b9b7b418c678966e6d0ebc4689ebf55f
+
+脚本实际读取 source/CHR01_Staff_Grip.blend 和 reports/CHR01_Grip32_SourceCalibration.json。Staff场景SHA须为505fe9d9bf87498ee0e938071cba729154ebd7ef1b56f900a9ac0837b9c1cf5b。来源身份和数值不因本地目录变化而改变；不要把最新角色v3同名文件替代冻结v2派生源。

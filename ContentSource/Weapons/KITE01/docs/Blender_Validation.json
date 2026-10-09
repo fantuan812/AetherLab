@@ -1,0 +1,631 @@
+{
+  "scope": "Blender native structure and export roundtrip only, not engine or full character collision",
+  "blender": "4.3.2",
+  "meshes": [
+    {
+      "name": "SM_KITE01_ChargingHandle",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_ChargingHandle_LOD1",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_ChargingHandle_LOD2",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Grip_Angled",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Grip_Angled_LOD1",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Grip_Angled_LOD2",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Handguard_Sand",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Handguard_Sand_LOD1",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Handguard_Sand_LOD2",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Magazine_Box",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Magazine_Box_LOD1",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Magazine_Box_LOD2",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Muzzle_Cover",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Muzzle_Short",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Muzzle_Short_LOD1",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Muzzle_Short_LOD2",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Optic_Reflex",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Optic_Reflex_LOD1",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Optic_Reflex_LOD2",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Receiver",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Receiver_LOD1",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Receiver_LOD2",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Stock_Compact",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Stock_Skeleton",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Stock_Skeleton_LOD1",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Stock_Skeleton_LOD2",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Trigger",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Trigger_LOD1",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    },
+    {
+      "name": "SM_KITE01_Trigger_LOD2",
+      "nonmanifold_edges": 0,
+      "uv0_in_0_1": true,
+      "finite": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "negative_scale": false
+    }
+  ],
+  "glb_roundtrip": [
+    {
+      "lod": 0,
+      "mesh_count": 9,
+      "triangles": 26612,
+      "bounds_m": [
+        0.9445000290870667,
+        0.08999999985098839,
+        0.4330064207315445
+      ],
+      "actions": [
+        "KITE01_ExteriorHandle_Study_SM_KITE01_ChargingHandle",
+        "KITE01_MagazineSwap_Study_SM_KITE01_Magazine_Box"
+      ]
+    },
+    {
+      "lod": 1,
+      "mesh_count": 9,
+      "triangles": 12768,
+      "bounds_m": [
+        0.9444209337234497,
+        0.08986884728074074,
+        0.4330346882343292
+      ],
+      "actions": []
+    },
+    {
+      "lod": 2,
+      "mesh_count": 9,
+      "triangles": 5314,
+      "bounds_m": [
+        0.9441912472248077,
+        0.08963796123862267,
+        0.43301451206207275
+      ],
+      "actions": []
+    }
+  ],
+  "fbx_roundtrip": [
+    {
+      "filename": "SM_KITE01_ChargingHandle.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 1
+    },
+    {
+      "filename": "SM_KITE01_Grip_Angled.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 3
+    },
+    {
+      "filename": "SM_KITE01_Handguard_Sand.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 4
+    },
+    {
+      "filename": "SM_KITE01_Magazine_Box.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 3
+    },
+    {
+      "filename": "SM_KITE01_Muzzle_Cover.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 2
+    },
+    {
+      "filename": "SM_KITE01_Muzzle_Short.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 3
+    },
+    {
+      "filename": "SM_KITE01_Optic_Reflex.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 4
+    },
+    {
+      "filename": "SM_KITE01_Receiver.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 4
+    },
+    {
+      "filename": "SM_KITE01_Stock_Compact.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 2
+    },
+    {
+      "filename": "SM_KITE01_Stock_Skeleton.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 4
+    },
+    {
+      "filename": "SM_KITE01_Trigger.fbx",
+      "mesh_count": 1,
+      "object_origins": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "uv_present": true,
+      "materials": 1
+    }
+  ],
+  "missing_textures": [],
+  "sockets": [
+    "SOCKET_KITE01_Aim",
+    "SOCKET_KITE01_Grip_R",
+    "SOCKET_KITE01_Magazine",
+    "SOCKET_KITE01_Muzzle",
+    "SOCKET_KITE01_Optic",
+    "SOCKET_KITE01_Reload_Clearance",
+    "SOCKET_KITE01_Stock",
+    "SOCKET_KITE01_Support_L"
+  ],
+  "animation_sample_frames": {
+    "1": {
+      "Magazine_Box": [
+        0.06400000303983688,
+        0.0,
+        -0.026000000536441803
+      ],
+      "ChargingHandle": [
+        -0.07000000029802322,
+        -0.027000000700354576,
+        0.0860000029206276
+      ]
+    },
+    "30": {
+      "Magazine_Box": [
+        0.06400000303983688,
+        0.0,
+        -0.25600001215934753
+      ],
+      "ChargingHandle": [
+        -0.07000000029802322,
+        -0.027000000700354576,
+        0.0860000029206276
+      ]
+    },
+    "45": {
+      "Magazine_Box": [
+        -0.015999995172023773,
+        0.0,
+        -0.25600001215934753
+      ],
+      "ChargingHandle": [
+        -0.07000000029802322,
+        -0.027000000700354576,
+        0.0860000029206276
+      ]
+    },
+    "80": {
+      "Magazine_Box": [
+        0.06400000303983688,
+        0.0,
+        -0.026000000536441803
+      ],
+      "ChargingHandle": [
+        -0.07000000029802322,
+        -0.027000000700354576,
+        0.0860000029206276
+      ]
+    },
+    "86": {
+      "Magazine_Box": [
+        0.06400000303983688,
+        0.0,
+        -0.026000000536441803
+      ],
+      "ChargingHandle": [
+        -0.10500000417232513,
+        -0.027000000700354576,
+        0.0860000029206276
+      ]
+    },
+    "96": {
+      "Magazine_Box": [
+        0.06400000303983688,
+        0.0,
+        -0.026000000536441803
+      ],
+      "ChargingHandle": [
+        -0.07000000029802322,
+        -0.027000000700354576,
+        0.0860000029206276
+      ]
+    }
+  },
+  "all_scoped_checks_pass": true,
+  "checks_count": 154,
+  "limitations": [
+    "No UE execution or acceptance",
+    "No collision-free hands/body/reload claim",
+    "Object animation study only, not skeletal character reload",
+    "LOD visual quality not equivalent to production optimization",
+    "Exterior game prop; no functional internals"
+  ]
+}
