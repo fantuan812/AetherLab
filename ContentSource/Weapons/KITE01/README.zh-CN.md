@@ -81,3 +81,5 @@ Library身份不赋予公共仓库读者访问权，交付通过用户自己的�
 - TexturesSourceDocs：完整PBR纹理、可复现脚本及证据。需要重新构建时解压到相同KITE01目录，保留相对目录结构
 
 小包内README是首次封装时快照，最新递送状态以仓库及Small_Delivery_Manifest为准。
+
+递送复核：原生枪体blend单独发送已accepted；6个小包发送已accepted，角色预览亦已accepted。这确认服务接收了附件消息，不等于用户已经下载或打开。无需重发旧超限包。
