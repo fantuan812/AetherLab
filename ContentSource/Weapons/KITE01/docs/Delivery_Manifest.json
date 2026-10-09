@@ -77,5 +77,6 @@
       "bytes": 22146310,
       "sha256": "8a36a2af3fa31d39c23ea102555cbc7de67be56491bd4ab1dee47882da5703da"
     }
-  ]
+  ],
+  "chat_transport_note": "Full 42,194,386-byte ZIP failed ChatGPT upload limit; retain as Library archive only. Prefer independent packages in Small_Delivery_Manifest.json; saved does not mean sent."
 }
