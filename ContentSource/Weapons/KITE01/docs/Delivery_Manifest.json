@@ -18,10 +18,10 @@
       "filename": "KITE01_WeaponAsset_v1.zip",
       "path_relative_to_artifact_root": "KITE01_WeaponAsset_v1.zip",
       "library_file_id": "libfile_da19234fb2788191b7199dbc7af2fd1e",
-      "file_id": "file_0000000082b881f6922a0eceef48a64c",
-      "current_version_number": 2,
-      "bytes": 42194369,
-      "sha256": "301efdd5f0228f8aacc500a0261d34242ffc077432cdd546eadc620858edb304"
+      "file_id": "file_00000000a69481f58507b77f497dfe49",
+      "current_version_number": 3,
+      "bytes": 42194386,
+      "sha256": "242cb89c57b97329037e5378e2a373069dea3272f4ce6b35946a42aa75b079de"
     },
     {
       "filename": "KITE01_Concept.png",

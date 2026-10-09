@@ -3,7 +3,7 @@ import pathlib,json,zipfile,hashlib
 R=pathlib.Path(__file__).resolve().parents[1]
 files=[]
 for p in sorted(R.rglob('*')):
- if not p.is_file() or p.suffix in ['.blend1','.log'] or any(x in p.name.lower() for x in ['character','file_index','delivery_manifest']):continue
+ if not p.is_file() or p.suffix in ['.blend1','.log','.pyc'] or '__pycache__' in p.parts or any(x in p.name.lower() for x in ['character','file_index','delivery_manifest']):continue
  files.append({'path':str(p.relative_to(R)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
 (R/'docs/File_Index.json').write_text(json.dumps({'stage':'weapon_only_v1','files':files},indent=2))
 out=R.parent/'KITE01_WeaponAsset_v1.zip'

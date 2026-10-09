@@ -133,8 +133,8 @@
     },
     {
       "path": "source/package_weapon.py",
-      "bytes": 1051,
-      "sha256": "d3d4b9f044e36c42ac2877b120e9a604f115143fcef544ccf5db27e93af396ff"
+      "bytes": 1086,
+      "sha256": "ee088f93d5ff68e3d563c9ed3a4d1d418b6f96fc3b45337049067dd178233c14"
     },
     {
       "path": "source/render_kite01.py",
