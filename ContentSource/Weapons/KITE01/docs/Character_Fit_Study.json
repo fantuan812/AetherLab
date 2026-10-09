@@ -1,0 +1,620 @@
+{
+  "status": "STATIC_FIT_STUDY_VISUALLY_REVIEWED_LIMITED",
+  "character_source_is_derivative": true,
+  "original_frozen_character_file_obtained": false,
+  "inputs_sha256_before": {
+    "character_inputs/stage1/source/CHR01_Staff_Grip.blend": "505fe9d9bf87498ee0e938071cba729154ebd7ef1b56f900a9ac0837b9c1cf5b",
+    "KITE01/KITE01_Modular.blend": "2b33999527b2f0f44d6d44e7b828fe2732764843de3d4463fa358fadd3856513"
+  },
+  "inputs_sha256_after": {
+    "character_inputs/stage1/source/CHR01_Staff_Grip.blend": "505fe9d9bf87498ee0e938071cba729154ebd7ef1b56f900a9ac0837b9c1cf5b",
+    "KITE01/KITE01_Modular.blend": "2b33999527b2f0f44d6d44e7b828fe2732764843de3d4463fa358fadd3856513"
+  },
+  "rig": "CHR01_Wanderer_Rig65",
+  "bone_count": 65,
+  "rest_sha256_before": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+  "rest_sha256_after": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+  "rest_preserved": true,
+  "character_mesh_vertices_topology_weights_preserved": true,
+  "character_mesh_fingerprints": {
+    "CHR01 • almond sclera -1": "daa710f3b9f83afc10e54cafa6ed4e996d1febd2ca7fdd60b52df9130e027499",
+    "CHR01 • almond sclera -1_low": "daa710f3b9f83afc10e54cafa6ed4e996d1febd2ca7fdd60b52df9130e027499",
+    "CHR01 • almond sclera 1": "fbb4fcdca7d2a9c99efc3b450bca89c0ae8ce98dd42c6de63ca374e49dda5490",
+    "CHR01 • almond sclera 1_low": "fbb4fcdca7d2a9c99efc3b450bca89c0ae8ce98dd42c6de63ca374e49dda5490",
+    "CHR01 • articulated source gloves and fingers": "6ee929740daaa3152ea13734e0ae26cab8857ecff77c88f4484224fd44abbf79",
+    "CHR01 • articulated source gloves and fingers_low": "6ee929740daaa3152ea13734e0ae26cab8857ecff77c88f4484224fd44abbf79",
+    "CHR01 • articulated travel trousers": "45101eee2aa08d5aeae51fae433ea61a46c1814e366cffcb44e43c0d4244e410",
+    "CHR01 • articulated travel trousers_low": "9a097af7d626bafe50732fac020da1360cdbd9ae651000a701b016d041d8ea17",
+    "CHR01 • belt brass buckle": "0fe926c3ead548757449ec9c5d6b56153924048064ea0df28c4038038b5ef27a",
+    "CHR01 • belt brass buckle_low": "c1915341124a99aaf1e109c82b3dd0d8fb367b4f4bc5912661f9c1c9cd9edad2",
+    "CHR01 • bob layer silver lock 00": "c3b1e2f77ee772bb69361040a7c8ea60c30a2719b6ea330444b21c1d68641c96",
+    "CHR01 • bob layer silver lock 00_low": "4ecf388ad9aeb13ab4c7346cd244b4c98b1bd59e46ae32af53f54ca6f353b4a6",
+    "CHR01 • bob layer silver lock 01": "d63347e2fcd431eb906b487562442b07cc4adb270f9f9527dc8b2b55e994942c",
+    "CHR01 • bob layer silver lock 01_low": "d5e19997f59f37f7c3a4b94d793d24a6f6446576983aa947ff943c6a34d1cc08",
+    "CHR01 • bob layer silver lock 02": "1e711275bf6a541da48fa7eca1da3851154884bfa5b84266e22b3b164644ed07",
+    "CHR01 • bob layer silver lock 02_low": "e19517dc48e4a36be084f7d16651cdcaac71990da3e3b493ee5c41f2ceeda4b6",
+    "CHR01 • bob layer silver lock 03": "47bda026ddfecab448cb4f989c670b2ec431afeeb6ec4ef3de86323c6de6ef16",
+    "CHR01 • bob layer silver lock 03_low": "219f883f79e024794f5bb0dc71ff9b0575dace705716b4e5eb45b6b543fbb924",
+    "CHR01 • bob layer silver lock 04": "62687e190d0b3c74a8a4d033d7daec1d9e87623050e3bc31ae6d666c1d80c7af",
+    "CHR01 • bob layer silver lock 04_low": "0ba66487e55d05479081ff87741b1b692503b04924d78ae1e62ca1955f5dbff6",
+    "CHR01 • bob layer silver lock 05": "bb234ae953a90487000aa4d15cb6e8d67992a9d319074bae6a340e4c50364ed9",
+    "CHR01 • bob layer silver lock 05_low": "e365ee5c7e775e5964075adbcc3617c3fa88b7a155289d6536398aaea2e3d332",
+    "CHR01 • bob layer silver lock 06": "7a6ac7e11a996863b59b0cf0182c75747d415684614545f763a1c0bd23e402b8",
+    "CHR01 • bob layer silver lock 06_low": "fe7d0f5526d22515ec682e88239836f1702b9e9db79edca8fbc6606f3b50cfeb",
+    "CHR01 • bob layer silver lock 07": "3a5dde44b5f33f98aac7ac2542dcae8453ed16ec8c6606a95b811c27e9dc5fd4",
+    "CHR01 • bob layer silver lock 07_low": "731d86ccc324a3d4b96c11d304acc64d19edd8f6317c96a6ad086a6b6bd9dc1b",
+    "CHR01 • bob layer silver lock 08": "1dac9f5dd90638a51067d62caae66e07b3543640ddb2e83c5efe3e3d5bffdcd6",
+    "CHR01 • bob layer silver lock 08_low": "1c926133c6680d9b693d7d3fd994d26bc7e6bcc26c049c454174703a4728b352",
+    "CHR01 • calm brow": "ae90caf48185cb708174a8c7d01f8ea2769e59093545f750b06a90c770ede1a2",
+    "CHR01 • calm brow.001": "1c353786527f90cfca1a1bd0881f27bff25b7d2d3d570def28a09ae2178e13ce",
+    "CHR01 • calm brow.001_low": "2934d668cf47e974a4999bbd288046edc28451dda2989ec8319c7444135eece7",
+    "CHR01 • calm brow_low": "7341f6900e3c6a4160ea10334dd7202397c3996c31c876b701e427d1736c8340",
+    "CHR01 • cape bronze fastening": "d33a9795efea5d01d486e2c1a44e7366f5144e96e296b164f34680cb2978cad8",
+    "CHR01 • cape bronze fastening_low": "bb4bb759c71ce65e052cab92d4f148672a67b4a602171502a3e134d613ddf2e5",
+    "CHR01 • cape opening piping": "f3fc41460f50279b7521a65b76614c4d81fd8ddff58f4abf4d978a3995c56d4a",
+    "CHR01 • cape opening piping.001": "b8ae7810bbcef7814e504988dae60156cf1969d2126d5ae90bd4394eafc088d3",
+    "CHR01 • cape opening piping.001_low": "9f6a724b4eb27de03c2ad2483e89cce1cbbb8b7ea2c37e67470cec03176d553d",
+    "CHR01 • cape opening piping_low": "97659e7a06c04975509b7f358e63f681353a129b645f1e4411549f9029f316cc",
+    "CHR01 • clasp inlay": "d35790f0b19429e9bf7458b49cdf0bc5e5093136856eba10a89b00db14ce8b3f",
+    "CHR01 • clasp inlay_low": "1e818b94da2407fc56e3114d72cbe2b97a8750c2259d19633bb7580d6899c368",
+    "CHR01 • clip leaf": "b43842d19d1e6fd57653708c7a9636dfab8f63d878a6fd5e74b9f4159e071b99",
+    "CHR01 • clip leaf.001": "2f42bbd8ebb87d00c0fb4374e45e6b6831fc5f9f1f4fdd445b327e1066b98d88",
+    "CHR01 • clip leaf.001_low": "b76720934ff8445a070a5c0cc59e050bff7228cd0b0b33259c64bbabb18ca95b",
+    "CHR01 • clip leaf_low": "f8bca3f5555a1d841356542c73e33dceddd7aaf4e9f236f9f13684920bd94014",
+    "CHR01 • compact left satchel": "e7113f58eb99f07c8d5f56d7a58f6179ddbb15bff0aae10d764ee58e206d7b90",
+    "CHR01 • compact left satchel_low": "418c9a5dc9357b96a5eeef0d73e220fe1515febbb4c27840b5f53a1664dc85a3",
+    "CHR01 • continuous silver hair cap": "a86da1ec5618c5f6a646f0d232c551a6f0d6421b27ba6dbcc2b369b33ce5abac",
+    "CHR01 • continuous silver hair cap_low": "ffdd06249669eca666b4dcc5bfcb33206e09f5788e8fb2338d7e7b3f7674d737",
+    "CHR01 • diagonal satchel strap": "169f5e42d1111545fd7ebcb1a945349633e3fec7faf2979cba90df2ce36c9187",
+    "CHR01 • diagonal satchel strap_low": "9f8d47831a968a67bb65c2c2a65ca5ce8f7ff830d8aad2a48f6eed45b1305511",
+    "CHR01 • fine eye contour": "1e0c411af24e1770f7bfe58ef6641f29e83bfa2b20c97d5b64f36da6cd7d9f29",
+    "CHR01 • fine eye contour.001": "8061ee0d6cd38846d6b6faf0ede6e2ddf487d7bbd29ac0d0f29faf6fd963928b",
+    "CHR01 • fine eye contour.001_low": "a8d5cc956095ca745270d8bc3f444a707c8a41aa2053367d0626e3c6cd6975e3",
+    "CHR01 • fine eye contour.002": "eaff205535c6eff5731d68ebf207cfe638b2b3dacd0321ea0dd93c78df1c4c06",
+    "CHR01 • fine eye contour.002_low": "615ec60aa6d5322d97fe6b73aceaaddfaff44e1b5dab7e416bd1b787e62fae21",
+    "CHR01 • fine eye contour.003": "0874fccd2241b0d2956b99d3867b1cf335618018ef2ae616b6593998196bb507",
+    "CHR01 • fine eye contour.003_low": "112ffdaff332e482f332c3ec3798da011f6ec3e0eb06a7109d299a1d72d38912",
+    "CHR01 • fine eye contour_low": "8be9670f8f696d498e9d5c13cd4b64833b849a0dd4837affc6af2b03051895b0",
+    "CHR01 • fitted leather bracer l": "e5a469c5fda0e9b7f82379956478c3f0b78439c684463cf3a52d2c98ebe3c85d",
+    "CHR01 • fitted leather bracer l_low": "0b2256006d445f3f62e9074714a25b45922ee9e916883a867ebedf99ca57e522",
+    "CHR01 • fitted leather bracer r": "e6183cbe3f2babf94663156f2147b6f1a27e6ca73bfefea58c938b930dffc21d",
+    "CHR01 • fitted leather bracer r_low": "1eb900e6cb86ddb78587064012ec408a03c1e6077a6b25f105c1ae09994e451b",
+    "CHR01 • gentle mouth": "2e49508d93f94edbed3d2d15eea2d2cc8581b8fd309f01b28fa8520055a6ebdc",
+    "CHR01 • gentle mouth_low": "a301a3db90fd5a8776df12d8158e01544f399eb949c8c3a9354bdbeaecf84200",
+    "CHR01 • iris -1": "48b9de772bca29e3a7e90ad36fb22c0dd3139c61b2aae4bc2fda7fc62420fc23",
+    "CHR01 • iris -1_low": "48b9de772bca29e3a7e90ad36fb22c0dd3139c61b2aae4bc2fda7fc62420fc23",
+    "CHR01 • iris 1": "1e5666605b4ddb2e17b6a548cf2b103e8b3bbe773aa967d22a731fd60f9409fb",
+    "CHR01 • iris 1_low": "1e5666605b4ddb2e17b6a548cf2b103e8b3bbe773aa967d22a731fd60f9409fb",
+    "CHR01 • ivory split shoulder cape": "a6b131d69c90350625b2a391b706d335b1d7f29c41f6c55f0ee8471aec299e72",
+    "CHR01 • ivory split shoulder cape_low": "90cd939f63183259597b480ac29f1dd272ec70b66e70c11544d7aa5a1be54c00",
+    "CHR01 • layered nape lock 00": "1f37f2939b77b1e3761be1fb1ac7bf7437d835e23e490ecf7ce298118e531baf",
+    "CHR01 • layered nape lock 00_low": "c9c024a0cd09908c81ac0594c480b09259be550b7ee9a6451a35443cc5a9d905",
+    "CHR01 • layered nape lock 01": "13dbb53129a99a88d5f57c5fc6258b4debe1ae9616ccca2c57dcda824484a069",
+    "CHR01 • layered nape lock 01_low": "823027abd35b0fd9df78bc0bff2dd0223999ae9495d0466416fb52edb897cbbc",
+    "CHR01 • layered nape lock 02": "e09c470b5d1608be176b72e8239e51f62bd54ff1c8472135c9af53103c0eeffc",
+    "CHR01 • layered nape lock 02_low": "b36912a0d3ecad6f007e11d352c7b0b927d106acfd9efcbd77c06adbb72d38c5",
+    "CHR01 • layered nape lock 03": "0f5cde1b300cb6c3de9c18bf8eac55d9e6b4416485e57d642219da13d83d2f39",
+    "CHR01 • layered nape lock 03_low": "8518c59113a10fe55b152c4c02040ee8c3ac9be6a1505a800f502279bab3e82c",
+    "CHR01 • layered nape lock 04": "2a230bf2a79f23f5e8cdd4714d11def2d732c810e03b927b763b8dea464eb0aa",
+    "CHR01 • layered nape lock 04_low": "f91c6c8859ceb5cce5e07ac10334094f052e790d34cfa2226149f21783a76906",
+    "CHR01 • layered nape lock 05": "41cab954e10811279a011ba8342e4cb3413fa96257621731df4abce23de59811",
+    "CHR01 • layered nape lock 05_low": "274a88018cb6a6ce0368c831b5d0ef240a6fb220c7a7fe5448a7489363910fa5",
+    "CHR01 • layered nape lock 06": "aefafe028c8991742de5c2868e13a2d2bc6f5a5d24d518369714c0c22feaa6a0",
+    "CHR01 • layered nape lock 06_low": "6cdcdfb079d80695782b9d01977d7a0008770871a2e15e473cc034df1d5ea7b9",
+    "CHR01 • layered nape lock 07": "48a288de99403f1bbe2d58a64daa68ebec690d2d2b7fedd018eeb053dae8cc3a",
+    "CHR01 • layered nape lock 07_low": "d136376a483670f8d725dc57f145e6e99e9d82769ea9baee6d9feec6876a49d2",
+    "CHR01 • layered nape lock 08": "11f68c9f4d237e8e68909d566a5dc39945cc7ff1225080d9d89b2b42474ef95a",
+    "CHR01 • layered nape lock 08_low": "e69c5630640f7299b1eff7dda4c688c4c0866ee987e79e62b096eb22777e6c54",
+    "CHR01 • layered nape lock 09": "0341f79db23cf9f4da27cdd3347ace927349f5d60b5ba7ddbaa8e74ec23c0e00",
+    "CHR01 • layered nape lock 09_low": "184306167339dbba6229aabd067a39803e8d433ed0c14e44cc62b0bb8c796c0a",
+    "CHR01 • layered nape lock 10": "61ca62c34e5ba8d4e1a57cbaf209eeccc6c7a36104b69ab5697d84dcad480b70",
+    "CHR01 • layered nape lock 10_low": "f870a5acd4e0409e29f24a73c6e156f0d802d9a3dfd3a38a93ed0d9d638fed7d",
+    "CHR01 • layered nape lock 11": "07d9ca7ee24472364e65d2407fb215427420c0b79636f8ca58529ae1934d2907",
+    "CHR01 • layered nape lock 11_low": "adec1f36dd5073b7d59cfa26db7d45e71e97bc07da884fc5f634f98a9f70e9bf",
+    "CHR01 • layered nape lock 12": "858176f7674cc1dd2e18a83a6d8d44fdb0a9df6c6cec0d95511cc35db50d8df5",
+    "CHR01 • layered nape lock 12_low": "0624f603daa181feee4819472d0ed03337c141005a921b94f6b87e883290ddda",
+    "CHR01 • layered nape lock 13": "a77349868ec1e7ec283468b87bbcb0a4b00f422e1c990331f982575623192905",
+    "CHR01 • layered nape lock 13_low": "e0b5177a33de3dec5523be302ab97000dc93c5f590c5397dd5da6a017666bea7",
+    "CHR01 • layered nape lock 14": "976c0213b9fa26af370a26a895582bd640f9ac1ba658d663a57c11a717c8044c",
+    "CHR01 • layered nape lock 14_low": "fdd787fb84872f0377df38d5751aa83ae45f8de4d3cbf4d105b58a18f2d0203e",
+    "CHR01 • leather travelling boots": "9b23c7699ef2e939be4e248566b28d3d18c9cd4447f7633ac09ec383d15478a2",
+    "CHR01 • leather travelling boots_low": "9b23c7699ef2e939be4e248566b28d3d18c9cd4447f7633ac09ec383d15478a2",
+    "CHR01 • leather waist belt": "a4a8c16d19b5740109650bc6dd610fb78f62c0b92dfaac40a4efc358409f2825",
+    "CHR01 • leather waist belt_low": "1b113b91ae44d0c85858b2856b86202d69397230a3028279d8a8fb62984d360d",
+    "CHR01 • lower lip": "ffdfec37fe423c9ed7ddd617e59643330f4a7c681ffd372103edfbc701793324",
+    "CHR01 • lower lip_low": "1f477d6c9212398ee3fcde92c49c2e4dbfab4444fbd0b0bc42fb4eea6c476daa",
+    "CHR01 • original stylized face and neck": "62a00834158aaf98aa6638e2252102cda862ad0221aa1a30ca4e2240a6c5cca1",
+    "CHR01 • original stylized face and neck_low": "c2d52def70b40e39ad3a4dd9d77737f94aa7f1890e1382f836b5aae7a6465ca8",
+    "CHR01 • pupil -1": "ff1396c4922135075aa019695d16e6f170ae72ca255096e45392f8b700078ef6",
+    "CHR01 • pupil -1_low": "ff1396c4922135075aa019695d16e6f170ae72ca255096e45392f8b700078ef6",
+    "CHR01 • pupil 1": "91d94c5638e084a3bc5f057f06a86ef114255f6ff343ad99173a2d46f340c7ae",
+    "CHR01 • pupil 1_low": "91d94c5638e084a3bc5f057f06a86ef114255f6ff343ad99173a2d46f340c7ae",
+    "CHR01 • rear satchel strap": "321a4d6904368c0fe063315e9e47ddec93ec217b92859c625e0e1cd844656f27",
+    "CHR01 • rear satchel strap_low": "0b5de9d38d2aa55a87e5d437ecd775340fbfc6ba7a55979cfa133213edfed9cf",
+    "CHR01 • retopologized sleeve l": "6ae004c65f7a35fb04e8ef08da22f8ffa34e04bb34d96ae88f67d81ebd2863ac",
+    "CHR01 • retopologized sleeve l_low": "4caf1f27674c509286a87cd80a18e34fabde5c3e6077c970ddd07f4cb2f4f5c7",
+    "CHR01 • retopologized sleeve r": "6f15860adf245e914471d6af61c7eaf94c2318d2b444bed995ac3144d2b1d5de",
+    "CHR01 • retopologized sleeve r_low": "010c5bb3e70fc70156655f2a600106eb6b39dc3754ec280581517475e9d2cb1f",
+    "CHR01 • right casting copper cuff": "af71a7c6fae39cf1b0214067154aaf6454101341129f74af065b27ad3ad99f9f",
+    "CHR01 • right casting copper cuff_low": "7538142799e44d521a2f9211aca9ccf1a7059a020cf3909c210af30f981c6fa6",
+    "CHR01 • right cuff sea crystal": "58e148df00e7268a1f97423be9875be17052b3729c38c5aa401967accb6e9acc",
+    "CHR01 • right cuff sea crystal_low": "4468dc4e1db0cbecaa1b09b2607bcb70f60ee0a0ccef80c599dd44f61fa2a052",
+    "CHR01 • right hair clasp": "50f5b311585c4facb00c0f909b1859c14b027ef52a133767bd9911032120179e",
+    "CHR01 • right hair clasp_low": "7fe6046ef84c475376238871d1d7b2c22f875cb2d1c30ddd50b13d23d70728ec",
+    "CHR01 • rounded human ear": "8db173fb1653ac2d58ccd498dc53f3e7fb908b9730afac6995e9c7fa2ed659ff",
+    "CHR01 • rounded human ear.001": "f899bcf1403b849ddccc634fa40fe31dc82dec58ea0a674bad28397ce77d7c1b",
+    "CHR01 • rounded human ear.001_low": "8c7237232cfeb2ee96d0ebefe751045e3ef1bedc119851b20a3ff13f1071486f",
+    "CHR01 • rounded human ear_low": "271f6e85375e80be709bf940901fbedc9587bbbabe715264d0598087e85c249e",
+    "CHR01 • satchel button": "2f3559a9e9036eb7994742003dbdfac2475c4c6104f4dc8e945974d582a99484",
+    "CHR01 • satchel button_low": "195eb094aba6f0c7599b0863bced618a2ba62b5816648ecdd5fcdb6fc2c844c8",
+    "CHR01 • satchel flap": "6a54dcea6bdecc96a4da3ef4115acc2d8785ecc5ace0590126e398d084354e82",
+    "CHR01 • satchel flap_low": "34f9041bad8b21ac874882c17f3ab825209e5a6556c8b8ac1e2bce16675c98e2",
+    "CHR01 • small oath diamond": "1eb6a32fd373ac2fc6050f4ae194131b38ca4ab22900021e9880c7c3856871df",
+    "CHR01 • small oath diamond_low": "264e8a6e05bf28c05e0a996b25852f3e0dc4bc59d51739730a63a80cacd6cd38",
+    "CHR01 • split tunic panel False-1": "afb4baeb33e43717f7e4cec18108e10c939fa8dd461e2020e62b336a37dff72f",
+    "CHR01 • split tunic panel False-1_low": "bfb5c1e9b0e851e9e1e6f4a7100a02faf4a6d9e183f33a4dac7a800252d7ef74",
+    "CHR01 • split tunic panel False1": "f8065942e9fd5ff4fc3efd733f2f79308d961dca95259f53d26ce5dcd299b9b0",
+    "CHR01 • split tunic panel False1_low": "77d2d23ded26214559cf6bec392a2783def46ad2b47ead51e8753247fdfa3f5c",
+    "CHR01 • split tunic panel True-1": "8dae4c8191ffb5dceab0a83b7fc9386418380ead5e247f95ad5a9fb245194d0b",
+    "CHR01 • split tunic panel True-1_low": "94d325d1191d8374cb3c60a081a16ed64baf064d2953b6b90fb8129d42779723",
+    "CHR01 • split tunic panel True1": "aaed517557c87018d63efc2140d4967676f30d51c404d342aba794ab12738ec2",
+    "CHR01 • split tunic panel True1_low": "fa0cd9e65b3c52d0f59853452b0530e45195dda6d37db1bca052e8db9658faeb",
+    "CHR01 • subtle ear inset": "407feedae43c6194a29cb19cc87e7fa8e3761f738e09d1b027d29c6ccbb2243d",
+    "CHR01 • subtle ear inset.001": "0980c6bb4a49b84deb7867d3f12f8d08bbfa1c04263d39861160e63af8a895a5",
+    "CHR01 • subtle ear inset.001_low": "b272e4cd4c971dbd271b62f2ed892c5c5ae4fe251a5e078323b18c51df83109d",
+    "CHR01 • subtle ear inset_low": "3228841c8d588a00626cc2e1572b954de830d567c88300ad7eb9db59a498d01b",
+    "CHR01 • subtle tunic hem": "2e8f5ad7aa5319295ab0089969c5e8b83699349b2793ff8005db148f59f39d3e",
+    "CHR01 • subtle tunic hem.001": "21394dab4ac462897dd5b6624950335abbf0a5d71c4dff7279a0d55fbf42474e",
+    "CHR01 • subtle tunic hem.001_low": "0be7fd37adfbb45ce928370f4d3848651bfc8a2ec565416a7ddef4844d15f72f",
+    "CHR01 • subtle tunic hem.002": "622222141938814c1d2d6a8cd3e336d72dfff2eaf4950c6b651f0a642b80b701",
+    "CHR01 • subtle tunic hem.002_low": "bd18a9174b3ada070cb6616967933c2131440fa2c29abb7eb2eaa98d670c5544",
+    "CHR01 • subtle tunic hem.003": "0da0e669ab5e6e122441987e1c08b4b3b21430c7b88cf29560b12adc8fe98a47",
+    "CHR01 • subtle tunic hem.003_low": "4081209c9df96a0391cf650ccbd63ef60bcccfd51f08399cdf395844c410d27c",
+    "CHR01 • subtle tunic hem_low": "f8415596a9ebaea3eede16b45747ff84b91680384656b7cd2bd636337656622e",
+    "CHR01 • swept silver lock 00": "9f1a3200a07ff33653d6e46c8706619fe0f6989a6a2077bbab84b4ca7b59ffdf",
+    "CHR01 • swept silver lock 00_low": "2dcd8284962329d600c8d346bb50caad92353fc92004e6cf731d29adfd407298",
+    "CHR01 • swept silver lock 01": "4f5c9be71ab7c2c2c27177a400d15dc2e8d6a0db50e9e36e391e1047214e09d1",
+    "CHR01 • swept silver lock 01_low": "5900b483ceab18356da16607351df4f2f809caa4a410c98258cda932026a97f6",
+    "CHR01 • swept silver lock 02": "406b6b250c6364c2be1f4240ea2368f2e31f4d0d2dc38a5d59cc22194044a22b",
+    "CHR01 • swept silver lock 02_low": "7b668da18b92cb5be555aebf3733689bd90165688729fa92aa09d580745eb3ff",
+    "CHR01 • swept silver lock 03": "883d6967cc54b7fe9097d26e680e51aa160561336d5b352f52c61b984a52a8b2",
+    "CHR01 • swept silver lock 03_low": "a2367ead4e97f5329b3068e406d6c32998bfede9093918f41b608a3232a5613f",
+    "CHR01 • swept silver lock 04": "1ad1784461fad845b815ef1ef7129bb49806e8d9e10cb7d80395e3ada2d0b10b",
+    "CHR01 • swept silver lock 04_low": "3b5d9f73934afea1880fb9629735732ce1c8d35e1de03b243bc6f7fb0d93f22a",
+    "CHR01 • swept silver lock 05": "3121cd3ae47814b3e884787d183fa83b70bb33aea5165eb52055578f54438cd8",
+    "CHR01 • swept silver lock 05_low": "e17a11de805532b5ea8c0ec13b673fa3ed6b1b07aea37d92d37a70b98fcb0073",
+    "CHR01 • swept silver lock 06": "c99dac5ca17bf809ad27d92d4f19b07f3ccd6157c531b2a609c2c53b628f668f",
+    "CHR01 • swept silver lock 06_low": "0e6251a3d994e7e46b39e858ca4fff2435d2ba72572ea978bf6fa34eab4eeebc",
+    "CHR01 • swept silver lock 07": "fdb6cddd735feb932016456de6060504aa34a59ddc65cf464a1d21f0e83d7e78",
+    "CHR01 • swept silver lock 07_low": "50f5be6bf4d6c3c674a8aed6f448678b4e2d8810ef2845e0ffb4b9f7ef6a8e44",
+    "CHR01 • swept silver lock 08": "8fc34118561acfb3f9edc8a9f6f84f5dc27d920fe6c4086d1256ae1b4c68c947",
+    "CHR01 • swept silver lock 08_low": "6fb2d94942ee59f451b5ee29bb7d16d8d4bc3fab242f2486027aa5ed4404c0ca",
+    "CHR01 • tailored high collar tunic": "9a2509f9c59928b10ad51bf253e0d7856e5c85b3565b4f21c8cb5c674c0cc9b7",
+    "CHR01 • tailored high collar tunic_low": "66d41074ad7db5d9b9b1b2fba8173ef86624e3bc5bbe64f315f966962f546be1",
+    "CHR01 • tiny eye light -1": "ef259d577e23affaa5df578c161f9930fc4471bc8d227d923d35ec96a39462a7",
+    "CHR01 • tiny eye light -1_low": "5d6a9c53b352ac0067f26afda5357f1feaaec3d294bc870bcb805a9733534239",
+    "CHR01 • tiny eye light 1": "72868a90126002462d1938923637e7afcfd513721672a513dee87a878fa2e5a4",
+    "CHR01 • tiny eye light 1_low": "928ef3610ff02fdacfc31ee451853c62695d2ce928acbddb4163384d313af5a0",
+    "CHR01 • tunic tailored seam": "c67ae3dde70edb40700796d1f839a9bc53b3c08707b29e24af00b2bcd88d04f5",
+    "CHR01 • tunic tailored seam.001": "111b057f927e411c1da13d52bef1912d30c93d40790b3a1be5a01804114ec30f",
+    "CHR01 • tunic tailored seam.001_low": "4ac609f762fce200281fc4a3a86453779958c019a94a9bcfd1c5883392542fa8",
+    "CHR01 • tunic tailored seam_low": "4587514906f14be84ce0a17767bfbf3a6f01b2862a0d4b880e5344e4244f27ff"
+  },
+  "fit": {
+    "r": {
+      "elbow": [
+        -0.2238459289073944,
+        -0.13644780218601227,
+        1.216482400894165
+      ],
+      "wrist_basis_angle_deg": 66.56121115996059,
+      "wrist_target": [
+        -0.17245154082775116,
+        -0.3160669505596161,
+        1.0898700952529907
+      ],
+      "reach_m": 0.41791046888787503,
+      "two_bone_length_m": 0.443271485981921,
+      "measured_contact_error_m": 2.443972150513042e-07,
+      "contact_world": [
+        -0.12799996137619019,
+        -0.2900000214576721,
+        1.0680001974105835
+      ]
+    },
+    "l": {
+      "elbow": [
+        0.27848196029663086,
+        -0.01784953474998474,
+        1.1385784149169922
+      ],
+      "wrist_basis_angle_deg": 9.297134823684528,
+      "wrist_target": [
+        0.30333825945854187,
+        -0.24057775735855103,
+        1.1119437217712402
+      ],
+      "reach_m": 0.37843074900057466,
+      "two_bone_length_m": 0.443271485981921,
+      "measured_contact_error_m": 3.182017282256875e-07,
+      "contact_world": [
+        0.30000022053718567,
+        -0.28999996185302734,
+        1.138000249862671
+      ]
+    }
+  },
+  "rifle_world_matrix": [
+    [
+      1.0,
+      -0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      -0.28999999165534973
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      1.149999976158142
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "pose": "Across-body low-ready static fit study",
+  "contact_frames_rifle_local": {
+    "r": [
+      [
+        0.9249884486198425,
+        -0.0,
+        0.3799952268600464,
+        -0.12800000607967377
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        -0.379995197057724,
+        0.0,
+        0.9249884486198425,
+        -0.0820000022649765
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "l": [
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.30000001192092896
+      ],
+      [
+        -1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        -1.0,
+        0.0,
+        -0.012000000104308128
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  },
+  "contact_frames_world": {
+    "r": [
+      [
+        0.9249884486198425,
+        0.0,
+        0.3799952268600464,
+        -0.12800000607967377
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        -0.28999999165534973
+      ],
+      [
+        -0.379995197057724,
+        0.0,
+        0.9249884486198425,
+        1.0679999589920044
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "l": [
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.30000001192092896
+      ],
+      [
+        -1.0,
+        0.0,
+        0.0,
+        -0.28999999165534973
+      ],
+      [
+        0.0,
+        -1.0,
+        0.0,
+        1.1380000114440918
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  },
+  "suggested_socket_rotation_quaternion_xyzw": {
+    "Grip_R": [
+      0.0,
+      0.193664088845253,
+      0.0,
+      0.9810678958892822
+    ],
+    "Support_L": [
+      -0.5,
+      0.5,
+      -0.5,
+      0.5
+    ]
+  },
+  "socket_suggestion_scope": "Art-fit candidates only, no Grip32 collision compatibility claim; support translation lower by 24mm",
+  "right_fingers": "Grip32 source quaternion pose",
+  "left_fingers": "55 percent source Grip32 curl for approximate under-pad support",
+  "support_contact_offset_from_socket_local_m": [
+    0,
+    0,
+    -0.024
+  ],
+  "magazine_guide_travel_m": 0.23,
+  "checks": [
+    "source SHA unchanged",
+    "all 65 bone REST records unchanged",
+    "character mesh vertices/topology/weights unchanged",
+    "analytical two-bone reach",
+    "evaluated hand contact-frame positional closure"
+  ],
+  "not_checked": [
+    "continuous hand-versus-gun surface collision",
+    "finger surface fit to rectangular support pad and angled grip",
+    "trigger finger placement",
+    "clothing-versus-gun collision",
+    "full-body animation",
+    "reload hand animation",
+    "aiming/sight alignment",
+    "Unreal import/runtime"
+  ],
+  "output_blend": "KITE01_CharacterFit.blend",
+  "output_render": "renders/KITE01_CharacterFit.png",
+  "visual_review": {
+    "performed": true,
+    "render": "KITE01/renders/KITE01_CharacterFit.png",
+    "result": "Usable across-body low-position visual fit study only",
+    "findings": [
+      "Original character scale and clothing retained; gun shown held in front of torso",
+      "Magazine movement guide visible below the magazine",
+      "Stock and right forearm remain close/visually overlap in this view; surface collision has not been accepted",
+      "Support fingers are relatively straight and illustrative",
+      "Hand-contact frame closure does not establish surface contact or penetration-free fit",
+      "Not shoulder-aiming, reload animation, full-body animation, or UE acceptance"
+    ]
+  },
+  "output_blend_sha256": "8a36a2af3fa31d39c23ea102555cbc7de67be56491bd4ab1dee47882da5703da",
+  "output_render_sha256": "5f779ddc41a818b382aa21a89b063bf8fedf843887ae29a239bfcefa9e5b7168",
+  "suggested_socket_rotation_status": "FIT_STUDY_ONLY_NOT_APPLIED_TO_STANDALONE_GUN",
+  "paths_relative_to": "aetherlab_rifle",
+  "saved_blend_readback": {
+    "image_count": 28,
+    "all_file_images_packed": true,
+    "images": [
+      {
+        "name": "AetherTravel_BaseColor_2048.png",
+        "packed": true,
+        "width": 2048,
+        "height": 1024
+      },
+      {
+        "name": "AetherTravel_Normal_2048.png",
+        "packed": true,
+        "width": 2048,
+        "height": 1024
+      },
+      {
+        "name": "AetherTravel_ORM_2048.png",
+        "packed": true,
+        "width": 2048,
+        "height": 1024
+      },
+      {
+        "name": "CHR01_Body_BaseColor.png",
+        "packed": true,
+        "width": 4096,
+        "height": 4096
+      },
+      {
+        "name": "CHR01_Body_Normal.png",
+        "packed": true,
+        "width": 2048,
+        "height": 2048
+      },
+      {
+        "name": "CHR01_Body_ORM.png",
+        "packed": true,
+        "width": 2048,
+        "height": 2048
+      },
+      {
+        "name": "CHR01_Face_BaseColor.png.001",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "CHR01_Face_Normal.png.001",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "CHR01_Face_ORM.png.001",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "CHR01_Hair_BaseColor.png.001",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "CHR01_Hair_Normal.png.001",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "CHR01_Hair_ORM.png.001",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "DarkAshWood_BaseColor_1K.png",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "DarkAshWood_Normal_1K.png",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "M_CeramicSand_BaseColor",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_CeramicSand_Roughness",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_EdgeMetal_BaseColor",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_EdgeMetal_Roughness",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_Graphite_BaseColor",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_Graphite_Roughness",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_InventoryTeal_BaseColor",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_InventoryTeal_Roughness",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_OpticLens_BaseColor",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_OpticLens_Roughness",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_Polymer_BaseColor",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "M_Polymer_Roughness",
+        "packed": true,
+        "width": 512,
+        "height": 512
+      },
+      {
+        "name": "NavyLeather_BaseColor_1K.png",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "NavyLeather_Normal_1K.png",
+        "packed": true,
+        "width": 1024,
+        "height": 1024
+      }
+    ],
+    "source_inputs_current_sha256": {
+      "character_inputs/stage1/source/CHR01_Staff_Grip.blend": "505fe9d9bf87498ee0e938071cba729154ebd7ef1b56f900a9ac0837b9c1cf5b",
+      "KITE01/KITE01_Modular.blend": "2b33999527b2f0f44d6d44e7b828fe2732764843de3d4463fa358fadd3856513"
+    },
+    "source_inputs_still_exact": true
+  }
+}

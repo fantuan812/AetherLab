@@ -1,0 +1,81 @@
+{
+  "schema": "aetherlab.kite01.first-art-study.v1",
+  "status": "PERSISTED_BLENDER_SCOPED_VERIFICATION_ONLY",
+  "engine_acceptance": "CANCELLED_NOT_RUN",
+  "public_repo_contains": "scripts and text evidence; binary files are in user Library",
+  "library_access": "IDs do not grant public readers access",
+  "deliverables": [
+    {
+      "filename": "KITE01_Modular.blend",
+      "path_relative_to_artifact_root": "KITE01/KITE01_Modular.blend",
+      "library_file_id": "libfile_d432e9b55ac88191af10b7d6e354ce41",
+      "file_id": "file_0000000006b481f5b5c80616d0212115",
+      "current_version_number": 0,
+      "bytes": 7698572,
+      "sha256": "2b33999527b2f0f44d6d44e7b828fe2732764843de3d4463fa358fadd3856513"
+    },
+    {
+      "filename": "KITE01_WeaponAsset_v1.zip",
+      "path_relative_to_artifact_root": "KITE01_WeaponAsset_v1.zip",
+      "library_file_id": "libfile_da19234fb2788191b7199dbc7af2fd1e",
+      "file_id": "file_00000000a69481f58507b77f497dfe49",
+      "current_version_number": 3,
+      "bytes": 42194386,
+      "sha256": "242cb89c57b97329037e5378e2a373069dea3272f4ce6b35946a42aa75b079de"
+    },
+    {
+      "filename": "KITE01_Concept.png",
+      "path_relative_to_artifact_root": "KITE01/reference/KITE01_Concept.png",
+      "library_file_id": "libfile_866b5737c9e88191ad8d09f7a0d70c85",
+      "file_id": "file_0000000033a081f6b39a1c6ac23609ae",
+      "current_version_number": 0,
+      "bytes": 1974791,
+      "sha256": "a9e82e7acd087189e549730f6caeee41aa9836a844b5290b47f66628700b49b5"
+    },
+    {
+      "filename": "KITE01_Beauty.png",
+      "path_relative_to_artifact_root": "KITE01/renders/KITE01_Beauty.png",
+      "library_file_id": "libfile_76db3bc4df608191bf1c0523ac11ae2c",
+      "file_id": "file_000000001d6081f6adba47c32d9dd092",
+      "current_version_number": 0,
+      "bytes": 2549353,
+      "sha256": "1dd81f31d773b43acc6c4ca0c8fffaf78e9f95d41732df5e2776ebc84f09b18a"
+    },
+    {
+      "filename": "KITE01_Side.png",
+      "path_relative_to_artifact_root": "KITE01/renders/KITE01_Side.png",
+      "library_file_id": "libfile_6c6832006d888191819df93ec46beaad",
+      "file_id": "file_00000000eb9481f682bf6461939aca2a",
+      "current_version_number": 0,
+      "bytes": 2104677,
+      "sha256": "96549bd31d3567f79ddc2ea57820aee30d68802fa882de0bd99200dd22c76e51"
+    },
+    {
+      "filename": "KITE01_Modules.png",
+      "path_relative_to_artifact_root": "KITE01/renders/KITE01_Modules.png",
+      "library_file_id": "libfile_1ed282e52cb0819199981ac9b79dd950",
+      "file_id": "file_00000000c9b881f5a562b807a53d7d70",
+      "current_version_number": 0,
+      "bytes": 1447332,
+      "sha256": "6dc6c5c663446e9f1f2de66275d2cdf52842ef98a7aca9e942a45180ac050612"
+    },
+    {
+      "filename": "KITE01_CharacterFit.png",
+      "path_relative_to_artifact_root": "KITE01/renders/KITE01_CharacterFit.png",
+      "library_file_id": "libfile_1e3516142ac88191806d14e54cb61fdd",
+      "file_id": "file_00000000acbc81f592e097123f3f54b8",
+      "current_version_number": 0,
+      "bytes": 3585319,
+      "sha256": "5f779ddc41a818b382aa21a89b063bf8fedf843887ae29a239bfcefa9e5b7168"
+    },
+    {
+      "filename": "KITE01_CharacterFit.blend",
+      "path_relative_to_artifact_root": "KITE01/KITE01_CharacterFit.blend",
+      "library_file_id": "libfile_caa4ebb3cabc8191972835e334625bc2",
+      "file_id": "file_00000000ef5081f591b030b8791d6afe",
+      "current_version_number": 0,
+      "bytes": 22146310,
+      "sha256": "8a36a2af3fa31d39c23ea102555cbc7de67be56491bd4ab1dee47882da5703da"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema": "aetherlab.chr01.frozen-character.v1",
+  "frozen_character": {
+    "filename": "CHR01_Wanderer_Editable.blend",
+    "sha256": "b227a2d002aed8724acdfd3f0d1a21aef5652f486b63245ed1278fe96a3eba69",
+    "height_m": 1.650740146636963,
+    "rig_object": "CHR01_Wanderer_Rig65",
+    "bone_count": 65,
+    "rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+    "hands_rest_sha256": "6e5caae72524ddfb5168066cac87866d3115a1fa415683097627ccfd331b80b2"
+  },
+  "fingerprints": {
+    "provenance": {
+      "source_artifact_relative_path": "contact_calibration/Immutable_Source_Fingerprints.json",
+      "sha256": "2eb641ecf4b1efc2a228a9407e100e1adf5af18dd8cb794c315975b5c67b5576",
+      "bytes": 1477
+    },
+    "values": {
+      "source_blend_path": "aetherlab_team/stylized_wanderer/v2/CHR01_Wanderer_Editable.blend",
+      "source_blend_sha256": "b227a2d002aed8724acdfd3f0d1a21aef5652f486b63245ed1278fe96a3eba69",
+      "source_contract_sha256": "4adf81fd5b88f0b10160448b0e07dd47c0611ba380f12d720c51850a25063c59",
+      "source_contract_bone_rest_sha256": "fa3ec5e21ee097e021fdae91d009bb71269beb0d1e3d8d2a0a21cba1a19afdf0",
+      "source_contract_hands_rest_sha256": "6e5caae72524ddfb5168066cac87866d3115a1fa415683097627ccfd331b80b2",
+      "source_rest_height_m": 1.650740146636963,
+      "armature_name": "CHR01_Wanderer_Rig65",
+      "hand_mesh_name": "CHR01 • articulated source gloves and fingers_low",
+      "bone_count": 65,
+      "hand_mesh_vertex_count": 1656,
+      "hand_mesh_triangle_count": 3260,
+      "array_serialization": "SHA256 of C-contiguous little-endian arrays; coords Nx3 float64; triangles Mx3 int64; weights Nx65 float64 in source_geometry.npz bone_names order; rest Nx4x4 float64",
+      "hand_vertex_coords_sha256": "14c8204e2562d6fd6a782389918c84068baf3854874a53dedd1015b530f78a9e",
+      "hand_triangle_indices_sha256": "09ff25d2e437975a7194bcde47418da8f693f26afb002b17008fcc30acf4f4f0",
+      "hand_skin_weights_sha256": "6298d480df1e3c73aa574dd838cb5b5904ba7d575f8604eb279d78ed6bb7cf02",
+      "all_bone_rest_matrices_sha256": "fa402e6b6ce50da42e2f86defbb9f4e980ddd84c4877ff76d16cf7b785e58bce",
+      "source_geometry_npz_sha256": "08f655e058220421bbcadfc4d7b4e3aaa7cd4079c81164d95b2df280a389d181",
+      "source_unchanged": true
+    }
+  },
+  "preservation_scope": "Original file SHA, source Basis, original mesh/weights/rest and pre-existing shape coordinates stay frozen. New cloth keys exist only in separately identified scene copies.",
+  "distinct_rest_hash_encodings": "rest_sha256 is the original source contract serialization. all_bone_rest_matrices_sha256 is the C-contiguous little-endian float64 array serialization; these are intentionally different digests."
+}
+
