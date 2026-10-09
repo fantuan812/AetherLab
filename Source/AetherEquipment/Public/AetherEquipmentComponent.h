@@ -6,6 +6,7 @@
 #include "AetherEquipmentComponent.generated.h"
 
 class UStaticMesh;
+class USkeletalMesh;
 struct FStreamableHandle;
 class UAnimSequence;
 class USkinnedMeshComponent;
@@ -53,8 +54,14 @@ public:
     // 细小饰品可无世界网格，仍保留真实槽位、实例和属性。
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bInvisibleAccessory = false;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bOccupiesBothHands = false;
-    // 双手武器辅助握点，以主手骨局部厘米计；不与成对防具的 SecondarySocket 混用。
-    UPROPERTY(EditAnywhere, BlueprintReadOnly) FVector SupportHandOffset = FVector(0,0,24);
+    // 完整双手合同；未配置时不能使用双手资产，没有旧位置字段迁移或默认握点。
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bSupportHandTransformConfigured = false;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TSoftObjectPtr<USkeletalMesh> GripTargetMesh;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FName GripMainHandBone;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FName GripSupportHandBone;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FString GripSourceSha256;
+    // 副手骨局部 -> 武器模型局部。厘米、单位四元数、单位 scale；不是主手骨局部偏移。
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FTransform SupportHandTransform = FTransform::Identity;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bAllowsGuard = false;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) float GuardStaminaMultiplier = .8f;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) float ParryWindowSeconds = .16f;
@@ -62,6 +69,10 @@ public:
     virtual FPrimaryAssetId GetPrimaryAssetId() const override { return FPrimaryAssetId(TEXT("AetherEquipment"), ItemId); }
     const FAetherAttackDefinition* FindAttack(FName Id) const;
     bool IsValidDefinition() const;
+    bool HasValidSupportHandGrip() const;
+    // Read-only author preflight, before any data asset is modified.
+    UFUNCTION(BlueprintCallable, Category="Equipment|Authoring")
+    static bool ValidateGripTarget(USkeletalMesh* Target, FName AttachmentSocket, FName MainBone, FName SupportBone);
 };
 
 UCLASS(BlueprintType)
