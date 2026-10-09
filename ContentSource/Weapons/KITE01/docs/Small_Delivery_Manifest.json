@@ -1,0 +1,125 @@
+{
+  "status": "LIBRARY_SAVED_CHAT_SEND_NOT_YET_VERIFIED",
+  "old_full_archive_bytes": 42194386,
+  "old_full_archive_chat_send": "FAILED_UPLOAD_LIMIT_NO_ACCEPTED_RECEIPT",
+  "native_blend_bytes": 7698572,
+  "archives_are_independent_not_multivolume": true,
+  "files": [
+    {
+      "filename": "KITE01_GLB_LOD0.zip",
+      "bytes": 3520268,
+      "sha256": "5797750a63b25f23fb7f20e58cee97c4872e962dd5ae2c29b409a5be3dadf8e9",
+      "members": [
+        "exports/KITE01_LOD0.glb"
+      ],
+      "library_file_id": "libfile_d823b7d20c908191a629783a91b61588",
+      "file_id": "file_00000000f9a881f581217c56a9cf4542",
+      "current_version_number": 0,
+      "library_saved": true,
+      "chat_delivery": "Awaiting parent send receipt"
+    },
+    {
+      "filename": "KITE01_GLB_LOD1_LOD2.zip",
+      "bytes": 6741038,
+      "sha256": "6d6d7b0ef3913a9712784cc83ac6bd8a5a98f0bc08f628c36f273c46ba46313f",
+      "members": [
+        "exports/KITE01_LOD1.glb",
+        "exports/KITE01_LOD2.glb"
+      ],
+      "library_file_id": "libfile_27f194a19da881919381d22548ed2acd",
+      "file_id": "file_00000000207881f58cc3bc1b5dffbd6c",
+      "current_version_number": 0,
+      "library_saved": true,
+      "chat_delivery": "Awaiting parent send receipt"
+    },
+    {
+      "filename": "KITE01_FBX_MainFurniture.zip",
+      "bytes": 6209264,
+      "sha256": "0f06acffd23082ae82ba961dfa3d3e0ea95328efe5e9a409921e8ea701f668d6",
+      "members": [
+        "exports/SM_KITE01_Receiver.fbx",
+        "exports/SM_KITE01_Handguard_Sand.fbx",
+        "exports/SM_KITE01_Stock_Skeleton.fbx"
+      ],
+      "library_file_id": "libfile_b2cf0fa79e508191862cd413d6d862d8",
+      "file_id": "file_00000000b1a081f59836648b194f33d5",
+      "current_version_number": 0,
+      "library_saved": true,
+      "chat_delivery": "Awaiting parent send receipt"
+    },
+    {
+      "filename": "KITE01_FBX_GripMagazineOptic.zip",
+      "bytes": 4915365,
+      "sha256": "f5fe584f2708d229229cab568a57a5152523c4888ff9167ccfc2a146536e75b5",
+      "members": [
+        "exports/SM_KITE01_Grip_Angled.fbx",
+        "exports/SM_KITE01_Magazine_Box.fbx",
+        "exports/SM_KITE01_Optic_Reflex.fbx"
+      ],
+      "library_file_id": "libfile_ba2ff51969688191b574d5ff947a3ce9",
+      "file_id": "file_00000000ed0881f5ba83f25957b54c75",
+      "current_version_number": 0,
+      "library_saved": true,
+      "chat_delivery": "Awaiting parent send receipt"
+    },
+    {
+      "filename": "KITE01_FBX_VariantsMoving.zip",
+      "bytes": 4523069,
+      "sha256": "44db7de17213d566664bb6ced0149f5d88eb54792306439ae637014ab47be608",
+      "members": [
+        "exports/SM_KITE01_Muzzle_Short.fbx",
+        "exports/SM_KITE01_Muzzle_Cover.fbx",
+        "exports/SM_KITE01_Stock_Compact.fbx",
+        "exports/SM_KITE01_ChargingHandle.fbx",
+        "exports/SM_KITE01_Trigger.fbx"
+      ],
+      "library_file_id": "libfile_965b78dfeee48191a62dec12ae15aa34",
+      "file_id": "file_00000000171081f5be77c75164a2f362",
+      "current_version_number": 0,
+      "library_saved": true,
+      "chat_delivery": "Awaiting parent send receipt"
+    },
+    {
+      "filename": "KITE01_TexturesSourceDocs.zip",
+      "bytes": 3658107,
+      "sha256": "19794e1746b83be88cec6dab7621d62eed125430fc94a9560e93d3c3aa12f063",
+      "members": [
+        "textures/M_Studio_BaseColor.png",
+        "textures/M_InventoryTeal_BaseColor.png",
+        "textures/M_EdgeMetal_BaseColor.png",
+        "textures/M_OpticLens_Roughness.png",
+        "textures/M_Graphite_Roughness.png",
+        "textures/M_CeramicSand_Roughness.png",
+        "textures/M_EdgeMetal_Roughness.png",
+        "textures/M_CeramicSand_BaseColor.png",
+        "textures/M_OpticLens_BaseColor.png",
+        "textures/M_Polymer_BaseColor.png",
+        "textures/M_Polymer_Roughness.png",
+        "textures/M_InventoryTeal_Roughness.png",
+        "textures/M_Studio_Roughness.png",
+        "textures/M_Graphite_BaseColor.png",
+        "source/package_small_delivery.py",
+        "source/package_weapon.py",
+        "source/build_character_fit_study.py",
+        "source/render_modules.py",
+        "source/verify_character_fit_study.py",
+        "source/build_kite01.py",
+        "source/render_kite01.py",
+        "source/validate_kite01.py",
+        "docs/Sources_and_Licensing.md",
+        "docs/Character_Fit_Study.json",
+        "docs/CharacterStudy.zh-CN.md",
+        "docs/Build_Manifest.json",
+        "docs/Blender_Validation.json",
+        "docs/FrozenCharacter.json",
+        "docs/Grip32.json",
+        "reference/Generation_Record.json"
+      ],
+      "library_file_id": "libfile_4c348a5d7c308191b712d97b7ee34967",
+      "file_id": "file_00000000c61881f58317ba2910e558c2",
+      "current_version_number": 0,
+      "library_saved": true,
+      "chat_delivery": "Awaiting parent send receipt"
+    }
+  ]
+}
